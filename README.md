@@ -5,6 +5,7 @@ For more info check ou the blog post here:
 https://wordpress.com/post/nowhereman999.wordpress.com/5054
 
 Added Version 1.17 with the following fixes/changes
+
 '        - Fixed numeric and String arrays with multi dimensions, wasn't storing the values properly
 
 '        - Renamed inlude file PRINT.ASM to Print.asm
