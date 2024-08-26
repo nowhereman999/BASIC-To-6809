@@ -22,3 +22,9 @@ V 1.18
   
 V 1.19
 - The program now closes files #1 and #2 before killing the old one and renaming the Temp.txt to the correct .asm filename when removing unnecessary lines, this was causing file permission errors on Windows OS machines
+
+V 2.00
+- Can now handle many more variables
+- Tokenizer can now parse code better, but still will require spaces in some cases in order to distinguish between commands and variables
+- Internally it's now a lot easier to add new BASIC commands.
+- Drawing horizontal lines has been sped up a lot, this also speeds up drawing Boxes and Filling boxes with the ,B or ,BF options for the LINE command
