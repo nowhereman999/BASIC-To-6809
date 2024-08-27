@@ -28,6 +28,7 @@ V 2.00
 - Tokenizer can now parse code better, but still will require spaces in some cases in order to distinguish between commands and variables
 - Internally it's now a lot easier to add new BASIC commands.
 - Drawing horizontal lines has been sped up a lot, this also speeds up drawing Boxes and Filling boxes with the ,B or ,BF options for the LINE command
+- Handling of DATA commands is improved, it can handle multiple DATA : DATA commands on a single line and it can now handle string values without quotes, just as the CoCo will
 
 - Compiler now has 3 programs to compile before you can use it.  Load them into QB64 and compile them in the same foler as the other folders in the .zip file (Basic_Includes & Basic_Commands)
 - The three programs are: BasTo6809_2.00.Main.bas, BasTo6809_2.00.1.Tokenizer.bas & BasTo6809_2.00.2.Compile.bas
