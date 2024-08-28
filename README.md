@@ -10,9 +10,10 @@ For each BasTo6809*.bas file:
 2. Compile the file by selecting `Run->Make Executable Only`
 
 ## Releasing
-1. Update `V$ = "X.Y.Z"` in Basto6809.Main.bas
+1. Update `V$ = "X.Y"` in Basto6809.Main.bas
 2. `git commit . -m "Updated version"`
-3. `git push origin tag vX.Y.Z`
+3. `git push origin tag vX.Y`
+4. Edit the newly created release located [here](releases)
 
 ## Releases
 V 2.03
