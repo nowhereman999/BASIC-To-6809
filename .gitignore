@@ -1,2 +1,10 @@
-
 .DS_Store
+BasTo6809.Main
+BasTo6809.Main_start.command
+BasTo6809.1.Tokenizer
+BasTo6809.1.Tokenizer_start.command
+BasTo6809.2.Compile
+BasTo6809.2.Compile_start.command
+qb64pe_start.command
+HELLO.asm
+
