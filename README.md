@@ -11,9 +11,11 @@ For each BasTo6809*.bas file:
 
 ## Releasing
 1. Update `V$ = "X.Y"` in Basto6809.Main.bas
-2. `git commit . -m "Updated version"`
-3. `git push origin tag vX.Y`
-4. Edit the newly created release located in Releases.
+2. Update this README file.
+3. `git commit . -m "Updated version"`
+4. `git tag vX.Y`
+5. `git push origin tag vX.Y`
+6. Edit the newly created release located in Releases.
 
 ## Releases
 V 2.03
