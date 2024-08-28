@@ -13,7 +13,7 @@ For each BasTo6809*.bas file:
 1. Update `V$ = "X.Y"` in Basto6809.Main.bas
 2. `git commit . -m "Updated version"`
 3. `git push origin tag vX.Y`
-4. Edit the newly created release located [here](releases)
+4. Edit the newly created release located in Releases.
 
 ## Releases
 V 2.03
