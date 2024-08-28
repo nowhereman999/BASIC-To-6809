@@ -1,0 +1,6 @@
+Help file for BASIC to 6809 compiler by Glen Hewlett
+
+For now please check out this blog entry to get started using the compiler:
+
+https://wordpress.com/post/nowhereman999.wordpress.com/5054
+
