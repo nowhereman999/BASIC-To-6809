@@ -619,7 +619,6 @@ If KeepTempFiles = 1 Then KeepTempFiles$ = "-k" Else KeepTempFiles$ = ""
 ' Tokenize the BASIC Program
 CompilerVersion$ = _OS$
 If InStr(CompilerVersion$, "[MACOSX]") > 0 Or InStr(CompilerVersion$, "[LINUX]") > 0 Then
-<<<<<<<< HEAD:BasTo6809.bas
     Shell "./BasTo6809.1.Tokenizer " + c$ + s$ + o$ + b$ + Verbose$ + p$ + OutName$
     ' We now have the BASIC program in a good tokenized format as the file BasicTokenized.bin
     ' Call the compiler with a few command line options to pass through to the compiler
@@ -629,17 +628,6 @@ Else
     ' We now have the BASIC program in a good tokenized format as the file BasicTokenized.bin
     ' Call the compiler with a few command line options to pass through to the compiler
     Shell ".\BasTo6809.2.Compile.exe " + c$ + s$ + o$ + b$ + Verbose$ + KeepTempFiles$ + OutName$
-========
-    Shell "./BasTo6809" + ".1.Tokenizer " + c$ + s$ + o$ + b$ + Verbose$ + p$ + OutName$
-    ' We now have the BASIC program in a good tokenized format as the file BasicTokenized.bin
-    ' Call the compiler with a few command line options to pass through to the compiler
-    Shell "./BasTo6809" + ".2.Compile " + c$ + s$ + o$ + b$ + Verbose$ + KeepTempFiles$ + OutName$
-Else
-    Shell ".\BasTo6809" + ".1.Tokenizer.exe " + c$ + s$ + o$ + b$ + Verbose$ + p$ + OutName$
-    ' We now have the BASIC program in a good tokenized format as the file BasicTokenized.bin
-    ' Call the compiler with a few command line options to pass through to the compiler
-    Shell ".\BasTo6809" + ".2.Compile.exe " + c$ + s$ + o$ + b$ + Verbose$ + KeepTempFiles$ + OutName$
->>>>>>>> fe96dc3 (Define new release instructions):BasTo6809.Main.bas
 End If
 System
 
