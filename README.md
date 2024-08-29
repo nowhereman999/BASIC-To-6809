@@ -4,6 +4,12 @@ A BASIC compiler for the TRS80 Color Computer
 For more info check out the blog post here:
 https://wordpress.com/post/nowhereman999.wordpress.com/5054
 
+V 2.03
+- Added -v (version) and -h (help) commandline options
+
+V 2.02
+- Fixed issue with INPUT command with quotes and numeric commands being identified as numeric arrays
+
 V 2.01
 - Added option -k to allow the user to keep the temporary files that are generated when the compiler is processing the .BAS program.  The default is to always delete these temp files.
 
