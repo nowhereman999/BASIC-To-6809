@@ -4,13 +4,8 @@
 'System
 
 V$ = "2.03"
-'        - Big change needed - Need to Tokenize close and open brackets, semi colons, commas, qoutes, probably all symbols and text...
-'          I think I need to tokenize everything, and make the program be able to handle more than 255 variables and commands
-'
-'        - Split the program into many parts, have the output from each section used in the next program
-'          This will hopefully allow the program to be split into separate smaller programs that can be assembled faster
-'          on their own.
-
+'        - Add Disk file access commands
+'        - Make the program handle array sizes intelegently, arrays of 254 or less will use the current array method, larger arrays will use 16 values like A(1050) or A(700,3)
 
 '        - Make draw's destination address the same as the LINE destination address so they can continue where each left off
 '        - Make PSET take a colour value
