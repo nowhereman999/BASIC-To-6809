@@ -3,18 +3,19 @@
 'Print "hex$(Array(x+2) "; Hex$(Array(x + 2))
 'System
 
-V$ = "2.03"
-'        - Add Disk file access commands
-'        - Make the program handle array sizes intelegently, arrays of 254 or less will use the current array method, larger arrays will use 16 values like A(1050) or A(700,3)
-
-'        - Make draw's destination address the same as the LINE destination address so they can continue where each left off
-'        - Make PSET take a colour value
-'        - Add more grpahics resolution handling like PMODE 1,2 & 3
-
+V$ = "2.04"
+'        - Added Disk file access commands
+'        - The compiler can now handle the LOADM command
+'
 ' Things to do:
 ' - Add more commands (look through CoCo Extended basic book)
 ' - Change variables for graphics programs so they use faster/DP RAM
-' - Have an option to set the max string size used in String variables and String Arrays
+' - Make the program handle array sizes intelegently, arrays of 254 or less will use the current array method, larger arrays will use 16 values like A(1050) or A(700,3)
+' - Make draw's destination address the same as the LINE destination address so they can continue where each left off
+' - Make PSET take a colour value
+' - Add more grpahics resolution handling like PMODE 1,2 & 3
+
+
 $ScreenHide
 $Console
 _Dest _Console
@@ -614,7 +615,7 @@ b$ = " -b" + Num$ + " "
 num = Verbose: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
 Verbose$ = " -v" + Num$ + " "
 p$ = " -p" + ProgramStart$ + " "
-If KeepTempFiles = 1 Then KeepTempFiles$ = "-k" Else KeepTempFiles$ = ""
+If KeepTempFiles = 1 Then KeepTempFiles$ = " -k " Else KeepTempFiles$ = ""
 ' We now have the BASIC program in a good text format as the file BASIC_Text.bas
 ' Tokenize the BASIC Program
 CompilerVersion$ = _OS$

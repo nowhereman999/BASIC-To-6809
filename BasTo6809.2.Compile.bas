@@ -986,17 +986,18 @@ v = Array(x): x = x + 1
 If v <> &HF2 Then Print "Error getting variable needed in the FOR command on";: GoTo FoundError
 ForJump(Array(x) * 256 + Array(x + 1)) = FORCount ' Set the numeric variable name/number to this ForJump #
 CompVar = Array(x) * 256 + Array(x + 1)
-' Change the bytes before the "TO" command to a $0D so we can use the HandleNumericVariable routine to setup the FOR X=Y  part
-Start = x
+' Change the bytes of the "TO" command to a $F50D so we can use the HandleNumericVariable routine to setup the FOR X=Y  part
+Start = x ' Point to the variable before the = sign
 Do Until (v = &HFF And Array(x) * 256 + Array(x + 1) = TO_CMD) Or (v = &HF5 And Array(x) = &H0D)
     v = Array(x): x = x + 1
 Loop
 If v = &HF5 Then v = Array(x): x = x + 1
 If v = &H0D Then Print "Error assigning a value to variable in the FOR command on";: GoTo FoundError
-PointAtTO = x - 1 ' Keep the value where the TO is
+' Found the TO command
+PointAtTO = x - 1 ' Remember where the TO command is
 Array(PointAtTO) = &HF5
 Array(PointAtTO + 1) = &H0D ' temporarily change the space before the TO command to a $F50D
-x = Start
+x = Start ' Point at the variable before the =
 GoSub HandleNumericVariable ' Handle code such as X=Y*3 and returns with value of Y*3 in _Var_X, NV$ has the variable name
 A$ = "ROLA": C$ = "Move sign bit to the carry": GoSub AssemOut
 A$ = "ROL": B$ = ",-S": C$ = "Save the Start sign bit on the stack": GoSub AssemOut
@@ -3481,9 +3482,66 @@ Color 15
 System
 DoLOAD:
 Color 14
-Print "Can't do command LOAD yet, found on line "; linelabel$
+Print "Can't do command LOAD, maybe this should be a LOADM, found on line "; linelabel$
 Color 15
 System
+DoLOADM:
+GoSub GetExpressionB4CommaEOL 'Handle an expression that ends with a comma or EOL, skip brackets
+GoSub ParseStringExpression ' Parse the String Expression, value will end up in _StrVar_PF00
+LoadmAfterFilename:
+v = Array(x): x = x + 1
+'Print #1, "; GetSectionToLOADM, v=$"; Hex$(v)
+If v = &HF5 Then
+    ' Found a special character
+    v = Array(x): x = x + 1
+    If v = &H2C Then ' Handle a comma on the LOADM line
+        GoSub GetExpressionB4EOL 'Handle an expression that ends with a colon or End of a Line
+        ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
+        A$ = "STD": B$ = "_Var_PF10": C$ = "Store D at _Var_PF10 as the LOADM offset value": GoSub AssemOut
+    Else
+        A$ = "CLR": B$ = "_Var_PF10": C$ = "Set _Var_PF10 to zero as the LOADM offset value": GoSub AssemOut
+        A$ = "CLR": B$ = "_Var_PF10+1": C$ = "Set _Var_PF10 to zero as the LOADM offset value": GoSub AssemOut
+    End If
+    If v = &H0D Or v = &H3A Then ' Handle EOL/Colon
+        GoTo OpenLoadm ' Do LOADM
+    End If
+End If
+Print "Error, Not sure how to handle LOADM filename on line "; linelabel$; " v = $"; Hex$(v), Chr$(v)
+Print "x-2 = $"; Hex$(Array(x - 2))
+Print "x-1 = $"; Hex$(Array(x - 1))
+Print "x   = $"; Hex$(Array(x))
+Print "x+1 = $"; Hex$(Array(x + 1))
+Print "x+2 = $"; Hex$(Array(x + 2))
+Print "x+3 = $"; Hex$(Array(x + 3))
+System
+OpenLoadm:
+A$ = "JSR": B$ = "FixFileName": C$ = "Format _StrVar_PF00 to proper disk filename format in memory at DNAMBF": GoSub AssemOut
+A$ = "LDU": B$ = "#DNAMBF": C$ = "U points at the filename to open": GoSub AssemOut
+' Open the the File pointed at by U
+' Enter with U pointing at the properly formatted filename (8 character filename badded with spaces) and a 3 character extension
+' Exits with X pointing at the filename entry in the disk directory
+' Carry flag will be set if it couldn't find the filename, cleared otherwise
+A$ = "JSR": B$ = "OpenFileU": C$ = "Go open file": GoSub AssemOut
+A$ = "BCS": B$ = "DiskError": C$ = "Error Openning the File": GoSub AssemOut
+' Initialize File for reading:
+' *** Enter with: X pointing at the filename to open
+' Copy the file info to the file control block
+' Copy Granule table for the file on the correct drive
+' setup the end sector to compare with for this granule
+' setup the track to read from
+' copy the first 256 bytes of the file into the file buffer
+' set the buffer pointer to the beginning of the buffer
+' Load the first sector of the file into the file buffer
+' At this point the file is ready to be read from by calling either DiskReadByteA or DiskReadWordD
+' *** Exit with: Y pointing at the FATBLx associated with the drive DCDRV (preserve Y until file has been closed)
+A$ = "JSR": B$ = "InitFile": C$ = "Prep open file for reading": GoSub AssemOut
+' Do a LOADM command
+' File must already be Initialized
+' *** Enter with: Y pointing at the FATBLx associated with the drive DCDRV
+' * Loads a  Machine Language file from the disk
+' Adds the 16 bit value stored in _Var_PF10 to the Load Address and the EXEC address
+A$ = "JSR": B$ = "DiskLOADM": C$ = "Load the ML program": GoSub AssemOut
+Return ' we have reached the end of the line return
 DoLSET:
 Color 14
 Print "Can't do command LSET yet, found on line "; linelabel$
@@ -4807,6 +4865,8 @@ Select Case GeneralCommands$(v)
         GoTo DoWRITE
     Case "WPOKE"
         GoTo DoWPOKE
+    Case "LOADM"
+        GoTo DoLOADM
     Case Else
         Print "Unknown General command on";: GoTo FoundError
         System
@@ -6433,6 +6493,25 @@ If Left$(GenExpression$, 1) = Chr$(&HFD) Then x = x - 3: Return 'Found a string 
 Expression$ = Expression$ + GenExpression$
 GoTo GEB4SemiComQ13D_EOL
 
+
+'Handle an expression that ends with a comma or EOL, skip brackets
+GetExpressionB4CommaEOL:
+Expression$ = ""
+InBracket = 0
+GEB4CommaEOL:
+GoSub GetGenExpression ' Returns with single expression in GenExpression$
+If GenExpression$ = Chr$(&HF5) + Chr$(&H0D) Or GenExpression$ = Chr$(&HF5) + Chr$(&H3A) Then x = x - 2: Return ' IF EOL/Colon point at it again and return
+If Left$(GenExpression$, 1) = Chr$(&HF5) Then
+    ' Found a special character
+    Sp = Asc(Right$(GenExpression$, 1))
+    If Sp = &H0D Or Sp = &H3A Then x = x - 2: Return ' IF EOL/Colon, or a quote then point at it again and return
+    If Sp = &H2C And InBracket = 0 Then x = x - 2: Return ' If a comma point at it again and return
+    If Sp = Asc("(") Then InBracket = InBracket + 1
+    If Sp = Asc(")") Then InBracket = InBracket - 1
+End If
+Expression$ = Expression$ + GenExpression$
+GoTo GEB4CommaEOL
+
 'Handle an expression that ends with a colon or End of a Line
 GetExpressionB4EOL:
 Expression$ = ""
@@ -6450,6 +6529,7 @@ GEB4Comma:
 GoSub GetGenExpression ' Returns with single expression in GenExpression$
 If Left$(GenExpression$, 1) = Chr$(&HF5) Then
     ' Found a special character
+    Sp = Asc(Right$(GenExpression$, 1))
     If Asc(Right$(GenExpression$, 1)) = &H2C And InBracket = 0 Then x = x - 2: Return ' If a comma point at it again and return
     If Sp = Asc("(") Then InBracket = InBracket + 1
     If Sp = Asc(")") Then InBracket = InBracket - 1

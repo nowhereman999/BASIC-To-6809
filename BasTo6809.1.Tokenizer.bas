@@ -799,6 +799,14 @@ For i = 0 To DefVarCount - 1
 Next i
 Close #1
 
+'See if we should need to use Disk access
+For ii = 0 To GeneralCommandsFoundCount - 1
+    Temp$ = UCase$(GeneralCommandsFound$(ii))
+    If Temp$ = "LOADM" Then
+        Disk = 1 ' Flag that we use Disk access
+    End If
+Next ii
+
 ' Start writing to the .asm file
 Open OutName$ For Output As #1
 DirectPage$ = ProgramStart$
@@ -959,6 +967,9 @@ For ii = 0 To GeneralCommandsFoundCount - 1
         Temp$ = "INPUTCode": GoSub AddIncludeTemp
         Temp$ = "DecimalStringToD": GoSub AddIncludeTemp ' Add commands for converting decimal numbers to D
     End If
+    If Temp$ = "LOADM" Then
+        Temp$ = "Disk_Commands": GoSub AddIncludeTemp ' Add code for Disk commands
+    End If
     If Temp$ = "PMODE" Then
         Temp$ = "GraphicSetup": GoSub AddIncludeTemp ' Add code for the setting different Graphics PMODES and SCREENs
         Temp$ = "GraphicCommands": GoSub AddIncludeTemp ' Add code to handle graphics commands
@@ -1012,22 +1023,61 @@ Temp$ = "SquareRoot": GoSub AddIncludeTemp
 
 GoSub WriteIncludeListToFile ' Write all the INCLUDE files needed to the .ASM file
 
-' Sound and Timer 60 Hz IRQ
-Z$ = "; Sound and Timer 60hz IRQ ": GoSub AssemOut
-Z$ = "SoundTimerIRQ:": GoSub AssemOut
-A$ = "LDA": B$ = "$FF03": C$ = "CHECK FOR 60HZ INTERRUPT": GoSub AssemOut
-A$ = "BPL": B$ = "Not60Hz": C$ = "RETURN IF 63.5 MICROSECOND INTERRUPT": GoSub AssemOut
-A$ = "LDA": B$ = "$FF02": C$ = "RESET PIA0, PORT B INTERRUPT FLAG": GoSub AssemOut
-A$ = "LDX": B$ = "SoundDuration": C$ = "Get the new Sound duration value": GoSub AssemOut
-A$ = "BEQ": B$ = ">": C$ = "RETURN IF TIMER = 0": GoSub AssemOut
-A$ = "LEAX": B$ = "-1,X": C$ = "DECREMENT TIMER IF NOT = 0": GoSub AssemOut
-A$ = "STX": B$ = "SoundDuration": C$ = "Save the new Sound duration value": GoSub AssemOut
-Z$ = "!"
-A$ = "INC": B$ = "_Var_Timer+1": C$ = "Increment the LSB of the Timer Value": GoSub AssemOut
-A$ = "BNE": B$ = "Not60Hz": C$ = "Skip ahead if not zero": GoSub AssemOut
-A$ = "INC": B$ = "_Var_Timer": C$ = "Increment the MSB of the Timer Value": GoSub AssemOut
-Z$ = "Not60Hz"
-A$ = "RTI": B$ = "": C$ = "RETURN FROM INTERRUPT": GoSub AssemOut
+If Disk = 0 Then
+    ' Sound and Timer 60 Hz IRQ
+    Z$ = "; Sound and Timer 60hz IRQ ": GoSub AssemOut
+    Z$ = "BASIC_IRQ:": GoSub AssemOut
+    A$ = "LDA": B$ = "$FF03": C$ = "CHECK FOR 60HZ INTERRUPT": GoSub AssemOut
+    A$ = "BPL": B$ = "Not60Hz": C$ = "RETURN IF 63.5 MICROSECOND INTERRUPT": GoSub AssemOut
+    A$ = "LDA": B$ = "$FF02": C$ = "RESET PIA0, PORT B INTERRUPT FLAG": GoSub AssemOut
+    A$ = "LDX": B$ = "SoundDuration": C$ = "Get the new Sound duration value": GoSub AssemOut
+    A$ = "BEQ": B$ = ">": C$ = "RETURN IF TIMER = 0": GoSub AssemOut
+    A$ = "LEAX": B$ = "-1,X": C$ = "DECREMENT TIMER IF NOT = 0": GoSub AssemOut
+    A$ = "STX": B$ = "SoundDuration": C$ = "Save the new Sound duration value": GoSub AssemOut
+    Z$ = "!"
+    A$ = "INC": B$ = "_Var_Timer+1": C$ = "Increment the LSB of the Timer Value": GoSub AssemOut
+    A$ = "BNE": B$ = "Not60Hz": C$ = "Skip ahead if not zero": GoSub AssemOut
+    A$ = "INC": B$ = "_Var_Timer": C$ = "Increment the MSB of the Timer Value": GoSub AssemOut
+    Z$ = "Not60Hz"
+    A$ = "RTI": B$ = "": C$ = "RETURN FROM INTERRUPT": GoSub AssemOut
+Else
+    ' DISK controller Interrupts
+    '; NMI SERVICE
+    Z$ = "DNMISV:"
+    A$ = "LDA": B$ = "NMIFLG": C$ = "GET NMI FLAG": GoSub AssemOut
+    A$ = "BEQ": B$ = "LD8AE": C$ = "RETURN IF NOT ACTIVE": GoSub AssemOut
+    A$ = "LDX": B$ = "DNMIVC": C$ = "GET NEW RETURN VECTOR": GoSub AssemOut
+    A$ = "STX": B$ = "10,S": C$ = "STORE AT STACKED PC SLOT ON STACK": GoSub AssemOut
+    A$ = "CLR": B$ = "NMIFLG": C$ = "RESET NMI FLAG": GoSub AssemOut
+    Z$ = "LD8AE"
+    A$ = "RTI": B$ = "": C$ = "RETURN FROM INTERRUPT": GoSub AssemOut
+    '; Disk IRQ SERVICE and Sound and Timer 60 Hz IRQ
+    Z$ = "BASIC_IRQ:"
+    A$ = "LDA": B$ = "$FF03": C$ = "63.5 MICRO SECOND OR 60 HZ INTERRUPT?": GoSub AssemOut
+    A$ = "BPL": B$ = "LD8AE": C$ = "RETURN IF 63.5 MICROSECOND": GoSub AssemOut
+    A$ = "LDA": B$ = "$FF02": C$ = "RESET 60 HZ PIA INTERRUPT FLAG": GoSub AssemOut
+    A$ = "LDA": B$ = "RDYTMR": C$ = "GET TIMER": GoSub AssemOut
+    A$ = "BEQ": B$ = "LD8CD": C$ = "BRANCH IF NOT ACTIVE": GoSub AssemOut
+    A$ = "DECA": C$ = "DECREMENT THE TIMER": GoSub AssemOut
+    A$ = "STA": B$ = "RDYTMR": C$ = "SAVE IT": GoSub AssemOut
+    A$ = "BNE": B$ = "LD8CD": C$ = "BRANCH IF NOT TIME TO TURN OFF DISK MOTORS": GoSub AssemOut
+    A$ = "LDA": B$ = "DRGRAM": C$ = "GET DSKREG IMAGE": GoSub AssemOut
+    A$ = "ANDA": B$ = "#$B0": C$ = "TURN ALL MOTORS AND DRIVE SELECTS OFF": GoSub AssemOut
+    A$ = "STA": B$ = "DRGRAM": C$ = "PUT IT BACK IN RAM IMAGE": GoSub AssemOut
+    A$ = "STA": B$ = "DSKREG": C$ = "SEND TO CONTROL REGISTER (MOTORS OFF)": GoSub AssemOut
+    Z$ = "LD8CD"
+    A$ = "LDX": B$ = "SoundDuration": C$ = "Get the new Sound duration value": GoSub AssemOut
+    A$ = "BEQ": B$ = ">": C$ = "RETURN IF TIMER = 0": GoSub AssemOut
+    A$ = "LEAX": B$ = "-1,X": C$ = "DECREMENT TIMER IF NOT = 0": GoSub AssemOut
+    A$ = "STX": B$ = "SoundDuration": C$ = "Save the new Sound duration value": GoSub AssemOut
+    Z$ = "!"
+    A$ = "INC": B$ = "_Var_Timer+1": C$ = "Increment the LSB of the Timer Value": GoSub AssemOut
+    A$ = "BNE": B$ = "Not60Hz": C$ = "Skip ahead if not zero": GoSub AssemOut
+    A$ = "INC": B$ = "_Var_Timer": C$ = "Increment the MSB of the Timer Value": GoSub AssemOut
+    Z$ = "Not60Hz"
+    A$ = "RTI": B$ = "": C$ = "RETURN FROM INTERRUPT": GoSub AssemOut
+End If
+
 
 Print #1, "* Main Program"
 Print #1, "START:"
@@ -1112,14 +1162,25 @@ A$ = "LDD": B$ = ">$0112": C$ = "Get the Extended BASIC's TIMER value": GoSub As
 A$ = "STD": B$ = "_Var_Timer": C$ = "Use Basic's Timer as a starting point for the TIMER value, just in case someone uses it for Randomness": GoSub AssemOut
 A$ = "STD": B$ = "Seed1": C$ = "Save TIMER value as the Random number seed value": GoSub AssemOut
 
+' Address    Interrupt    CoCo 2 Vector    CoCo 3 Vector
+' $FFF2      SWI3         $100             $FEEE
+' $FFF4      SWI2         $103             $FEF1
+' $FFF6      FIRQ         $10F             $FEF4    * Make it an RTI ($3B)
+' $FEF8      IRQ          $10C             $FEF7    * Go to our BASIC_IRQ
+' $FFFA      SWI          $106             $FEFA
+' $FFFC      NMI          $109             $FEFD    * Go to our Disk controller IRQ
+' $FFFE      RESET        $A027            $8C1B
+
 ' Setup IRQ jump address
 A$ = "LDX": B$ = "$FFFE": C$ = "Get the RESET location": GoSub AssemOut
 A$ = "CMPX": B$ = "#$8C1B": C$ = "Check if it's a CoCo 3": GoSub AssemOut
 A$ = "BNE": B$ = "SaveCoCo1": C$ = "Setup IRQ, using CoCo 1 IRQ Jump location": GoSub AssemOut
 A$ = "LDX": B$ = "#$FEF7": C$ = "X = Address for the COCO 3 IRQ JMP": GoSub AssemOut
+A$ = "LDY": B$ = "#$FEFD": C$ = "Y = Address for the COCO 3 NMI JMP": GoSub AssemOut
 A$ = "BRA": B$ = ">": C$ = "Skip ahead": GoSub AssemOut
 Z$ = "SaveCoCo1": GoSub AssemOut
 A$ = "LDX": B$ = "#$010C": C$ = "X = Address for the COCO 1 IRQ JMP": GoSub AssemOut
+A$ = "LDY": B$ = "#$0109": C$ = "Y = Address for the COCO 1 NMI JMP": GoSub AssemOut
 Z$ = "!"
 ' Save the original IRQ jump address so we can restore it once done
 A$ = "LDU": B$ = "#OriginalIRQ": C$ = "U=Address of the IRQ": GoSub AssemOut
@@ -1130,8 +1191,16 @@ A$ = "STD": B$ = "1,U": C$ = "Backup the Address of the IRQ": GoSub AssemOut
 ' Use our IRQ address
 A$ = "LDA": B$ = "#$7E": C$ = "JMP instruction": GoSub AssemOut
 A$ = "STA": B$ = ",X": C$ = "A = JMP Instruction": GoSub AssemOut
-A$ = "LDD": B$ = "#SoundTimerIRQ": C$ = "D=Address of the our IRQ": GoSub AssemOut
-A$ = "STD": B$ = "1,X": C$ = "D=Address of the IRQ": GoSub AssemOut
+A$ = "LDU": B$ = "#BASIC_IRQ": C$ = "D=Address of the our IRQ": GoSub AssemOut
+A$ = "STU": B$ = "1,X": C$ = "D=Address of the IRQ": GoSub AssemOut
+' Add our NMI
+A$ = "STA": B$ = ",Y": C$ = "A = JMP Instruction": GoSub AssemOut
+A$ = "LDU": B$ = "#DNMISV": C$ = "D=Address of the our NMIRQ": GoSub AssemOut
+A$ = "STU": B$ = "1,Y": C$ = "D=Address of the IRQ": GoSub AssemOut
+' Make FIRQ an RTI
+A$ = "LDA": B$ = "#$3B": C$ = "RTI instruction": GoSub AssemOut
+A$ = "STA": B$ = "$010F": C$ = "Save instruction for the CoCo1": GoSub AssemOut
+A$ = "STA": B$ = "$FEF4": C$ = "Save instruction for the CoCo3": GoSub AssemOut
 ' Start the IRQ
 Z$ = "* This is where we enable the IRQ": GoSub AssemOut
 A$ = "ANDCC": B$ = "#%11101111": C$ = "= %11101111 this will Enable the IRQ to start": GoSub AssemOut
@@ -1714,12 +1783,12 @@ While i <= Len(Expression$)
             ' We found "&H"
             Tokenized$ = Tokenized$ + i$ ' copy the H to the output
             ' Get the first hex value
-            i$ = UCase$(Mid$(Expression$, i, 1)): i = i + 1
             While i <= Len(Expression$)
+                i$ = UCase$(Mid$(Expression$, i, 1)): i = i + 1
                 If (Asc(i$) >= Asc("A") And Asc(i$) <= Asc("F")) Or (Asc(i$) >= Asc("0") And Asc(i$) <= Asc("9")) Then
                     Tokenized$ = Tokenized$ + i$
-                    i$ = UCase$(Mid$(Expression$, i, 1)): i = i + 1
                 Else
+                    i = i - 1
                     Exit While
                 End If
             Wend
