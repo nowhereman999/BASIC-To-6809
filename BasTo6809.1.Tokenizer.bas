@@ -1015,6 +1015,7 @@ Next ii
 ' Libraries always included, other libraries use them, so they are needed
 Temp$ = "Equates": GoSub AddIncludeTemp
 Temp$ = "Print": GoSub AddIncludeTemp
+Temp$ = "Print_Serial": GoSub AddIncludeTemp
 Temp$ = "D_to_String": GoSub AddIncludeTemp
 Temp$ = "DHex_to_String": GoSub AddIncludeTemp
 Temp$ = "Mulitply16x16": GoSub AddIncludeTemp
@@ -1193,10 +1194,12 @@ A$ = "LDA": B$ = "#$7E": C$ = "JMP instruction": GoSub AssemOut
 A$ = "STA": B$ = ",X": C$ = "A = JMP Instruction": GoSub AssemOut
 A$ = "LDU": B$ = "#BASIC_IRQ": C$ = "D=Address of the our IRQ": GoSub AssemOut
 A$ = "STU": B$ = "1,X": C$ = "D=Address of the IRQ": GoSub AssemOut
-' Add our NMI
-A$ = "STA": B$ = ",Y": C$ = "A = JMP Instruction": GoSub AssemOut
-A$ = "LDU": B$ = "#DNMISV": C$ = "D=Address of the our NMIRQ": GoSub AssemOut
-A$ = "STU": B$ = "1,Y": C$ = "D=Address of the IRQ": GoSub AssemOut
+If Disk = 1 Then
+    ' Add our NMI
+    A$ = "STA": B$ = ",Y": C$ = "A = JMP Instruction": GoSub AssemOut
+    A$ = "LDU": B$ = "#DNMISV": C$ = "D=Address of the our NMIRQ": GoSub AssemOut
+    A$ = "STU": B$ = "1,Y": C$ = "D=Address of the IRQ": GoSub AssemOut
+End If
 ' Make FIRQ an RTI
 A$ = "LDA": B$ = "#$3B": C$ = "RTI instruction": GoSub AssemOut
 A$ = "STA": B$ = "$010F": C$ = "Save instruction for the CoCo1": GoSub AssemOut
