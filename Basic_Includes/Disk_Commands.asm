@@ -610,8 +610,14 @@ LD77E           TFR         A,B             ; SAVE PARTIAL IMAGE IN ACCB
                 STA         DSKREG          ; PROGRAM THE 1793 CONTROL REGISTER
                 BITB        #$08            ; WERE MOTORS ALREADY ON?
                 BNE         LD792           ; DON'T WAIT FOR IT TO COME UP TO SPEED IF ALREADY ON
-                JSR         >LA7D1          ; WAIT A WHILE
-                JSR         >LA7D1          ; WAIT SOME MORE FOR MOTOR TO COME UP TO SPEED
+; WAIT A WHILE
+                LDX    #$0000      GET READY TO WAIT A WHILE
+!               LEAX   -1,X        DECREMENT X
+                BNE    <           BRANCH IF NOT ZERO
+; WAIT SOME MORE FOR MOTOR TO COME UP TO SPEED
+                LDX    #$0000      GET READY TO WAIT A WHILE
+!               LEAX   -1,X        DECREMENT X
+                BNE    <           BRANCH IF NOT ZERO
 LD792           BSR         LD7D1           ; WAIT UNTIL NOT BUSY OR TIME OUT
                 BNE         LD7A0           ; BRANCH IF TIMED OUT (DOOR OPEN. NO DISK, NO POWER. ETC.)
                 CLR         DCSTA           ; CLEAR STATUS REGISTER
@@ -776,11 +782,6 @@ LD89D           FCB         1               ; DRIVE SEL 0
 ;                STA         DSKREG          ; SEND TO CONTROL REGISTER (MOTORS OFF)
 ;LD8CD           RTI                         ;         >L8955          ; JUMP TO EXTENDED BASIC'S IRQ HANDLER
 
-LA7D1   LDX    #$0000      GET READY TO WAIT A WHILE
-* DELAY WHILE DECREMENTING X TO ZERO
-!       LEAX   -1,X        DECREMENT X
-        BNE    <           BRANCH IF NOT ZERO
-        RTS
 
 PrintDiskErrorOnScreen:
         PSHS    B

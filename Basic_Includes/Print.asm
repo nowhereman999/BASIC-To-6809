@@ -1,4 +1,5 @@
-* Print Command
+; Print Command
+; Print number in D on text screen
 PRINT_D:
         TSTA              ; See if the value is negative or positive
         BPL     >         ; Skip ahead if positive
@@ -6,23 +7,23 @@ PRINT_D:
         COMB
         ADDD    #$0001    ; Make D a positive number
         PSHS    D         ; Save D on the stack
-        LDA     #109-$40      ; 109 = minus sign
+        LDA     #109-$40  ; 109 = minus sign
         BRA     PRINT_D1  ; Skip ahead
 !       PSHS    D         ; Save D on the stack
-        LDA     #96-$40       ; 96 = space (blank)
+        LDA     #96-$40   ; 96 = space (blank)
 PRINT_D1:
         JSR     PrintA_On_Screen
-        CLR     _Var_PF00  ; This will be the tenthousands
+        CLR     _Var_PF00 ; This will be the tenthousands
         CLR     _Var_PF01 ; This will be the thousands
         CLR     _Var_PF02 ; This will be the hundreds
         CLR     _Var_PF03 ; This will be the tens
         CLR     _Var_PF04 ; This will be the ones
-        LDD     ,S++        ; D = value to convert to Decimal
+        LDD     ,S++      ; D = value to convert to Decimal
 !       SUBD    #10000
         BLO     >
         INC     _Var_PF00
         BRA     <
-!       ADDD    #10000      ; We now have the ten thousands
+!       ADDD    #10000    ; We now have the ten thousands
 !       SUBD    #1000
         BLO     >
         INC     _Var_PF01
@@ -88,7 +89,6 @@ Print1s:
         BSR     PrintA_On_Screen
         LDA     #$20        ; Blank
         BRA     PrintA_On_Screen ; Print A on the screen and return
-
 UpdateCursor:
         PSHS  D,X
         BRA     LA344

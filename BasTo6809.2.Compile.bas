@@ -1966,7 +1966,7 @@ If c > 5 Then
     A$ = "LDU": B$ = ",S++": C$ = "Load U with the string start location off the stack and fix the stack": GoSub AssemOut
     Z$ = "!"
     A$ = "LDA": B$ = ",U+": C$ = "Get the string data": GoSub AssemOut
-    A$ = "JSR": B$ = "PrintA_On_Screen": C$ = "Go print A on screen @ Cursor Position": GoSub AssemOut
+    A$ = "JSR": B$ = PrintA$: C$ = "Go print A" + PrintDev$: GoSub AssemOut
     A$ = "DECB": C$ = "decrement the string length counter": GoSub AssemOut
     A$ = "BNE": B$ = "<": C$ = "If not counted down to zero then loop": GoSub AssemOut
 Else
@@ -1974,7 +1974,7 @@ Else
     For c = 1 To c
         v = Array(x): x = x + 1: 'Get next byte
         A$ = "LDA": B$ = "#$" + Hex$(v): C$ = "A = Byte to print, " + Chr$(v): GoSub AssemOut
-        A$ = "JSR": B$ = "PrintA_On_Screen": C$ = "Go print A on screen @ Cursor Position": GoSub AssemOut
+        A$ = "JSR": B$ = PrintA$: C$ = "Go print A" + PrintDev$: GoSub AssemOut
     Next c
     x = x + 2 ' skip past the end quote
 End If
@@ -1982,6 +1982,7 @@ PrintQDone:
 Return
 
 DoPRINT:
+PrintD$ = "Print_D": PrintA$ = "PrintA_On_Screen": PrintDev$ = " on screen"
 ' Parse parts of it, upto a ";" print it, then do the next part
 ' Figure out what we need to print...
 GetSectionToPrint:
@@ -1996,7 +1997,7 @@ If v >= Asc("0") And v <= Asc("9") Or (v = Asc("&") And Array(x) = Asc("H")) The
     x = x - 1 ' make sure to inlcude the first Numeric variable
     GoSub GetExB4SemiComQ13D_EOL ' Get an Expression before a semi colon, a comma a quote, an &HF1,&HF3 or &HFD an EOL/Colon
     ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression, value will end up in D
-    A$ = "JSR": B$ = "PRINT_D": C$ = "Go print D on screen": GoSub AssemOut
+    A$ = "JSR": B$ = "PrintD$": C$ = "Go print D" + PrintDev$: GoSub AssemOut
     GoTo GetSectionToPrint
 End If
 
@@ -2004,7 +2005,7 @@ If v = &HF0 Then ' Printing a Numeric Array variable, PRINT A(5)
     x = x - 1 ' make sure to inlcude the first Numeric array variable
     GoSub GetExB4SemiComQ13D_EOL ' Get an Expression before a semi colon, a comma a quote, an &HF1,&HF3 or &HFD an EOL/Colon
     ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression, value will end up in D
-    A$ = "JSR": B$ = "PRINT_D": C$ = "Go print D on screen": GoSub AssemOut
+    A$ = "JSR": B$ = PrintD$: C$ = "Go print D" + PrintDev$: GoSub AssemOut
     GoTo GetSectionToPrint
 End If
 
@@ -2019,7 +2020,7 @@ If v = &HF1 Then ' Printing a String Array variable, PRINT A$(6)
     A$ = "BEQ": B$ = "Done@": C$ = "If the length of the string is zero then don't print it (Skip ahead)": GoSub AssemOut
     Z$ = "!"
     A$ = "LDA": B$ = ",U+": C$ = "Get a source byte": GoSub AssemOut
-    A$ = "JSR": B$ = "PrintA_On_Screen": GoSub AssemOut
+    A$ = "JSR": B$ = PrintA$: C$ = "Go print A" + PrintDev$: GoSub AssemOut
     A$ = "DECB": C$ = "Decrement the counter": GoSub AssemOut
     A$ = "BNE": B$ = "<": C$ = "Loop until all data is copied to the destination string": GoSub AssemOut
     Z$ = "Done@": GoSub AssemOut
@@ -2031,7 +2032,7 @@ If v = &HF2 Then ' Printing a Regular Numeric Variable, PRINT A
     x = x - 1 ' make sure to inlcude the first Numeric variable
     GoSub GetExB4SemiComQ13D_EOL ' Get an Expression before a semi colon, a comma a quote, an &HF1,&HF3 or &HFD an EOL/Colon
     ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression, value will end up in D
-    A$ = "JSR": B$ = "PRINT_D": C$ = "Go print D on screen": GoSub AssemOut
+    A$ = "JSR": B$ = PRINT_D$: C$ = "Go print D on screen": GoSub AssemOut
     GoTo GetSectionToPrint
 End If
 If v = &HF3 Then ' Printing a Regular String Variable, PRINT A$
@@ -2044,7 +2045,7 @@ If v = &HF3 Then ' Printing a Regular String Variable, PRINT A$
     A$ = "BEQ": B$ = "Done@": C$ = "If the length of the string is zero then don't print it (Skip ahead)": GoSub AssemOut
     Z$ = "!"
     A$ = "LDA": B$ = ",U+": C$ = "Get a source byte": GoSub AssemOut
-    A$ = "JSR": B$ = "PrintA_On_Screen": GoSub AssemOut
+    A$ = "JSR": B$ = PrintA$: C$ = "Go print A" + PrintDev$: GoSub AssemOut
     A$ = "DECB": C$ = "Decrement the counter": GoSub AssemOut
     A$ = "BNE": B$ = "<": C$ = "Loop until all data is copied to the destination string": GoSub AssemOut
     Z$ = "Done@": GoSub AssemOut
@@ -2059,7 +2060,7 @@ If v = &HF5 Then
             Return 'if we previously did a comma or semicolon then Return
         Else
             A$ = "LDA": B$ = "#$0D": C$ = "Do a Line Feed/Carriage Return": GoSub AssemOut
-            A$ = "JSR": B$ = "PrintA_On_Screen": GoSub AssemOut
+            A$ = "JSR": B$ = PrintA$: C$ = "Go print A" + PrintDev$: GoSub AssemOut
             Return ' we have reached the end of the line return
         End If
     End If
@@ -2067,7 +2068,54 @@ If v = &HF5 Then
         GoSub PrintInQuotes ' Prints in quotes, x points after the end quote
         GoTo GetSectionToPrint
     End If
-    If v = &H23 Then ' Printing # somewhere other than the screen , PRINT #1,"Hello, World!"
+    If v = &H23 Then ' Printing # somewhere other than the text screen , PRINT #-2,"Hello, World!"
+        v = Array(x): x = x + 1
+        If v = &H30 Then
+            v = Array(x): x = x + 1
+            If v = &HF5 Then
+                v = Array(x): x = x + 1
+                If v <> &H2C Then
+                    Print "Can't print the value after # on";: GoTo FoundError
+                Else
+                    ' If it is Print #0, then print to text screen
+                    PrintD$ = "Print_D": PrintA$ = "PrintA_On_Screen": PrintDev$ = " on screen"
+                    GoTo GetSectionToPrint
+                End If
+            End If
+        End If
+        If v = &HFC Then
+            v = Array(x): x = x + 1
+            If v = &H2D Then
+                ' Printing #-
+                v = Array(x): x = x + 1
+                If v = &H32 Then
+                    ' Print #-2
+                    v = Array(x): x = x + 1
+                    If v = &HF5 Then
+                        v = Array(x): x = x + 1
+                        If v <> &H2C Then
+                            Print "Print command should have a comma after # on";: GoTo FoundError
+                        Else
+                            PrintD$ = "PRINT_D_Serial": PrintA$ = "AtoSerialPort": PrintDev$ = " to printer"
+                            GoTo GetSectionToPrint
+                        End If
+                    End If
+                End If
+                If v = &H33 Then
+                    ' Print #-3
+                    v = Array(x): x = x + 1
+                    If v = &HF5 Then
+                        v = Array(x): x = x + 1
+                        If v <> &H2C Then
+                            Print "Print command should have a comma after # on";: GoTo FoundError
+                        Else
+                            PrintD$ = "PRINT_D_GraphicScreen": PrintA$ = "AtoGraphicScreen": PrintDev$ = " to graphic screen"
+                            GoTo GetSectionToPrint
+                        End If
+                    End If
+                End If
+            End If
+        End If
         Print "Can't handle printing to other devices on";: GoTo FoundError
     End If
     If v = &H28 Then ' Check if we have some open brackets to deal with, see if the next character is a string or numeric and deal with it accordingly
@@ -2080,7 +2128,7 @@ If v = &HF5 Then
             GoSub GetExpressionB4EndBracket: x = x + 2 ' get expression before an end bracket, move past it
             Expression$ = Expression$ + Chr$(&HF5) + Chr$(&H29) ' add close bracket
             ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression, value will end up in D
-            A$ = "JSR": B$ = "PRINT_D": C$ = "Go print D on screen": GoSub AssemOut
+            A$ = "JSR": B$ = PRINT_D$: C$ = "Go print D on screen": GoSub AssemOut
         End If
         GoTo GetSectionToPrint
     End If
@@ -2098,7 +2146,7 @@ If v = &HFB Then ' Printing a FN - function
     x = x - 1 ' make sure to inlcude the first Numeric command byte
     GoSub GetExB4SemiComQ13D_EOL ' Get an Expression before a semi colon, a comma a quote, an &HF1,&HF3 or &HFD an EOL/Colon
     ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression, value will end up in D
-    A$ = "JSR": B$ = "PRINT_D": C$ = "Go print D on screen": GoSub AssemOut
+    A$ = "JSR": B$ = PRINT_D$: C$ = "Go print D on screen": GoSub AssemOut
     GoTo GetSectionToPrint
 End If
 If v = &HFC Then
@@ -2107,7 +2155,7 @@ If v = &HFC Then
         x = x - 1 ' make sure to inlcude the first Numeric variable
         GoSub GetExB4SemiComQ13D_EOL ' Get an Expression before a semi colon, a comma a quote, an &HF1,&HF3 or &HFD an EOL/Colon
         ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression, value will end up in D
-        A$ = "JSR": B$ = "PRINT_D": C$ = "Go print D on screen": GoSub AssemOut
+        A$ = "JSR": B$ = PRINT_D$: C$ = "Go print D on screen": GoSub AssemOut
         GoTo GetSectionToPrint
     Else
         If Array(x) = &H2B Then
@@ -2117,7 +2165,7 @@ If v = &HFC Then
                 x = x - 1 ' make it start at the +
                 GoSub GetExB4SemiComQ13D_EOL ' Get an Expression before a semi colon, a comma a quote, an &HF1,&HF3 or &HFD an EOL/Colon
                 ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression, value will end up in D
-                A$ = "JSR": B$ = "PRINT_D": C$ = "Go print D on screen": GoSub AssemOut
+                A$ = "JSR": B$ = PRINT_D$: C$ = "Go print D on screen": GoSub AssemOut
                 GoTo GetSectionToPrint
             Else
                 '  treat it like a semicolon
@@ -2150,7 +2198,7 @@ If v = &HFD Then ' Printing a String Command, PRINT CHR$(67)
     A$ = "BEQ": B$ = "Done@": C$ = "If the length of the string is zero then don't print it (Skip ahead)": GoSub AssemOut
     Z$ = "!"
     A$ = "LDA": B$ = ",U+": C$ = "Get a source byte": GoSub AssemOut
-    A$ = "JSR": B$ = "PrintA_On_Screen": GoSub AssemOut
+    A$ = "JSR": B$ = PrintA$: C$ = "Go print A" + PrintDev$: GoSub AssemOut
     A$ = "DECB": C$ = "Decrement the counter": GoSub AssemOut
     A$ = "BNE": B$ = "<": C$ = "Loop until all data is copied to the destination string": GoSub AssemOut
     Z$ = "Done@": GoSub AssemOut
@@ -2165,7 +2213,7 @@ If v = &HFE Then ' Printing a Numeric Command, PRINT PEEK(10)
         ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression, value will end up in D
         A$ = "LDA": B$ = "#$20": C$ = "A = SPACE": GoSub AssemOut
         Z$ = "!"
-        A$ = "JSR": B$ = "PrintA_On_Screen": GoSub AssemOut
+        A$ = "JSR": B$ = PrintA$: C$ = "Go print A" + PrintDev$: GoSub AssemOut
         A$ = "DECB": C$ = "Decrement the count": GoSub AssemOut
         A$ = "BNE": B$ = "<": C$ = "keep looping": GoSub AssemOut
         GoTo GetSectionToPrint
@@ -2173,7 +2221,7 @@ If v = &HFE Then ' Printing a Numeric Command, PRINT PEEK(10)
         x = x - 1 ' make sure to inlcude the first Numeric command byte
         GoSub GetExB4SemiComQ13D_EOL ' Get an Expression before a semi colon, a comma a quote, an &HF1,&HF3 or &HFD an EOL/Colon
         ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression, value will end up in D
-        A$ = "JSR": B$ = "PRINT_D": C$ = "Go print D on screen": GoSub AssemOut
+        A$ = "JSR": B$ = PRINT_D$: C$ = "Go print D on screen": GoSub AssemOut
         GoTo GetSectionToPrint
     End If
 End If
@@ -2183,7 +2231,7 @@ If v = &HFF Then
     x = x - 1
     v = Array(x)
     A$ = "LDA": B$ = "#$0D": C$ = "Do a Line Feed/Carriage Return": GoSub AssemOut
-    A$ = "JSR": B$ = "PrintA_On_Screen": GoSub AssemOut
+    A$ = "JSR": B$ = PrintA$: C$ = "Go print A" + PrintDev$: GoSub AssemOut
     Return
 End If
 If v = &H40 Then

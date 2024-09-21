@@ -1089,16 +1089,16 @@ A$ = "ORCC": B$ = "#$50": C$ = "Turn off the interrupts": GoSub AssemOut
 A$ = "LDA": B$ = "#$" + DirectPage$: GoSub AssemOut
 A$ = "TFR": B$ = "A,DP": C$ = "Setup the Direct page to use our variable location": GoSub AssemOut
 
-Z$ = "* This code masks off the two low bits written to $FF20": GoSub AssemOut
-Z$ = "* So you can send the PCM Unsigned 8 Bit sample as is, no masking needed": GoSub AssemOut
-A$ = "LDA": B$ = "$FF21": C$ = "* PIA1_Byte_1_IRQ      * $FF21": GoSub AssemOut
-A$ = "PSHS": B$ = "A": C$ = "": GoSub AssemOut
-A$ = "ANDA": B$ = "#%00110011": C$ = "* FORCE BIT2 LOW": GoSub AssemOut
-A$ = "STA": B$ = "$FF21": C$ = "* PIA1_Byte_1_IRQ * $FF21": GoSub AssemOut
-A$ = "LDA": B$ = "#%11111100": C$ = "* OUTPUT ON DAC, INPUT ON RS-232 & CDI": GoSub AssemOut
-A$ = "STA": B$ = "$FF20": C$ = "* PIA1_Byte_0_IRQ * $FF20 NOW DATA DIRECTION REGISTER": GoSub AssemOut
-A$ = "PULS": B$ = "A": C$ = "": GoSub AssemOut
-A$ = "STA": B$ = "$FF21": C$ = "* PIA1_Byte_1_IRQ * $FF21": GoSub AssemOut
+'Z$ = "* This code masks off the two low bits written to $FF20": GoSub AssemOut
+'Z$ = "* So you can send the PCM Unsigned 8 Bit sample as is, no masking needed": GoSub AssemOut
+'A$ = "LDA": B$ = "$FF21": C$ = "* PIA1_Byte_1_IRQ      * $FF21": GoSub AssemOut
+'A$ = "PSHS": B$ = "A": C$ = "": GoSub AssemOut
+'A$ = "ANDA": B$ = "#%00110011": C$ = "* FORCE BIT2 LOW": GoSub AssemOut
+'A$ = "STA": B$ = "$FF21": C$ = "* PIA1_Byte_1_IRQ * $FF21": GoSub AssemOut
+'A$ = "LDA": B$ = "#%11111100": C$ = "* OUTPUT ON DAC, INPUT ON RS-232 & CDI": GoSub AssemOut
+'A$ = "STA": B$ = "$FF20": C$ = "* PIA1_Byte_0_IRQ * $FF20 NOW DATA DIRECTION REGISTER": GoSub AssemOut
+'A$ = "PULS": B$ = "A": C$ = "": GoSub AssemOut
+'A$ = "STA": B$ = "$FF21": C$ = "* PIA1_Byte_1_IRQ * $FF21": GoSub AssemOut
 
 Z$ = "* Enable 6 Bit DAC output": GoSub AssemOut
 A$ = "LDA": B$ = "$FF23": C$ = "* PIA1_Byte_3_IRQ_Ct_Snd * $FF23 GET PIA": GoSub AssemOut
