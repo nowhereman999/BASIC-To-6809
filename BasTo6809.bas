@@ -3,10 +3,9 @@
 'Print "hex$(Array(x+2) "; Hex$(Array(x + 2))
 'System
 
-V$ = "2.04"
-'        - Added Disk file access commands
-'        - The compiler can now handle the LOADM command
-'
+V$ = "2.05"
+'        - Added printing to serial port with Print #-2,
+
 ' Things to do:
 ' - Add more commands (look through CoCo Extended basic book)
 ' - Change variables for graphics programs so they use faster/DP RAM
