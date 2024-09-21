@@ -4,6 +4,9 @@ A BASIC compiler for the TRS80 Color Computer
 For more info check out the blog post here:
 https://wordpress.com/post/nowhereman999.wordpress.com/5054
 
+V 2.05
+- Added printing to the serial port with PRINT #-2,
+
 V 2.04
 - Added Disk I/O access commands in the file Disk_Command.asm
 - The Compiler can now do a LOADM command
