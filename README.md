@@ -4,6 +4,10 @@ A BASIC compiler for the TRS80 Color Computer
 For more info check out the blog post here:
 https://wordpress.com/post/nowhereman999.wordpress.com/5054
 
+V 2.06
+- Added feature to print to the PMODE 4 screen using PRINT #-3,"Hello World", use LOCATE x,y to set the location on screen of the text
+- Select which font from the commandline using option -fxxxx where xxxx is either Arcade or CoCoT1
+
 V 2.05
 - Added printing to the serial port with PRINT #-2,
 

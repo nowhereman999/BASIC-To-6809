@@ -1,5 +1,5 @@
 ; Print Command
-; Print number in D on text screen
+; Print number in D to serial device
 PRINT_D_Serial:
         TSTA              ; See if the value is negative or positive
         BPL     >         ; Skip ahead if positive
