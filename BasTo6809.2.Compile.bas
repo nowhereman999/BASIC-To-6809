@@ -1265,26 +1265,24 @@ DoLOCATE:
 ' Get first number in D
 GoSub GetExpressionB4Comma: x = x + 2 ' Get the expression before a Comma, & move past it
 ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
-A$ = "ADDD": B$ = "#$400": C$ = "D = Column + $400, start of the screen in RAM": GoSub AssemOut
+A$ = "CMPB": B$ = "#31": C$ = "Check if it's beyond the right side of the screen": GoSub AssemOut
+A$ = "BLS": B$ = ">": C$ = "Skip ahead if good": GoSub AssemOut
+A$ = "LDB": B$ = "#31": C$ = "If it's beyond the screen, make it the bottom row": GoSub AssemOut
+Z$ = "!"
+A$ = "ADDD": B$ = "#$E00": C$ = "D = Column + $E00, start of the screen in RAM": GoSub AssemOut
 A$ = "TFR": B$ = "D,X": C$ = "Save D = Column in X": GoSub AssemOut
 'x in the array will now be pointing just past the ,
 'Get value to poke in D (we only use B)
 GoSub GetExpressionB4EOL ' Get the expression before an End of Line in Expression$
 ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
+A$ = "CMPB": B$ = "#184": C$ = "Check if it's beyond the bottom of the screen": GoSub AssemOut
+A$ = "BLS": B$ = ">": C$ = "Skip ahead if good": GoSub AssemOut
+A$ = "LDB": B$ = "#184": C$ = "If it's beyond the screen, make it the bottom row": GoSub AssemOut
+Z$ = "!"
 A$ = "LDA": B$ = "#32": C$ = "32 bytes per row": GoSub AssemOut
 A$ = "MUL": C$ = "Move down the screen B Rows": GoSub AssemOut
 A$ = "LEAX": B$ = "D,X": C$ = "X=X+D, which now has the screen location": GoSub AssemOut
-A$ = "CMPX": B$ = "#$600": C$ = "Compare D with $600": GoSub AssemOut
-A$ = "BLO": B$ = ">": C$ = "Skip ahead if lower than $600": GoSub AssemOut
-A$ = "LDX": B$ = "#$5FF": C$ = "Make D = $5FF (max)": GoSub AssemOut
-A$ = "BRA": B$ = "@StoreX": C$ = "Update the location to print": GoSub AssemOut
-Z$ = "!"
-A$ = "CMPX": B$ = "#$400": C$ = "Compare D with $600": GoSub AssemOut
-A$ = "BHS": B$ = "@StoreX": C$ = "Skip ahead if higher than $600": GoSub AssemOut
-A$ = "LDX": B$ = "#$400": C$ = "Make D = $400 (min)": GoSub AssemOut
-Z$ = "@StoreX"
-A$ = "STX": B$ = "CURPOS": C$ = "Update the location of the cursor": GoSub AssemOut
-Print #1, ""
+A$ = "STX": B$ = "GraphicCURPOS": C$ = "Update the location of the cursor": GoSub AssemOut
 Return
 ' Quickly get the joystick values of 0,31,63 of both joysticks both horizontally and vertically
 ' Results are stored same place BASIC normally has the Joystick readings:
@@ -1982,7 +1980,7 @@ PrintQDone:
 Return
 
 DoPRINT:
-PrintD$ = "Print_D": PrintA$ = "PrintA_On_Screen": PrintDev$ = " on screen"
+PrintD$ = "PRINT_D": PrintA$ = "PrintA_On_Screen": PrintDev$ = " on screen"
 ' Parse parts of it, upto a ";" print it, then do the next part
 ' Figure out what we need to print...
 GetSectionToPrint:
@@ -1997,7 +1995,7 @@ If v >= Asc("0") And v <= Asc("9") Or (v = Asc("&") And Array(x) = Asc("H")) The
     x = x - 1 ' make sure to inlcude the first Numeric variable
     GoSub GetExB4SemiComQ13D_EOL ' Get an Expression before a semi colon, a comma a quote, an &HF1,&HF3 or &HFD an EOL/Colon
     ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression, value will end up in D
-    A$ = "JSR": B$ = "PrintD$": C$ = "Go print D" + PrintDev$: GoSub AssemOut
+    A$ = "JSR": B$ = PrintD$: C$ = "Go print D" + PrintDev$: GoSub AssemOut
     GoTo GetSectionToPrint
 End If
 
@@ -2109,7 +2107,7 @@ If v = &HF5 Then
                         If v <> &H2C Then
                             Print "Print command should have a comma after # on";: GoTo FoundError
                         Else
-                            PrintD$ = "PRINT_D_GraphicScreen": PrintA$ = "AtoGraphicScreen": PrintDev$ = " to graphic screen"
+                            PrintD$ = "PRINT_D_Graphics_Screen": PrintA$ = "AtoGraphics_Screen": PrintDev$ = " to graphic screen"
                             GoTo GetSectionToPrint
                         End If
                     End If
@@ -2936,10 +2934,37 @@ Else
 End If
 Return
 DoEXEC:
-Color 14
-Print "Can't do command EXEC yet, found on line "; linelabel$
-Color 15
-System
+v = Array(x): x = x + 1
+If v >= Asc("0") And v <= Asc("9") Or (v = Asc("&") And Array(x) = Asc("H")) Then ' Printing a number, PRINT 10*20
+    x = x - 1 ' make sure to inlcude the first Numeric variable
+    GoSub GetExB4SemiComQ13D_EOL ' Get an Expression before a semi colon, a comma a quote, an &HF1,&HF3 or &HFD an EOL/Colon
+    ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression, value will end up in D
+    A$ = "TFR": B$ = "D,PC": C$ = "JMP to D": GoSub AssemOut
+    Return
+End If
+If v = &HF0 Then ' Printing a Numeric Array variable, PRINT A(5)
+    x = x - 1 ' make sure to inlcude the first Numeric array variable
+    GoSub GetExB4SemiComQ13D_EOL ' Get an Expression before a semi colon, a comma a quote, an &HF1,&HF3 or &HFD an EOL/Colon
+    ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression, value will end up in D
+    A$ = "TFR": B$ = "D,PC": C$ = "JMP to D": GoSub AssemOut
+    Return
+End If
+If v = &HF2 Then ' Printing a Regular Numeric Variable, PRINT A
+    x = x - 1 ' make sure to inlcude the first Numeric variable
+    GoSub GetExB4SemiComQ13D_EOL ' Get an Expression before a semi colon, a comma a quote, an &HF1,&HF3 or &HFD an EOL/Colon
+    ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression, value will end up in D
+    A$ = "TFR": B$ = "D,PC": C$ = "JMP to D": GoSub AssemOut
+    Return
+End If
+If v = &HF5 Then
+    ' Found a special character
+    v = Array(x): x = x + 1
+    If v = &H0D Or v = &H3A Then ' Execute address in the EXECAddress
+        A$ = "JMP": B$ = "[EXECAddress]": C$ = "Jump to address stored at EXECAddress": GoSub AssemOut
+        Return ' we have reached the end of the line return
+    End If
+End If
+Print "Error: Can't handle expression after the EXEC command on";: GoTo FoundError
 DoSKIPF:
 Color 14
 Print "Can't do command SKIPF yet, found on line "; linelabel$

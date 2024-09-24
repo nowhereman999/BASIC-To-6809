@@ -98,6 +98,9 @@ Check$ = "REM": GoSub FindGenCommandNumber ' Gets the General Command number of 
 C_REM = ii
 Check$ = "'": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
 C_REMApostrophe = ii
+Check$ = "PRINT": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+C_PRINT = ii
+
 
 ' Handle command line options
 FI = 0
@@ -116,6 +119,7 @@ For check = 1 To count
     If LCase$(Left$(N$, 2)) = "-b" Then BranchCheck = Val(Right$(N$, Len(N$) - 2)): GoTo CheckNextCMDOption
     If LCase$(Left$(N$, 2)) = "-v" Then Verbose = Val(Right$(N$, Len(N$) - 2)): GoTo CheckNextCMDOption
     If LCase$(Left$(N$, 2)) = "-p" Then ProgramStart$ = Right$(N$, Len(N$) - 2): GoTo CheckNextCMDOption
+    If LCase$(Left$(N$, 2)) = "-f" Then Font$ = Right$(N$, Len(N$) - 2): GoTo CheckNextCMDOption
     ' check if we got a file name yet if so then the next filename will be output
     OutName$ = N$
     CheckNextCMDOption:
@@ -751,6 +755,23 @@ While x < filesize
     End If
 Wend
 
+If Verbose > 0 Then Print "Doing Pass 4 - Finding special cases that will need other files to be included..."
+x = 0
+While x < filesize
+    v = Array(x): x = x + 1 ' get the command to do
+    If v = &HFF Then ' Found a command
+        v = Array(x) * 256 + Array(x + 1): x = x + 2
+        If v = C_PRINT Then ' Is it the PRINT command?
+            ' Found a PRINT command, see if we have a print #-3, which will print to the graphics screen
+            '#-3, =  F5 23 FC 2D 33 F5 2C
+            If Array(x) = &HF5 And Array(x + 1) = &H23 And Array(x + 2) = &HFC And Array(x + 3) = &H2D And Array(x + 4) = &H33 And Array(x + 5) = &HF5 And Array(x + 6) = &H2C Then
+                x = x + 7
+                PrintGraphicsText = 1
+            End If
+        End If
+    End If
+Wend
+
 Open "NumericVariablesUsed.txt" For Output As #1
 For i = 0 To NumericVariableCount - 1
     Print #1, NumericVariable$(i)
@@ -1016,6 +1037,11 @@ Next ii
 Temp$ = "Equates": GoSub AddIncludeTemp
 Temp$ = "Print": GoSub AddIncludeTemp
 Temp$ = "Print_Serial": GoSub AddIncludeTemp
+If PrintGraphicsText = 1 Then
+    ' Found program uses PRINT #-3, to print to the graphics screen
+    Temp$ = "Print_Graphic_Screen": GoSub AddIncludeTemp
+    Temp$ = "Graphic_Screen_Fonts/" + Font$: GoSub AddIncludeTemp
+End If
 Temp$ = "D_to_String": GoSub AddIncludeTemp
 Temp$ = "DHex_to_String": GoSub AddIncludeTemp
 Temp$ = "Mulitply16x16": GoSub AddIncludeTemp
@@ -1079,7 +1105,6 @@ Else
     A$ = "RTI": B$ = "": C$ = "RETURN FROM INTERRUPT": GoSub AssemOut
 End If
 
-
 Print #1, "* Main Program"
 Print #1, "START:"
 A$ = "PSHS": B$ = "CC,D,DP,X,Y,U": C$ = "Save the original BASIC Register values": GoSub AssemOut
@@ -1104,6 +1129,12 @@ Z$ = "* Enable 6 Bit DAC output": GoSub AssemOut
 A$ = "LDA": B$ = "$FF23": C$ = "* PIA1_Byte_3_IRQ_Ct_Snd * $FF23 GET PIA": GoSub AssemOut
 A$ = "ORA": B$ = "#%00001000": C$ = "* SET 6-BIT SOUND ENABLE": GoSub AssemOut
 A$ = "STA": B$ = "$FF23": C$ = "* PIA1_Byte_3_IRQ_Ct_Snd * $FF23 STORE": GoSub AssemOut
+
+If PrintGraphicsText = 1 Then
+    ' Found program uses PRINT #-3, to print to the graphics screen
+    A$ = "LDD": B$ = "#$0E00": C$ = "Clear D": GoSub AssemOut
+    A$ = "STD": B$ = "GraphicCURPOS": C$ = "Set the graphics cursor to the top left corner": GoSub AssemOut
+End If
 
 A$ = "BRA": B$ = "SkipClear": C$ = "On startup skip ahead and do a BSR to this section to clear the variables, as CLEAR will use this code": GoSub AssemOut
 ' Clear variable RAM  (make this a routine as the CLEAR command will use it to erase all the variables
@@ -1297,8 +1328,7 @@ While i <= Len(Expression$)
             End If
             If Temp$ = "PRINT" Then
                 ' Found 5 letter general command which may or may not have a space before the open bracket
-                If Mid$(BaseString$, 6, 1) = "@" Then
-                    'This general command does have an open bracket
+                If Mid$(BaseString$, 6, 1) = "@" Or Mid$(BaseString$, 6, 1) = "#" Then
                     RightSpace = 1
                 End If
             End If
