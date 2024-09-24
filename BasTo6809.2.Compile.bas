@@ -340,7 +340,7 @@ While x < Filesize
     Do Until GenExpression$ = Chr$(&HF5) + Chr$(&H0D) Or GenExpression$ = Chr$(&HF5) + Chr$(&H3A)
         If GenExpression$ = Chr$(&HFF) + Chr$(Check1) + Chr$(Check2) Or GenExpression$ = Chr$(&HFF) + Chr$(Check3) + Chr$(Check4) Then
             ' This line has a REM, copy stuff before the REM to the end of the line and move x pointer to the start of actual commands
-            RemStart = x - 4
+            RemStart = x - 4: Exit Do
         Else
             Expression$ = Expression$ + GenExpression$
         End If
@@ -381,7 +381,7 @@ While x < Filesize
             GoTo DoAnotherLine ' Jump to the general command pointed at by V, Ends with a RETURN
         End If
     End If
-    Print "v="; Hex$(v)
+    'Print "v="; Hex$(v)
     If v = &HF0 Then GoSub HandleNumericArray: GoTo DoAnotherLine
     If v = &HF1 Then GoSub HandleStringArray: GoTo DoAnotherLine
     If v = &HF2 Then GoSub HandleNumericVariable: GoTo DoAnotherLine
@@ -2738,7 +2738,6 @@ DoCLEAR:
 ' Get first number in D
 GoSub GetExpressionB4SemiComEOL ' Get an Expression before a semi colon, a comma or an EOL
 ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression, result will be in D
-Print "v="; Hex$(v), Hex$(Array(x))
 If v = &H2C Then
     x = x + 2 ' consume the &HF5 & comma
     'we have a comma so we should get the next value after the comma

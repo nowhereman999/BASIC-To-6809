@@ -3,7 +3,10 @@
 'Print "hex$(Array(x+2) "; Hex$(Array(x + 2))
 'System
 
-V$ = "2.06"
+V$ = "2.07"
+'       - Fixed problem with REM or ' at the end of a line, was causing that entire line to be ignored especially if it started with a variable
+'
+' V2.06
 '       - Fixed a bug where the compiler needed a space after the PRINT command and before the # sign as PRINT#-2 or PRINT#-1 would give an error.
 '       - Added support of PRINT#-3, which prints text to the PMODE 4 screen
 '       - Changed the LOCATE x,y command so it will position the PRINT #-3, cursor location on the PMODE 4 screen where x is from 0 to 31 and y is from 0 to 184

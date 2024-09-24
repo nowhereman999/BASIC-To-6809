@@ -86,10 +86,6 @@ Check$ = "GOTO": GoSub FindGenCommandNumber ' Gets the General Command number of
 C_GOTO = ii
 Check$ = "END": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
 C_END = ii
-Check$ = "REM": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
-C_REM = ii
-Check$ = "'": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
-C_APOSTROPHE = ii
 Check$ = "DIM": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
 C_DIM = ii
 Check$ = "DATA": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
@@ -100,7 +96,6 @@ Check$ = "'": GoSub FindGenCommandNumber ' Gets the General Command number of Ch
 C_REMApostrophe = ii
 Check$ = "PRINT": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
 C_PRINT = ii
-
 
 ' Handle command line options
 FI = 0
@@ -510,7 +505,7 @@ While x <= filesize
         ' Print "Checking for stuff after the THEN"
         v = Array(x): x = x + 1 ' get a byte
         While v = &HF5 And Array(x) = &H3A: v = Array(x): x = x + 1: Wend ' consume any colons directly after the THEN
-        If v = (&HF5 And Array(x) = &H0D) Or (v = &HFF And Array(x) * 256 + Array(x + 1) = C_REM) Or (v = &HFF And Array(x) * 256 + Array(x + 1) = C_APOSTROPHE) Then ' After THEN do we have an EOL, or REMarks?
+        If v = (&HF5 And Array(x) = &H0D) Or (v = &HFF And Array(x) * 256 + Array(x + 1) = C_REM) Or (v = &HFF And Array(x) * 256 + Array(x + 1) = C_REMApostrophe) Then ' After THEN do we have an EOL, or REMarks?
             ' if so this is already an IF/THEN/ELSE/ELSEIF/ENDIF so don't need to change it to be a multi line IF
             INArray(c) = v: c = c + 1 ' write byte to ouput array
             If v = &HF5 And Array(x) = &H0D Then INArray(c) = &H0D: c = c + 1: x = x + 1
@@ -1692,9 +1687,8 @@ While i <= Len(Expression$)
                     While i <= Len(Expression$)
                         i$ = Mid$(Expression$, i, 1): i = i + 1
                         Tokenized$ = Tokenized$ + i$
-
                     Wend
-                    GoTo DoneGettingExpression
+                    GoTo GetNextToken1
                 End If
                 If v = C_REMApostrophe Then
                     ' Found an apostrophe ' copy the rest of the expression as is, no more tokenizing needed
@@ -1702,7 +1696,7 @@ While i <= Len(Expression$)
                         i$ = Mid$(Expression$, i, 1): i = i + 1
                         Tokenized$ = Tokenized$ + i$
                     Wend
-                    GoTo DoneGettingExpression
+                    GoTo GetNextToken1
                 End If
                 ' Check for a DATA
                 If v = C_DATA Then

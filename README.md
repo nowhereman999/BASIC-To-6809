@@ -4,6 +4,9 @@ A BASIC compiler for the TRS80 Color Computer
 For more info check out the blog post here:
 https://wordpress.com/post/nowhereman999.wordpress.com/5054
 
+V 2.07
+- Fixed problem with REM or ' at the end of a line, was causing that entire line to be ignored especially if it started with a variable
+
 V 2.06
 - Added feature to print to the PMODE 4 screen using PRINT #-3,"Hello World", use LOCATE x,y to set the location on screen of the text
 - Select which font from the commandline using option -fxxxx where xxxx is either Arcade or CoCoT1
