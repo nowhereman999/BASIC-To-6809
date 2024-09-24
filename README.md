@@ -5,7 +5,7 @@ For more info check out the blog post here:
 https://wordpress.com/post/nowhereman999.wordpress.com/5054
 
 V 2.07
-- Fixed problem with REM or ' at the end of a line, was causing that entire line to be ignored especially if it started with a variable
+- Fixed a bug with REM or ' at the end of a line that has variables in it, the line was past the variable name was being ignored by the parser
 
 V 2.06
 - Added feature to print to the PMODE 4 screen using PRINT #-3,"Hello World", use LOCATE x,y to set the location on screen of the text
