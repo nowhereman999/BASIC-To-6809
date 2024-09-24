@@ -3,7 +3,11 @@
 'Print "hex$(Array(x+2) "; Hex$(Array(x + 2))
 'System
 
-V$ = "2.07"
+V$ = "2.08"
+'       - Broke some regular printing with the printing to graphics screen, this is now been fixed
+'       - Fixed a bug with getting the value of an expression before an open bracket if an array was before the open bracket
+'
+' V2.07
 '       - Fixed problem with REM or ' at the end of a line, was causing that entire line to be ignored especially if it started with a variable
 '
 ' V2.06

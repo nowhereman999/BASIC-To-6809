@@ -251,7 +251,6 @@ While EOF(1) = 0
     DefVarCount = DefVarCount + 1
 Wend
 Close #1
-
 ' Start writing to the .asm file
 Open OutName$ For Append As #1
 
@@ -617,7 +616,7 @@ Return 'X pointing at the memory location for the Numeric Array, D is unchanged
 ' Exits with a Return
 HandleNumericArray:
 If Verbose > 3 Then Print "Going to deal with  Numeric array"
-v = Array(x * 256) + Array(x + 1): x = x + 2
+v = Array(x) * 256 + Array(x + 1): x = x + 2
 NV$ = NumericArrayVariables$(v)
 If Verbose > 3 Then Print "Numeric array variable is: "; NV$
 NumDims = Array(x): x = x + 3 ' Consume the $F5 & open bracket
@@ -795,7 +794,7 @@ Return 'X pointing at the memory location for the Numeric Array, D is unchanged
 ' Exits with a Return
 HandleStringArray:
 If Verbose > 3 Then Print "Going to deal with String array"
-v = Array(x * 256) + Array(x + 1): x = x + 2
+v = Array(x) * 256 + Array(x + 1): x = x + 2
 SV$ = StringArrayVariables$(v)
 If Verbose > 3 Then Print "String array variable is: "; SV$
 NumDims = Array(x): x = x + 3 ' Consume the $F5 & open bracket
@@ -984,8 +983,8 @@ FORStackPointer = FORStackPointer + 1
 FORSTack(FORStackPointer) = FORCount
 v = Array(x): x = x + 1
 If v <> &HF2 Then Print "Error getting variable needed in the FOR command on";: GoTo FoundError
-ForJump(Array(x) * 256 + Array(x + 1)) = FORCount ' Set the numeric variable name/number to this ForJump #
-CompVar = Array(x) * 256 + Array(x + 1)
+'ForJump(Array(x) * 256 + Array(x + 1)) = FORCount ' Set the numeric variable name/number to this ForJump #
+CompVar = Array(x) * 256 + Array(x + 1) ' Comparison Variable
 ' Change the bytes of the "TO" command to a $F50D so we can use the HandleNumericVariable routine to setup the FOR X=Y  part
 Start = x ' Point to the variable before the = sign
 Do Until (v = &HFF And Array(x) * 256 + Array(x + 1) = TO_CMD) Or (v = &HF5 And Array(x) = &H0D)
@@ -1216,7 +1215,7 @@ While v <> &HFF ' Keep copying until we get the next command which should be a T
     v = Array(x): x = x + 1
     CheckIfTrue$ = CheckIfTrue$ + Chr$(v)
 Wend
-Print Hex$(x), Hex$(Array(x)), Hex$(Array(x + 1)), Hex$(Array(x + 2)), Hex$(Array(x + 3))
+'(x), Hex$(Array(x)), Hex$(Array(x + 1)), Hex$(Array(x + 2)), Hex$(Array(x + 3))
 v = Array(x) * 256 + Array(x + 1): x = x + 2
 If v <> THEN_CMD Then Print "Need a THEN after the IF statement on";: GoTo FoundError
 CheckIfTrue$ = Left$(CheckIfTrue$, Len(CheckIfTrue$) - 1) ' remove the &HFF on the end
@@ -2030,7 +2029,7 @@ If v = &HF2 Then ' Printing a Regular Numeric Variable, PRINT A
     x = x - 1 ' make sure to inlcude the first Numeric variable
     GoSub GetExB4SemiComQ13D_EOL ' Get an Expression before a semi colon, a comma a quote, an &HF1,&HF3 or &HFD an EOL/Colon
     ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression, value will end up in D
-    A$ = "JSR": B$ = PRINT_D$: C$ = "Go print D on screen": GoSub AssemOut
+    A$ = "JSR": B$ = PrintD$: C$ = "Go print D" + PrintDev$: GoSub AssemOut
     GoTo GetSectionToPrint
 End If
 If v = &HF3 Then ' Printing a Regular String Variable, PRINT A$
@@ -2126,7 +2125,7 @@ If v = &HF5 Then
             GoSub GetExpressionB4EndBracket: x = x + 2 ' get expression before an end bracket, move past it
             Expression$ = Expression$ + Chr$(&HF5) + Chr$(&H29) ' add close bracket
             ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression, value will end up in D
-            A$ = "JSR": B$ = PRINT_D$: C$ = "Go print D on screen": GoSub AssemOut
+            A$ = "JSR": B$ = PrintD$: C$ = "Go print D" + PrintDev$: GoSub AssemOut
         End If
         GoTo GetSectionToPrint
     End If
@@ -2144,7 +2143,7 @@ If v = &HFB Then ' Printing a FN - function
     x = x - 1 ' make sure to inlcude the first Numeric command byte
     GoSub GetExB4SemiComQ13D_EOL ' Get an Expression before a semi colon, a comma a quote, an &HF1,&HF3 or &HFD an EOL/Colon
     ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression, value will end up in D
-    A$ = "JSR": B$ = PRINT_D$: C$ = "Go print D on screen": GoSub AssemOut
+    A$ = "JSR": B$ = PrintD$: C$ = "Go print D" + PrintDev$: GoSub AssemOut
     GoTo GetSectionToPrint
 End If
 If v = &HFC Then
@@ -2153,7 +2152,7 @@ If v = &HFC Then
         x = x - 1 ' make sure to inlcude the first Numeric variable
         GoSub GetExB4SemiComQ13D_EOL ' Get an Expression before a semi colon, a comma a quote, an &HF1,&HF3 or &HFD an EOL/Colon
         ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression, value will end up in D
-        A$ = "JSR": B$ = PRINT_D$: C$ = "Go print D on screen": GoSub AssemOut
+        A$ = "JSR": B$ = PrintD$: C$ = "Go print D" + PrintDev$: GoSub AssemOut
         GoTo GetSectionToPrint
     Else
         If Array(x) = &H2B Then
@@ -2163,7 +2162,7 @@ If v = &HFC Then
                 x = x - 1 ' make it start at the +
                 GoSub GetExB4SemiComQ13D_EOL ' Get an Expression before a semi colon, a comma a quote, an &HF1,&HF3 or &HFD an EOL/Colon
                 ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression, value will end up in D
-                A$ = "JSR": B$ = PRINT_D$: C$ = "Go print D on screen": GoSub AssemOut
+                A$ = "JSR": B$ = PrintD$: C$ = "Go print D" + PrintDev$: GoSub AssemOut
                 GoTo GetSectionToPrint
             Else
                 '  treat it like a semicolon
@@ -2219,11 +2218,10 @@ If v = &HFE Then ' Printing a Numeric Command, PRINT PEEK(10)
         x = x - 1 ' make sure to inlcude the first Numeric command byte
         GoSub GetExB4SemiComQ13D_EOL ' Get an Expression before a semi colon, a comma a quote, an &HF1,&HF3 or &HFD an EOL/Colon
         ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression, value will end up in D
-        A$ = "JSR": B$ = PRINT_D$: C$ = "Go print D on screen": GoSub AssemOut
+        A$ = "JSR": B$ = PrintD$: C$ = "Go print D" + PrintDev$: GoSub AssemOut
         GoTo GetSectionToPrint
     End If
 End If
-
 If v = &HFF Then
     'it could be printing inside an IF/ELSE line, so return
     x = x - 1
@@ -2316,7 +2314,7 @@ Print #1,
 Return
 
 DoINPUT:
-DoINPUT0:
+PrintD$ = "PRINT_D": PrintA$ = "PrintA_On_Screen": PrintDev$ = " on screen" ' Make sure we are printing on the text screen
 v = Array(x): x = x + 1
 ShowInputCount = ShowInputCount + 1
 num = ShowInputCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
@@ -5834,7 +5832,6 @@ If Asc(Mid$(Expression$(ExpressionCount), index(ExpressionCount), 1)) = &HFC The
 End If
 ' Now handle whether the factor is a number or a subexpression
 If Mid$(Expression$(ExpressionCount), index(ExpressionCount), 2) = Chr$(&HF5) + "(" Then
-    Print "Found open bracket"
     index(ExpressionCount) = index(ExpressionCount) + 2 ' Consume '$F5&('
     GoSub ParseExpression0 ' Recursively check the next value
     resultP30(PE30Count) = Parse00_Term ' this will return with the next value
@@ -6565,7 +6562,6 @@ If Left$(GenExpression$, 1) = Chr$(&HFD) Then x = x - 3: Return 'Found a string 
 Expression$ = Expression$ + GenExpression$
 GoTo GEB4SemiComQ13D_EOL
 
-
 'Handle an expression that ends with a comma or EOL, skip brackets
 GetExpressionB4CommaEOL:
 Expression$ = ""
@@ -6618,9 +6614,9 @@ GoSub GetGenExpression ' Returns with single expression in GenExpression$
 If Left$(GenExpression$, 1) = Chr$(&HF5) Then
     ' Found a special character
     Sp = Asc(Right$(GenExpression$, 1))
+    If Sp = Asc(")") And InBracket < 1 Then x = x - 2: Return ' If last close bracket then point at it again and return
     If Sp = Asc("(") Then InBracket = InBracket + 1
     If Sp = Asc(")") Then InBracket = InBracket - 1
-    If Sp = Asc(")") And InBracket < 1 Then x = x - 2: Return ' If last close bracket then point at it again and return
 End If
 Expression$ = Expression$ + GenExpression$
 GoTo GEB4EndBracket

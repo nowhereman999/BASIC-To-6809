@@ -4,6 +4,10 @@ A BASIC compiler for the TRS80 Color Computer
 For more info check out the blog post here:
 https://wordpress.com/post/nowhereman999.wordpress.com/5054
 
+V 2.08
+- Broke some regular printing with the printing to graphics screen, this is now been fixed
+- Fixed a bug with getting the value of an expression before an open bracket if an array was before the open bracket
+
 V 2.07
 - Fixed a bug with REM or ' at the end of a line that has variables in it, the line was past the variable name was being ignored by the parser
 
