@@ -42,8 +42,8 @@ V 2.00
 - Handling of DATA commands is improved, it can handle multiple DATA : DATA commands on a single line and it can now handle string values without quotes, just as the CoCo will
 
 - Compiler now has 3 programs to compile before you can use it.  Load them into QB64 and compile them in the same foler as the other folders in the .zip file (Basic_Includes & Basic_Commands)
-- The three programs are: BasTo6809_2.00.Main.bas, BasTo6809_2.00.1.Tokenizer.bas & BasTo6809_2.00.2.Compile.bas
-- Once all three are compiled start the compiler with the usual options as (or similar to): ./BasTo6809_2.00.Main -ascii -v0 -o2 -b0 YourProgram.bas
+- The three programs are: BasTo6809.bas, BasTo6809.1.Tokenizer.bas & BasTo6809.2.Compile.bas
+- Once all three are compiled start the compiler with the usual options as (or similar to): ./BasTo6809 -ascii -v0 -o2 -b0 YourProgram.bas
 V 1.19
 - The program now closes files #1 and #2 before killing the old one and renaming the Temp.txt to the correct .asm filename when removing unnecessary lines, this was causing file permission errors on Windows OS machines
 V 1.18
