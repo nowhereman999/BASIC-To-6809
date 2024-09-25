@@ -4676,7 +4676,6 @@ Z$ = "!"
 A$ = "STA": B$ = ",X": C$ = "Save A at X": GoSub AssemOut
 ' Since INKEY$ is a string command without brackets we need
 ' to fix  Expression$(ExpressionCount) so when we return everything flows as normal
-show$ = Expression$(ExpressionCount): GoSub show
 Expression$(ExpressionCount) = Left$(Expression$(ExpressionCount), 3) + Chr$(&HF5) + "(" + Chr$(&HF5) + ")" + "    "
 ' index(ExpressionCount) is fine with a value of 4
 Return
