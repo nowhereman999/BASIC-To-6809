@@ -4,6 +4,9 @@ A BASIC compiler for the TRS80 Color Computer
 For more info check out the blog post here:
 https://wordpress.com/post/nowhereman999.wordpress.com/5054
 
+V 2.09
+- Fixed a bug with INKEY$
+
 V 2.08
 - Broke some regular printing with the printing to graphics screen, this is now been fixed
 - Fixed a bug with getting the value of an expression before an open bracket if an array was before the open bracket

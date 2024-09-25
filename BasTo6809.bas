@@ -3,7 +3,10 @@
 'Print "hex$(Array(x+2) "; Hex$(Array(x + 2))
 'System
 
-V$ = "2.08"
+V$ = "2.09"
+'       - Fixed a bug with INKEY$
+'
+' V2.08"
 '       - Broke some regular printing with the printing to graphics screen, this is now been fixed
 '       - Fixed a bug with getting the value of an expression before an open bracket if an array was before the open bracket
 '
