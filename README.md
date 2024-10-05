@@ -4,6 +4,9 @@ A BASIC compiler for the TRS80 Color Computer
 For more info check out the blog post here:
 https://wordpress.com/post/nowhereman999.wordpress.com/5054
 
+V 2.11
+- Tweaked PLAY command, had problems with Quoted PLAY string
+
 V 2.10
 - Added PLAY command and tweaked DRAW command so it handles ;X with a string if the DRAW command doesn't end with a semi colon
 - Fixed a NASTY bug where certain bytes in ADDASSEM/ENDASSEM would write over actual program code

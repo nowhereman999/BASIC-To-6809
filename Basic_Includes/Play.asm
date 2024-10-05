@@ -30,7 +30,12 @@ Play:
         STA     ,U+             ; Save the byte
 @Skip:  DECB                    ; Decrement the string length
         BNE     <
-
+        CMPA    #';'            ; check if last value is a semi colon
+        BEQ     >               ; Skip ahead if so
+        LDA     #';'            ; A= ;
+        STA     ,U
+        INC     _StrVar_IFRight ; Added a semi colon to the end of the PLAY string
+!
 ; PLAY command, From BASIC ROM (tweaked)
 ;PLAY
         LDX     #$0000          ; DEFAULT VALUES FOR LENGTH OF PLAY COMMAND AND ADDRESS
