@@ -5,8 +5,6 @@ Verbose = 0
 
 Dim Array(270000) As _Unsigned _Byte
 Dim INArray(270000) As _Unsigned _Byte
-Dim DataArray(270000) As _Unsigned _Byte
-Dim DataArrayCount As Integer
 
 Dim LabelName$(100000)
 Dim NumericVariable$(100000)
@@ -36,6 +34,7 @@ Dim IncludeList$(10000)
 
 Dim DefLabel$(10000)
 Dim DefVar(1000) As Integer
+
 DefLabelCount = 0
 DefVarCount = 0
 
@@ -152,33 +151,26 @@ While x < length - 1 ' Loop until we've processed the entire BASIC program
     ' Start of new line
     ' Searching for Inline assembly -  read a full line
     y = x
+    v = 0
     Temp$ = ""
-    v = Array(x): x = x + 1
-    While x <= length - 1 And v <> &H0D
-        Temp$ = Temp$ + Chr$(v)
+    Do Until x >= length Or v = &H0D
         v = Array(x): x = x + 1
-    Wend
-    P = InStr(Temp$, "ADDASSEM")
-    If P > 0 Then
+        Temp$ = Temp$ + Chr$(v)
+    Loop
+    p = InStr(Temp$, "ADDASSEM")
+    If p > 0 Then
         ' We found the start of some inline assembly
         ' Ignore any labels found here...
         'copy lines unaltered until we get a ENDASSEM
         REM_AddCodeAlpha0:
         Temp$ = ""
-        v = Array(x): x = x + 1
-        While v <> &H0D
-            Temp$ = Temp$ + Chr$(v)
+        v = 0
+        Do Until x >= length Or v = &H0D
             v = Array(x): x = x + 1
-        Wend
-        Temp$ = Temp$ + Chr$(&H0D)
+            Temp$ = Temp$ + Chr$(v)
+        Loop
         ' Check if this line is the last
-        P = InStr(Temp$, "ENDASSEM")
-        If P = 0 Then
-            For ii = 1 To Len(Temp$)
-                '  INArray(INx) = Asc(Mid$(Temp$, ii, 1)): INx = INx + 1
-            Next ii
-            GoTo REM_AddCodeAlpha0
-        End If
+        If InStr(Temp$, "ENDASSEM") = 0 Then GoTo REM_AddCodeAlpha0
     Else
         x = y
     End If
@@ -260,14 +252,14 @@ While x < length - 1 ' Loop until we've processed the entire BASIC program
     ' Start of new line
     ' Searching for Inline assembly -  read a full line
     y = x
+    v = 0
     Temp$ = ""
-    v = Array(x): x = x + 1
-    While x <= length - 1 And v <> &H0D
-        Temp$ = Temp$ + Chr$(v)
+    Do Until x >= length Or v = &H0D
         v = Array(x): x = x + 1
-    Wend
-    P = InStr(Temp$, "ADDASSEM")
-    If P > 0 Then
+        Temp$ = Temp$ + Chr$(v)
+    Loop
+    p = InStr(Temp$, "ADDASSEM")
+    If p > 0 Then
         ' We found the start of some inline assembly
         ' Copy the line number or label
         '    Tokenized$ = Chr$(Len(CurrentLine$)) + CurrentLine$ + Tokenized$ + Chr$(&HF5) + Chr$(&H0D) ' Line ends with $F50D
@@ -279,30 +271,29 @@ While x < length - 1 ' Loop until we've processed the entire BASIC program
             Next ii
         End If
         Num = C_REM: GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSB
-        INArray(c) = MSB: c = c + 1: INArray(c) = LSB: c = c + 1 ' write command to ouput array
+        ' INArray(INx) = MSB: INx = INx + 1: INArray(INx) = LSB: INx = INx + 1 ' write command to ouput array
         Temp$ = Chr$(Len(CurrentLine$)) + CurrentLine$ + Chr$(&HFF) + Chr$(MSB) + Chr$(LSB) + " ADDASSEM:" + Chr$(&HF5) + Chr$(&H0D)
         For ii = 1 To Len(Temp$)
             INArray(INx) = Asc(Mid$(Temp$, ii, 1)): INx = INx + 1
         Next ii
         ' Copy lines unaltered until we get a ENDASSEM
         REM_AddCode0:
+        v = 0
         Temp$ = ""
-        v = Array(x): x = x + 1
-        While v <> &H0D
-            Temp$ = Temp$ + Chr$(v)
+        Do Until x >= length Or v = &H0D
             v = Array(x): x = x + 1
-        Wend
-        Temp$ = Temp$ + Chr$(&H0D)
+            Temp$ = Temp$ + Chr$(v)
+        Loop
         ' Check if this line is the last
-        P = InStr(Temp$, "ENDASSEM")
-        If P = 0 Then
+        p = InStr(Temp$, "ENDASSEM")
+        If p = 0 Then
             For ii = 1 To Len(Temp$)
                 INArray(INx) = Asc(Mid$(Temp$, ii, 1)): INx = INx + 1
             Next ii
             GoTo REM_AddCode0
         End If
         Num = C_REM: GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSB
-        INArray(c) = MSB: c = c + 1: INArray(c) = LSB: c = c + 1 ' write command to ouput array
+        '       INArray(INx) = MSB: INx = INx + 1: INArray(INx) = LSB: INx = INx + 1 ' write command to ouput array
         Temp$ = Chr$(0) + Chr$(&HFF) + Chr$(MSB) + Chr$(LSB) + " ENDASSEM:" + Chr$(&HF5) + Chr$(&H0D)
         For ii = 1 To Len(Temp$)
             INArray(INx) = Asc(Mid$(Temp$, ii, 1)): INx = INx + 1
@@ -465,9 +456,21 @@ End If
 ' Example: array(0),array(1),array(2),...,array(length)
 filesize = INx - 1
 c = 0
-For Op = 0 To filesize
-    Array(c) = INArray(Op): c = c + 1
-Next Op
+For OP = 0 To filesize
+    Array(c) = INArray(OP): c = c + 1
+Next OP
+
+
+ReDim LastOutArray(filesize) As _Unsigned _Byte
+c = 0
+For OP = 0 To filesize
+    LastOutArray(c) = Array(OP): c = c + 1
+Next OP
+If _FileExists("BasicTokenizedB4Pass2.bin") Then Kill "BasicTokenizedB4Pass2.bin"
+If Verbose > 0 Then Print "Writing to file "; "BasicTokenizedB4Pass2.bin"
+Open "BasicTokenizedB4Pass2.bin" For Binary As #1
+Put #1, , LastOutArray()
+Close #1
 
 ' Re-format IF statements that are only one line and don't end with an ENDIF just an EOL to end with and ENDIF (so all IF's can be handled the same)
 If Verbose > 0 Then Print "Doing Pass 2 - Changing single line IF commands to IF/THEN/ELSE/END IF, multiple lines"
@@ -579,7 +582,7 @@ While x <= filesize
             FixedGoto:
             v = Array(x): x = x + 1 ' get a byte the $0D
             INArray(c) = v: c = c + 1 ' write byte to ouput array
-            For i = 1 To IfCounter
+            For I = 1 To IfCounter
                 'END IF = FF xx xx FF xx xx F5 0D
                 INArray(c) = 0: c = c + 1 ' line label length of zero
                 INArray(c) = &HFF: c = c + 1
@@ -590,7 +593,7 @@ While x <= filesize
                 INArray(c) = MSB: c = c + 1: INArray(c) = LSB: c = c + 1 ' write command to ouput array
                 INArray(c) = &HF5: c = c + 1 ' Add EOL
                 INArray(c) = &H0D: c = c + 1 ' EOL
-            Next i
+            Next I
         End If
     End If
     PartOfENDIF:
@@ -610,56 +613,57 @@ Wend
 ' &HFF = General Command (3 Bytes)
 
 ' Change Variable _Var_Timer = to command TIMER =
+
 Check$ = "TIMER": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
 C_TIMER = ii
 CheckForTimer:
-While Op <= filesize
-    v = INArray(Op): Op = Op + 1
+While OP <= filesize
+    v = INArray(OP): OP = OP + 1
     If v < &HF0 Then GoTo CheckForTimer
     'We have a Token
     Select Case v
         Case &HF0, &HF1: ' Found a Numeric or String array
-            Op = Op + 3
+            OP = OP + 3
         Case &HF2: ' Found a numeric variable
-            If INArray(Op) * 256 + INArray(Op + 1) = 0 Then
-                If INArray(Op + 2) = &HFC Then
-                    If INArray(Op + 3) = &H3D Then ' Check for =
+            If INArray(OP) * 256 + INArray(OP + 1) = 0 Then
+                If INArray(OP + 2) = &HFC Then
+                    If INArray(OP + 3) = &H3D Then ' Check for =
                         ' Found "_Var_Timer =" as a variable
-                        INArray(Op - 1) = &HFF ' Make it a General command
+                        INArray(OP - 1) = &HFF ' Make it a General command
                         Num = C_TIMER: GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSB
-                        INArray(Op) = MSB: INArray(Op + 1) = LSB ' write command to ouput array
-                        Op = Op + 2
+                        INArray(OP) = MSB: INArray(OP + 1) = LSB ' write command to ouput array
+                        OP = OP + 2
                     End If
                 End If
             End If
         Case &HF3: ' Found a string variable
-            Op = Op + 2
+            OP = OP + 2
         Case &HF5 ' Found a special character
-            Op = Op + 1
+            OP = OP + 1
         Case &HFB: ' Found a DEF FN Function
-            Op = Op + 2
+            OP = OP + 2
         Case &HFC: ' Found an Operator
-            Op = Op + 1
+            OP = OP + 1
         Case &HFD, &HFE, &HFF: 'Found String,Numeric or General command
-            Op = Op + 2
+            OP = OP + 2
     End Select
 Wend
 
 ' Copy array INArray() to Array()
 filesize = c - 1
 c = 0
-For Op = 0 To filesize
-    Array(c) = INArray(Op): c = c + 1
-Next Op
+For OP = 0 To filesize
+    Array(c) = INArray(OP): c = c + 1
+Next OP
 
 ReDim LastOutArray(filesize) As _Unsigned _Byte
 c = 0
-For Op = 0 To filesize
-    LastOutArray(c) = Array(Op): c = c + 1
-Next Op
-If _FileExists("BasicTokenizedB4Pass2.bin") Then Kill "BasicTokenizedB4Pass2.bin"
-If Verbose > 0 Then Print "Writing to file "; "BasicTokenizedB4Pass2.bin"
-Open "BasicTokenizedB4Pass2.bin" For Binary As #1
+For OP = 0 To filesize
+    LastOutArray(c) = Array(OP): c = c + 1
+Next OP
+If _FileExists("BasicTokenizedB4Pass3.bin") Then Kill "BasicTokenizedB4Pass3.bin"
+If Verbose > 0 Then Print "Writing to file "; "BasicTokenizedB4Pass3.bin"
+Open "BasicTokenizedB4Pass3.bin" For Binary As #1
 Put #1, , LastOutArray()
 Close #1
 
@@ -727,10 +731,10 @@ Wend
 filesize = c - 1
 ReDim LastOutArray(filesize) As _Unsigned _Byte
 c = 0
-For Op = 0 To filesize
-    Array(c) = INArray(Op)
-    LastOutArray(c) = INArray(Op): c = c + 1
-Next Op
+For OP = 0 To filesize
+    Array(c) = INArray(OP)
+    LastOutArray(c) = INArray(OP): c = c + 1
+Next OP
 If _FileExists("BasicTokenized.bin") Then Kill "BasicTokenized.bin"
 If Verbose > 0 Then Print "Writing to file "; "BasicTokenized.bin"
 Open "BasicTokenized.bin" For Binary As #1
@@ -768,58 +772,61 @@ While x < filesize
 Wend
 
 Open "NumericVariablesUsed.txt" For Output As #1
-For i = 0 To NumericVariableCount - 1
-    Print #1, NumericVariable$(i)
-Next i
+For I = 0 To NumericVariableCount - 1
+    Print #1, NumericVariable$(I)
+Next I
 Close #1
 Open "StringVariablesUsed.txt" For Output As #1
-For i = 0 To StringVariableCounter - 1
-    Print #1, StringVariable$(i)
-Next i
+For I = 0 To StringVariableCounter - 1
+    Print #1, StringVariable$(I)
+Next I
 Close #1
 Open "GeneralCommandsFound.txt" For Output As #1
-For i = 0 To GeneralCommandsFoundCount - 1
-    Print #1, GeneralCommandsFound$(i)
-Next i
+For I = 0 To GeneralCommandsFoundCount - 1
+    Print #1, GeneralCommandsFound$(I)
+Next I
 Close #1
 Open "StringCommandsFound.txt" For Output As #1
-For i = 0 To StringCommandsFoundCount - 1
-    Print #1, StringCommandsFound$(i)
-Next i
+For I = 0 To StringCommandsFoundCount - 1
+    Print #1, StringCommandsFound$(I)
+Next I
 Close #1
 Open "NumericCommandsFound.txt" For Output As #1
-For i = 0 To NumericCommandsFoundCount - 1
-    Print #1, NumericCommandsFound$(i)
-Next i
+For I = 0 To NumericCommandsFoundCount - 1
+    Print #1, NumericCommandsFound$(I)
+Next I
 Close #1
 Open "NumericArrayVarsUsed.txt" For Output As #1
-For i = 0 To NumArrayVarsUsedCounter - 1
-    Print #1, NumericArrayVariables$(i)
-    Print #1, NumericArrayDimensions(i)
-Next i
+For I = 0 To NumArrayVarsUsedCounter - 1
+    Print #1, NumericArrayVariables$(I)
+    Print #1, NumericArrayDimensions(I)
+Next I
 Close #1
 Open "StringArrayVarsUsed.txt" For Output As #1
-For i = 0 To StringArrayVarsUsedCounter - 1
-    Print #1, StringArrayVariables$(i)
-    Print #1, StringArrayDimensions(i)
-Next i
+For I = 0 To StringArrayVarsUsedCounter - 1
+    Print #1, StringArrayVariables$(I)
+    Print #1, StringArrayDimensions(I)
+Next I
 Close #1
 Open "DefFNUsed.txt" For Output As #1
-For i = 0 To DefLabelCount - 1
-    Print #1, DefLabel$(i)
-Next i
+For I = 0 To DefLabelCount - 1
+    Print #1, DefLabel$(I)
+Next I
 Close #1
 Open "DefVarUsed.txt" For Output As #1
-For i = 0 To DefVarCount - 1
-    Print #1, DefVar(i)
-Next i
+For I = 0 To DefVarCount - 1
+    Print #1, DefVar(I)
+Next I
 Close #1
 
-'See if we should need to use Disk access
+'See if we should need to use Disk access and Background sound
 For ii = 0 To GeneralCommandsFoundCount - 1
     Temp$ = UCase$(GeneralCommandsFound$(ii))
     If Temp$ = "LOADM" Then
         Disk = 1 ' Flag that we use Disk access
+    End If
+    If Temp$ = "PLAY" Then
+        PlayCommand = 1 ' Flag that we use the Play Command
     End If
 Next ii
 
@@ -961,6 +968,21 @@ If Verbose > 0 Then Print "Adding the required Libraries..."
 ' Need to tweak code so we only include code that we need in our program
 'Add includes that are necessary
 
+' Libraries always included, other libraries use them, so they are needed
+Temp$ = "Equates": GoSub AddIncludeTemp
+Temp$ = "Print": GoSub AddIncludeTemp
+Temp$ = "Print_Serial": GoSub AddIncludeTemp
+If PrintGraphicsText = 1 Then
+    ' Found program uses PRINT #-3, to print to the graphics screen
+    Temp$ = "Print_Graphic_Screen": GoSub AddIncludeTemp
+    Temp$ = "Graphic_Screen_Fonts/" + Font$: GoSub AddIncludeTemp
+End If
+Temp$ = "D_to_String": GoSub AddIncludeTemp
+Temp$ = "DHex_to_String": GoSub AddIncludeTemp
+Temp$ = "Mulitply16x16": GoSub AddIncludeTemp
+Temp$ = "Divide16with16": GoSub AddIncludeTemp
+Temp$ = "SquareRoot": GoSub AddIncludeTemp
+
 ' List of includes needs to be added, only if it's not already in the list
 Print #1, "; Section of necessary included code:"
 For ii = 0 To GeneralCommandsFoundCount - 1
@@ -985,6 +1007,11 @@ For ii = 0 To GeneralCommandsFoundCount - 1
     End If
     If Temp$ = "LOADM" Then
         Temp$ = "Disk_Commands": GoSub AddIncludeTemp ' Add code for Disk commands
+    End If
+    If Temp$ = "PLAY" Then
+        Temp$ = "Play": GoSub AddIncludeTemp ' Add code for PLAY command
+        Temp$ = "Audio_Muxer": GoSub AddIncludeTemp 'SOUND routine also requires the Muxer to be turned on
+        Temp$ = "DecimalStringToD": GoSub AddIncludeTemp ' Add commands for converting decimal numbers to D
     End If
     If Temp$ = "PMODE" Then
         Temp$ = "GraphicSetup": GoSub AddIncludeTemp ' Add code for the setting different Graphics PMODES and SCREENs
@@ -1028,20 +1055,6 @@ For ii = 0 To NumericCommandsFoundCount - 1
     End If
 Next ii
 
-' Libraries always included, other libraries use them, so they are needed
-Temp$ = "Equates": GoSub AddIncludeTemp
-Temp$ = "Print": GoSub AddIncludeTemp
-Temp$ = "Print_Serial": GoSub AddIncludeTemp
-If PrintGraphicsText = 1 Then
-    ' Found program uses PRINT #-3, to print to the graphics screen
-    Temp$ = "Print_Graphic_Screen": GoSub AddIncludeTemp
-    Temp$ = "Graphic_Screen_Fonts/" + Font$: GoSub AddIncludeTemp
-End If
-Temp$ = "D_to_String": GoSub AddIncludeTemp
-Temp$ = "DHex_to_String": GoSub AddIncludeTemp
-Temp$ = "Mulitply16x16": GoSub AddIncludeTemp
-Temp$ = "Divide16with16": GoSub AddIncludeTemp
-Temp$ = "SquareRoot": GoSub AddIncludeTemp
 
 GoSub WriteIncludeListToFile ' Write all the INCLUDE files needed to the .ASM file
 
@@ -1099,6 +1112,37 @@ Else
     Z$ = "Not60Hz"
     A$ = "RTI": B$ = "": C$ = "RETURN FROM INTERRUPT": GoSub AssemOut
 End If
+If PlayCommand = 1 Then
+    ' Include special PLAY IRQ to jump to while playing notes
+    Z$ = "; Timer & Play 60hz IRQ ": GoSub AssemOut
+    Z$ = "PLAY_IRQ:": GoSub AssemOut
+    A$ = "LDA": B$ = "$FF03": C$ = "CHECK FOR 60HZ INTERRUPT": GoSub AssemOut
+    A$ = "BPL": B$ = "Not60HzPlay": C$ = "RETURN IF 63.5 MICROSECOND INTERRUPT": GoSub AssemOut
+    A$ = "LDA": B$ = "$FF02": C$ = "RESET PIA0, PORT B INTERRUPT FLAG": GoSub AssemOut
+    A$ = "INC": B$ = "_Var_Timer+1": C$ = "Increment the LSB of the Timer Value": GoSub AssemOut
+    A$ = "BNE": B$ = ">": C$ = "Skip ahead if not zero": GoSub AssemOut
+    A$ = "INC": B$ = "_Var_Timer": C$ = "Increment the MSB of the Timer Value": GoSub AssemOut
+    Z$ = "!"
+    A$ = "LDD": B$ = "PLYTMR": C$ = "GET THE PLAY TIMER": GoSub AssemOut
+    A$ = "BEQ": B$ = ">": C$ = "Exit IRQ": GoSub AssemOut
+    A$ = "SUBD": B$ = "VD5": C$ = "SUBTRACT OUT PLAY INTERVAL": GoSub AssemOut
+    A$ = "STD": B$ = "PLYTMR": C$ = "SAVE THE NEW TIMER VALUE": GoSub AssemOut
+    A$ = "BHI": B$ = ">": C$ = "BRANCH IF PLAY COMMAND NOT DONE": GoSub AssemOut
+    A$ = "CLR": B$ = "PLYTMR": C$ = "RESET MSB OF PLAY TIMER IF DONE": GoSub AssemOut
+    A$ = "CLR": B$ = "PLYTMR+1": C$ = "RESET LSB OF PLAY TIMER": GoSub AssemOut
+    Z$ = "PlayIRQExit:": GoSub AssemOut
+    A$ = "PULS": B$ = "A": C$ = "GET THE CONDITION CODE REG": GoSub AssemOut
+    A$ = "LDS": B$ = "7,S": C$ = "LOAD THE STACK POINTER WITH THE CONTENTS OF THE U REGISTER": GoSub AssemOut
+    Print #1, "; WHICH WAS STACKED WHEN THE INTERRUPT WAS HONORED."
+    A$ = "ANDA": B$ = "#$7F": C$ = "CLEAR E FLAG - MAKE COMPUTER THINK THIS WAS AN FIRQ": GoSub AssemOut
+    A$ = "PSHS": B$ = "A": C$ = "Save Condition Code": GoSub AssemOut
+    Print #1, "; THE RTI WILL NOW NOT RETURN TO WHERE IT WAS"
+    Print #1, "; INTERRUPTED FROM - IT WILL RETURN TO THE MAIN PLAY"
+    Print #1, "; COMMAND INTERPRETATION LOOP."
+    Print #1, "!"
+    Z$ = "Not60HzPlay"
+    A$ = "RTI": B$ = "": C$ = "RETURN FROM INTERRUPT": GoSub AssemOut
+End If
 
 Print #1, "* Main Program"
 Print #1, "START:"
@@ -1109,17 +1153,6 @@ A$ = "ORCC": B$ = "#$50": C$ = "Turn off the interrupts": GoSub AssemOut
 A$ = "LDA": B$ = "#$" + DirectPage$: GoSub AssemOut
 A$ = "TFR": B$ = "A,DP": C$ = "Setup the Direct page to use our variable location": GoSub AssemOut
 
-'Z$ = "* This code masks off the two low bits written to $FF20": GoSub AssemOut
-'Z$ = "* So you can send the PCM Unsigned 8 Bit sample as is, no masking needed": GoSub AssemOut
-'A$ = "LDA": B$ = "$FF21": C$ = "* PIA1_Byte_1_IRQ      * $FF21": GoSub AssemOut
-'A$ = "PSHS": B$ = "A": C$ = "": GoSub AssemOut
-'A$ = "ANDA": B$ = "#%00110011": C$ = "* FORCE BIT2 LOW": GoSub AssemOut
-'A$ = "STA": B$ = "$FF21": C$ = "* PIA1_Byte_1_IRQ * $FF21": GoSub AssemOut
-'A$ = "LDA": B$ = "#%11111100": C$ = "* OUTPUT ON DAC, INPUT ON RS-232 & CDI": GoSub AssemOut
-'A$ = "STA": B$ = "$FF20": C$ = "* PIA1_Byte_0_IRQ * $FF20 NOW DATA DIRECTION REGISTER": GoSub AssemOut
-'A$ = "PULS": B$ = "A": C$ = "": GoSub AssemOut
-'A$ = "STA": B$ = "$FF21": C$ = "* PIA1_Byte_1_IRQ * $FF21": GoSub AssemOut
-
 Z$ = "* Enable 6 Bit DAC output": GoSub AssemOut
 A$ = "LDA": B$ = "$FF23": C$ = "* PIA1_Byte_3_IRQ_Ct_Snd * $FF23 GET PIA": GoSub AssemOut
 A$ = "ORA": B$ = "#%00001000": C$ = "* SET 6-BIT SOUND ENABLE": GoSub AssemOut
@@ -1127,8 +1160,19 @@ A$ = "STA": B$ = "$FF23": C$ = "* PIA1_Byte_3_IRQ_Ct_Snd * $FF23 STORE": GoSub A
 
 If PrintGraphicsText = 1 Then
     ' Found program uses PRINT #-3, to print to the graphics screen
-    A$ = "LDD": B$ = "#$0E00": C$ = "Clear D": GoSub AssemOut
+    A$ = "LDD": B$ = "#$0E00": C$ = "Set D to the top left of the screen": GoSub AssemOut
     A$ = "STD": B$ = "GraphicCURPOS": C$ = "Set the graphics cursor to the top left corner": GoSub AssemOut
+End If
+If PlayCommand = 1 Then
+    ' Initialize the PLAY command variables
+    A$ = "LDD": B$ = "#$BA42": C$ = "MID HIGH VALUE + MID LOW VALUE": GoSub AssemOut
+    A$ = "STD": B$ = "VOLHI": C$ = "INITIALIZE PLAY VOLUME": GoSub AssemOut
+    A$ = "LDA": B$ = "#$02": GoSub AssemOut
+    A$ = "STA": B$ = "TEMPO": C$ = "INITIALIZE TEMPO TO 2": GoSub AssemOut
+    A$ = "STA": B$ = "OCTAVE": C$ = "INITIALIZE OCTAVE TO 3": GoSub AssemOut
+    A$ = "ASLA": C$ = "X2": GoSub AssemOut
+    A$ = "STA": B$ = "NOTELN": C$ = "INITIALIZE NOTE LENGTH TO 5": GoSub AssemOut
+    A$ = "CLR": B$ = "DOTVAL": C$ = "CLEAR NOTE TIMER SCALE FACTOR": GoSub AssemOut
 End If
 
 A$ = "BRA": B$ = "SkipClear": C$ = "On startup skip ahead and do a BSR to this section to clear the variables, as CLEAR will use this code": GoSub AssemOut
@@ -1209,6 +1253,10 @@ Z$ = "SaveCoCo1": GoSub AssemOut
 A$ = "LDX": B$ = "#$010C": C$ = "X = Address for the COCO 1 IRQ JMP": GoSub AssemOut
 A$ = "LDY": B$ = "#$0109": C$ = "Y = Address for the COCO 1 NMI JMP": GoSub AssemOut
 Z$ = "!"
+If PlayCommand = 1 Then
+    A$ = "STX": B$ = "IRQAddress": C$ = "Save the IRQ address for the PLAY command to change/restore": GoSub AssemOut
+    A$ = "INC": B$ = "IRQAddress+1": C$ = "Increment the IRQAddress so it points at the actual JMP location": GoSub AssemOut
+End If
 ' Save the original IRQ jump address so we can restore it once done
 A$ = "LDU": B$ = "#OriginalIRQ": C$ = "U=Address of the IRQ": GoSub AssemOut
 A$ = "LDA": B$ = ",X": C$ = "A = Branch Instruction": GoSub AssemOut
@@ -1230,12 +1278,12 @@ End If
 A$ = "LDA": B$ = "#$3B": C$ = "RTI instruction": GoSub AssemOut
 A$ = "STA": B$ = "$010F": C$ = "Save instruction for the CoCo1": GoSub AssemOut
 A$ = "STA": B$ = "$FEF4": C$ = "Save instruction for the CoCo3": GoSub AssemOut
+
 ' Start the IRQ
 Z$ = "* This is where we enable the IRQ": GoSub AssemOut
 A$ = "ANDCC": B$ = "#%11101111": C$ = "= %11101111 this will Enable the IRQ to start": GoSub AssemOut
 
 Z$ = "; *** User's Program code starts here ***": GoSub AssemOut
-
 System
 
 ' Tokens for variables type:
@@ -1255,40 +1303,40 @@ TokenizeExpression:
 If Verbose > 1 Then Print "Expression to tokenize is:"; Expression$
 ' Go through command list and see if we match any, replacing any matches with tokens
 Tokenized$ = ""
-i = 1
+I = 1
 GetNextToken:
-While i <= Len(Expression$)
-    i$ = Mid$(Expression$, i, 1)
+While I <= Len(Expression$)
+    i$ = Mid$(Expression$, I, 1)
     ' Check for  Special characters like a comma, semi colon, quote , brackets
     If i$ = Chr$(&H22) Then
         Tokenized$ = Tokenized$ + Chr$(&HF5) + i$ ' Tokenize the first quote
-        i = i + 1 'Move past it
-        i$ = Mid$(Expression$, i, 1)
+        I = I + 1 'Move past it
+        i$ = Mid$(Expression$, I, 1)
         While i$ <> Chr$(&H22) ' keep copying until we get an end quote
             If i$ = Chr$(&H0D) Then Print "Error1: something is wrong getting the charcters in quotes at";: GoTo FoundError
             Tokenized$ = Tokenized$ + i$ ' Copy the data inside the quotes
-            i = i + 1
-            i$ = Mid$(Expression$, i, 1)
+            I = I + 1
+            i$ = Mid$(Expression$, I, 1)
         Wend
         Tokenized$ = Tokenized$ + Chr$(&HF5) + i$ ' make the end quote also tokenized
-        i = i + 1
+        I = I + 1
         GoTo GetNextToken ' go handle stuff in quotes
     End If
     ' Check for a General command
     For c = 1 To GeneralCommandsCount
         Temp$ = UCase$(GeneralCommands$(c))
-        BaseString$ = UCase$(Right$(Expression$, Len(Expression$) - i + 1))
+        BaseString$ = UCase$(Right$(Expression$, Len(Expression$) - I + 1))
         If Temp$ = "TIMER" Then Temp$ = "Ignore" ' Don't change TIMER commands to commands here, as they need to be left as variable names, they get fixed as TIMER= afterwards
         If InStr(BaseString$, Temp$) = 1 Then
             'Found a General Command
-            If i > 1 Then
+            If I > 1 Then
                 ' Check for a space before the start of this command
-                If Mid$(Expression$, i - 1, 1) = " " Or Mid$(Expression$, i - 1, 1) = ":" Then LeftSpace = 1 Else LeftSpace = 0
+                If Mid$(Expression$, I - 1, 1) = " " Or Mid$(Expression$, I - 1, 1) = ":" Then LeftSpace = 1 Else LeftSpace = 0
             Else
                 LeftSpace = 1
             End If
             ' It could be a General command, check for a space after the found command
-            If i + Len(Temp$) <= Len(Expression$) Then
+            If I + Len(Temp$) <= Len(Expression$) Then
                 ' check if we have a space or special character or a number after the found command
                 If Mid$(Expression$, i + Len(Temp$), 1) = " " Or Mid$(Expression$, i + Len(Temp$), 1) = chr$(&HF5) or Mid$(Expression$, i + Len(Temp$), 1)=chr$(&H22) _
                 or (asc(Mid$(Expression$, i + Len(Temp$), 1)) >= &H30 and asc(Mid$(Expression$, i + Len(Temp$), 1)) <= &H39) Then
@@ -1362,11 +1410,11 @@ While i <= Len(Expression$)
                 ' Check for a REM or '
                 If c = 3 Or c = 4 Then
                     'We found a REM or ' - copy the rest of this line
-                    i = i + Len(Temp$) ' move pointer forward
-                    While i <= Len(Expression$)
-                        i$ = Mid$(Expression$, i, 1)
+                    I = I + Len(Temp$) ' move pointer forward
+                    While I <= Len(Expression$)
+                        i$ = Mid$(Expression$, I, 1)
                         Tokenized$ = Tokenized$ + i$
-                        i = i + 1
+                        I = I + 1
                     Wend
                     GoTo TokenAdded0
                 End If
@@ -1375,15 +1423,15 @@ While i <= Len(Expression$)
                 ' Check for a DATA
                 If c = ii Then
                     'We found a DATA command - copy the rest of this line
-                    i = i + Len(Temp$) ' move pointer forward past "DATA" command
-                    While i <= Len(Expression$) And i$ <> Chr$(&HF5)
-                        i$ = Mid$(Expression$, i, 1): i = i + 1
+                    I = I + Len(Temp$) ' move pointer forward past "DATA" command
+                    While I <= Len(Expression$) And i$ <> Chr$(&HF5)
+                        i$ = Mid$(Expression$, I, 1): I = I + 1
                         If i$ = Chr$(&H22) Then
                             Tokenized$ = Tokenized$ + Chr$(&HF5) + i$ ' Tokenize the first quote
-                            i$ = Mid$(Expression$, i, 1): i = i + 1
+                            i$ = Mid$(Expression$, I, 1): I = I + 1
                             While i$ <> Chr$(&H22) ' keep copying until we get an end quote
                                 Tokenized$ = Tokenized$ + i$ ' Copy the data inside the quotes
-                                i$ = Mid$(Expression$, i, 1): i = i + 1
+                                i$ = Mid$(Expression$, I, 1): I = I + 1
                             Wend
                             Tokenized$ = Tokenized$ + Chr$(&HF5) + i$ ' make the end quote also tokenized
                         Else
@@ -1392,9 +1440,9 @@ While i <= Len(Expression$)
                     Wend
                     If i$ = Chr$(&HF5) Then
                         'Found a control Token, copy the next byte
-                        i$ = Mid$(Expression$, i, 1)
+                        i$ = Mid$(Expression$, I, 1)
                         Tokenized$ = Tokenized$ + i$
-                        i = i + 1
+                        I = I + 1
                     End If
                     GoTo TokenAdded0
                 End If
@@ -1403,14 +1451,14 @@ While i <= Len(Expression$)
                 ' Check for a DEF
                 If c = ii Then
                     'We found a DEF command, we need to handle the FNx()=...  part
-                    i = i + Len(Temp$) + 3 ' move pointer forward so it now points at the FN label
+                    I = I + Len(Temp$) + 3 ' move pointer forward so it now points at the FN label
                     Temp$ = ""
                     ' Get the FN variable name in Temp$
-                    While i <= Len(Expression$)
-                        i$ = Mid$(Expression$, i, 1)
+                    While I <= Len(Expression$)
+                        i$ = Mid$(Expression$, I, 1)
                         If i$ = "(" Then Exit While
                         Temp$ = Temp$ + i$
-                        i = i + 1
+                        I = I + 1
                     Wend
                     DefLabel$(DefLabelCount) = Temp$
                     Num = DefLabelCount: GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSB
@@ -1418,7 +1466,7 @@ While i <= Len(Expression$)
                     DefLabelCount = DefLabelCount + 1
                     GoTo TokenAdded0
                 End If
-                i = i + Len(Temp$) ' move pointer forward
+                I = I + Len(Temp$) ' move pointer forward
                 GoTo TokenAdded0
             End If
         End If
@@ -1426,19 +1474,19 @@ While i <= Len(Expression$)
     ' Check for a Numeric command
     For c = 1 To NumericCommandsCount
         Temp$ = UCase$(NumericCommands$(c))
-        BaseString$ = UCase$(Right$(Expression$, Len(Expression$) - i + 1))
+        BaseString$ = UCase$(Right$(Expression$, Len(Expression$) - I + 1))
         If InStr(BaseString$, Temp$) = 1 Then
             'Found a Numeric Command
-            If i > 1 Then
+            If I > 1 Then
                 ' Check for a stuff before the start of this command
-                If Mid$(Expression$, i - 1, 1) = " " Or Mid$(Expression$, i - 1, 1) = "(" Or Mid$(Expression$, i - 1, 1) = "=" Then LeftSpace = 1 Else LeftSpace = 0
+                If Mid$(Expression$, I - 1, 1) = " " Or Mid$(Expression$, I - 1, 1) = "(" Or Mid$(Expression$, I - 1, 1) = "=" Then LeftSpace = 1 Else LeftSpace = 0
             Else
                 LeftSpace = 1
             End If
             ' It could be a General command, check for a space after the found command
-            If i + Len(Temp$) < Len(Expression$) Then
+            If I + Len(Temp$) < Len(Expression$) Then
                 ' check if we have a space or ( after the found command
-                If Mid$(Expression$, i + Len(Temp$), 1) = " " Or Mid$(Expression$, i + Len(Temp$), 1) = "(" Then RightSpace = 1 Else RightSpace = 0
+                If Mid$(Expression$, I + Len(Temp$), 1) = " " Or Mid$(Expression$, I + Len(Temp$), 1) = "(" Then RightSpace = 1 Else RightSpace = 0
             Else
                 RightSpace = 1
             End If
@@ -1446,12 +1494,12 @@ While i <= Len(Expression$)
             If Temp$ = "FN" And LeftSpace = 1 Then
                 'We found an FN command, ignore the variablename before the (
                 Temp$ = ""
-                i = i + 2 ' skip past FN
-                While i <= Len(Expression$)
-                    i$ = Mid$(Expression$, i, 1)
+                I = I + 2 ' skip past FN
+                While I <= Len(Expression$)
+                    i$ = Mid$(Expression$, I, 1)
                     If i$ = "(" Then Exit While
                     Temp$ = Temp$ + i$
-                    i = i + 1
+                    I = I + 1
                 Wend
                 'Find the FN Label number that matches and write it to the Tokenized file
                 For ii = 0 To DefLabelCount
@@ -1466,7 +1514,7 @@ While i <= Len(Expression$)
                 GoSub AddToNumericCommandList
                 Num = c: GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSB
                 Tokenized$ = Tokenized$ + Chr$(&HFE) + Chr$(MSB) + Chr$(LSB) 'Token $FE is for Numeric Commands
-                i = i + Len(Temp$) ' move pointer forward
+                I = I + Len(Temp$) ' move pointer forward
                 GoTo TokenAdded0
             End If
         End If
@@ -1474,20 +1522,20 @@ While i <= Len(Expression$)
     ' Check for a String command
     For c = 1 To StringCommandsCount
         Temp$ = UCase$(StringCommands$(c))
-        BaseString$ = UCase$(Right$(Expression$, Len(Expression$) - i + 1))
+        BaseString$ = UCase$(Right$(Expression$, Len(Expression$) - I + 1))
         If InStr(BaseString$, Temp$) = 1 Then
             'Found a String Command
             GoSub AddToStringCommandList
             Num = c: GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSB
             Tokenized$ = Tokenized$ + Chr$(&HFD) + Chr$(MSB) + Chr$(LSB) 'Token $FD is for String Commands
-            i = i + Len(Temp$) ' move pointer forward
+            I = I + Len(Temp$) ' move pointer forward
             GoTo TokenAdded0
         End If
     Next c
     ' Check for an Operator command
     For c = 1 To OperatorCommandsCount
         Temp$ = UCase$(OperatorCommands$(c))
-        BaseString$ = UCase$(Right$(Expression$, Len(Expression$) - i + 1))
+        BaseString$ = UCase$(Right$(Expression$, Len(Expression$) - I + 1))
         If InStr(BaseString$, Temp$) = 1 Then
             'Found an Operator Command
             If Temp$ = "NOT" Then
@@ -1498,17 +1546,93 @@ While i <= Len(Expression$)
                 End If
             End If
             Tokenized$ = Tokenized$ + Chr$(&HFC) + Chr$(c) 'Token &HFC is for Operator Commands
-            i = i + Len(Temp$) ' move pointer forward
+            I = I + Len(Temp$) ' move pointer forward
             GoTo TokenAdded0
         End If
     Next c
     AddTokenAsIs0:
     Tokenized$ = Tokenized$ + i$
-    i = i + 1
+    I = I + 1
     TokenAdded0:
-    If Temp$ = "DRAW" Then ' Found a Draw command, change any ;X inside a quote to ":DRAW (whatever before the next semi colon" : DRAW" the rest
-        Temp$ = Right$(Expression$, Len(Expression$) - i)
-        Expression$ = Left$(Expression$, i)
+    If Temp$ = "DRAW" Then ' Found a Draw command, change any X inside a quote to ":DRAW (whatever before the next semi colon" : DRAW" the rest
+        Temp$ = Right$(Expression$, Len(Expression$) - I)
+        Expression$ = Left$(Expression$, I)
+        EndString = InStr(Temp$, Chr$(&HF5)) ' Mark end at a Colon
+        If EndString = 0 Then
+            EndString = Len(Temp$) ' If no colons then end is the end of string
+            EndPart$ = ""
+        Else
+            EndPart$ = Right$(Temp$, Len(Temp$) - EndString + 1)
+            Temp$ = Left$(Temp$, EndString - 1)
+        End If
+        While Right$(Temp$, 1) = " ": Temp$ = Left$(Temp$, Len(Temp$) - 1): Wend
+        ' Remove spaces in quoted parts
+        Temp1$ = ""
+        qc = 0
+        For T1 = 1 To Len(Temp$)
+            T1$ = Mid$(Temp$, T1, 1)
+            If T1$ = Chr$(&H22) Then qc = qc + 1
+            If (qc And 1) = 1 Then
+                If T1$ <> " " Then
+                    Temp1$ = Temp1$ + T1$
+                End If
+            Else
+                Temp1$ = Temp1$ + T1$
+            End If
+        Next T1
+        Temp$ = Temp1$
+        Temp1$ = ""
+        T1 = 1
+        '        While T1 < Len(Temp$) - 1
+        '            If UCase$(Mid$(Temp$, T1, 2)) <> ";X" Then
+        '                Temp1$ = Temp1$ + Mid$(Temp$, T1, 1)
+        '            Else
+        '                Temp1$ = Temp1$ + Chr$(&H22) + " " ' add end quote & a space
+        '                Temp1$ = Temp1$ + Chr$(&HF5) + ":DRAW " 'add : DRAW
+        '                T1 = T1 + 2
+        '                While Mid$(Temp$, T1, 1) <> ";"
+        '                    Temp1$ = Temp1$ + Mid$(Temp$, T1, 1)
+        '                    T1 = T1 + 1
+        '                Wend
+        '                Temp1$ = Temp1$ + " " ' add end quote   & a space
+        '                Temp1$ = Temp1$ + Chr$(&HF5) + ":DRAW " + Chr$(&H22) 'add : DRAW
+        '                T1 = T1 - 1
+        '            End If
+        '            T1 = T1 + 1
+        '        Wend
+        While T1 < Len(Temp$) - 1
+            If UCase$(Mid$(Temp$, T1, 1)) <> "X" Then
+                Temp1$ = Temp1$ + Mid$(Temp$, T1, 1)
+            Else
+                If Right$(Temp$, 2) <> Chr$(&H3B) + Chr$(&H22) Then
+                    ' if it doesn't end with a semi + quote
+                    Temp$ = Left$(Temp$, Len(Temp$) - 1) + Chr$(&H3B) + Chr$(&H22) 'Make it end with a semi colon and a quote
+                End If
+                Temp1$ = Temp1$ + Chr$(&H22) + " " ' add end quote & a space
+                Temp1$ = Temp1$ + Chr$(&HF5) + ":DRAW " 'add :DRAW
+                T1 = T1 + 1 ' move past the X
+                Do Until Mid$(Temp$, T1, 1) = ";" ' Look for end semi colon
+                    Temp1$ = Temp1$ + Mid$(Temp$, T1, 1)
+                    T1 = T1 + 1
+                Loop
+                Temp1$ = Temp1$ + " " ' add end quote & a space
+                Temp1$ = Temp1$ + Chr$(&HF5) + ":DRAW " + Chr$(&H22) 'add :DRAW
+                T1 = T1 - 1
+            End If
+            T1 = T1 + 1
+        Wend
+
+
+
+        If T1 < Len(Temp$) Then Temp1$ = Temp1$ + Right$(Temp$, Len(Temp$) - T1 + 1)
+        ReplaceCount = Replace(Temp1$, "DRAW " + Chr$(&H22) + ";", "DRAW " + Chr$(&H22)) '  Replace(text$, old$, new$)  ' Change DRAW "; to DRAW "
+        ReplaceCount = Replace(Temp1$, "DRAW " + Chr$(&H22) + Chr$(&H22), "") '  Replace(text$, old$, new$)  ' Remove null Draw commands
+        ReplaceCount = Replace(Temp1$, Chr$(&HF5) + ": " + Chr$(&HF5) + ":", Chr$(&HF5) + ":") '  Replace(text$, old$, new$)  ' Remove null Draw commands
+        Expression$ = Expression$ + Temp1$ + " " + EndPart$
+    End If
+    If Temp$ = "PLAY" Then ' Found a Play command, change any X inside a quote to ":PLAY (whatever before the next semi colon" : PLAY" the rest
+        Temp$ = Right$(Expression$, Len(Expression$) - I)
+        Expression$ = Left$(Expression$, I)
         EndString = InStr(Temp$, Chr$(&HF5)) ' Mark end at a Colon
         If EndString = 0 Then
             EndString = Len(Temp$) ' If no colons then end is the end of string
@@ -1536,36 +1660,43 @@ While i <= Len(Expression$)
         Temp1$ = ""
         T1 = 1
         While T1 < Len(Temp$) - 1
-            If UCase$(Mid$(Temp$, T1, 2)) <> ";X" Then
+            If UCase$(Mid$(Temp$, T1, 1)) <> "X" Then
                 Temp1$ = Temp1$ + Mid$(Temp$, T1, 1)
             Else
+                ' Found an X
+                If Right$(Temp$, 2) <> Chr$(&H3B) + Chr$(&H22) Then
+                    ' if it doesn't end with a semicolon + quote
+                    Temp$ = Left$(Temp$, Len(Temp$) - 1) + Chr$(&H3B) + Chr$(&H22) 'Make it end with a semi colon and a quote
+                End If
                 Temp1$ = Temp1$ + Chr$(&H22) + " " ' add end quote & a space
-                Temp1$ = Temp1$ + Chr$(&HF5) + ":DRAW " 'add : DRAW
-                T1 = T1 + 2
-                While Mid$(Temp$, T1, 1) <> ";"
+                Temp1$ = Temp1$ + Chr$(&HF5) + ":PLAY " 'add :PLAY
+                T1 = T1 + 1 ' move past the X
+                Do Until Mid$(Temp$, T1, 1) = ";" ' Look for end semi colon
                     Temp1$ = Temp1$ + Mid$(Temp$, T1, 1)
                     T1 = T1 + 1
-                Wend
-                Temp1$ = Temp1$ + " " ' add end quote   & a space
-                Temp1$ = Temp1$ + Chr$(&HF5) + ":DRAW " + Chr$(&H22) 'add : DRAW
+                Loop
+                Temp1$ = Temp1$ + " " ' add end quote & a space
+                Temp1$ = Temp1$ + Chr$(&HF5) + ":PLAY " + Chr$(&H22) 'add :PLAY
                 T1 = T1 - 1
             End If
             T1 = T1 + 1
         Wend
         If T1 < Len(Temp$) Then Temp1$ = Temp1$ + Right$(Temp$, Len(Temp$) - T1 + 1)
-        ReplaceCount = Replace(Temp1$, "DRAW " + Chr$(&H22) + ";", "DRAW " + Chr$(&H22)) '  Replace(text$, old$, new$)  ' Change DRAW "; to DRAW "
-        ReplaceCount = Replace(Temp1$, "DRAW " + Chr$(&H22) + Chr$(&H22), "") '  Replace(text$, old$, new$)  ' Remove null Draw commands
-        ReplaceCount = Replace(Temp1$, Chr$(&HF5) + ": " + Chr$(&HF5) + ":", Chr$(&HF5) + ":") '  Replace(text$, old$, new$)  ' Remove null Draw commands
+        ReplaceCount = Replace(Temp1$, "PLAY " + Chr$(&H22) + ";", "PLAY " + Chr$(&H22)) '  Replace(text$, old$, new$)  ' Change PLAY "; to PLAY "
+        ReplaceCount = Replace(Temp1$, "PLAY " + Chr$(&H22) + Chr$(&H22), "") '  Replace(text$, old$, new$)  ' Remove null PLAY commands
+        ReplaceCount = Replace(Temp1$, Chr$(&HF5) + ": " + Chr$(&HF5) + ":", Chr$(&HF5) + ":") '  Replace(text$, old$, new$)  ' Remove null PLAY commands
+        If Left$(Temp1$, 9) = Chr$(&H22) + Chr$(&H22) + " " + Chr$(&HF5) + ":PLAY" Then Temp1$ = Right$(Temp1$, Len(Temp1$) - 9) ' remove an empty first PLAY ""
         Expression$ = Expression$ + Temp1$ + " " + EndPart$
     End If
 Wend
+
 If Verbose > 1 Then
     Print "1st:"
-    For i = 1 To Len(Tokenized$)
-        A = Asc(Mid$(Tokenized$, i, 1))
-        If A < 16 Then Print "0";
-        Print Hex$(Asc(Mid$(Tokenized$, i, 1)));
-    Next i
+    For I = 1 To Len(Tokenized$)
+        a = Asc(Mid$(Tokenized$, I, 1))
+        If a < 16 Then Print "0";
+        Print Hex$(Asc(Mid$(Tokenized$, I, 1)));
+    Next I
     Print
 End If
 ' Special commands that need manual tweaking
@@ -1576,30 +1707,30 @@ End If
 ' ,1,0 - Draw a Box
 ' ,1,1 - Draw a box and fill it
 Temp$ = ""
-i = 1
+I = 1
 ' Find the LINE Token
 Check$ = "LINE": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
 If Found = 1 Then
     ' We do have a LINE command
     Num = ii
     GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSBs
-    While InStr(i, Tokenized$, Chr$(&HFF) + Chr$(MSB) + Chr$(LSB)) > 0
-        Start = i
+    While InStr(I, Tokenized$, Chr$(&HFF) + Chr$(MSB) + Chr$(LSB)) > 0
+        Start = I
         ' This line of code has the LINE command in it
-        i = InStr(i, Tokenized$, Chr$(&H2C) + Chr$(&H20) + Chr$(&HFF)) ' Find the ", " + PSET or   ", " + PRESET
-        If i = 0 Then Print "Error: LINE command doesn't have ,PSET or ,PRESET on";: GoTo FoundError 'Can't find the ,PSET or ,PRESET
-        i = i + 5 ' Move past the PSET or PRESET
-        Temp$ = Temp$ + Mid$(Tokenized$, Start, i - Start)
-        If Mid$(Tokenized$, i, 1) = Chr$(&H20) And Mid$(Tokenized$, i + 1, 1) = Chr$(&H2C) Then
+        I = InStr(I, Tokenized$, Chr$(&H2C) + Chr$(&H20) + Chr$(&HFF)) ' Find the ", " + PSET or   ", " + PRESET
+        If I = 0 Then Print "Error: LINE command doesn't have ,PSET or ,PRESET on";: GoTo FoundError 'Can't find the ,PSET or ,PRESET
+        I = I + 5 ' Move past the PSET or PRESET
+        Temp$ = Temp$ + Mid$(Tokenized$, Start, I - Start)
+        If Mid$(Tokenized$, I, 1) = Chr$(&H20) And Mid$(Tokenized$, I + 1, 1) = Chr$(&H2C) Then
             ' We have a comma associated with this PSET/PRESET, figure out if it's a B or BF
-            i = i + 3 ' Move after the comma
-            If Mid$(Tokenized$, i, 1) <> "B" Then Print "Error: LINE command doesn't have a ,B after ,PSET or ,PRESET on";: GoTo FoundError 'Can't find the ,B
+            I = I + 3 ' Move after the comma
+            If Mid$(Tokenized$, I, 1) <> "B" Then Print "Error: LINE command doesn't have a ,B after ,PSET or ,PRESET on";: GoTo FoundError 'Can't find the ,B
             Temp$ = Temp$ + ",1" ' Add the box flag
-            i = i + 1 ' move past the B
+            I = I + 1 ' move past the B
             ' Check for F after the B
-            If Mid$(Tokenized$, i, 1) = "F" Then
+            If Mid$(Tokenized$, I, 1) = "F" Then
                 Temp$ = Temp$ + ",1" ' Add the fill flag
-                i = i + 1 ' moce past the F
+                I = I + 1 ' moce past the F
             Else
                 Temp$ = Temp$ + ",0" ' No fill value
             End If
@@ -1610,7 +1741,7 @@ If Found = 1 Then
     Wend
     If Temp$ <> "" Then
         ' We found a LINE command
-        Tokenized$ = Temp$ + Right$(Tokenized$, Len(Tokenized$) - i + 1)
+        Tokenized$ = Temp$ + Right$(Tokenized$, Len(Tokenized$) - I + 1)
     End If
 End If
 
@@ -1634,66 +1765,66 @@ End If
 ' Find Numeric & String Arrays
 Expression$ = Tokenized$
 Tokenized$ = ""
-i = 1
+I = 1
 GetNextToken1:
-While i <= Len(Expression$)
-    i$ = Mid$(Expression$, i, 1): i = i + 1
+While I <= Len(Expression$)
+    i$ = Mid$(Expression$, I, 1): I = I + 1
     If Asc(i$) > &HEF Then
         ' We hit a token, copy it
         Tokenized$ = Tokenized$ + i$
         Select Case Asc(i$)
             Case &HF5:
                 'We have a special character tokenized already
-                i$ = Mid$(Expression$, i, 1): i = i + 1 ' Get the Special character
+                i$ = Mid$(Expression$, I, 1): I = I + 1 ' Get the Special character
                 Tokenized$ = Tokenized$ + i$ ' Copy it
                 If i$ = Chr$(&H22) Then
                     ' Found a quote, so copy all until we get the end tokenized quote
-                    i$ = Mid$(Expression$, i, 1): i = i + 1 ' Get a byte
+                    i$ = Mid$(Expression$, I, 1): I = I + 1 ' Get a byte
                     While i$ <> Chr$(&H22) ' keep copying until we find the end quote
                         Tokenized$ = Tokenized$ + i$ ' Copy the byte
-                        i$ = Mid$(Expression$, i, 1): i = i + 1 ' Get a byte
+                        i$ = Mid$(Expression$, I, 1): I = I + 1 ' Get a byte
                     Wend
                     Tokenized$ = Tokenized$ + i$ ' Copy the end quote
                 End If
                 GoTo GetNextToken1
             Case &HFB:
                 ' DEF FN Function?
-                i$ = Mid$(Expression$, i, 1): i = i + 1: Tokenized$ = Tokenized$ + i$
-                i$ = Mid$(Expression$, i, 1): i = i + 1: Tokenized$ = Tokenized$ + i$
+                i$ = Mid$(Expression$, I, 1): I = I + 1: Tokenized$ = Tokenized$ + i$
+                i$ = Mid$(Expression$, I, 1): I = I + 1: Tokenized$ = Tokenized$ + i$
                 GoTo GetNextToken1
             Case &HFC:
                 ' Operator?
-                i$ = Mid$(Expression$, i, 1): i = i + 1: Tokenized$ = Tokenized$ + i$
+                i$ = Mid$(Expression$, I, 1): I = I + 1: Tokenized$ = Tokenized$ + i$
                 GoTo GetNextToken1
             Case &HFD:
                 ' String Command?
-                i$ = Mid$(Expression$, i, 1): i = i + 1: Tokenized$ = Tokenized$ + i$
-                i$ = Mid$(Expression$, i, 1): i = i + 1: Tokenized$ = Tokenized$ + i$
+                i$ = Mid$(Expression$, I, 1): I = I + 1: Tokenized$ = Tokenized$ + i$
+                i$ = Mid$(Expression$, I, 1): I = I + 1: Tokenized$ = Tokenized$ + i$
                 GoTo GetNextToken1
             Case &HFE:
                 ' Numeric Command?
-                i$ = Mid$(Expression$, i, 1): i = i + 1: Tokenized$ = Tokenized$ + i$
-                i$ = Mid$(Expression$, i, 1): i = i + 1: Tokenized$ = Tokenized$ + i$
+                i$ = Mid$(Expression$, I, 1): I = I + 1: Tokenized$ = Tokenized$ + i$
+                i$ = Mid$(Expression$, I, 1): I = I + 1: Tokenized$ = Tokenized$ + i$
                 'skip forward until after the open and close brackets
                 GoTo GetNextToken1
             Case &HFF:
                 ' General Command?
-                i$ = Mid$(Expression$, i, 1): i = i + 1: Tokenized$ = Tokenized$ + i$
+                i$ = Mid$(Expression$, I, 1): I = I + 1: Tokenized$ = Tokenized$ + i$
                 v = Asc(i$) * 256
-                i$ = Mid$(Expression$, i, 1): i = i + 1: Tokenized$ = Tokenized$ + i$
+                i$ = Mid$(Expression$, I, 1): I = I + 1: Tokenized$ = Tokenized$ + i$
                 v = v + Asc(i$)
                 If v = C_REM Then
                     ' Found a REM, copy the rest of the expression as is, no more tokenizing needed
-                    While i <= Len(Expression$)
-                        i$ = Mid$(Expression$, i, 1): i = i + 1
+                    While I <= Len(Expression$)
+                        i$ = Mid$(Expression$, I, 1): I = I + 1
                         Tokenized$ = Tokenized$ + i$
                     Wend
                     GoTo GetNextToken1
                 End If
                 If v = C_REMApostrophe Then
                     ' Found an apostrophe ' copy the rest of the expression as is, no more tokenizing needed
-                    While i <= Len(Expression$)
-                        i$ = Mid$(Expression$, i, 1): i = i + 1
+                    While I <= Len(Expression$)
+                        i$ = Mid$(Expression$, I, 1): I = I + 1
                         Tokenized$ = Tokenized$ + i$
                     Wend
                     GoTo GetNextToken1
@@ -1701,11 +1832,11 @@ While i <= Len(Expression$)
                 ' Check for a DATA
                 If v = C_DATA Then
                     'We found a DATA command - copy the rest of this line upto a colon or the end
-                    While i <= Len(Expression$)
-                        i$ = Mid$(Expression$, i, 1): i = i + 1
+                    While I <= Len(Expression$)
+                        i$ = Mid$(Expression$, I, 1): I = I + 1
                         Tokenized$ = Tokenized$ + i$
                         If i$ = Chr$(&HF5) Then
-                            i$ = Mid$(Expression$, i, 1): i = i + 1
+                            i$ = Mid$(Expression$, I, 1): I = I + 1
                             Tokenized$ = Tokenized$ + i$
                             If i$ = Chr$(&H3A) Then Exit While
                         End If
@@ -1714,7 +1845,7 @@ While i <= Len(Expression$)
                 GoTo GetNextToken1
         End Select
     End If
-    CheckStart = i - 1 ' This is as far back as we can go looking for an array label
+    CheckStart = I - 1 ' This is as far back as we can go looking for an array label
     ' Find an open bracket, which could be part of an array variable
     For ii = CheckStart + 1 To Len(Expression$)
         If Mid$(Expression$, ii, 1) = "(" Then
@@ -1755,7 +1886,7 @@ While i <= Len(Expression$)
                 For y = BracketStart To Start - 1
                     Tokenized$ = Tokenized$ + Mid$(Expression$, y, 1)
                 Next y
-                i = Start ' Update i's position
+                I = Start ' Update i's position
                 GoTo GetNextToken1
             Else ' Not a string array, check for Numeric array
                 If (Asc(Check$) >= Asc("A") And Asc(Check$) <= Asc("Z")) Or (Asc(Check$) >= Asc("0") And Asc(Check$) <= Asc("9")) Or _
@@ -1792,7 +1923,7 @@ While i <= Len(Expression$)
                     For y = BracketStart To Start - 1
                         Tokenized$ = Tokenized$ + Mid$(Expression$, y, 1)
                     Next y
-                    i = Start ' Update i's position
+                    I = Start ' Update i's position
                     GoTo GetNextToken1
                 Else
                     ' Not an array break out of the FOR Next loop
@@ -1802,20 +1933,20 @@ While i <= Len(Expression$)
         End If
     Next ii
     CopyOtherBytes:
-    If i$ = "&" And i < Len(Expression$) Then
+    If i$ = "&" And I < Len(Expression$) Then
         ' Might be hex value "&H"
         Tokenized$ = Tokenized$ + i$ ' output the "&"
-        i$ = Mid$(Expression$, i, 1): i = i + 1
+        i$ = Mid$(Expression$, I, 1): I = I + 1
         If i$ = "H" Then
             ' We found "&H"
             Tokenized$ = Tokenized$ + i$ ' copy the H to the output
             ' Get the first hex value
-            While i <= Len(Expression$)
-                i$ = UCase$(Mid$(Expression$, i, 1)): i = i + 1
+            While I <= Len(Expression$)
+                i$ = UCase$(Mid$(Expression$, I, 1)): I = I + 1
                 If (Asc(i$) >= Asc("A") And Asc(i$) <= Asc("F")) Or (Asc(i$) >= Asc("0") And Asc(i$) <= Asc("9")) Then
                     Tokenized$ = Tokenized$ + i$
                 Else
-                    i = i - 1
+                    I = I - 1
                     Exit While
                 End If
             Wend
@@ -1826,21 +1957,21 @@ While i <= Len(Expression$)
 Wend
 If Verbose > 1 Then
     Print "2nd:"
-    For i = 1 To Len(Tokenized$)
-        A = Asc(Mid$(Tokenized$, i, 1))
-        If A < 16 Then Print "0";
-        Print Hex$(Asc(Mid$(Tokenized$, i, 1)));
-    Next i
+    For I = 1 To Len(Tokenized$)
+        a = Asc(Mid$(Tokenized$, I, 1))
+        If a < 16 Then Print "0";
+        Print Hex$(Asc(Mid$(Tokenized$, I, 1)));
+    Next I
     Print
 End If
 
 ' Tokenize Special Characters
 Expression$ = Tokenized$
 Tokenized$ = ""
-i = 1
+I = 1
 GetNextToken2:
-While i <= Len(Expression$)
-    v = Asc(Mid$(Expression$, i, 1)): i = i + 1
+While I <= Len(Expression$)
+    v = Asc(Mid$(Expression$, I, 1)): I = I + 1
     If v < &HF0 Then
         If v = &H23 Then Tokenized$ = Tokenized$ + Chr$(&HF5) + Chr$(v): GoTo GetNextToken2 ' Found #
         If v = &H28 Then Tokenized$ = Tokenized$ + Chr$(&HF5) + Chr$(v): GoTo GetNextToken2 ' Found open bracket
@@ -1853,43 +1984,43 @@ While i <= Len(Expression$)
     Tokenized$ = Tokenized$ + Chr$(v) 'copy the token
     Select Case v
         Case &HF0, &HF1: ' Found a Numeric or String array
-            v = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(v): i = i + 1 ' Copy MSB of Array ID
-            v = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(v): i = i + 1 ' Copy LSB of Array ID
-            v = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(v): i = i + 1 ' Copy # of dimensions
+            v = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(v): I = I + 1 ' Copy MSB of Array ID
+            v = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(v): I = I + 1 ' Copy LSB of Array ID
+            v = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(v): I = I + 1 ' Copy # of dimensions
         Case &HF2, &HF3: ' Found a numeric or string variable
-            v = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(v): i = i + 1 ' Copy MSB of variable ID
-            v = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(v): i = i + 1 ' Copy LSB of variable ID
+            v = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(v): I = I + 1 ' Copy MSB of variable ID
+            v = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(v): I = I + 1 ' Copy LSB of variable ID
         Case &HF5 ' Found a special character
-            v = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(v): i = i + 1 ' Copy Special character
+            v = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(v): I = I + 1 ' Copy Special character
             'We have a special character tokenized already
             If v = &H22 Then
                 ' Found a quote, so copy all until we get the end tokenized quote
-                i$ = Mid$(Expression$, i, 1) ' Get a byte
+                i$ = Mid$(Expression$, I, 1) ' Get a byte
                 While i$ <> Chr$(&H22) ' keep skipping until we find the end quote
                     Tokenized$ = Tokenized$ + i$ ' Copy the byte
-                    i = i + 1: i$ = Mid$(Expression$, i, 1) ' Get a byte
+                    I = I + 1: i$ = Mid$(Expression$, I, 1) ' Get a byte
                 Wend
             End If
         Case &HFB: ' Found a DEF FN Function
-            v = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(v): i = i + 1 ' Copy MSB of FN ID
-            v = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(v): i = i + 1 ' Copy LSB of FN ID
+            v = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(v): I = I + 1 ' Copy MSB of FN ID
+            v = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(v): I = I + 1 ' Copy LSB of FN ID
         Case &HFC: ' Found an Operator
-            v = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(v): i = i + 1 ' Copy Operator
+            v = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(v): I = I + 1 ' Copy Operator
         Case &HFD, &HFE: 'Found String,Numeric command
-            v = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(v): i = i + 1 ' Copy MSB of command ID
-            v = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(v): i = i + 1 ' Copy LSB of command ID
+            v = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(v): I = I + 1 ' Copy MSB of command ID
+            v = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(v): I = I + 1 ' Copy LSB of command ID
         Case &HFF: 'Found General command
-            v = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(v): i = i + 1 ' Copy MSB of command ID
-            v = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(v): i = i + 1 ' Copy LSB of command ID
+            v = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(v): I = I + 1 ' Copy MSB of command ID
+            v = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(v): I = I + 1 ' Copy LSB of command ID
             ' Check for a DATA command
-            v = Asc(Mid$(Expression$, i - 2, 1)) * 256 + Asc(Mid$(Expression$, i - 1, 1))
+            v = Asc(Mid$(Expression$, I - 2, 1)) * 256 + Asc(Mid$(Expression$, I - 1, 1))
             If v = C_DATA Then
                 'We found a line with the DATA command, copy it all as it is, don't add extra control characters
-                While i <= Len(Expression$)
-                    i$ = Mid$(Expression$, i, 1): i = i + 1
+                While I <= Len(Expression$)
+                    i$ = Mid$(Expression$, I, 1): I = I + 1
                     Tokenized$ = Tokenized$ + i$
                     If i$ = Chr$(&HF5) Then
-                        i$ = Mid$(Expression$, i, 1): i = i + 1
+                        i$ = Mid$(Expression$, I, 1): I = I + 1
                         Tokenized$ = Tokenized$ + i$
                         If i$ = Chr$(&H3A) Then Exit While
                     End If
@@ -1898,11 +2029,11 @@ While i <= Len(Expression$)
             End If
             If v = C_REM Or v = C_REMApostrophe Then
                 'We found a line with the REM command, copy it all as it is, don't add extra control characters
-                While i <= Len(Expression$)
-                    i$ = Mid$(Expression$, i, 1): i = i + 1
+                While I <= Len(Expression$)
+                    i$ = Mid$(Expression$, I, 1): I = I + 1
                     Tokenized$ = Tokenized$ + i$
                     If i$ = Chr$(&HF5) Then
-                        i$ = Mid$(Expression$, i, 1): i = i + 1
+                        i$ = Mid$(Expression$, I, 1): I = I + 1
                         Tokenized$ = Tokenized$ + i$
                         If i$ = Chr$(&H3A) Then Exit While
                     End If
@@ -1927,58 +2058,58 @@ Wend
 ' Find Numeric & String Variables
 Expression$ = Tokenized$
 Tokenized$ = ""
-i = 1
+I = 1
 GetNextToken3:
-While i <= Len(Expression$)
-    i$ = Mid$(Expression$, i, 1)
+While I <= Len(Expression$)
+    i$ = Mid$(Expression$, I, 1)
     If Asc(i$) > &HEF Then ' Test if we hit a token
         If i$ = Chr$(&HF5) Then
             Tokenized$ = Tokenized$ + i$ ' copy the &HF5
             'We have a special character tokenized already
-            i = i + 1: i$ = Mid$(Expression$, i, 1) ' Get the Special character
+            I = I + 1: i$ = Mid$(Expression$, I, 1) ' Get the Special character
             Tokenized$ = Tokenized$ + i$ ' Copy it
             If i$ = Chr$(&H22) Then
                 ' Found a quote, so copy all until we get the end tokenized quote
-                i = i + 1: i$ = Mid$(Expression$, i, 1) ' Get a byte
-                While Mid$(Expression$, i, 1) <> Chr$(&H22) ' keep skipping until we find the end quote
+                I = I + 1: i$ = Mid$(Expression$, I, 1) ' Get a byte
+                While Mid$(Expression$, I, 1) <> Chr$(&H22) ' keep skipping until we find the end quote
                     Tokenized$ = Tokenized$ + i$ ' Copy the byte
-                    i = i + 1: i$ = Mid$(Expression$, i, 1) ' Get a byte
+                    I = I + 1: i$ = Mid$(Expression$, I, 1) ' Get a byte
                 Wend
                 GoTo GetNextToken3
             End If
-            i = i + 1: i$ = Mid$(Expression$, i, 1) ' Get a byte
+            I = I + 1: i$ = Mid$(Expression$, I, 1) ' Get a byte
             GoTo GetNextToken3
         End If
         ' This needs to account for 16 bit numbers now
         If Asc(i$) = &HF0 Or Asc(i$) = &HF1 Then
             ' Copy the token plus 3 more values (array , # of dimensions)
             Tokenized$ = Tokenized$ + i$ ' copy the token
-            i = i + 1: i$ = Mid$(Expression$, i, 1) ' Get the array MSB
+            I = I + 1: i$ = Mid$(Expression$, I, 1) ' Get the array MSB
             Tokenized$ = Tokenized$ + i$ ' Copy
-            i = i + 1: i$ = Mid$(Expression$, i, 1) ' Get the array LSB
+            I = I + 1: i$ = Mid$(Expression$, I, 1) ' Get the array LSB
             Tokenized$ = Tokenized$ + i$ ' Copy
-            i = i + 1: i$ = Mid$(Expression$, i, 1) ' Get the # of dimensions in the array
+            I = I + 1: i$ = Mid$(Expression$, I, 1) ' Get the # of dimensions in the array
             Tokenized$ = Tokenized$ + i$ ' Copy
-            i = i + 1
+            I = I + 1
             GoTo GetNextToken3
         Else
             ' Check for a REM or '
             Check$ = "REM": GoSub FindGenCommandInExpression 'Checks if position i in Expression$ has the command Check$, return Found=1 is found else Found=0
             If Found = 1 Then
-                While i <= Len(Expression$)
-                    i$ = Mid$(Expression$, i, 1)
+                While I <= Len(Expression$)
+                    i$ = Mid$(Expression$, I, 1)
                     Tokenized$ = Tokenized$ + i$
-                    i = i + 1
+                    I = I + 1
                 Wend
                 GoTo GetNextToken3
             End If
             ' Check for a an apostrophe '
             Check$ = "'": GoSub FindGenCommandInExpression 'Checks if position i in Expression$ has the command Check$, return Found=1 is found else Found=0
             If Found = 1 Then
-                While i <= Len(Expression$)
-                    i$ = Mid$(Expression$, i, 1)
+                While I <= Len(Expression$)
+                    i$ = Mid$(Expression$, I, 1)
                     Tokenized$ = Tokenized$ + i$
-                    i = i + 1
+                    I = I + 1
                 Wend
                 GoTo GetNextToken3
             End If
@@ -1986,11 +2117,11 @@ While i <= Len(Expression$)
             Check$ = "DATA": GoSub FindGenCommandInExpression 'Checks if position i in Expression$ has the command Check$, return Found=1 is found else Found=0
             If Found = 1 Then
                 'We found a DATA command - copy the rest of this line
-                While i <= Len(Expression$)
-                    i$ = Mid$(Expression$, i, 1): i = i + 1
+                While I <= Len(Expression$)
+                    i$ = Mid$(Expression$, I, 1): I = I + 1
                     Tokenized$ = Tokenized$ + i$
                     If i$ = Chr$(&HF5) Then
-                        i$ = Mid$(Expression$, i, 1): i = i + 1
+                        i$ = Mid$(Expression$, I, 1): I = I + 1
                         Tokenized$ = Tokenized$ + i$
                         If i$ = Chr$(&H3A) Then Exit While
                     End If
@@ -2000,56 +2131,56 @@ While i <= Len(Expression$)
             If Asc(i$) = &HFC Then
                 ' Hit an operator, copy only one value after
                 Tokenized$ = Tokenized$ + i$ ' copy the token
-                i = i + 1: i$ = Mid$(Expression$, i, 1) ' Get the operator
+                I = I + 1: i$ = Mid$(Expression$, I, 1) ' Get the operator
                 Tokenized$ = Tokenized$ + i$ ' Copy
-                i = i + 1
+                I = I + 1
                 GoTo GetNextToken3
             Else
                 ' We hit a token, copy it
                 Tokenized$ = Tokenized$ + i$ ' copy the token
-                i = i + 1: i$ = Mid$(Expression$, i, 1) ' Get the array MSB
+                I = I + 1: i$ = Mid$(Expression$, I, 1) ' Get the array MSB
                 Tokenized$ = Tokenized$ + i$ ' Copy
-                i = i + 1: i$ = Mid$(Expression$, i, 1) ' Get the array LSB
+                I = I + 1: i$ = Mid$(Expression$, I, 1) ' Get the array LSB
                 Tokenized$ = Tokenized$ + i$ ' Copy
-                i = i + 1
+                I = I + 1
                 GoTo GetNextToken3
             End If
         End If
     Else
-        If i$ = "&" And i < Len(Expression$) Then
+        If i$ = "&" And I < Len(Expression$) Then
             ' Might be hex value "&H"
             Tokenized$ = Tokenized$ + i$ ' output the "&"
-            i = i + 1 ' move past the "&"
-            i$ = Mid$(Expression$, i, 1)
+            I = I + 1 ' move past the "&"
+            i$ = Mid$(Expression$, I, 1)
             If i$ = "H" Then
                 ' We found "&H"
                 Tokenized$ = Tokenized$ + i$ ' copy the H to the output
-                i = i + 1
+                I = I + 1
                 ' Get the first hex value
-                i$ = UCase$(Mid$(Expression$, i, 1)): i = i + 1
-                While i <= Len(Expression$)
+                i$ = UCase$(Mid$(Expression$, I, 1)): I = I + 1
+                While I <= Len(Expression$)
                     If (Asc(i$) >= Asc("A") And Asc(i$) <= Asc("F")) Or (Asc(i$) >= Asc("0") And Asc(i$) <= Asc("9")) Then
                         Tokenized$ = Tokenized$ + i$
-                        i$ = UCase$(Mid$(Expression$, i, 1)): i = i + 1
+                        i$ = UCase$(Mid$(Expression$, I, 1)): I = I + 1
                     Else
                         Exit While
                     End If
                 Wend
-                i = i - 1
+                I = I - 1
             End If
         Else
             ' Check for a variable
             If Asc(UCase$(i$)) >= Asc("A") And Asc(UCase$(i$)) <= Asc("Z") Then ' Is it a letter?
                 ' It is part of a variable name, we don't know if it's numeric or string at the moment
                 ' Get the variable name
-                Start = i ' start points at the 2nd character of the variable
+                Start = I ' start points at the 2nd character of the variable
                 While Start <= Len(Expression$)
                     If Mid$(Expression$, Start, 1) = " " Or Mid$(Expression$, Start, 1) = Chr$(&HF5) Or Mid$(Expression$, Start, 1) = Chr$(&HFC) _
                     Or Mid$(Expression$, Start, 1) = "$" or Mid$(Expression$, Start, 1) = "=" Then Exit While
                     Start = Start + 1
                 Wend
                 If Mid$(Expression$, Start, 1) = "$" Then Start = Start + 1
-                Temp$ = Mid$(Expression$, i, Start - i)
+                Temp$ = Mid$(Expression$, I, Start - I)
                 If Right$(Temp$, 1) = "$" Then
                     'We found a string variable to tokenize
                     GoSub AddStringVariable ' Add variable Temp$ to the String variable List
@@ -2060,7 +2191,7 @@ While i <= Len(Expression$)
                         Num = StringVariableCounter - 1: GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSB
                         Tokenized$ = Tokenized$ + Chr$(&HF3) + Chr$(MSB) + Chr$(LSB)
                     End If
-                    i = i + Len(Temp$) ' move pointer forward
+                    I = I + Len(Temp$) ' move pointer forward
                     GoTo GetNextToken3
                 Else
                     'Test if Temp$ is a label instead of a variable name, write it as is if it is a LABEL
@@ -2087,23 +2218,23 @@ While i <= Len(Expression$)
                             Tokenized$ = Tokenized$ + Mid$(LabelCheck$, ii1, 1)
                         Next ii1
                     End If
-                    i = i + Len(Temp$) ' move pointer forward
+                    I = I + Len(Temp$) ' move pointer forward
                     GoTo GetNextToken3
                 End If
             End If
         End If
     End If
     Tokenized$ = Tokenized$ + i$
-    i = i + 1
+    I = I + 1
 Wend
 ' Remove all spaces that aren't in a quote or DATA statement
 Expression$ = Tokenized$
 Tokenized$ = ""
-i = 1
+I = 1
 
 LoopFindSpaces:
-While i <= Len(Expression$)
-    v = Asc(Mid$(Expression$, i, 1)): i = i + 1
+While I <= Len(Expression$)
+    v = Asc(Mid$(Expression$, I, 1)): I = I + 1
     If v < &HF0 Then
         If v <> &H20 Then Tokenized$ = Tokenized$ + Chr$(v) ' If not a space then copy it
         GoTo LoopFindSpaces
@@ -2112,43 +2243,43 @@ While i <= Len(Expression$)
     Tokenized$ = Tokenized$ + Chr$(v) 'copy the token
     Select Case v
         Case &HF0, &HF1: ' Found a Numeric or String array
-            v = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(v): i = i + 1 ' Copy MSB of Array ID
-            v = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(v): i = i + 1 ' Copy LSB of Array ID
-            v = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(v): i = i + 1 ' Copy # of dimensions
+            v = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(v): I = I + 1 ' Copy MSB of Array ID
+            v = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(v): I = I + 1 ' Copy LSB of Array ID
+            v = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(v): I = I + 1 ' Copy # of dimensions
         Case &HF2, &HF3: ' Found a numeric or string variable
-            v = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(v): i = i + 1 ' Copy MSB of variable ID
-            v = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(v): i = i + 1 ' Copy LSB of variable ID
+            v = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(v): I = I + 1 ' Copy MSB of variable ID
+            v = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(v): I = I + 1 ' Copy LSB of variable ID
         Case &HF5 ' Found a special character
-            v = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(v): i = i + 1 ' Copy Special character
+            v = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(v): I = I + 1 ' Copy Special character
             'We have a special character tokenized already
             If v = &H22 Then
                 ' Found a quote, so copy all until we get the end tokenized quote
-                i$ = Mid$(Expression$, i, 1) ' Get a byte
+                i$ = Mid$(Expression$, I, 1) ' Get a byte
                 While i$ <> Chr$(&H22) ' keep skipping until we find the end quote
                     Tokenized$ = Tokenized$ + i$ ' Copy the byte
-                    i = i + 1: i$ = Mid$(Expression$, i, 1) ' Get a byte
+                    I = I + 1: i$ = Mid$(Expression$, I, 1) ' Get a byte
                 Wend
             End If
         Case &HFB: ' Found a DEF FN Function
-            v = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(v): i = i + 1 ' Copy MSB of FN ID
-            v = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(v): i = i + 1 ' Copy LSB of FN ID
+            v = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(v): I = I + 1 ' Copy MSB of FN ID
+            v = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(v): I = I + 1 ' Copy LSB of FN ID
         Case &HFC: ' Found an Operator
-            v = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(v): i = i + 1 ' Copy Operator
+            v = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(v): I = I + 1 ' Copy Operator
         Case &HFD, &HFE: 'Found String,Numeric command
-            v = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(v): i = i + 1 ' Copy MSB of command ID
-            v = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(v): i = i + 1 ' Copy LSB of command ID
+            v = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(v): I = I + 1 ' Copy MSB of command ID
+            v = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(v): I = I + 1 ' Copy LSB of command ID
         Case &HFF: 'Found General command
-            v = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(v): i = i + 1 ' Copy MSB of command ID
-            v = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(v): i = i + 1 ' Copy LSB of command ID
-            v = Asc(Mid$(Expression$, i - 2, 1)) * 256 + Asc(Mid$(Expression$, i - 1, 1))
+            v = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(v): I = I + 1 ' Copy MSB of command ID
+            v = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(v): I = I + 1 ' Copy LSB of command ID
+            v = Asc(Mid$(Expression$, I - 2, 1)) * 256 + Asc(Mid$(Expression$, I - 1, 1))
             ' Check for a REM or '
             If v = C_REM Or v = C_REMApostrophe Then
                 'We found a line with the REM command, copy it all as it is, don't add extra control characters
-                While i <= Len(Expression$)
-                    i$ = Mid$(Expression$, i, 1): i = i + 1
+                While I <= Len(Expression$)
+                    i$ = Mid$(Expression$, I, 1): I = I + 1
                     Tokenized$ = Tokenized$ + i$
                     If i$ = Chr$(&HF5) Then
-                        i$ = Mid$(Expression$, i, 1): i = i + 1
+                        i$ = Mid$(Expression$, I, 1): I = I + 1
                         Tokenized$ = Tokenized$ + i$
                         If i$ = Chr$(&H3A) Then Exit While
                     End If
@@ -2159,10 +2290,10 @@ While i <= Len(Expression$)
             If v = C_DATA Then
                 'We found a line with the DATA command
                 MoreDataToCheck:
-                If i > Len(Expression$) Then GoTo LoopFindSpaces ' we have reached the end of the expression
-                v = Asc(Mid$(Expression$, i, 1)): i = i + 1 'Ge the first byte after the command DATA or after a comma
+                If I > Len(Expression$) Then GoTo LoopFindSpaces ' we have reached the end of the expression
+                v = Asc(Mid$(Expression$, I, 1)): I = I + 1 'Ge the first byte after the command DATA or after a comma
                 If v = Asc(" ") Then
-                    If i <= Len(Expression$) Then
+                    If I <= Len(Expression$) Then
                         GoTo MoreDataToCheck ' skip extra spaces after a comma or after the command DATA
                     Else
                         GoTo LoopFindSpaces ' we have reached the end of the expression
@@ -2175,42 +2306,42 @@ While i <= Len(Expression$)
                 End If
                 If (v >= Asc("0") And v <= Asc("9")) Then
                     'We have a number to copy, so we can erase any spaces we find until a comma or end of Expression$
-                    Do Until v = &H2C Or i > Len(Expression$)
+                    Do Until v = &H2C Or I > Len(Expression$)
                         If v = &HF5 Then
-                            If Asc(Mid$(Expression$, i, 1)) = &H3A Then
+                            If Asc(Mid$(Expression$, I, 1)) = &H3A Then
                                 Exit Do
                             End If
                         End If
                         If v <> Asc(" ") Then Tokenized$ = Tokenized$ + Chr$(v)
-                        v = Asc(Mid$(Expression$, i, 1)): i = i + 1
+                        v = Asc(Mid$(Expression$, I, 1)): I = I + 1
                     Loop
                     Tokenized$ = Tokenized$ + Chr$(v)
                     If v = &HF5 Then
                         ' We found a colon on this line
-                        v = Asc(Mid$(Expression$, i, 1)): i = i + 1
+                        v = Asc(Mid$(Expression$, I, 1)): I = I + 1
                         Tokenized$ = Tokenized$ + Chr$(v) ' Copy the colon
                         GoTo LoopFindSpaces ' look for more commands after the colon
                     End If
-                    If i > Len(Expression$) Then GoTo LoopFindSpaces ' we are at the end
+                    If I > Len(Expression$) Then GoTo LoopFindSpaces ' we are at the end
                     GoTo MoreDataToCheck ' Handle more data
                 End If
-                If v = Asc("&") And Mid$(Expression$, i, 1) = "H" Then
+                If v = Asc("&") And Mid$(Expression$, I, 1) = "H" Then
                     'it's a hex number get it all and convert it to a number
                     Temp$ = ""
-                    i = i + 1 ' skip past the "H"
-                    v = Asc(Mid$(Expression$, i, 1)): i = i + 1
-                    Do Until v = &H2C Or i > Len(Expression$)
+                    I = I + 1 ' skip past the "H"
+                    v = Asc(Mid$(Expression$, I, 1)): I = I + 1
+                    Do Until v = &H2C Or I > Len(Expression$)
                         If v = &HF5 Then
-                            If Asc(Mid$(Expression$, i, 1)) = &H3A Then
+                            If Asc(Mid$(Expression$, I, 1)) = &H3A Then
                                 Exit Do
                             End If
                         End If
                         Temp$ = Temp$ + Chr$(v)
-                        v = Asc(Mid$(Expression$, i, 1)): i = i + 1
+                        v = Asc(Mid$(Expression$, I, 1)): I = I + 1
                     Loop
                     If v = &HF5 Then
                         ' We found a colon on this line
-                        v = Asc(Mid$(Expression$, i, 1)): i = i + 1
+                        v = Asc(Mid$(Expression$, I, 1)): I = I + 1
                         Tokenized$ = Tokenized$ + Chr$(v) ' Copy the colon
                         GoTo LoopFindSpaces ' look for more commands after the colon
                     End If
@@ -2232,47 +2363,47 @@ While i <= Len(Expression$)
                 End If
                 'Otherwise it's a string copy spaces in the string
                 DataString:
-                If v = &HF5 And Asc(Mid$(Expression$, i, 1)) = &H22 Then
+                If v = &HF5 And Asc(Mid$(Expression$, I, 1)) = &H22 Then
                     ' Found a quote
                     Tokenized$ = Tokenized$ + Chr$(v) ' Copy &HF5
-                    v = Asc(Mid$(Expression$, i, 1)): i = i + 1 ' Get the quote
+                    v = Asc(Mid$(Expression$, I, 1)): I = I + 1 ' Get the quote
                     ' inside quoted text ignore commas
-                    Do Until (v = &HF5 And Asc(Mid$(Expression$, i, 1)) = &H22) Or i > Len(Expression$) ' copy until we get a close quote or End of line
+                    Do Until (v = &HF5 And Asc(Mid$(Expression$, I, 1)) = &H22) Or I > Len(Expression$) ' copy until we get a close quote or End of line
                         If v = &HF5 Then
-                            If Asc(Mid$(Expression$, i, 1)) = &H3A Then
+                            If Asc(Mid$(Expression$, I, 1)) = &H3A Then
                                 Exit Do
                             End If
                         End If
                         Tokenized$ = Tokenized$ + Chr$(v)
-                        v = Asc(Mid$(Expression$, i, 1)): i = i + 1
+                        v = Asc(Mid$(Expression$, I, 1)): I = I + 1
                     Loop
                     Tokenized$ = Tokenized$ + Chr$(v)
-                    If v = &HF5 And Asc(Mid$(Expression$, i, 1)) = &H22 Then
+                    If v = &HF5 And Asc(Mid$(Expression$, I, 1)) = &H22 Then
                         ' We found an end quote
-                        v = Asc(Mid$(Expression$, i, 1)): i = i + 1
+                        v = Asc(Mid$(Expression$, I, 1)): I = I + 1
                         Tokenized$ = Tokenized$ + Chr$(v)
                         GoTo MoreDataToCheck ' Handle more data
                     End If
-                    If v = &HF5 And Asc(Mid$(Expression$, i, 1)) = &H3A Then
+                    If v = &HF5 And Asc(Mid$(Expression$, I, 1)) = &H3A Then
                         ' We found a colon on this line
-                        v = Asc(Mid$(Expression$, i, 1)): i = i + 1
+                        v = Asc(Mid$(Expression$, I, 1)): I = I + 1
                         Tokenized$ = Tokenized$ + Chr$(v) ' Copy the colon
                         GoTo LoopFindSpaces ' look for more commands after the colon
                     End If
                     GoTo LoopFindSpaces ' look for more commands
                 Else
                     ' Not a quote, copy as is until we get a comma, Colon or EOL
-                    Do Until v = &H2C Or i > Len(Expression$)
+                    Do Until v = &H2C Or I > Len(Expression$)
                         If v = &HF5 Then
-                            If Asc(Mid$(Expression$, i, 1)) = &H3A Then
+                            If Asc(Mid$(Expression$, I, 1)) = &H3A Then
                                 Exit Do
                             End If
                         End If
                         Tokenized$ = Tokenized$ + Chr$(v)
-                        v = Asc(Mid$(Expression$, i, 1)): i = i + 1
+                        v = Asc(Mid$(Expression$, I, 1)): I = I + 1
                     Loop
                     ' Make sure right most byte is not a space
-                    If i > Len(Expression$) Then
+                    If I > Len(Expression$) Then
                         'Got to EOL
                         Tokenized$ = Tokenized$ + Chr$(v)
                         Tokenized$ = Left$(Tokenized$, Len(Tokenized$) - 1)
@@ -2284,7 +2415,7 @@ While i <= Len(Expression$)
                         Tokenized$ = Tokenized$ + Chr$(v) ' Write the &HF5 or comma
                         If v = &HF5 Then
                             ' We found a colon on this line
-                            v = Asc(Mid$(Expression$, i, 1)): i = i + 1
+                            v = Asc(Mid$(Expression$, I, 1)): I = I + 1
                             Tokenized$ = Tokenized$ + Chr$(v) ' Copy the colon
                             GoTo LoopFindSpaces ' look for more commands after the colon
                         End If
@@ -2301,27 +2432,27 @@ Check$ = "DEF": GoSub FindGenCommandNumber ' Gets the General Command number of 
 If Found = 1 Then
     Num = ii
     GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSBs
-    i = 1
-    While i <= Len(Tokenized$)
-        v = Asc(Mid$(Tokenized$, i, 1))
+    I = 1
+    While I <= Len(Tokenized$)
+        v = Asc(Mid$(Tokenized$, I, 1))
         If v = &HFF Then
-            If Asc(Mid$(Tokenized$, i + 1, 1)) = MSB And Asc(Mid$(Tokenized$, i + 2, 1)) = LSB Then
+            If Asc(Mid$(Tokenized$, I + 1, 1)) = MSB And Asc(Mid$(Tokenized$, I + 2, 1)) = LSB Then
                 ' Found a DEF FN, let's get the Variable type and number
-                DefVar(DefVarCount) = Asc(Mid$(Tokenized$, i + 9, 1)) * 256 + Asc(Mid$(Tokenized$, i + 10, 1))
+                DefVar(DefVarCount) = Asc(Mid$(Tokenized$, I + 9, 1)) * 256 + Asc(Mid$(Tokenized$, I + 10, 1))
                 DefVarCount = DefVarCount + 1
             End If
         End If
-        i = i + 1
+        I = I + 1
     Wend
 End If
 DoneGettingExpression:
 If Verbose > 1 Then
     Print "3rd:"
-    For i = 1 To Len(Tokenized$)
-        A = Asc(Mid$(Tokenized$, i, 1))
-        If A < 16 Then Print "0";
-        Print Hex$(Asc(Mid$(Tokenized$, i, 1)));
-    Next i
+    For I = 1 To Len(Tokenized$)
+        a = Asc(Mid$(Tokenized$, I, 1))
+        If a < 16 Then Print "0";
+        Print Hex$(Asc(Mid$(Tokenized$, I, 1)));
+    Next I
     Print
 End If
 Return
@@ -2603,13 +2734,13 @@ Return
 'Checks if position i in Expression$ has the command Check$, return Found=1 is found else Found=0
 FindGenCommandInExpression:
 Found = 0
-If Asc(Mid$(Expression$, i, 1)) = &HFF Then
+If Asc(Mid$(Expression$, I, 1)) = &HFF Then
     For ii = 0 To GeneralCommandsCount
         If GeneralCommands$(ii) = Check$ Then
             Exit For
         End If
     Next ii
-    If Asc(Mid$(Expression$, i + 1, 1)) * 256 + Asc(Mid$(Expression$, i + 2, 1)) = ii Then
+    If Asc(Mid$(Expression$, I + 1, 1)) * 256 + Asc(Mid$(Expression$, I + 2, 1)) = ii Then
         Found = 1
     End If
 End If

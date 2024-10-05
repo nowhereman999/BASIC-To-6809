@@ -3,10 +3,14 @@
 'Print "hex$(Array(x+2) "; Hex$(Array(x + 2))
 'System
 
-V$ = "2.09"
+V$ = "2.10"
+'       - Added PLAY command and tweaked DRAW command so it handles ;X with a string if the DRAW command doesn't end with a semi colon
+'       - Fixed a NASTY bug where certain bytes in ADDASSEM/ENDASSEM would write over actual program code
+'
+' V2.09
 '       - Fixed a bug with INKEY$
 '
-' V2.08"
+' V2.08
 '       - Broke some regular printing with the printing to graphics screen, this is now been fixed
 '       - Fixed a bug with getting the value of an expression before an open bracket if an array was before the open bracket
 '
@@ -28,11 +32,10 @@ V$ = "2.09"
 ' Things to do:
 ' - Add more commands (look through CoCo Extended basic book)
 ' - Change variables for graphics programs so they use faster/DP RAM
-' - Make the program handle array sizes intelegently, arrays of 254 or less will use the current array method, larger arrays will use 16 values like A(1050) or A(700,3)
+' - Make the program handle array sizes intellegently, arrays of 254 or less will use the current array method, larger arrays will use 16 bit values like A(1050) or A(700,3)
 ' - Make draw's destination address the same as the LINE destination address so they can continue where each left off
 ' - Make PSET take a colour value
 ' - Add more grpahics resolution handling like PMODE 1,2 & 3
-
 
 $ScreenHide
 $Console
@@ -80,9 +83,9 @@ Dim StringCommandsFoundCount As Integer
 Dim IncludeList$(100)
 Dim var$(1000) ' variable names
 Dim C$(256), C2$(256) ' Commands
-Dim Array(270000) As _Unsigned _Byte
-Dim INArray(270000) As _Unsigned _Byte
-Dim DataArray(270000) As _Unsigned _Byte
+Dim Array(2000000) As _Unsigned _Byte
+Dim INArray(2000000) As _Unsigned _Byte
+Dim DataArray(2000000) As _Unsigned _Byte
 Dim DataArrayCount As Integer
 Dim c(256) As _Unsigned _Byte
 'Dim c2(256) As _Unsigned _Byte
@@ -385,67 +388,6 @@ End If
 ProgramIsNowText:
 ' Reduce multiple spaces outside of quotes to single spaces
 ' Add code to ignore lines between ADDASSEM / ENDASSEM
-i = 0: n = 0
-q = 0
-EraseExtraSpacesColons:
-While n < length
-    y = n
-    ' get a line and look for ADDASSEM
-    Temp$ = "": c = 0
-    Do Until n >= length Or c = &H0D Or c = &H0A
-        c = Array(n): n = n + 1
-        Temp$ = Temp$ + Chr$(c)
-    Loop
-    If InStr(Temp$, "ADDASSEM") > 0 Then
-        ' this line is an ADDASSEM line, copy everything as it is until we get to an ENDASSEM line
-        'Copy Top line
-        For ii = 1 To Len(Temp$)
-            Array(i) = Asc(Mid$(Temp$, ii, 1)): i = i + 1
-        Next ii
-        CopyAssemCodeAsIs:
-        Temp$ = ""
-        While n < length And (c <> &H0D Or c <> &H0A)
-            c = Array(n): n = n + 1
-            Temp$ = Temp$ + Chr$(c)
-        Wend
-        For ii = 1 To Len(Temp$)
-            Array(i) = Asc(Mid$(Temp$, ii, 1)): i = i + 1
-        Next ii
-        If InStr(Temp$, "ENDASSEM") > 0 Then GoTo EraseExtraSpacesColons 'Copied the last line
-        GoTo CopyAssemCodeAsIs
-    Else
-        n = y
-        c = Array(n)
-        While n < length And (c <> &H0D Or c <> &H0A)
-            c = Array(n)
-            Array(i) = c
-            If c = &H22 Then q = q + 1 ' Found a quote
-            If (q And 1) = 0 Then
-                '  Not in a Quote
-                If c = Asc(" ") Then
-                    ' Found a space and not in a quote
-                    n = n + 1
-                    While Array(n) = Asc(" ")
-                        n = n + 1 ' skip the spaces
-                    Wend
-                    n = n - 1
-                End If
-                If c = Asc(":") Then
-                    'Found a colon
-                    q = 0
-                    While Array(n) = Asc(":")
-                        n = n + 1 ' skip extra colons
-                    Wend
-                    n = n - 1
-                End If
-            End If
-            n = n + 1
-            i = i + 1
-        Wend
-        q = 0
-    End If
-Wend
-length = i
 
 'Strip any extra spaces off the end of every line
 c = 0: x = 0
@@ -480,16 +422,80 @@ If Temp$ <> "" Then
         INArray(c) = Asc(Mid$(Temp$, i, 1)): c = c + 1
     Next i
 End If
-length = c - 1
+If INArray(c - 1) <> &H0D Then INArray(c) = &H0D: c = c + 1
+length = c
 
 ' BASICMode is <> 1 copy the input INArray to array
 For i = 0 To length - 1
     Array(i) = INArray(i)
 Next i
+
+' Erase double or more spaces and double or more colons
+i = 0: n = 0
+q = 0
+EraseExtraSpacesColons:
+While n < length
+    y = n
+    ' get a line and look for ADDASSEM
+    Temp$ = "": c = 0
+    While n <= length And c <> &H0D
+        c = Array(n): n = n + 1
+        Temp$ = Temp$ + Chr$(c)
+    Wend
+    If InStr(Temp$, "ADDASSEM") > 0 Then
+        ' This line is an ADDASSEM line, copy everything as it is until we get to an ENDASSEM line
+        'Copy Top line
+        n = y
+        CopyAssemCodeAsIs:
+        Temp$ = "": c = 0
+        While n <= length And c <> &H0D
+            c = Array(n): n = n + 1
+            Temp$ = Temp$ + Chr$(c)
+        Wend
+        For ii = 1 To Len(Temp$)
+            Array(i) = Asc(Mid$(Temp$, ii, 1)): i = i + 1
+        Next ii
+        If InStr(Temp$, "ENDASSEM") > 0 Then GoTo EraseExtraSpacesColons 'Copied the last line
+        GoTo CopyAssemCodeAsIs
+    Else
+        n = y
+        c = Array(n)
+        While n < length And c <> &H0D
+            c = Array(n)
+            Array(i) = c
+            If c = &H22 Then q = q + 1 ' Found a quote
+            If (q And 1) = 0 Then
+                '  Not in a Quote
+                If c = Asc(" ") Then
+                    ' Found a space and not in a quote
+                    n = n + 1
+                    While Array(n) = Asc(" ")
+                        n = n + 1 ' skip the spaces
+                    Wend
+                    n = n - 1
+                End If
+                If c = Asc(":") Then
+                    'Found a colon
+                    q = 0
+                    While Array(n) = Asc(":")
+                        n = n + 1 ' skip extra colons
+                    Wend
+                    n = n - 1
+                End If
+            End If
+            n = n + 1
+            i = i + 1
+        Wend
+        q = 0
+    End If
+Wend
+length = i
+
 ' We now have the BASIC program as a text file in array() size is from 0 to length-1
 ' Format program so it has spaces where it needs them to be:
 c = 0: x = 0
 InQuote = 0
+KeepLooking:
 While x <= length - 1
     ' read a full line
     y = x
@@ -502,6 +508,7 @@ While x <= length - 1
     Temp$ = Temp$ + Chr$(&H0D)
     p = InStr(Temp$, "ADDASSEM")
     If p > 0 Then
+        ' Found an addassem
         For ii = 1 To Len(Temp$)
             INArray(c) = Asc(Mid$(Temp$, ii, 1)): c = c + 1
         Next ii
@@ -512,11 +519,12 @@ While x <= length - 1
         While v <> &H0D
             Temp$ = Temp$ + Chr$(v)
             v = Array(x): x = x + 1
+            ' If x > length - 1 Then Print "WHAT!": System
         Wend
         Temp1$ = ""
         For ii = 1 To Len(Temp$)
             T1 = Asc(Mid$(Temp$, ii, 1))
-            If T1 <> &H0D And T1 <> &H0A Then Temp1$ = Temp1$ + Mid$(Temp$, ii, 1)
+            If T1 <> &H0D Then Temp1$ = Temp1$ + Mid$(Temp$, ii, 1)
         Next ii
         Temp$ = Temp1$ + Chr$(&H0D)
         ' Check if this line is the last
@@ -531,6 +539,7 @@ While x <= length - 1
         For ii = 1 To Len(Temp$)
             INArray(c) = Asc(Mid$(Temp$, ii, 1)): c = c + 1
         Next ii
+        GoTo KeepLooking ' check for more ADDASSEMs
     Else
         x = y
     End If
@@ -616,12 +625,14 @@ While x <= length - 1
     End If
     INArray(c) = v: c = c + 1
 Wend
+
 'Now that it's formatted copy INArray to array
 INArray(c) = &H0D ' Make last byte of the file an Enter
 length = c
 For i = 0 To length
     Array(i) = INArray(i)
 Next i
+
 If Verbose > 2 Then
     ' Let's print the current program listing:
     For i = 0 To length - 1
@@ -673,6 +684,7 @@ Else
     Shell ".\BasTo6809.2.Compile.exe " + c$ + s$ + o$ + b$ + Verbose$ + KeepTempFiles$ + OutName$
 End If
 System
+
 
 FillCommandArray: ' Main Commands
 C$(&H80) = "FOR "

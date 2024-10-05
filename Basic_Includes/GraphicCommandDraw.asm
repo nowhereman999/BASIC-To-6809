@@ -1,7 +1,7 @@
 ; Draw command
-; Start of draw commands is at _StrVar_PF01 and terminated with a zero
+; Start of draw commands is at _StrVar_PF00 and terminated with a zero
 ;
-; Variable used
+; Variables used
 DrawBlankFlag           RMB     1             ; Flag to say if we are drawing a blank line or not
 RelativeMoveFlag        RMB     1             ; Flag to say if we are doing a relative move or not
 DrawDestination         RMB     2             ; y,x co-ordinates of the Draw Destination

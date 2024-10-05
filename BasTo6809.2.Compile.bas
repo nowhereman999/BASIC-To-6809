@@ -527,6 +527,7 @@ If KeepTempFiles = 0 Then
     Kill "BASIC_Text.bas"
     Kill "BasicTokenized.bin"
     Kill "BasicTokenizedB4Pass2.bin"
+    Kill "BasicTokenizedB4Pass3.bin"
 End If
 If Verbose > 0 Then Print "All Done :)"
 System
@@ -3448,7 +3449,6 @@ Color 15
 System
 DoDRAW:
 ' Copy strings and quotes to a tempstring
-' Uses _StrVar_PF01 & _StrVar_IFRight string space which gives us about 510 bytes to play with
 GoSub GetExpressionB4EOL ' Get the expression before an End of Line in Expression$
 GoSub ParseStringExpression ' Parse the String Expression, value will end up in _StrVar_PF00
 A$ = "JSR": B$ = "Draw": C$ = "Draw command, will draw the commands in the string _StrVar_PF00": GoSub AssemOut
@@ -3483,10 +3483,11 @@ PModeSkipScreen:
 A$ = "JSR": B$ = "DoPMODE": C$ = "Go setup a PMODE screen, A = PMODE # and B is the screen number": GoSub AssemOut
 Return
 DoPLAY:
-Color 14
-Print "Can't do command PLAY yet, found on line "; linelabel$
-Color 15
-System
+' Copy strings and quotes to a tempstring
+GoSub GetExpressionB4EOL ' Get the expression before an End of Line in Expression$
+GoSub ParseStringExpression ' Parse the String Expression, value will end up in _StrVar_PF00
+A$ = "JSR": B$ = "Play": C$ = "Play command, will play the commands in the string _StrVar_PF00": GoSub AssemOut
+Return
 DoDLOAD:
 Color 14
 Print "Can't do command DLOAD yet, found on line "; linelabel$
@@ -5052,6 +5053,7 @@ End Select
 
 ' Get the value of a string expression
 ParseStringExpression:
+'show$ = Expression$: GoSub show
 If Verbose > 2 Then Print "Going to parse String: "; Expression$
 ExpressionCount = ExpressionCount + 1
 Expression$(ExpressionCount) = Expression$ + "    "

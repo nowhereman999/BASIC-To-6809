@@ -101,7 +101,6 @@ CharJumpTable:
         FDB     Character_Blank         ; $7D }
         FDB     Character_Blank         ; $7E ~
         FDB     Character_Blank         ; $7F DEL
-
 ; Table end
 ; **************************************
 ;  Blank
@@ -114,9 +113,6 @@ CharJumpTable:
 ;6 00000000
 ;7 00000000
 Character_Blank:
-        opt     cd
-        opt     cc
-        opt     ct
         CLRA
         STA     ,U     * 0      U
         LEAU    128,U
@@ -139,9 +135,6 @@ Character_Blank:
 ;6 00000000
 ;7 00100000
 Character_Exclamation:
-        opt     cd
-        opt     cc
-        opt     ct
         CLRA
         STA     ,U     * 0      U
         LEAU    128,U
@@ -169,9 +162,6 @@ Character_Exclamation:
 ;6 00000000
 ;7 00000000
 Character_Quote:
-        opt     cd
-        opt     cc
-        opt     ct
         CLRA
         STA     ,U     * 0      U
         LEAU    128,U
@@ -197,9 +187,6 @@ Character_Quote:
 ;6 01010100
 ;7 00010000
 Character_Asterisk:
-        opt     cd
-        opt     cc
-        opt     ct
         CLR     ,U     * 0      U
         LEAU    128,U
         LDA     #%00010000
@@ -224,9 +211,6 @@ Character_Asterisk:
 ;6 00000000
 ;7 00000000
 Character_Hyphen:
-        opt     cd
-        opt     cc
-        opt     ct
         CLRA
         STA     ,U     * 0      U
         LEAU    128,U
@@ -250,9 +234,6 @@ Character_Hyphen:
 ;6 00100000
 ;7 01000000
 Character_Slash:
-        opt     cd
-        opt     cc
-        opt     ct
         CLRA
         STA     ,U     * 0      U
         LEAU    128,U
@@ -282,9 +263,6 @@ Character_Slash:
 ;6 00110010
 ;7 00011100
 Character_0:
-        opt     cd
-        opt     cc
-        opt     ct
         CLR     ,U     * 0      U
         LEAU    128,U
         LDA     #%00011100
@@ -311,9 +289,6 @@ Character_0:
 ;6 00001100
 ;7 00111111
 Character_1:
-        opt     cd
-        opt     cc
-        opt     ct
         CLR     ,U     * 0      U
         LEAU    128,U
         LDA     #%00001100
@@ -327,8 +302,6 @@ Character_1:
         LDA     #%00111111
         STA     96,U   * 7      U+96
         RTS
-
-
 ; **************************************
 ;  2
 ;0 00000000
@@ -340,9 +313,6 @@ Character_1:
 ;6 01110000
 ;7 01111111
 Character_2:
-        opt     cd
-        opt     cc
-        opt     ct
         CLR     ,U     * 0      U
         LEAU    128,U
         LDA     #%00111110
@@ -360,8 +330,6 @@ Character_2:
         LDA     #%01111111
         STA     96,U   * 7      U+96
         RTS
-
-
 ; **************************************
 ;  3
 ;0 00000000
@@ -373,9 +341,6 @@ Character_2:
 ;6 01100011
 ;7 00111110
 Character_3:
-        opt     cd
-        opt     cc
-        opt     ct
         CLR     ,U     * 0      U
         LEAU    128,U
         LDA     #%00111111
@@ -404,9 +369,6 @@ Character_3:
 ;6 00000110
 ;7 00000110
 Character_4:
-        opt     cd
-        opt     cc
-        opt     ct
         CLR     ,U     * 0      U
         LEAU    128,U
         LDA     #%00001110
@@ -434,9 +396,6 @@ Character_4:
 ;6 01100011
 ;7 00111110
 Character_5:
-        opt     cd
-        opt     cc
-        opt     ct
         CLR     ,U     * 0      U
         LEAU    128,U
         LDA     #%01111110
@@ -464,9 +423,6 @@ Character_5:
 ;6 01100011
 ;7 00111110
 Character_6:
-        opt     cd
-        opt     cc
-        opt     ct
         CLR     ,U     * 0      U
         LEAU    128,U
         LDA     #%00011110
@@ -494,9 +450,6 @@ Character_6:
 ;6 00011000
 ;7 00011000
 Character_7:
-        opt     cd
-        opt     cc
-        opt     ct
         CLR     ,U     * 0      U
         LEAU    128,U
         LDA     #%01111111
@@ -523,9 +476,6 @@ Character_7:
 ;6 01000011
 ;7 00111110
 Character_8:
-        opt     cd
-        opt     cc
-        opt     ct
         CLR     ,U     * 0      U
         LEAU    128,U
         LDA     #%00111100
@@ -553,9 +503,6 @@ Character_8:
 ;6 00000110
 ;7 00111100
 Character_9:
-        opt     cd
-        opt     cc
-        opt     ct
         CLR     ,U     * 0      U
         LEAU    128,U
         LDA     #%00111110
@@ -583,9 +530,6 @@ Character_9:
 ;6 00011000
 ;7 00000000
 Character_Colon:
-        opt     cd
-        opt     cc
-        opt     ct
         CLRA
         STA     ,U     * 0      U
         LEAU    128,U
@@ -609,9 +553,6 @@ Character_Colon:
 ;6 00010000
 ;7 00001000
 Character_Less:
-        opt     cd
-        opt     cc
-        opt     ct
         CLR     ,U     * 0      U
         LEAU    128,U
         LDA     #%00001000
@@ -637,9 +578,6 @@ Character_Less:
 ;6 00000000
 ;7 00000000
 Character_Equal:
-        opt     cd
-        opt     cc
-        opt     ct
         CLRA
         STA     ,U     * 0      U
         LEAU    128,U
@@ -663,9 +601,6 @@ Character_Equal:
 ;6 00010000
 ;7 00100000
 Character_Great:
-        opt     cd
-        opt     cc
-        opt     ct
         CLR     ,U     * 0      U
         LEAU    128,U
         LDA     #%00100000
@@ -691,9 +626,6 @@ Character_Great:
 ;6 01100011
 ;7 01100011
 Character_A:
-        opt     cd
-        opt     cc
-        opt     ct
         CLR     ,U     * 0      U
         LEAU    128,U
         LDA     #%00011100
@@ -719,9 +651,6 @@ Character_A:
 ;6 01100011
 ;7 01111110
 Character_B:
-        opt     cd
-        opt     cc
-        opt     ct
         CLR     ,U     * 0      U
         LEAU    128,U
         LDA     #%01111110
@@ -745,9 +674,6 @@ Character_B:
 ;6 00110011
 ;7 00011110
 Character_C:
-        opt     cd
-        opt     cc
-        opt     ct
         CLR     ,U     * 0      U
         LEAU    128,U
         LDA     #%00011110
@@ -772,9 +698,6 @@ Character_C:
 ;6 01100110
 ;7 01111100
 Character_D:
-        opt     cd
-        opt     cc
-        opt     ct
         CLR     ,U  * 0         U
         LEAU    128,U
         LDA     #%01111100
@@ -799,9 +722,6 @@ Character_D:
 ;6 00110000
 ;7 00111111
 Character_E:
-        opt     cd
-        opt     cc
-        opt     ct
         CLR     ,U  * 0         U
         LEAU    128,U
         LDA     #%00111111
@@ -825,11 +745,7 @@ Character_E:
 ;5 01100000
 ;6 01100000
 ;7 01100000
-
 Character_F:
-        opt     cd
-        opt     cc
-        opt     ct
         CLR     ,U  * 0         U
         LEAU    128,U
         LDA     #%01111111
@@ -853,11 +769,7 @@ Character_F:
 ;5 01100011
 ;6 00110011
 ;7 00011111
-
 Character_G:
-        opt     cd
-        opt     cc
-        opt     ct
         CLR     ,U  * 0         U
         LEAU    128,U
         LDA     #%00011111
@@ -885,9 +797,6 @@ Character_G:
 ;6 01100011
 ;7 01100011
 Character_H:
-        opt     cd
-        opt     cc
-        opt     ct
         CLR     ,U     * 0      U
         LEAU    128,U
         LDA     #%01100011
@@ -900,9 +809,6 @@ Character_H:
         LDA     #%01111111
         STA     ,U     * 4      U
         RTS
-
-
-
 ; **************************************
 ;  I
 ;0 00000000
@@ -914,9 +820,6 @@ Character_H:
 ;6 00001100
 ;7 00111111
 Character_I:
-        opt     cd
-        opt     cc
-        opt     ct
         CLR     ,U     * 0      U
         LEAU    128,U
         LDA     #%00111111
@@ -939,11 +842,7 @@ Character_I:
 ;5 00000011
 ;6 01100011
 ;7 00111110
-
 Character_J:
-        opt     cd
-        opt     cc
-        opt     ct
         CLR     ,U     * 0      U
         LEAU    128,U
         LDA     #%00000011
@@ -968,9 +867,6 @@ Character_J:
 ;6 01101110
 ;7 01100111
 Character_K:
-        opt     cd
-        opt     cc
-        opt     ct
         CLR     ,U     * 0      U
         LEAU    128,U
         LDA     #%01100011
@@ -998,11 +894,7 @@ Character_K:
 ;5 00110000
 ;6 00110000
 ;7 00111111
-
 Character_L:
-        opt     cd
-        opt     cc
-        opt     ct
         CLR     ,U     * 0      U
         LEAU    128,U
         LDA     #%00110000
@@ -1025,11 +917,7 @@ Character_L:
 ;5 01101011
 ;6 01100011
 ;7 01100011
-
 Character_M:
-        opt     cd
-        opt     cc
-        opt     ct
         CLR     ,U     * 0      U
         LEAU    128,U
         LDA     #%01100011
@@ -1054,11 +942,7 @@ Character_M:
 ;5 01101111
 ;6 01100111
 ;7 01100011
-
 Character_N:
-        opt     cd
-        opt     cc
-        opt     ct
         CLR     ,U     * 0      U
         LEAU    128,U
         LDA     #%01100011
@@ -1075,8 +959,6 @@ Character_N:
         LDA     #%01100111
         STA     64,U   * 6      U+64
         RTS
-
-
 ; **************************************
 ;  O
 ;0 00000000
@@ -1087,11 +969,7 @@ Character_N:
 ;5 01100011
 ;6 01100011
 ;7 00111110
-
 Character_O:
-        opt     cd
-        opt     cc
-        opt     ct
         CLR     ,U     * 0      U
         LEAU    128,U
         LDA     #%00111110
@@ -1115,9 +993,6 @@ Character_O:
 ;6 01100000
 ;7 01100000
 Character_P:
-        opt     cd
-        opt     cc
-        opt     ct
         CLR     ,U     * 0      U
         LEAU    128,U
         LDA     #%01111110
@@ -1141,11 +1016,7 @@ Character_P:
 ;5 01101111
 ;6 01100110
 ;7 00111101
-
 Character_Q:
-        opt     cd
-        opt     cc
-        opt     ct
         CLR     ,U     * 0      U
         LEAU    128,U
         LDA     #%00111110
@@ -1172,9 +1043,6 @@ Character_Q:
 ;6 01101110
 ;7 01100111
 Character_R:
-        opt     cd
-        opt     cc
-        opt     ct
         CLR     ,U     * 0      U
         LEAU    128,U
         LDA     #%01111110
@@ -1202,9 +1070,6 @@ Character_R:
 ;6 01100011
 ;7 00111110
 Character_S:
-        opt     cd
-        opt     cc
-        opt     ct
         CLR     ,U     * 0      U
         LEAU    128,U
         LDA     #%00111100
@@ -1232,9 +1097,6 @@ Character_S:
 ;6 00001100
 ;7 00001100
 Character_T:
-        opt     cd
-        opt     cc
-        opt     ct
         CLR     ,U     * 0      U
         LEAU    128,U
         LDA     #%00111111
@@ -1258,9 +1120,6 @@ Character_T:
 ;6 01100011
 ;7 00111110
 Character_U:
-        opt     cd
-        opt     cc
-        opt     ct
         CLR     ,U     * 0      U
         LEAU    128,U
         LDA     #%01100011
@@ -1284,9 +1143,6 @@ Character_U:
 ;6 00011100
 ;7 00001000
 Character_V:
-        opt     cd
-        opt     cc
-        opt     ct
         CLR     ,U     * 0      U
         LEAU    128,U
         LDA     #%01100011
@@ -1313,9 +1169,6 @@ Character_V:
 ;6 01110111
 ;7 01100011
 Character_W:
-        opt     cd
-        opt     cc
-        opt     ct
         CLR     ,U     * 0      U
         LEAU    128,U
         LDA     #%01100011
@@ -1341,9 +1194,6 @@ Character_W:
 ;6 01110111
 ;7 01100011
 Character_X:
-        opt     cd
-        opt     cc
-        opt     ct
         CLR     ,U     * 0      U
         LEAU    128,U
         LDA     #%01100011
@@ -1369,9 +1219,6 @@ Character_X:
 ;6 00001100
 ;7 00001100
 Character_Y:
-        opt     cd
-        opt     cc
-        opt     ct
         CLR     ,U     * 0      U
         LEAU    128,U
         LDA     #%00110011
@@ -1396,9 +1243,6 @@ Character_Y:
 ;6 01110000
 ;7 01111111
 Character_Z:
-        opt     cd
-        opt     cc
-        opt     ct
         CLR     ,U     * 0      U
         LEAU    128,U
         LDA     #%01111111
