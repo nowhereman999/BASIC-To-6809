@@ -530,7 +530,7 @@ If KeepTempFiles = 0 Then
     Kill "BasicTokenizedB4Pass3.bin"
 End If
 If Verbose > 0 Then Print "All Done :)"
-System
+System 1 ' 1 signifies exit with no errors :)
 
 ' Returns with X pointing at the memory location for the Numeric Array, D is unchanged
 MakeXPointAtNumericArray:
@@ -3438,15 +3438,175 @@ A$ = "JSR": B$ = "PAINT": C$ = "Go do the PAINT/Flood Fill": GoSub AssemOut
 Print #1,
 Return
 DoGET:
-Color 14
-Print "Can't do command GET yet, found on line "; linelabel$
-Color 15
-System
+v = Array(x): x = x + 1
+If Array(x) <> &H28 Then Print "Can't find open bracket for GET command on";: GoTo FoundError
+' Get the start x co-ordinate
+x = x + 1 'move past the open bracket
+GoSub GetExpressionB4Comma: x = x + 2 'Handle an expression that ends with a comma skip brackets & move past it
+ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression result with value in D
+
+A$ = "TSTA": C$ = "Check if D is a negative": GoSub AssemOut
+A$ = "BPL": B$ = ">": C$ = "If value is 0 or more then check if we are > 255": GoSub AssemOut
+A$ = "CLRB": C$ = "Make value zero": GoSub AssemOut
+A$ = "BRA": B$ = "@SaveB0": C$ = "Save B on the stack": GoSub AssemOut
+Z$ = "!"
+A$ = "CMPD": B$ = "#255": C$ = "Check if B is > than 255": GoSub AssemOut
+A$ = "BLE": B$ = "@SaveB0": C$ = "If value is 255 or < then skip ahead": GoSub AssemOut
+A$ = "LDB": B$ = "#255": C$ = "Make the max size 255": GoSub AssemOut
+Z$ = "@SaveB0"
+A$ = "PSHS": B$ = "B": C$ = "Save the x coordinate value on the stack": GoSub AssemOut
+' Get the start y co-ordinate
+GoSub GetExpressionB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
+
+A$ = "TSTA": C$ = "Check if D is a negative": GoSub AssemOut
+A$ = "BPL": B$ = ">": C$ = "If value is 0 or more then check if we are > 191": GoSub AssemOut
+A$ = "CLRB": C$ = "Make value zero": GoSub AssemOut
+A$ = "BRA": B$ = "@SaveB1": C$ = "Save B on the stack": GoSub AssemOut
+Z$ = "!"
+A$ = "CMPD": B$ = "#191": C$ = "Check if B is > than 191": GoSub AssemOut
+A$ = "BLE": B$ = "@SaveB1": C$ = "If value is 191 or < then skip ahead": GoSub AssemOut
+A$ = "LDB": B$ = "#191": C$ = "Make the max size 191": GoSub AssemOut
+Z$ = "@SaveB1"
+A$ = "PSHS": B$ = "B": C$ = "Save the y coordinate on the stack": GoSub AssemOut
+Print #1, ' Need a space for @ in assembly
+' Make Sure we have a -(
+If Array(x + 1) = &H2D And Array(x + 2) = &HF5 And Array(x + 3) = &H28 Then
+    ' all is good
+    x = x + 4 ' Move past the open bracket
+Else
+    Print "Can't find minus or open bracket for GET command on";: GoTo FoundError
+End If
+' Get the destination x co-ordinate
+GoSub GetExpressionB4Comma: x = x + 2 'Handle an expression that ends with a comma skip brackets & move past it
+ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression result with value in D
+A$ = "TSTA": C$ = "Check if D is a negative": GoSub AssemOut
+A$ = "BPL": B$ = ">": C$ = "If value is 0 or more then check if we are > 255": GoSub AssemOut
+A$ = "CLRB": C$ = "Make value zero": GoSub AssemOut
+A$ = "BRA": B$ = "@SaveB0": C$ = "Save B on the stack": GoSub AssemOut
+Z$ = "!"
+A$ = "CMPD": B$ = "#255": C$ = "Check if B is > than 255": GoSub AssemOut
+A$ = "BLE": B$ = "@SaveB0": C$ = "If value is 255 or < then skip ahead": GoSub AssemOut
+A$ = "LDB": B$ = "#255": C$ = "Make the max size 255": GoSub AssemOut
+Z$ = "@SaveB0"
+A$ = "PSHS": B$ = "B": C$ = "Save the x coordinate value on the stack": GoSub AssemOut
+' Get the destination y co-ordinate
+GoSub GetExpressionB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
+A$ = "TSTA": C$ = "Check if D is a negative": GoSub AssemOut
+A$ = "BPL": B$ = ">": C$ = "If value is 0 or more then check if we are > 191": GoSub AssemOut
+A$ = "CLRB": C$ = "Make value zero": GoSub AssemOut
+A$ = "BRA": B$ = "@SaveB1": C$ = "Save B on the stack": GoSub AssemOut
+Z$ = "!"
+A$ = "CMPD": B$ = "#191": C$ = "Check if B is > than 191": GoSub AssemOut
+A$ = "BLE": B$ = "@SaveB1": C$ = "If value is 191 or < then skip ahead": GoSub AssemOut
+A$ = "LDB": B$ = "#191": C$ = "Make the max size 191": GoSub AssemOut
+Z$ = "@SaveB1"
+A$ = "PSHS": B$ = "B": C$ = "Save the y coordinate on the stack": GoSub AssemOut
+Print #1, ' make sure to leave a blank line so the @ are all good
+x = x + 1 ' Skip &HF5
+v = Array(x): x = x + 1 ' Get comma
+If v <> &H2C Then Print "Can't find comma after the destination x & y co-ordinates on";: GoTo FoundError
+' Should have an array name next
+v = Array(x): x = x + 1
+If v <> &HF0 Then Print "Can't find Array name after the destination x & y co-ordinates on";: GoTo FoundError
+v = Array(x) * 256 + Array(x + 1): x = x + 2
+NV$ = NumericArrayVariables$(v)
+NumDims = Array(x): x = x + 1 ' Skip past the number of arrays it's always 2
+A$ = "LDU": B$ = "#_ArrayNum_" + NV$: C$ = "U points at the start of the array": GoSub AssemOut
+A$ = "JSR": B$ = "GET": C$ = "Go fill the GET buffer that U points at": GoSub AssemOut
+Return
 DoPUT:
-Color 14
-Print "Can't do command PUT yet, found on line "; linelabel$
-Color 15
-System
+v = Array(x): x = x + 1
+If Array(x) <> &H28 Then Print "Can't find open bracket for PUT command on";: GoTo FoundError
+' Get the start x co-ordinate
+x = x + 1 'move past the open bracket
+GoSub GetExpressionB4Comma: x = x + 2 'Handle an expression that ends with a comma skip brackets & move past it
+ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression result with value in D
+
+A$ = "TSTA": C$ = "Check if D is a negative": GoSub AssemOut
+A$ = "BPL": B$ = ">": C$ = "If value is 0 or more then check if we are > 255": GoSub AssemOut
+A$ = "CLRB": C$ = "Make value zero": GoSub AssemOut
+A$ = "BRA": B$ = "@SaveB0": C$ = "Save B on the stack": GoSub AssemOut
+Z$ = "!"
+A$ = "CMPD": B$ = "#255": C$ = "Check if B is > than 255": GoSub AssemOut
+A$ = "BLE": B$ = "@SaveB0": C$ = "If value is 255 or < then skip ahead": GoSub AssemOut
+A$ = "LDB": B$ = "#255": C$ = "Make the max size 255": GoSub AssemOut
+Z$ = "@SaveB0"
+A$ = "PSHS": B$ = "B": C$ = "Save the x coordinate value on the stack": GoSub AssemOut
+' Get the start y co-ordinate
+GoSub GetExpressionB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
+
+A$ = "TSTA": C$ = "Check if D is a negative": GoSub AssemOut
+A$ = "BPL": B$ = ">": C$ = "If value is 0 or more then check if we are > 191": GoSub AssemOut
+A$ = "CLRB": C$ = "Make value zero": GoSub AssemOut
+A$ = "BRA": B$ = "@SaveB1": C$ = "Save B on the stack": GoSub AssemOut
+Z$ = "!"
+A$ = "CMPD": B$ = "#191": C$ = "Check if B is > than 191": GoSub AssemOut
+A$ = "BLE": B$ = "@SaveB1": C$ = "If value is 191 or < then skip ahead": GoSub AssemOut
+A$ = "LDB": B$ = "#191": C$ = "Make the max size 191": GoSub AssemOut
+Z$ = "@SaveB1"
+A$ = "PSHS": B$ = "B": C$ = "Save the y coordinate on the stack": GoSub AssemOut
+Print #1, ' Need a space for @ in assembly
+' Make Sure we have a -(
+If Array(x + 1) = &H2D And Array(x + 2) = &HF5 And Array(x + 3) = &H28 Then
+    ' all is good
+    x = x + 4 ' Move past the open bracket
+Else
+    Print "Can't find minus or open bracket for PUT command on";: GoTo FoundError
+End If
+' Get the destination x co-ordinate
+GoSub GetExpressionB4Comma: x = x + 2 'Handle an expression that ends with a comma skip brackets & move past it
+ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression result with value in D
+A$ = "TSTA": C$ = "Check if D is a negative": GoSub AssemOut
+A$ = "BPL": B$ = ">": C$ = "If value is 0 or more then check if we are > 255": GoSub AssemOut
+A$ = "CLRB": C$ = "Make value zero": GoSub AssemOut
+A$ = "BRA": B$ = "@SaveB0": C$ = "Save B on the stack": GoSub AssemOut
+Z$ = "!"
+A$ = "CMPD": B$ = "#255": C$ = "Check if B is > than 255": GoSub AssemOut
+A$ = "BLE": B$ = "@SaveB0": C$ = "If value is 255 or < then skip ahead": GoSub AssemOut
+A$ = "LDB": B$ = "#255": C$ = "Make the max size 255": GoSub AssemOut
+Z$ = "@SaveB0"
+A$ = "PSHS": B$ = "B": C$ = "Save the x coordinate value on the stack": GoSub AssemOut
+' Get the destination y co-ordinate
+GoSub GetExpressionB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
+A$ = "TSTA": C$ = "Check if D is a negative": GoSub AssemOut
+A$ = "BPL": B$ = ">": C$ = "If value is 0 or more then check if we are > 191": GoSub AssemOut
+A$ = "CLRB": C$ = "Make value zero": GoSub AssemOut
+A$ = "BRA": B$ = "@SaveB1": C$ = "Save B on the stack": GoSub AssemOut
+Z$ = "!"
+A$ = "CMPD": B$ = "#191": C$ = "Check if B is > than 191": GoSub AssemOut
+A$ = "BLE": B$ = "@SaveB1": C$ = "If value is 191 or < then skip ahead": GoSub AssemOut
+A$ = "LDB": B$ = "#191": C$ = "Make the max size 191": GoSub AssemOut
+Z$ = "@SaveB1"
+A$ = "PSHS": B$ = "B": C$ = "Save the y coordinate on the stack": GoSub AssemOut
+Print #1, ' make sure to leave a blank line so the @ are all good
+x = x + 1 ' Skip &HF5
+v = Array(x): x = x + 1 ' Get comma
+If v <> &H2C Then Print "Can't find comma after the destination x & y co-ordinates on";: GoTo FoundError
+' Should have an array name next
+v = Array(x): x = x + 1
+If v <> &HF0 Then Print "Can't find Array name after the destination x & y co-ordinates on";: GoTo FoundError
+v = Array(x) * 256 + Array(x + 1): x = x + 2
+NV$ = NumericArrayVariables$(v)
+A$ = "LDU": B$ = "#_ArrayNum_" + NV$: C$ = "U points at the start of the array": GoSub AssemOut
+PutType = Array(x): x = x + 1 ' Get the type of PUT command to execute
+' PutType Action
+'   0     PSET
+'   1     PRESET
+'   2     AND
+'   3     OR
+'   4     NOT
+'   5     XOR - New command ' why not
+If PutType = 0 Then A$ = "JSR": B$ = "PUT_PSET": C$ = "Go Draw the buffer that U points at on screen": GoSub AssemOut: Return
+If PutType = 1 Then A$ = "JSR": B$ = "PUT_PRESET": C$ = "Go Draw the buffer that U points at on screen": GoSub AssemOut: Return
+If PutType = 2 Then A$ = "JSR": B$ = "PUT_AND": C$ = "Go Draw the buffer that U points at on screen": GoSub AssemOut: Return
+If PutType = 3 Then A$ = "JSR": B$ = "PUT_OR": C$ = "Go Draw the buffer that U points at on screen": GoSub AssemOut: Return
+If PutType = 4 Then A$ = "JSR": B$ = "PUT_NOT": C$ = "Go Draw the buffer that U points at on screen": GoSub AssemOut: Return
+If PutType = 5 Then A$ = "JSR": B$ = "PUT_XOR": C$ = "Go Draw the buffer that U points at on screen": GoSub AssemOut: Return
+Print "Error handling type of PUT on": GoSub FoundError
 DoDRAW:
 ' Copy strings and quotes to a tempstring
 GoSub GetExpressionB4EOL ' Get the expression before an End of Line in Expression$

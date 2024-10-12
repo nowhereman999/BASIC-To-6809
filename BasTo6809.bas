@@ -3,7 +3,10 @@
 'Print "hex$(Array(x+2) "; Hex$(Array(x + 2))
 'System
 
-V$ = "2.11"
+V$ = "2.12"
+'       - Added GET and PUT commands, added option for PUT command to use the usual PSET (default), PRESET, AND, OR, NOT but also added XOR
+'
+' V2.11
 '       - tweaked PLAY command to handle quoted strings a little better.
 '
 ' V2.10
@@ -676,16 +679,16 @@ If KeepTempFiles = 1 Then KeepTempFiles$ = " -k " Else KeepTempFiles$ = ""
 ' Tokenize the BASIC Program
 CompilerVersion$ = _OS$
 If InStr(CompilerVersion$, "[MACOSX]") > 0 Or InStr(CompilerVersion$, "[LINUX]") > 0 Then
-    Shell "./BasTo6809.1.Tokenizer " + c$ + s$ + o$ + b$ + Verbose$ + p$ + f$ + OutName$
-    ' We now have the BASIC program in a good tokenized format as the file BasicTokenized.bin
-    ' Call the compiler with a few command line options to pass through to the compiler
-    Shell "./BasTo6809.2.Compile " + c$ + s$ + o$ + b$ + Verbose$ + KeepTempFiles$ + OutName$
+    PreString$ = "./"
 Else
-    Shell ".\BasTo6809.1.Tokenizer.exe " + c$ + s$ + o$ + b$ + Verbose$ + p$ + f$ + OutName$
-    ' We now have the BASIC program in a good tokenized format as the file BasicTokenized.bin
-    ' Call the compiler with a few command line options to pass through to the compiler
-    Shell ".\BasTo6809.2.Compile.exe " + c$ + s$ + o$ + b$ + Verbose$ + KeepTempFiles$ + OutName$
+    PreString$ = ".\"
 End If
+returncode = Shell(PreString$ + "BasTo6809.1.Tokenizer " + c$ + s$ + o$ + b$ + Verbose$ + p$ + f$ + OutName$)
+If returncode = 0 Then System
+' We now have the BASIC program in a good tokenized format as the file BasicTokenized.bin
+' Call the compiler with a few command line options to pass through to the compiler
+returncode = Shell(PreString$ + "BasTo6809.2.Compile " + c$ + s$ + o$ + b$ + Verbose$ + KeepTempFiles$ + OutName$)
+If returncode = 0 Then System
 System
 
 

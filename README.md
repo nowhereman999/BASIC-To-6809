@@ -4,6 +4,10 @@ A BASIC compiler for the TRS80 Color Computer
 For more info check out the blog post here:
 https://wordpress.com/post/nowhereman999.wordpress.com/5054
 
+V 2.12
+- Added GET and PUT commands, added option for PUT command to use the usual PSET (default), PRESET, AND, OR, NOT but also added
+  XOR
+  
 V 2.11
 - Tweaked PLAY command, had problems with Quoted PLAY string
 

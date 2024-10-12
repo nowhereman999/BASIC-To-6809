@@ -95,6 +95,15 @@ Check$ = "'": GoSub FindGenCommandNumber ' Gets the General Command number of Ch
 C_REMApostrophe = ii
 Check$ = "PRINT": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
 C_PRINT = ii
+Check$ = "PSET": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+C_PSET = ii
+Check$ = "PRESET": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+C_PRESET = ii
+Check$ = "GET": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+C_GET = ii
+Check$ = "PUT": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+C_PUT = ii
+
 
 ' Handle command line options
 FI = 0
@@ -906,7 +915,7 @@ If NumArrayVarsUsedCounter > 0 Then
         For D1 = 0 To NumericArrayDimensions(ii) - 1
             Num = Val("&H" + Mid$(NumericArrayDimensionsVal$(ii), 1 + D1 * 4, 4)) + 1 ' + 1 because it is zero based
             GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-            A$ = "FCB": B$ = Num$: C$ = "Default size of each array element is 11 (0 to 10), changed with the DIM command": GoSub AssemOut
+            A$ = "FCB": B$ = Num$: C$ = "Default size of each array element is 12 (0 to 11), changed with the DIM command": GoSub AssemOut
         Next D1
         A$ = "RMB": B$ = Temp$: C$ = "Two bytes (16 bits) per element": GoSub AssemOut
     Next ii
@@ -1016,6 +1025,14 @@ For ii = 0 To GeneralCommandsFoundCount - 1
     If Temp$ = "PMODE" Then
         Temp$ = "GraphicSetup": GoSub AddIncludeTemp ' Add code for the setting different Graphics PMODES and SCREENs
         Temp$ = "GraphicCommands": GoSub AddIncludeTemp ' Add code to handle graphics commands
+    End If
+    If Temp$ = "GET" Or Temp$ = "PUT" Then
+        Temp$ = "GraphicCommandsGetPut": GoSub AddIncludeTemp ' Add code to handle Get and Put commands
+        If PUTPRESET = 1 Then Temp$ = "GraphicCommandsPut_PRESET": GoSub AddIncludeTemp ' Add code to handle Put PRESET command
+        If PUTAND = 1 Then Temp$ = "GraphicCommandsPut_AND": GoSub AddIncludeTemp ' Add code to handle Put AND command
+        If PUTOR = 1 Then Temp$ = "GraphicCommandsPut_OR": GoSub AddIncludeTemp ' Add code to handle Put OR command
+        If PUTNOT = 1 Then Temp$ = "GraphicCommandsPut_NOT": GoSub AddIncludeTemp ' Add code to handle Put NOT command
+        If PUTXOR = 1 Then Temp$ = "GraphicCommandsPut_XOR": GoSub AddIncludeTemp ' Add code to handle Put XOR command
     End If
     If Temp$ = "SET" Or Temp$ = "RESET" Then
         Temp$ = "SetResetPoint": GoSub AddIncludeTemp
@@ -1284,7 +1301,7 @@ Z$ = "* This is where we enable the IRQ": GoSub AssemOut
 A$ = "ANDCC": B$ = "#%11101111": C$ = "= %11101111 this will Enable the IRQ to start": GoSub AssemOut
 
 Z$ = "; *** User's Program code starts here ***": GoSub AssemOut
-System
+System 1 ' End with flag of 1 = All went OK
 
 ' Tokens for variables type:
 ' &HF0 = Numeric Arrays
@@ -1349,6 +1366,20 @@ While I <= Len(Expression$)
             End If
             ' Make changes for General commands that have bracket values, otherwise they will be picked up as numeric array variables
             If Temp$ = "SET" Then
+                ' Found 3 letter general command which may or may not have a space before the open bracket
+                If Mid$(BaseString$, 4, 1) = "(" Then
+                    'This general command does have an open bracket
+                    RightSpace = 1
+                End If
+            End If
+            If Temp$ = "GET" Then
+                ' Found 3 letter general command which may or may not have a space before the open bracket
+                If Mid$(BaseString$, 4, 1) = "(" Then
+                    'This general command does have an open bracket
+                    RightSpace = 1
+                End If
+            End If
+            If Temp$ = "PUT" Then
                 ' Found 3 letter general command which may or may not have a space before the open bracket
                 If Mid$(BaseString$, 4, 1) = "(" Then
                     'This general command does have an open bracket
@@ -1554,6 +1585,11 @@ While I <= Len(Expression$)
     Tokenized$ = Tokenized$ + i$
     I = I + 1
     TokenAdded0:
+
+
+
+
+
     If Temp$ = "DRAW" Then ' Found a Draw command, change any X inside a quote to ":DRAW (whatever before the next semi colon" : DRAW" the rest
         Temp$ = Right$(Expression$, Len(Expression$) - I)
         Expression$ = Left$(Expression$, I)
@@ -1700,6 +1736,20 @@ If Verbose > 1 Then
     Print
 End If
 ' Special commands that need manual tweaking
+' Check and skip lines that start with REMarks
+Num = C_REM
+GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSBs
+If InStr(Tokenized$, Chr$(&HFF) + Chr$(MSB) + Chr$(LSB)) = 1 Then
+    ' Found a REM at the start of this line, skip checking special commands
+    GoTo SkipCheckingSpecialCommands
+End If
+Num = C_REMApostrophe
+GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSBs
+If InStr(Tokenized$, Chr$(&HFF) + Chr$(MSB) + Chr$(LSB)) = 1 Then
+    ' Found a ' at the start of this line, skip checking special commands
+    GoTo SkipCheckingSpecialCommands
+End If
+
 ' LINE may or may not have ,B or BF at the end which might get turned into variable below
 ' Change the Tokenized$ command so it will have
 ' after ,PSET or ,PRESET we will have
@@ -1745,6 +1795,149 @@ If Found = 1 Then
     End If
 End If
 
+' GET command, we must have an array pointer after the last last close bracket and comma
+TempCOM$ = ""
+I = 1
+' Find the GET Token
+Num = C_GET
+GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSBs
+While InStr(I, Tokenized$, Chr$(&HFF) + Chr$(MSB) + Chr$(LSB)) > 0 ' See if we still have any PUT commands to deal with
+    Start = I
+    ' This line of code has the GET command in it
+    I = InStr(I, Tokenized$, Chr$(&H29) + Chr$(&H20) + Chr$(&H2C) + Chr$(&H20)) ' Find the ") , "
+    If I = 0 Then Print "Error: GET command doesn't have Close bracket and comma on";: GoTo FoundError 'Can't find the ),
+    I = I + 4 ' Move past the ), - Now point at the array name
+    ArrayStart = I
+    Temp$ = ""
+    While I <= Len(Tokenized$)
+        i$ = Mid$(Tokenized$, I, 1): I = I + 1
+        If i$ = Chr$(&H20) Or i$ = Chr$(&HF5) Then I = I - 1: Exit While
+        Temp$ = Temp$ + i$
+    Wend
+    If i$ = Chr$(&H20) Then
+        ' Check for a , G after the array
+        ANameEnd = InStr(I, Tokenized$, ", G") ' Find the ", G"
+        If ANameEnd > 0 Then
+            I = ANameEnd + 3
+            i$ = ""
+        Else
+            Print "Error: GET command ends with something other than a ,G";: GoTo FoundError 'Can't find the PUT action
+        End If
+    End If
+    Dimensions = 2: ' graphics have two dimensions
+    GoSub AddToNumArrayVariableList ' Add variable Temp$ to the Numeric array variable List and the number of dimensions the String array has
+    If Found = 1 Then
+        Num = ii: GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSB
+        GETArray$ = Chr$(&HF0) + Chr$(MSB) + Chr$(LSB) + Chr$(2)
+    Else
+        Num = NumArrayVarsUsedCounter - 1: GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSB
+        GETArray$ = Chr$(&HF0) + Chr$(MSB) + Chr$(LSB) + Chr$(2)
+    End If
+    TempCOM$ = TempCOM$ + Mid$(Tokenized$, Start, ArrayStart - Start - 1) + GETArray$ ' Copy the rest of the PUT command, I points at the Colon or the end of this line
+    Check$ = "GET": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+    Num = ii
+    GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSBs
+Wend
+If TempCOM$ <> "" Then
+    ' We found a GET command
+    Tokenized$ = TempCOM$ + Right$(Tokenized$, Len(Tokenized$) - I + 1)
+End If
+
+' PUT command, we must have an array pointer after the last last close bracket and comma
+TempCOM$ = ""
+I = 1
+' Find the PUT Token
+Num = C_PUT
+GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSBs
+While InStr(I, Tokenized$, Chr$(&HFF) + Chr$(MSB) + Chr$(LSB)) > 0 ' See if we still have any PUT commands to deal with
+    Start = I
+    ' This line of code has the PUT command in it
+    I = InStr(I, Tokenized$, Chr$(&H29) + Chr$(&H20) + Chr$(&H2C) + Chr$(&H20)) ' Find the ") , "
+    If I = 0 Then Print "Error: PUT command doesn't have Close bracket and comma on";: GoTo FoundError 'Can't find the ),
+    I = I + 4 ' Move past the ), - Now point at the array name
+    ArrayStart = I
+    Temp$ = ""
+    While I <= Len(Tokenized$)
+        i$ = Mid$(Tokenized$, I, 1): I = I + 1
+        If i$ = Chr$(&H20) Or i$ = Chr$(&HF5) Then I = I - 1: Exit While
+        Temp$ = Temp$ + i$
+    Wend
+    PUTPSET = 1 ' Default to ,PSET
+    If i$ = Chr$(&H20) Then
+        Num = C_PSET
+        ' Extract the high byte (higher 8 bits)
+        MSByte = Num \ 256 ' Integer division by 256
+        ' Extract the low byte (lower 8 bits)
+        LSByte = Num And 255 ' Equivalent to num MOD 256
+        ANameEnd = InStr(I, Tokenized$, Chr$(&H2C) + Chr$(&H20) + Chr$(&HFF) + Chr$(MSByte) + Chr$(LSByte)) ' Find the " , PSET"
+        If ANameEnd > 0 Then
+            PUTPSET = 1
+            PutType = 0
+            I = ANameEnd + 5
+        Else
+            Num = C_PRESET
+            ' Extract the high byte (higher 8 bits)
+            MSByte = Num \ 256 ' Integer division by 256
+            ' Extract the low byte (lower 8 bits)
+            LSByte = Num And 255 ' Equivalent to num MOD 256
+            ANameEnd = InStr(I, Tokenized$, Chr$(&H2C) + Chr$(&H20) + Chr$(&HFF) + Chr$(MSByte) + Chr$(LSByte)) ' Find the " , PRESET"
+            If ANameEnd > 0 Then
+                PUTPRESET = 1
+                PutType = 1
+                I = ANameEnd + 5
+            Else
+                ANameEnd = InStr(I, Tokenized$, Chr$(&H2C) + Chr$(&H20) + Chr$(&HFC) + Chr$(&H10)) ' Find the " , AND"
+                If ANameEnd > 0 Then
+                    PUTAND = 1
+                    PutType = 2
+                    I = ANameEnd + 4
+                Else
+                    ANameEnd = InStr(I, Tokenized$, Chr$(&H2C) + Chr$(&H20) + Chr$(&HFC) + Chr$(&H11)) ' Find the " , OR"
+                    If ANameEnd > 0 Then
+                        PUTOR = 1
+                        PutType = 3
+                        I = ANameEnd + 4
+                    Else
+                        ANameEnd = InStr(I, Tokenized$, Chr$(&H2C) + Chr$(&H20) + Chr$(&HFC) + Chr$(&H14)) ' Find the " , NOT"
+                        If ANameEnd > 0 Then
+                            PUTNOT = 1
+                            PutType = 4
+                            I = ANameEnd + 4
+                        Else
+                            ANameEnd = InStr(I, Tokenized$, Chr$(&H2C) + Chr$(&H20) + Chr$(&HFC) + Chr$(&H13)) ' Find the " , XOR"
+                            If ANameEnd > 0 Then
+                                PUTXOR = 1
+                                PutType = 5
+                                I = ANameEnd + 4
+                            Else
+                                Print "Error: PUT command doesn't end with an action like PSET,PRESET,AND,OR or NOT on";: GoTo FoundError 'Can't find the PUT action
+                            End If
+                        End If
+                    End If
+                End If
+            End If
+        End If
+    End If
+    Dimensions = 2: ' graphics have two dimensions
+    GoSub AddToNumArrayVariableList ' Add variable Temp$ to the Numeric array variable List and the number of dimensions the String array has
+    If Found = 1 Then
+        Num = ii: GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSB
+        ArrayPutType$ = Chr$(&HF0) + Chr$(MSB) + Chr$(LSB) + Chr$(PutType)
+    Else
+        Num = NumArrayVarsUsedCounter - 1: GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSB
+        ArrayPutType$ = Chr$(&HF0) + Chr$(MSB) + Chr$(LSB) + Chr$(PutType)
+    End If
+    TempCOM$ = TempCOM$ + Mid$(Tokenized$, Start, ArrayStart - Start - 1) + ArrayPutType$ ' Copy the rest of the PUT command, I points at the Colon or the end of this line
+    Check$ = "PUT": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+    Num = ii
+    GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSBs
+Wend
+If TempCOM$ <> "" Then
+    ' We found a PUT command
+    Tokenized$ = TempCOM$ + Right$(Tokenized$, Len(Tokenized$) - I + 1)
+End If
+
+SkipCheckingSpecialCommands:
 ' Tokens for variables type:
 ' &HF0 = Numeric Arrays
 ' &HF1 = String Arrays
@@ -1763,6 +1956,7 @@ End If
 
 ' Next tokenize Numeric Arrays & String Arrays
 ' Find Numeric & String Arrays
+
 Expression$ = Tokenized$
 Tokenized$ = ""
 I = 1
@@ -1832,6 +2026,18 @@ While I <= Len(Expression$)
                 ' Check for a DATA
                 If v = C_DATA Then
                     'We found a DATA command - copy the rest of this line upto a colon or the end
+                    While I <= Len(Expression$)
+                        i$ = Mid$(Expression$, I, 1): I = I + 1
+                        Tokenized$ = Tokenized$ + i$
+                        If i$ = Chr$(&HF5) Then
+                            i$ = Mid$(Expression$, I, 1): I = I + 1
+                            Tokenized$ = Tokenized$ + i$
+                            If i$ = Chr$(&H3A) Then Exit While
+                        End If
+                    Wend
+                End If
+                If v = C_PUT Or v = C_GET Then ' Check for a PUT or GET command
+                    'We found a PUT or GET command - copy the rest of this line upto a colon or the end
                     While I <= Len(Expression$)
                         i$ = Mid$(Expression$, I, 1): I = I + 1
                         Tokenized$ = Tokenized$ + i$
@@ -2706,7 +2912,7 @@ show:
 Print "Working on line "; linelabel$
 Print "Length of "; show$; " is"; Len(show$)
 For ii = 1 To Len(show$)
-    Print ii, Hex$(Asc(Mid$(show$, ii, 1)))
+    Print ii, Hex$(Asc(Mid$(show$, ii, 1))), Chr$(Asc(Mid$(show$, ii, 1)))
 Next ii
 Input q
 If q = 1 Then System
