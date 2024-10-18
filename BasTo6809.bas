@@ -3,11 +3,14 @@
 'Print "hex$(Array(x+2) "; Hex$(Array(x + 2))
 'System
 
-V$ = "2.12"
+V$ = "2.13"
+'       - Added command PLAYSDC"SAMPLE.RAW" which will play the sample stored on the SDC through the CoCo DAC
+'
+' V2.12
 '       - Added GET and PUT commands, added option for PUT command to use the usual PSET (default), PRESET, AND, OR, NOT but also added XOR
 '
 ' V2.11
-'       - tweaked PLAY command to handle quoted strings a little better.
+'       - Tweaked PLAY command to handle quoted strings a little better.
 '
 ' V2.10
 '       - Added PLAY command and tweaked DRAW command so it handles ;X with a string if the DRAW command doesn't end with a semi colon

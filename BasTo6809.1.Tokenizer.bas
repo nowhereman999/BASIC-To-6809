@@ -837,6 +837,9 @@ For ii = 0 To GeneralCommandsFoundCount - 1
     If Temp$ = "PLAY" Then
         PlayCommand = 1 ' Flag that we use the Play Command
     End If
+    If Temp$ = "SDCPLAY" Then
+        SDCPLAY = 1 ' Flag that we need extra SDCPlayback buffer space
+    End If
 Next ii
 
 ' Start writing to the .asm file
@@ -892,6 +895,11 @@ For Num = 0 To 1
 Next Num
 ' Add temp IF string space
 Print #1, "_StrVar_IFRight"; T1$; "RMB "; T1$; "256     ; Temp String Variable for IF Compares"
+If SDCPLAY = 1 Then
+    ' We need extra SDCPlayback buffer space
+    Print #1, "SDCPLAY_Extra"; T1$; "RMB "; T1$; "256     ; Extra temp Space for SDCPLAY command"
+End If
+
 
 ' Add the String Variables used
 Print #1, "; String Variables Used:"; StringVariableCounter
@@ -1033,6 +1041,11 @@ For ii = 0 To GeneralCommandsFoundCount - 1
         If PUTOR = 1 Then Temp$ = "GraphicCommandsPut_OR": GoSub AddIncludeTemp ' Add code to handle Put OR command
         If PUTNOT = 1 Then Temp$ = "GraphicCommandsPut_NOT": GoSub AddIncludeTemp ' Add code to handle Put NOT command
         If PUTXOR = 1 Then Temp$ = "GraphicCommandsPut_XOR": GoSub AddIncludeTemp ' Add code to handle Put XOR command
+    End If
+    If Temp$ = "SDCPLAY" Then
+        Temp$ = "Audio_Muxer": GoSub AddIncludeTemp ' Add code for Selecting the audio muxer and to turn it on or off
+        Temp$ = "StreamFile_Library": GoSub AddIncludeTemp
+        Temp$ = "SDCPlay": GoSub AddIncludeTemp
     End If
     If Temp$ = "SET" Or Temp$ = "RESET" Then
         Temp$ = "SetResetPoint": GoSub AddIncludeTemp

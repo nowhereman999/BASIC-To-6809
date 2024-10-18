@@ -3648,6 +3648,13 @@ GoSub GetExpressionB4EOL ' Get the expression before an End of Line in Expressio
 GoSub ParseStringExpression ' Parse the String Expression, value will end up in _StrVar_PF00
 A$ = "JSR": B$ = "Play": C$ = "Play command, will play the commands in the string _StrVar_PF00": GoSub AssemOut
 Return
+DoSDCPLAY:
+' Copy filename to a tempstring
+GoSub GetExpressionB4EOL ' Get the expression before an End of Line in Expression$
+GoSub ParseStringExpression ' Parse the String Expression, value will end up in _StrVar_PF00
+' Check the filename to make sure it's OK
+A$ = "JSR": B$ = "SDCPLAY": C$ = "Play audio sample where the filename is in _StrVar_PF00": GoSub AssemOut
+Return
 DoDLOAD:
 Color 14
 Print "Can't do command DLOAD yet, found on line "; linelabel$
@@ -5022,6 +5029,8 @@ Select Case GeneralCommands$(v)
         GoTo DoPCOPY
     Case "PLAY"
         GoTo DoPLAY
+    Case "SDCPLAY"
+        GoTo DoSDCPLAY
     Case "PMODE"
         GoTo DoPMODE
     Case "POKE"
