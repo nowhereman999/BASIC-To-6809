@@ -1041,12 +1041,10 @@ For ii = 0 To GeneralCommandsFoundCount - 1
         If PUTXOR = 1 Then Temp$ = "GraphicCommandsPut_XOR": GoSub AddIncludeTemp ' Add code to handle Put XOR command
     End If
     If Temp$ = "SDCPLAY" Or Temp$ = "SDCPLAYORCL" Or Temp$ = "SDCPLAYORCR" Or Temp$ = "SDCPLAYORCS" Then
-        If Temp$ = "SDCPLAY" Then Temp$ = "SDCPlay"
-        If Temp$ = "SDCPLAYORCL" Then Temp$ = "SDCPlayOrc90Left"
-        If Temp$ = "SDCPLAYORCR" Then Temp$ = "SDCPlayOrc90Right"
-        If Temp$ = "SDCPLAYORCS" Then Temp$ = "SDCPlayOrc90Stereo"
-        GoSub AddIncludeTemp
-        Temp$ = "Audio_Muxer": GoSub AddIncludeTemp ' Add code for Selecting the audio muxer and to turn it on or off
+        If Temp$ = "SDCPLAY" Then Temp$ = "SDCPlay": GoSub AddIncludeTemp: Temp$ = "Audio_Muxer": GoSub AddIncludeTemp ' Add code for Selecting the audio muxer and to turn it on or off
+        If Temp$ = "SDCPLAYORCL" Then Temp$ = "SDCPlayOrc90Left": GoSub AddIncludeTemp
+        If Temp$ = "SDCPLAYORCR" Then Temp$ = "SDCPlayOrc90Right": GoSub AddIncludeTemp
+        If Temp$ = "SDCPLAYORCS" Then Temp$ = "SDCPlayOrc90Stereo": GoSub AddIncludeTemp
         Temp$ = "StreamFile_Library": GoSub AddIncludeTemp
         Temp$ = "SDCVersionCheck": GoSub AddIncludeTemp
     End If
