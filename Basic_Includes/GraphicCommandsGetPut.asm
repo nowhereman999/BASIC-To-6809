@@ -346,25 +346,3 @@ PutRightValues:
         FCB     %00000011       ; 6
         FCB     %00000001       ; 7
         
-
-        NOP                     ; [2] Waste CPU cycles, one byte
-        BRN     *               ; [3] Waste CPU cycles, two bytes
-        LEAU    ,U              ; [4] Waste CPU cycles, two bytes
-        PSHS    #0              ; [5] Waste CPU cycles, two bytes  (Thanks PenguinofEveil and Darren)
-        TFR     A,A             ; [6] Waste CPU cycles, two bytes
-        LEAU    ,U++            ; [7] Waste CPU cycles, two bytes  (Thanks Darren)
-        EXG     A,A             ; [8] Waste CPU cycles, two bytes
-
-        DEC    ,X
-        DEC    <$FF
-        LEAY   -1,Y
-        LEAX   -1,x
-        LEAU   -1,U
-        LDB     ,Y+
-
-        LDB    #64              ; [2] 
-        LDS    #$1234
-        LDY    #$1234
-        LDU    #$1234
-        LDS    #$1234
-        LEAY   +512,Y

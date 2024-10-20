@@ -3,7 +3,17 @@
 'Print "hex$(Array(x+2) "; Hex$(Array(x + 2))
 'System
 
-V$ = "2.13"
+V$ = "2.14"
+'       - Added more commands for streaming audio directly off the CoCoSDC: SDCPLAYORCS, SDCPLAYORCL & SDCPLAYORCR
+'         These commands require either an Orchestra 90 or CocoFLASH (https://www.go4retro.com/products/cocoflash/) cartridge
+'         The SDCPLAYORCS command streams stereo 8 bit unsigned audio at 22,375hz to both the left and right channels
+'         The SDCPLAYORCL streams mono 8 bit unsigned audio at 44,750hz to the Left channel output
+'         The SDCPLAYORCR streams mono 8 bit unsigned audio at 44,750hz to the Right channel output
+'       - Added version checking if the user is going to have SDC streaming commands like SDCPLAY as the SDC needs version 127 or higher
+'       - Fixed handling of REM's that were commenting out actual code, it now display better in the .asm file
+'         It was also causing errors as some of the command values were printing as ASCII LF/BREAK/Carriage return symbols
+'
+' V2.13
 '       - Added command PLAYSDC"SAMPLE.RAW" which will play the sample stored on the SDC through the CoCo DAC
 '
 ' V2.12

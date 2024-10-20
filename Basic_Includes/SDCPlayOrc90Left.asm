@@ -1,4 +1,5 @@
-; SDCPlay command - 44,750 khz sample rate
+; SDCPLAYORCL command - Play audio sample through the Orchestra 90/CoCo Flash
+; Left speaker output at 44,750 khz sample rate
 ; Play a raw audio sample directly from the CoCoSDC
 ; filename is at _StrVar_PF00 and terminated with a zero
 ; Will use RAM from _StrVar_PF00 to _StrVar_IFRight+256 as two 512 byte RAM buffers
@@ -11,33 +12,19 @@
 * for f in *.wav ; do ffmpeg -i "$f"  -acodec pcm_u8 -f u8 -ac 1 -ar 44750 -af aresample=44750:filter_size=256:cutoff=1.0  "${f%.wav}.raw" ; done
 *****************************************************
 
-SDCBuffer0      EQU     _StrVar_PF00
-SDCBuffer1      EQU     SDCBuffer0+512
-SDC_DAC         EQU     $FF20   ; $FF20 the built in 6 bit DAC
-;SDC_DAC         EQU     $FF7A   ; $FF7A is Orchestra 90/CoCo Flash — 8-bit Left channel DAC
-;SDC_DAC         EQU     $FF7B   ; $FF7B is Orchestra 90/CoCo Flash — 8-bit Right channel DAC
+SDCBuffer0L     EQU     _StrVar_PF00
+SDCBuffer1L     EQU     SDCBuffer0L+512
+;SDC_DAC         EQU     $FF20   ; $FF20 the built in 6 bit DAC
+SDC_DACL        EQU     $FF7A   ; $FF7A is Orchestra 90/CoCo Flash — 8-bit Left channel DAC
+;SDC_DACR        EQU     $FF7B   ; $FF7B is Orchestra 90/CoCo Flash — 8-bit Right channel DAC
 
-SDCPLAY:
+SDCPLAYOrcL:
         PSHS    CC,DP           ; Save the CC & the DP on the stack
         ORCC    #$50            ; Turn off the interrupts
-        STS     PlaySDCStack+2  ; Save the Stack (Self mod)
+        STS     PlaySDCStackOrcL+2  ; Save the Stack (Self mod)
 
 * Add code to check version of the CoCoSDC we need version 127 or later for opening files with the
 * Lowercase m: which doesn't have a size length check
-
-        JSR     Select_AnalogMuxer ; SET UP DA TO PASS THROUGH ANA MUX
-        JSR     AnalogMuxOn     ; ENABLE ANA MUX
-
-* This code masks off the two low bits written to $FF20
-* So you can send the PCM Unsigned 8 Bit sample as is, no masking needed
-	LDA	<$21
-	PSHS	A
-	ANDA	#%00110011      ; FORCE BIT2 LOW
-	STA	<$21            ; $FF20 NOW DATA DIRECTION REGISTER
-	LDA	#%11111100      ; OUTPUT ON DAC, INPUT ON RS-232 & CDI
-	STA	<$20
-	PULS	A
-	STA	<$21
 ; Put "m:" at the start of the filename
         LDX     #_StrVar_PF00+1 ; Get the start of the filename string
         LDB     -1,X            ; Get the length byte
@@ -68,35 +55,35 @@ SDCPLAY:
 
 !       LDA     <$48            ; [4] Poll status byte, required for the first byte of each 512 byte sector (get ready to read the next buffer)
         ASRA                    ; [2] Shift the BUSY bit to the carry
-        LBCC    >SDCAudioPlayDone ;[5 if not taken, 6 if it is taken] Done if BUSY bit is cleared (End of File) (jump to play the buffer and end)
+        LBCC    >SDCAudioPlayDoneOrcL ;[5 if not taken, 6 if it is taken] Done if BUSY bit is cleared (End of File) (jump to play the buffer and end)
         BEQ     <
 
 ; Since we want to go backwards we will start with buffer 1
 ; Fill buffer 1
         LDB     #128            ; A = 0
-        LDS     #SDCBuffer1+512 ; [4] S = the end of buffer 1+1
+        LDS     #SDCBuffer1L+512 ; [4] S = the end of buffer 1+1
 !       LDU     <$4A            ; Get two samples in U
         LDX     <$4A            ; Get two samples in X
         PSHS    X,U             ; Save the samples
         DECB                    ; decrement the counter
         BNE     <               ; Have we done 128 times yet? Keep looping if not
-        LDY     #SDCBuffer1+512 ; [4] Y = end of Buffer 1+1
+        LDY     #SDCBuffer1L+512 ; [4] Y = end of Buffer 1+1
 !       LDA     <$48            ; [4] Poll status byte, required for the first byte of each 512 byte sector (get ready to read the next buffer)
         ASRA                    ; [2] Shift the BUSY bit to the carry
-        LBCC    >SDCAudioPlayDone ;[5 if not taken, 6 if it is taken] Done if BUSY bit is cleared (End of File) (jump to play the buffer and end)
+        LBCC    >SDCAudioPlayDoneOrcL ;[5 if not taken, 6 if it is taken] Done if BUSY bit is cleared (End of File) (jump to play the buffer and end)
         BEQ     <
 
 ; Start playing audio from buffer 1, backwards
 ; B = 83, 83 * 2 = 166 samples
-PlayAudioBuff1:
+PlayAudioBuff1OrcL:
         LDB     #83             ; [2] Play 83*2 = 166 bytes before getting more data from the SDC to give it time to fill its buffer
 !       LDA     ,--Y            ; [7] Get a byte from buffer
-        STA     <SDC_DAC        ; [4] Send byte to the DAC
+        STA     <SDC_DACL        ; [4] Send byte to the DAC
 
         LEAU    ,U              ; [4] Waste CPU cycles, two bytes
         LEAU    ,U++            ; [7] Waste CPU cycles, two bytes
         LDA     1,Y             ; [5] Get a byte from buffer
-        STA     <SDC_DAC        ; [4] Send byte to the DAC
+        STA     <SDC_DACL        ; [4] Send byte to the DAC
 
         LEAU    ,U              ; [4] Waste CPU cycles, two bytes      
         DECB                    ; [2] Dec counter, loop until we've played back 254 samples (almost half the buffer)
@@ -104,106 +91,106 @@ PlayAudioBuff1:
 ; done playing 166 samples
 ; Play 6 & Load 8 bytes
         LDA     ,--Y            ; [7] Get a byte from buffer
-        STA     <SDC_DAC        ; [4] Send byte to the DAC
+        STA     <SDC_DACL        ; [4] Send byte to the DAC
 
         LDU     <$4A            ; [5] Get two samples in U
         LDX     <$4A            ; [5] Get two samples in X
         LDA     1,Y             ; [5] Get a byte from buffer
-        STA     >SDC_DAC        ; [5] Send byte to the DAC SDC_DAC
+        STA     >SDC_DACL        ; [5] Send byte to the DAC SDC_DACL
 
         PSHS    X,U             ; [9] Save the samples
         LDA     ,--Y            ; [7] Get a byte from buffer
-        STA     <SDC_DAC        ; [4] Send byte to the DAC
+        STA     <SDC_DACL        ; [4] Send byte to the DAC
 
         LDU     <$4A            ; [5] Get two samples in U
         LDX     <$4A            ; [5] Get two samples in X
         LDA     1,Y             ; [5] Get a byte from buffer
-        STA     >SDC_DAC        ; [5] Send byte to the DAC SDC_DAC
+        STA     >SDC_DACL        ; [5] Send byte to the DAC SDC_DACL
 
         PSHS    X,U             ; [9] Save the samples
         LDA     ,--Y            ; [7] Get a byte from buffer
-        STA     <SDC_DAC        ; [4] Send byte to the DAC
+        STA     <SDC_DACL        ; [4] Send byte to the DAC
 
         PSHS    #0              ; [5] Waste CPU cycles, two bytes
         PSHS    #0              ; [5] Waste CPU cycles, two bytes
         LDA     1,Y             ; [5] Get a byte from buffer
-        STA     >SDC_DAC        ; [5] Send byte to the DAC SDC_DAC
+        STA     >SDC_DACL        ; [5] Send byte to the DAC SDC_DACL
 
 * done playing 172 samples, loaded 8 
         LDB     #42             ; [2] Play 42 x 8 = 336 samples, & Load 42 x 12 = 504 bytes into the buffer
         LEAU    ,U++            ; [7] Waste CPU cycles, two bytes
 * Loop Plays 8 samples and loads 12 samples
 !       LDA     ,--Y            ; [7] Get a byte from buffer
-        STA     <SDC_DAC        ; [4] Send byte to the DAC
+        STA     <SDC_DACL        ; [4] Send byte to the DAC
 
         LDU     <$4A            ; [5] Get two samples in U
         LDX     <$4A            ; [5] Get two samples in X
         LDA     1,Y             ; [5] Get a byte from buffer
-        STA     >SDC_DAC        ; [5] Send byte to the DAC SDC_DAC
+        STA     >SDC_DACL        ; [5] Send byte to the DAC SDC_DACL
 
         PSHS    X,U             ; [9] Save the samples
         LDA     ,--Y            ; [7] Get a byte from buffer
-        STA     <SDC_DAC        ; [4] Send byte to the DAC
+        STA     <SDC_DACL        ; [4] Send byte to the DAC
 
         LDU     <$4A            ; [5] Get two samples in U
         LDX     <$4A            ; [5] Get two samples in X
         LDA     1,Y             ; [5] Get a byte from buffer
-        STA     >SDC_DAC        ; [5] Send byte to the DAC SDC_DAC
+        STA     >SDC_DACL        ; [5] Send byte to the DAC SDC_DACL
 
         PSHS    X,U             ; [9] Save the samples
         LDA     ,--Y            ; [7] Get a byte from buffer
-        STA     <SDC_DAC        ; [4] Send byte to the DAC
+        STA     <SDC_DACL        ; [4] Send byte to the DAC
 
         LDU     <$4A            ; [5] Get two samples in U
         LDX     <$4A            ; [5] Get two samples in X
         LDA     1,Y             ; [5] Get a byte from buffer
-        STA     >SDC_DAC        ; [5] Send byte to the DAC SDC_DAC
+        STA     >SDC_DACL        ; [5] Send byte to the DAC SDC_DACL
 
         PSHS    X,U             ; [9] Save the samples
         LDA     ,--Y            ; [7] Get a byte from buffer
-        STA     <SDC_DAC        ; [4] Send byte to the DAC
+        STA     <SDC_DACL        ; [4] Send byte to the DAC
 
         PSHS    #0              ; [5] Waste CPU cycles, two bytes
         PSHS    #0              ; [5] Waste CPU cycles, two bytes
         LDA     1,Y             ; [5] Get a byte from buffer
-        STA     >SDC_DAC        ; [5] Send byte to the DAC SDC_DAC
+        STA     >SDC_DACL        ; [5] Send byte to the DAC SDC_DACL
       
         LEAU    ,U              ; [4] Waste CPU cycles, two bytes
         DECB                    ; [2] Dec counter, loop until we've played back 254 samples (almost half the buffer)
         BNE     <               ; [3] Loop if not zero + 11 Cycles
 * Done playing 508 Samples, loaded 512
         LDA     ,--Y            ; [7] Get a byte from buffer
-        STA     <SDC_DAC        ; [4] Send byte to the DAC
+        STA     <SDC_DACL        ; [4] Send byte to the DAC
 
         LDA     >$FF48          ; [5] Poll status byte, required for the first byte of each 512 byte sector (get ready to read the next buffer)
         ASRA                    ; [2] Shift the BUSY bit to the carry
         BRN     *               ; [3] Waste CPU cycles, two bytes
         LDA     1,Y             ; [5] Get a byte from buffer
-        STA     >SDC_DAC        ; [5] Send byte to the DAC SDC_DAC
+        STA     >SDC_DACL        ; [5] Send byte to the DAC SDC_DACL
 * Done playing 510 Samples
 
-        LBCC    >SDCPlaylastblock0 ;[5] if not taken, 6 if it is taken] Done if BUSY bit is cleared (End of File) (jump to play the buffer and end)
+        LBCC    >SDCPlaylastblock0OrcL ;[5] if not taken, 6 if it is taken] Done if BUSY bit is cleared (End of File) (jump to play the buffer and end)
         LEAU    ,U              ; [4] Waste CPU cycles, two bytes
         LDA     ,--Y            ; [7] Get a byte from buffer
-        STA     <SDC_DAC        ; [4] Send byte to the DAC
+        STA     <SDC_DACL        ; [4] Send byte to the DAC
 
-        LDS    #SDCBuffer1+512  ; [4] S = end of Buffer1 1+1
+        LDS    #SDCBuffer1L+512  ; [4] S = end of Buffer1 1+1
         LEAU    ,U++            ; [7] Waste CPU cycles, two bytes
         LDA     1,Y             ; [5] Get a byte from buffer
-        STA     <SDC_DAC        ; [4] Send byte to the DAC
+        STA     <SDC_DACL        ; [4] Send byte to the DAC
 * Done playing 512 Samples
 
         LEAU    ,U++            ; [7] Waste CPU cycles, two bytes
         LDB     #83             ; [2] Play 83*2 = 166 bytes before getting more data from the SDC to give it time to fill its buffer
 ; B = 83, 83 * 2 = 166 samples
-PlayAudioBuff0:
+PlayAudioBuff0OrcL:
 !       LDA     ,--Y            ; [7] Get a byte from buffer
-        STA     <SDC_DAC        ; [4] Send byte to the DAC
+        STA     <SDC_DACL        ; [4] Send byte to the DAC
 
         LEAU    ,U              ; [4] Waste CPU cycles, two bytes
         LEAU    ,U++            ; [7] Waste CPU cycles, two bytes
         LDA     1,Y             ; [5] Get a byte from buffer
-        STA     <SDC_DAC        ; [4] Send byte to the DAC
+        STA     <SDC_DACL        ; [4] Send byte to the DAC
 
         LEAU    ,U              ; [4] Waste CPU cycles, two bytes     
         DECB                    ; [2] Dec counter, loop until we've played back 254 samples (almost half the buffer)
@@ -211,69 +198,69 @@ PlayAudioBuff0:
 ; done playing 166 samples
 ; Play 6 & Load 8 bytes
         LDA     ,--Y            ; [7] Get a byte from buffer
-        STA     <SDC_DAC        ; [4] Send byte to the DAC
+        STA     <SDC_DACL        ; [4] Send byte to the DAC
 
         LDU     <$4A            ; [5] Get two samples in U
         LDX     <$4A            ; [5] Get two samples in X
         LDA     1,Y             ; [5] Get a byte from buffer
-        STA     >SDC_DAC        ; [5] Send byte to the DAC SDC_DAC
+        STA     >SDC_DACL        ; [5] Send byte to the DAC SDC_DACL
 
         PSHS    X,U             ; [9] Save the samples
         LDA     ,--Y            ; [7] Get a byte from buffer
-        STA     <SDC_DAC        ; [4] Send byte to the DAC
+        STA     <SDC_DACL        ; [4] Send byte to the DAC
 
         LDU     <$4A            ; [5] Get two samples in U
         LDX     <$4A            ; [5] Get two samples in X
         LDA     1,Y             ; [5] Get a byte from buffer
-        STA     >SDC_DAC        ; [5] Send byte to the DAC SDC_DAC
+        STA     >SDC_DACL        ; [5] Send byte to the DAC SDC_DACL
 
         PSHS    X,U             ; [9] Save the samples
         LDA     ,--Y            ; [7] Get a byte from buffer
-        STA     <SDC_DAC        ; [4] Send byte to the DAC
+        STA     <SDC_DACL        ; [4] Send byte to the DAC
 
         PSHS    #0              ; [5] Waste CPU cycles, two bytes
         PSHS    #0              ; [5] Waste CPU cycles, two bytes
         LDA     1,Y             ; [5] Get a byte from buffer
-        STA     >SDC_DAC        ; [5] Send byte to the DAC SDC_DAC
+        STA     >SDC_DACL        ; [5] Send byte to the DAC SDC_DACL
 
 * done playing 172 samples, loaded 8 
         LDB     #42             ; [2] Play 42 x 8 = 336 samples, & Load 42 x 12 = 504 bytes into the buffer
         LEAU    ,U++            ; [7] Waste CPU cycles, two bytes
 * Loop Plays 8 samples and loads 12 samples
 !       LDA     ,--Y            ; [7] Get a byte from buffer
-        STA     <SDC_DAC        ; [4] Send byte to the DAC
+        STA     <SDC_DACL        ; [4] Send byte to the DAC
 
         LDU     <$4A            ; [5] Get two samples in U
         LDX     <$4A            ; [5] Get two samples in X
         LDA     1,Y             ; [5] Get a byte from buffer
-        STA     >SDC_DAC        ; [5] Send byte to the DAC SDC_DAC
+        STA     >SDC_DACL        ; [5] Send byte to the DAC SDC_DACL
 
         PSHS    X,U             ; [9] Save the samples
         LDA     ,--Y            ; [7] Get a byte from buffer
-        STA     <SDC_DAC        ; [4] Send byte to the DAC
+        STA     <SDC_DACL        ; [4] Send byte to the DAC
 
         LDU     <$4A            ; [5] Get two samples in U
         LDX     <$4A            ; [5] Get two samples in X
         LDA     1,Y             ; [5] Get a byte from buffer
-        STA     >SDC_DAC        ; [5] Send byte to the DAC SDC_DAC
+        STA     >SDC_DACL        ; [5] Send byte to the DAC SDC_DACL
 
         PSHS    X,U             ; [9] Save the samples
         LDA     ,--Y            ; [7] Get a byte from buffer
-        STA     <SDC_DAC        ; [4] Send byte to the DAC
+        STA     <SDC_DACL        ; [4] Send byte to the DAC
 
         LDU     <$4A            ; [5] Get two samples in U
         LDX     <$4A            ; [5] Get two samples in X
         LDA     1,Y             ; [5] Get a byte from buffer
-        STA     >SDC_DAC        ; [5] Send byte to the DAC SDC_DAC
+        STA     >SDC_DACL        ; [5] Send byte to the DAC SDC_DACL
 
         PSHS    X,U             ; [9] Save the samples
         LDA     ,--Y            ; [7] Get a byte from buffer
-        STA     <SDC_DAC        ; [4] Send byte to the DAC
+        STA     <SDC_DACL        ; [4] Send byte to the DAC
 
         PSHS    #0              ; [5] Waste CPU cycles, two bytes
         PSHS    #0              ; [5] Waste CPU cycles, two bytes
         LDA     1,Y             ; [5] Get a byte from buffer
-        STA     >SDC_DAC        ; [5] Send byte to the DAC SDC_DAC
+        STA     >SDC_DACL        ; [5] Send byte to the DAC SDC_DACL
       
         LEAU    ,U              ; [4] Waste CPU cycles, two bytes
         DECB                    ; [2] Dec counter, loop until we've played back 254 samples (almost half the buffer)
@@ -281,79 +268,68 @@ PlayAudioBuff0:
 * Done playing 508 Samples, loaded 512
 * Done playing 508 Samples, loaded 512
         LDA     ,--Y            ; [7] Get a byte from buffer
-        STA     <SDC_DAC        ; [4] Send byte to the DAC
+        STA     <SDC_DACL        ; [4] Send byte to the DAC
 
         LDA     >$FF48          ; [5] Poll status byte, required for the first byte of each 512 byte sector (get ready to read the next buffer)
         ASRA                    ; [2] Shift the BUSY bit to the carry
         BRN     *               ; [3] Waste CPU cycles, two bytes
         LDA     1,Y             ; [5] Get a byte from buffer
-        STA     >SDC_DAC        ; [5] Send byte to the DAC SDC_DAC
+        STA     >SDC_DACL        ; [5] Send byte to the DAC SDC_DACL
 * Done playing 510 Samples
 
-        BCC     <SDCPlaylastblock1 ;[3] Done if BUSY bit is cleared (End of File) (jump to play the buffer and end)
+        BCC     <SDCPlaylastblock1OrcL ;[3] Done if BUSY bit is cleared (End of File) (jump to play the buffer and end)
         NOP                     ; [2] Waste CPU cycles, one byte 
         LDB     <$00            ; [4] Get keyboard state
         LDA     ,--Y            ; [7] Get a byte from buffer
-        STA     <SDC_DAC        ; [4] Send byte to the DAC
+        STA     <SDC_DACL        ; [4] Send byte to the DAC
 
         BITB    #$40            ; [2] Test row with the BREAK key
-        BEQ     <SDCBreak       ; [3] Exit if BREAK is pressed
+        BEQ     <SDCBreakOrcL   ; [3] Exit if BREAK is pressed
         LDA     1,Y             ; [5] Get a byte from buffer
         NOP                     ; [2] Waste CPU cycles, one byte 
-        LDY     #SDCBuffer1+512 ; [4] Y = end of Buffer 1+1
-        STA     <SDC_DAC        ; [4] Send byte to the DAC
+        LDY     #SDCBuffer1L+512 ; [4] Y = end of Buffer 1+1
+        STA     <SDC_DACL        ; [4] Send byte to the DAC
 * Done playing 512 Samples
         NOP                     ; [2] Waste CPU cycles, one byte 
-        LBRA    >PlayAudioBuff1 ; [5] big loop again +13 above
+        LBRA    >PlayAudioBuff1OrcL ; [5] big loop again +13 above
 
-SDCBreak:
+SDCBreakOrcL:
         LDB     #$D0            ; Send abort I/O command..
         STB     <$48            ; ..to the controller
         ASRB                    ; will use CMDABORT for the status result
-        BRA     SDCAudioPlayDone
+        BRA     SDCAudioPlayDoneOrcL
 
-SDCPlaylastblock1:
+SDCPlaylastblock1OrcL:
         NOP                     ; [2] Waste CPU cycles, one byte 
         LDB     <$00            ; [4] Get keyboard state
         LDA     ,--Y            ; [7] Get a byte from buffer
-        STA     <SDC_DAC        ; [4] Send byte to the DAC
+        STA     <SDC_DACL        ; [4] Send byte to the DAC
 
         PSHS    #0              ; [5] Waste CPU cycles, two bytes
         TFR     A,A             ; [6] Waste CPU cycles, two bytes
         LDA     1,Y             ; [5] Get a byte from buffer
-        STA     <SDC_DAC        ; [4] Send byte to the DAC
+        STA     <SDC_DACL        ; [4] Send byte to the DAC
 
-        LDY     #SDCBuffer1+512 ; [4] Y = end of Buffer 1+1
+        LDY     #SDCBuffer1L+512 ; [4] Y = end of Buffer 1+1
         BRN     *               ; [3] Waste CPU cycles, two bytes
-SDCPlaylastblock0:
+SDCPlaylastblock0OrcL:
         CLRB                    ; [2] Play 256*2 = 512 bytes before getting more data from the SDC to give it time to fill its buffer
 !       LDA     ,--Y            ; [7] Get a byte from buffer
-        STA     <SDC_DAC        ; [4] Send byte to the DAC
+        STA     <SDC_DACL        ; [4] Send byte to the DAC
 
         LEAU    ,U              ; [4] Waste CPU cycles, two bytes
         LEAU    ,U++            ; [7] Waste CPU cycles, two bytes
         LDA     1,Y             ; [5] Get a byte from buffer
-        STA     <SDC_DAC        ; [4] Send byte to the DAC
+        STA     <SDC_DACL        ; [4] Send byte to the DAC
 
         LEAU    ,U              ; [4] Waste CPU cycles, two bytes    
         DECB                    ; [2] Dec counter, loop until we've played back 254 samples (almost half the buffer)
         BNE     <               ; [3] Loop if not zero
         
 * Exit
-SDCAudioPlayDone:
+SDCAudioPlayDoneOrcL:
         CLR     <$40            ; put SDC controller back in floppy mode
 
-* Set the Printer port (RS232 serial) back to output
-	LDA	<$21
-	PSHS	A
-	ANDA	#%00110011              * FORCE BIT2 LOW
-	STA	<$21                   * $FF20 NOW DATA DIRECTION REGISTER
-	LDA	#%11111110              * OUTPUT ON DAC, OUTPUT ON RS-232 & INPUT on CDI
-	STA	<$20
-	PULS	A
-	STA	<$21
-
-PlaySDCStack:
+PlaySDCStackOrcL:
         LDS     #$FFFF          ; Restore the Stack pointer (self mod)
-        PULS    CC,DP           ; Restore CC & DP
-        BRA     AnalogMuxOff    ; DISABLE ANA MUX AND RETURN
+        PULS    CC,DP,PC        ; Restore CC & DP

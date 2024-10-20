@@ -55,9 +55,9 @@ OpenSDC_File_X_At_AU:
 
 * Put controller in Command mode
 * This changes the mode the CoCo SDC work in.  It is now ready for direct communication
-        LDA     #$43                * control latch value to enable SDC command mode
-        STA     $FF40               * Send the command to the SDC
-        JSR     POLLBUSY            * Wait for the SDC to signify it is not busy - Busy signal is low
+        LDA     #$43            ; control latch value to enable SDC command mode
+        STA     $FF40           ; Send the command to the SDC
+        JSR     POLLBUSY        ; Wait for the SDC to signify it is not busy - Busy signal is low
 
 * Mount a file
 * Mounting a file auto ejects any previous file that was mounted

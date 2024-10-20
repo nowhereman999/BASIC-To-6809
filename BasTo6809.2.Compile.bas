@@ -3655,6 +3655,27 @@ GoSub ParseStringExpression ' Parse the String Expression, value will end up in 
 ' Check the filename to make sure it's OK
 A$ = "JSR": B$ = "SDCPLAY": C$ = "Play audio sample where the filename is in _StrVar_PF00": GoSub AssemOut
 Return
+DoSDCPLAYORCL:
+' Copy filename to a tempstring
+GoSub GetExpressionB4EOL ' Get the expression before an End of Line in Expression$
+GoSub ParseStringExpression ' Parse the String Expression, value will end up in _StrVar_PF00
+' Check the filename to make sure it's OK
+A$ = "JSR": B$ = "SDCPLAYOrcL": C$ = "Play audio sample where the filename is in _StrVar_PF00 on Orc 90/CoCo Flash Left Speaker output": GoSub AssemOut
+Return
+DoSDCPLAYORCR:
+' Copy filename to a tempstring
+GoSub GetExpressionB4EOL ' Get the expression before an End of Line in Expression$
+GoSub ParseStringExpression ' Parse the String Expression, value will end up in _StrVar_PF00
+' Check the filename to make sure it's OK
+A$ = "JSR": B$ = "SDCPLAYOrcR": C$ = "Play audio sample where the filename is in _StrVar_PF00 on Orc 90/CoCo Flash Right Speaker output": GoSub AssemOut
+Return
+DoSDCPLAYORCS:
+' Copy filename to a tempstring
+GoSub GetExpressionB4EOL ' Get the expression before an End of Line in Expression$
+GoSub ParseStringExpression ' Parse the String Expression, value will end up in _StrVar_PF00
+' Check the filename to make sure it's OK
+A$ = "JSR": B$ = "SDCPLAYOrcS": C$ = "Play audio sample where the filename is in _StrVar_PF00 on Orc 90/CoCo Flash in Stereo": GoSub AssemOut
+Return
 DoDLOAD:
 Color 14
 Print "Can't do command DLOAD yet, found on line "; linelabel$
@@ -5031,6 +5052,12 @@ Select Case GeneralCommands$(v)
         GoTo DoPLAY
     Case "SDCPLAY"
         GoTo DoSDCPLAY
+    Case "SDCPLAYORCL"
+        GoTo DoSDCPLAYORCL
+    Case "SDCPLAYORCR"
+        GoTo DoSDCPLAYORCR
+    Case "SDCPLAYORCS"
+        GoTo DoSDCPLAYORCS
     Case "PMODE"
         GoTo DoPMODE
     Case "POKE"
@@ -6445,18 +6472,79 @@ If v = &HFF Then 'General Command
     v = Array(x) * 256 + Array(x + 1): x = x + 2
     Temp$ = GeneralCommands$(v)
     If Temp$ = "'" Or Temp$ = "REM" Then
-        v = &H20
-        Do Until v = &HF5 And Array(x) = &H0D ' keep copying until we get an EOL
-            Temp$ = Temp$ + Chr$(v)
-            v = Array(x): x = x + 1
+        Temp$ = Temp$ + " "
+        Do Until v = &H0D And Array(x - 2) = &HF5 ' keep copying until we get an EOL
+            GoSub DecodeInREMark
+            Temp$ = Temp$ + Temp1$
         Loop
+        Temp$ = Left$(Temp$, Len(Temp$) - 1) 'remove last $0D
         x = x - 2
     End If
     Return
 End If
+Print " Error decoding line, V= $"; Hex$(v), Hex$(x): System
 
-Print " Error decoding line, V= $"; Hex$(v): System
-
+DecodeInREMark:
+Temp1$ = ""
+v = Array(x): x = x + 1
+If v = &HF0 Then 'Numeric Array Variable
+    v = Array(x) * 256 + Array(x + 1): x = x + 2
+    Temp1$ = NumericArrayVariables$(v)
+    v = Array(x): x = x + 1 'v= number of elements in the array
+    Return
+End If
+If v = &HF1 Then 'String Array Variable
+    v = Array(x) * 256 + Array(x + 1): x = x + 2
+    Temp1$ = StringArrayVariables$(v) + "$" ' add the $ back in to show it's a string
+    v = Array(x): x = x + 1 'v= number of elements in the array
+    Return
+End If
+If v = &HF2 Then 'Regular Numeric Variable
+    v = Array(x) * 256 + Array(x + 1): x = x + 2
+    Temp1$ = NumericVariable$(v): Return
+End If
+If v = &HF3 Then 'Regular String Variable
+    v = Array(x) * 256 + Array(x + 1): x = x + 2
+    Temp1$ = StringVariable$(v) + "$" ' add the $ back in to show it's a string
+    Return
+End If
+If v = &HF5 Then ' Special Characters
+    v = Array(x): x = x + 1
+    If v = &H22 Then
+        'We found a quote, copy everything inside the quotes to Temp$
+        While v <> &HF5 ' keep copying until we get an end quote
+            Temp1$ = Temp1$ + Chr$(v)
+            v = Array(x): x = x + 1
+        Wend
+        v = Array(x): x = x + 1
+    End If
+    Temp1$ = Temp1$ + Chr$(v)
+    Return
+End If
+If v = &HFB Then ' Pointer for the label of a DEF FN command
+    v = Array(x) * 256 + Array(x + 1): x = x + 2
+    Temp1$ = DefLabel$(v): Return
+    Return
+End If
+If v = &HFC Then 'Operator Command
+    v = Array(x): x = x + 1
+    Temp1$ = OperatorCommands$(v): Return
+End If
+If v = &HFD Then 'String Command
+    v = Array(x) * 256 + Array(x + 1): x = x + 2
+    Temp1$ = StringCommands$(v): Return
+End If
+If v = &HFE Then 'Numeric Command
+    v = Array(x) * 256 + Array(x + 1): x = x + 2
+    Temp1$ = NumericCommands$(v): Return
+End If
+If v = &HFF Then 'General Command
+    v = Array(x) * 256 + Array(x + 1): x = x + 2
+    Temp1$ = GeneralCommands$(v) + " "
+    Return
+End If
+Temp1$ = Temp1$ + Chr$(v)
+Return
 
 'Convert number in Num to a string without spaces as Num$
 NumAsString:
@@ -6483,8 +6571,8 @@ Print "Length of "; show$; " is"; Len(show$)
 For ii = 1 To Len(show$)
     Print ii, Hex$(Asc(Mid$(show$, ii, 1)))
 Next ii
-Input Q
-If Q = 1 Then System
+Input q
+If q = 1 Then System
 Return
 
 ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSBs

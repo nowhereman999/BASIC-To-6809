@@ -104,7 +104,6 @@ C_GET = ii
 Check$ = "PUT": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
 C_PUT = ii
 
-
 ' Handle command line options
 FI = 0
 count = _CommandCount
@@ -837,7 +836,7 @@ For ii = 0 To GeneralCommandsFoundCount - 1
     If Temp$ = "PLAY" Then
         PlayCommand = 1 ' Flag that we use the Play Command
     End If
-    If Temp$ = "SDCPLAY" Then
+    If Temp$ = "SDCPLAY" Or Temp$ = "SDCPLAYORCL" Or Temp$ = "SDCPLAYORCR" Or Temp$ = "SDCPLAYORCS" Then
         SDCPLAY = 1 ' Flag that we need extra SDCPlayback buffer space
     End If
 Next ii
@@ -899,7 +898,6 @@ If SDCPLAY = 1 Then
     ' We need extra SDCPlayback buffer space
     Print #1, "SDCPLAY_Extra"; T1$; "RMB "; T1$; "256     ; Extra temp Space for SDCPLAY command"
 End If
-
 
 ' Add the String Variables used
 Print #1, "; String Variables Used:"; StringVariableCounter
@@ -1042,10 +1040,15 @@ For ii = 0 To GeneralCommandsFoundCount - 1
         If PUTNOT = 1 Then Temp$ = "GraphicCommandsPut_NOT": GoSub AddIncludeTemp ' Add code to handle Put NOT command
         If PUTXOR = 1 Then Temp$ = "GraphicCommandsPut_XOR": GoSub AddIncludeTemp ' Add code to handle Put XOR command
     End If
-    If Temp$ = "SDCPLAY" Then
+    If Temp$ = "SDCPLAY" Or Temp$ = "SDCPLAYORCL" Or Temp$ = "SDCPLAYORCR" Or Temp$ = "SDCPLAYORCS" Then
+        If Temp$ = "SDCPLAY" Then Temp$ = "SDCPlay"
+        If Temp$ = "SDCPLAYORCL" Then Temp$ = "SDCPlayOrc90Left"
+        If Temp$ = "SDCPLAYORCR" Then Temp$ = "SDCPlayOrc90Right"
+        If Temp$ = "SDCPLAYORCS" Then Temp$ = "SDCPlayOrc90Stereo"
+        GoSub AddIncludeTemp
         Temp$ = "Audio_Muxer": GoSub AddIncludeTemp ' Add code for Selecting the audio muxer and to turn it on or off
         Temp$ = "StreamFile_Library": GoSub AddIncludeTemp
-        Temp$ = "SDCPlay": GoSub AddIncludeTemp
+        Temp$ = "SDCVersionCheck": GoSub AddIncludeTemp
     End If
     If Temp$ = "SET" Or Temp$ = "RESET" Then
         Temp$ = "SetResetPoint": GoSub AddIncludeTemp
@@ -1308,7 +1311,9 @@ End If
 A$ = "LDA": B$ = "#$3B": C$ = "RTI instruction": GoSub AssemOut
 A$ = "STA": B$ = "$010F": C$ = "Save instruction for the CoCo1": GoSub AssemOut
 A$ = "STA": B$ = "$FEF4": C$ = "Save instruction for the CoCo3": GoSub AssemOut
-
+If SDCPLAY = 1 Then ' If we are doing any SDC streaming check the version as it must byt V127 or higher
+    A$ = "JSR": B$ = "CheckSDCFirmwareVersion": C$ = "Check the version of the SDC controller must be > v126": GoSub AssemOut
+End If
 ' Start the IRQ
 Z$ = "* This is where we enable the IRQ": GoSub AssemOut
 A$ = "ANDCC": B$ = "#%11101111": C$ = "= %11101111 this will Enable the IRQ to start": GoSub AssemOut
@@ -1452,7 +1457,7 @@ While I <= Len(Expression$)
                 Num = c: GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSB
                 Tokenized$ = Tokenized$ + Chr$(&HFF) + Chr$(MSB) + Chr$(LSB) 'Token &HFF is for General Commands
                 ' Check for a REM or '
-                If c = 3 Or c = 4 Then
+                If c = C_REM Or c = C_REMApostrophe Then
                     'We found a REM or ' - copy the rest of this line
                     I = I + Len(Temp$) ' move pointer forward
                     While I <= Len(Expression$)
@@ -1598,11 +1603,6 @@ While I <= Len(Expression$)
     Tokenized$ = Tokenized$ + i$
     I = I + 1
     TokenAdded0:
-
-
-
-
-
     If Temp$ = "DRAW" Then ' Found a Draw command, change any X inside a quote to ":DRAW (whatever before the next semi colon" : DRAW" the rest
         Temp$ = Right$(Expression$, Len(Expression$) - I)
         Expression$ = Left$(Expression$, I)

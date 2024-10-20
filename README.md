@@ -4,6 +4,16 @@ A BASIC compiler for the TRS80 Color Computer
 For more info check out the blog post here:
 https://wordpress.com/post/nowhereman999.wordpress.com/5054
 
+V 2.14
+- Added more commands for streaming audio directly off the CoCo SDC: SDCPLAYORCS, SDCPLAYORCL & SDCPLAYORCR
+  These commands require either an Orchestra 90 or CocoFLASH (https://www.go4retro.com/products/cocoflash/) cartridge
+  The SDCPLAYORCS command streams stereo 8 bit unsigned audio at 22,375hz to both the left and right channels
+  The SDCPLAYORCL streams mono 8 bit unsigned audio at 44,750hz to the Left channel output
+  The SDCPLAYORCR streams mono 8 bit unsigned audio at 44,750hz to the Right channel output
+- Added version checking if the user is going to have SDC streaming commands like SDCPLAY as the SDC needs version 127 or higher
+- Fixed handling of REM's that were commenting out actual code, it now display better in the .asm file
+  It was also causing errors as some of the command values were printing as ASCII LF/BREAK/Carriage return symbols
+
 V 2.13
 - Added SDCPLAY command to let you play audio files directly off the CoCo SDC
 
