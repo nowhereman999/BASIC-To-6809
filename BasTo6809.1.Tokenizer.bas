@@ -1113,7 +1113,7 @@ For ii = 0 To NumericCommandsFoundCount - 1
         Temp$ = "DecimalStringToD": GoSub AddIncludeTemp
         Temp$ = "HexStringToD": GoSub AddIncludeTemp
     End If
-    if temp$="FLOATADD" or temp$="FLOATSUB" or temp$="FLOATMUL" or temp$="FLOATDIV" or temp$="FLOATSQRT" or temp$="FLOATSIN" or temp$="FLOATCOS" or temp$="FLOATTAN" _
+    if temp$="FLOATADD" or temp$="FLOATSUB" or temp$="FLOATMUL" or temp$="FLOATDIV" or temp$="FLOATSQR" or temp$="FLOATSIN" or temp$="FLOATCOS" or temp$="FLOATTAN" _
        or temp$="FLOATATAN" or temp$="FLOATEXP" or temp$="FLOATLOG" then
         Temp$ = "FloatingPointMath": GoSub AddIncludeTemp 'Add floating point math routines
     End If

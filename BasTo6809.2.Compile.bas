@@ -196,8 +196,8 @@ Check$ = "FLOATMUL": GoSub FindNumCommandNumber ' Gets the Numeric Command numbe
 FLOATMUL_CMD = ii
 Check$ = "FLOATDIV": GoSub FindNumCommandNumber ' Gets the Numeric Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
 FLOATDIV_CMD = ii
-Check$ = "FLOATSQRT": GoSub FindNumCommandNumber ' Gets the Numeric Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
-FLOATSQRT_CMD = ii
+Check$ = "FLOATSQR": GoSub FindNumCommandNumber ' Gets the Numeric Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+FLOATSQR_CMD = ii
 Check$ = "FLOATSIN": GoSub FindNumCommandNumber ' Gets the Numeric Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
 FLOATSIN_CMD = ii
 Check$ = "FLOATCOS": GoSub FindNumCommandNumber ' Gets the Numeric Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
@@ -1049,7 +1049,7 @@ Select Case FirstChar
                 FloatCMD$ = "FPCMP"
                 ArgCount = 2
                 CompType = 5
-            Case FLOATSQRT_CMD
+            Case FLOATSQR_CMD
                 FloatCMD$ = "FPSQRT"
                 ArgCount = 1
             Case FLOATSIN_CMD
