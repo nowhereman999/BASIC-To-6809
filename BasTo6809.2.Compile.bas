@@ -10,6 +10,10 @@ Dim DataArrayCount As Integer
 
 Dim NumericVariable$(100000)
 Dim NumericVariableCount As Integer
+
+Dim FloatVariable$(100000)
+Dim FloatVariableCount As Integer
+
 Dim StringVariable$(100000)
 Dim StringVariableCounter As Integer
 Dim NumericArrayVariables$(100000), NumericArrayDimensions(100000) As Integer, NumericArrayDimensionsVal$(100000)
@@ -47,6 +51,12 @@ Dim ELSELocation(100) As Integer 'Flag if the IF has an ELSE
 Dim D As Integer
 Dim values(100) As Double ' Predefine a large enough array for values
 Dim ops(100) As String ' Predefine a large enough array for operators
+
+' Stuff for FP conversion
+Dim FloatNum As Double
+Dim expo As Integer, sign As _Byte, mant As Long
+Dim FPbyte(5) As _Byte
+
 
 ' Handle command line options
 FI = 0
@@ -176,6 +186,45 @@ Check$ = "ELSE": GoSub FindGenCommandNumber ' Gets the General Command number of
 ELSE_CMD = ii
 Check$ = "TAB": GoSub FindNumCommandNumber ' Gets the Numeric Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
 TAB_CMD = ii
+Check$ = "INT": GoSub FindNumCommandNumber ' Gets the Numeric Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+INT_CMD = ii
+Check$ = "FLOATADD": GoSub FindNumCommandNumber ' Gets the Numeric Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+FLOATADD_CMD = ii
+Check$ = "FLOATSUB": GoSub FindNumCommandNumber ' Gets the Numeric Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+FLOATSUB_CMD = ii
+Check$ = "FLOATMUL": GoSub FindNumCommandNumber ' Gets the Numeric Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+FLOATMUL_CMD = ii
+Check$ = "FLOATDIV": GoSub FindNumCommandNumber ' Gets the Numeric Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+FLOATDIV_CMD = ii
+Check$ = "FLOATSQRT": GoSub FindNumCommandNumber ' Gets the Numeric Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+FLOATSQRT_CMD = ii
+Check$ = "FLOATSIN": GoSub FindNumCommandNumber ' Gets the Numeric Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+FLOATSIN_CMD = ii
+Check$ = "FLOATCOS": GoSub FindNumCommandNumber ' Gets the Numeric Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+FLOATCOS_CMD = ii
+Check$ = "FLOATTAN": GoSub FindNumCommandNumber ' Gets the Numeric Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+FLOATTAN_CMD = ii
+Check$ = "FLOATATAN": GoSub FindNumCommandNumber ' Gets the Numeric Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+FLOATATAN_CMD = ii
+Check$ = "FLOATEXP": GoSub FindNumCommandNumber ' Gets the Numeric Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+FLOATEXP_CMD = ii
+Check$ = "FLOATLOG": GoSub FindNumCommandNumber ' Gets the Numeric Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+FLOATLOG_CMD = ii
+Check$ = "FLOATTOSTR": GoSub FindNumCommandNumber ' Gets the Numeric Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+FLOATTOSTR_CMD = ii
+Check$ = "CMPGT": GoSub FindNumCommandNumber ' Gets the Numeric Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+CMPGT_CMD = ii
+Check$ = "CMPGE": GoSub FindNumCommandNumber ' Gets the Numeric Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+CMPGE_CMD = ii
+Check$ = "CMPEQ": GoSub FindNumCommandNumber ' Gets the Numeric Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+CMPEQ_CMD = ii
+Check$ = "CMPLE": GoSub FindNumCommandNumber ' Gets the Numeric Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+CMPLE_CMD = ii
+Check$ = "CMPLT": GoSub FindNumCommandNumber ' Gets the Numeric Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+CMPLT_CMD = ii
+Check$ = "STRTOFLOAT": GoSub FindNumCommandNumber ' Gets the Numeric Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+STRTOFLOAT_CMD = ii
+
 
 x = 0
 INx = 0
@@ -191,6 +240,12 @@ Open "NumericVariablesUsed.txt" For Input As #1
 While EOF(1) = 0
     Input #1, NumericVariable$(NumericVariableCount)
     NumericVariableCount = NumericVariableCount + 1
+Wend
+Close #1
+Open "FloatingPointVariablesUsed.txt" For Input As #1
+While EOF(1) = 0
+    Input #1, FloatVariable$(FloatVariableCount)
+    FloatVariableCount = FloatVariableCount + 1
 Wend
 Close #1
 StringVariableCounter = 0
@@ -361,7 +416,7 @@ While x < Filesize
     ' Figure out what type of token we have and deal with it
     v = Array(x): x = x + 1 ' get the token
     If Verbose > 3 Then Print "Token is: "; Hex$(v)
-    If v < &HF0 And v > &HF3 And v <> &HFF Then
+    If v < &HF0 And v > &HF4 And v <> &HFF Then
         Print "Error on or just after "; linelabel; " Needs either a variable or a General command, but found ";
         If v = &HFC Then Print "Operator Command": System
         If v = &HFD Then Print "String Command": System
@@ -385,6 +440,7 @@ While x < Filesize
     If v = &HF1 Then GoSub HandleStringArray: GoTo DoAnotherLine
     If v = &HF2 Then GoSub HandleNumericVariable: GoTo DoAnotherLine
     If v = &HF3 Then GoSub HandleStringVariable: GoTo DoAnotherLine
+    If v = &HF4 Then GoSub HandleFloatVariable: GoTo DoAnotherLine
 Wend
 Print #1, "EXITProgram:"
 A$ = "ORCC": B$ = "#$50": C$ = "Turn off the interrupts": GoSub AssemOut
@@ -473,9 +529,9 @@ If Optimize > 1 Then
         ' Read the next line
         Line Input #1, line$
         ' Shift the buffer
-        For i = 1 To 5
-            buffer$(i) = buffer$(i + 1)
-        Next i
+        For I = 1 To 5
+            buffer$(I) = buffer$(I + 1)
+        Next I
         buffer$(6) = line$
         ' Check if the buffer matches the pattern
         If Left$(buffer$(1), 16) = "        LDD     " AND _
@@ -490,21 +546,21 @@ If Optimize > 1 Then
             Print #2, buffer$(1)
             Print #2, "        "; lastLine$; "    "; Mid$(buffer$(3), 17, Len(buffer$(3)) - 17)
             ' Clear the buffer
-            For i = 2 To 6
+            For I = 2 To 6
                 Line Input #1, line$
-                buffer$(i) = line$
-            Next i
+                buffer$(I) = line$
+            Next I
         Else
             ' Write the buffered line if it's not part of the pattern
             Print #2, buffer$(1)
         End If
     Loop
     ' Write the remaining lines in the buffer
-    For i = 2 To 6
-        If buffer$(i) <> "" Then
-            Print #2, buffer$(i)
+    For I = 2 To 6
+        If buffer$(I) <> "" Then
+            Print #2, buffer$(I)
         End If
-    Next i
+    Next I
     ' Close the files
     Close #1
     Close #2
@@ -516,6 +572,7 @@ End If
 If KeepTempFiles = 0 Then
     'Erase the temp files
     Kill "NumericVariablesUsed.txt"
+    Kill "FloatingPointVariablesUsed.txt"
     Kill "StringVariablesUsed.txt"
     Kill "GeneralCommandsFound.txt"
     Kill "StringCommandsFound.txt"
@@ -912,15 +969,456 @@ v = Array(x): x = x + 1
 If v <> &H3D Then Print "Syntax error13, looking for = sign in";: GoTo FoundError
 GoSub GetExpressionB4EOL ' Get the expression before an End of Line in Expression$
 ' Check Expression$ for a variable or numeric commands, if there aren't any, then ExType=0 and NewExpression$ will be the expression without any tokenized characters
-GoSub CheckForVariable
-If ExType = 0 Then
-    GoSub EvaluateNewExpression
-    num = D: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-    A$ = "LDD": B$ = "#" + Num$: C$ = "Since we don't have any variables or numeric commands, this is the calculated value": GoSub AssemOut
+FirstChar = Asc(Left$(Expression$, 1))
+If FirstChar = &HF4 Then
+    ' We found a floating point number
+    If Len(Expression$) <> 3 Then
+        Print "Something is wrong with the floating point variable being assigned to "; NV; " on";: GoTo FoundError
+    End If
+    v = Asc(Mid$(Expression$, 2, 1)) * 256 + Asc(Right$(Expression$, 1))
+    SourceFPV$ = "_FPVar_" + FloatVariable$(v)
+    'Let's round the value by 0.5
+    A$ = "LDU": B$ = "#FPStackspace+5": C$ = "Point U at the beginning of the Floating point stack+5": GoSub AssemOut
+    A$ = "LDX": B$ = "#" + SourceFPV$: C$ = "Point X at the floaing point variable": GoSub AssemOut
+    A$ = "JSR": B$ = "FPLOD": C$ = "Copy FP NUMBER FROM ADDRESS X AND PUSH ONTO USER STACK": GoSub AssemOut
+    A$ = "LDX": B$ = "#FPHALF": C$ = "Point X at the floating point value for 0.5 (part of the FP library)": GoSub AssemOut
+    A$ = "JSR": B$ = "FPLOD": C$ = "Copy FP NUMBER FROM ADDRESS X AND PUSH ONTO USER STACK": GoSub AssemOut
+    A$ = "JSR": B$ = "FPADD": C$ = "FLOATING POINT ADDITION  (Float @ -10,U + Float @ -5,U, result Float @ -5,U)": GoSub AssemOut
+    A$ = "JSR": B$ = "FP2INT": C$ = "Convert FP number at -5,U to a signed 16-bit number in D": GoSub AssemOut
+    A$ = "STD": B$ = NV$: C$ = "Save to numeric variable": GoSub AssemOut
 Else
-    ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
+    ' Check Expression$ for a variable or numeric commands, if there aren't any, then ExType=0 and NewExpression$ will be the expression without any tokenized characters
+    GoSub CheckForVariable
+    If ExType = 0 Then
+        GoSub EvaluateNewExpression
+        num = D: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+        A$ = "LDD": B$ = "#" + Num$: C$ = "Since we don't have any variables or numeric commands, this is the calculated value": GoSub AssemOut
+    Else
+        ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
+    End If
+    A$ = "STD": B$ = NV$: C$ = "Save Numeric variable": GoSub AssemOut
 End If
-A$ = "STD": B$ = NV$: C$ = "Save Numeric variable": GoSub AssemOut
+Return
+
+HandleFloatVariable:
+v = Array(x) * 256 + Array(x + 1): x = x + 2
+FPV$ = "_FPVar_" + FloatVariable$(v)
+v = Array(x): x = x + 1
+If v <> &HFC Then Print "Syntax error12, looking for = sign in";: GoTo FoundError
+v = Array(x): x = x + 1
+If v <> &H3D Then Print "Syntax error13, looking for = sign in";: GoTo FoundError
+Start1 = x
+GoSub GetExpressionB4EOL ' Get the expression before an End of Line in Expression$
+EP = 1 'pointer in Expression$
+FirstChar = Asc(Mid$(Expression$, EP, 1)): EP = EP + 1
+Select Case FirstChar
+    Case &HFE
+        'Handle numeric/float command
+        CheckFloatIF:
+        v = Asc(Mid$(Expression$, EP, 1)) * 256 + Asc(Mid$(Expression$, EP + 1, 1)): EP = EP + 2 ' Get numeric command ID
+        Select Case v
+            Case FLOATADD_CMD
+                FloatCMD$ = "FPADD"
+                ArgCount = 2
+            Case FLOATSUB_CMD
+                FloatCMD$ = "FPSUB"
+                ArgCount = 2
+            Case FLOATMUL_CMD
+                FloatCMD$ = "FPMUL"
+                ArgCount = 2
+            Case FLOATDIV_CMD
+                FloatCMD$ = "FPDIV"
+                ArgCount = 2
+            Case CMPGT_CMD
+                FloatCMD$ = "FPCMP"
+                ArgCount = 2
+                CompType = 1
+            Case CMPGE_CMD
+                FloatCMD$ = "FPCMP"
+                ArgCount = 2
+                CompType = 2
+            Case CMPEQ_CMD
+                FloatCMD$ = "FPCMP"
+                ArgCount = 2
+                CompType = 3
+            Case CMPLE_CMD
+                FloatCMD$ = "FPCMP"
+                ArgCount = 2
+                CompType = 4
+            Case CMPLT_CMD
+                FloatCMD$ = "FPCMP"
+                ArgCount = 2
+                CompType = 5
+            Case FLOATSQRT_CMD
+                FloatCMD$ = "FPSQRT"
+                ArgCount = 1
+            Case FLOATSIN_CMD
+                FloatCMD$ = "FPSIN"
+                ArgCount = 1
+            Case FLOATCOS_CMD
+                FloatCMD$ = "FPCOS"
+                ArgCount = 1
+            Case FLOATTAN_CMD
+                FloatCMD$ = "FPTAN"
+                ArgCount = 1
+            Case FLOATATAN_CMD
+                FloatCMD$ = "FPATAN"
+                ArgCount = 1
+            Case FLOATEXP_CMD
+                FloatCMD$ = "FPEXP"
+                ArgCount = 1
+            Case FLOATLOG_CMD
+                FloatCMD$ = "FPLN"
+                ArgCount = 1
+            Case INT_CMD
+                EP = EP + 2 ' consume the open bracket
+                Expression$ = Mid$(Expression$, EP, Len(Expression$) - EP - 1)
+                ' Check Expression$ for a variable or numeric commands, if there aren't any, then ExType=0 and NewExpression$ will be the expression without any tokenized characters
+                GoSub CheckForVariable
+                If ExType = 0 Then
+                    GoSub EvaluateNewExpression
+                    num = D: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+                    A$ = "LDD": B$ = "#" + Num$: C$ = "Since we don't have any variables or numeric commands, this is the calculated value": GoSub AssemOut
+                Else
+                    ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
+                End If
+                A$ = "LDU": B$ = "#" + FPV$: C$ = "Point U at the beginning of the Floating point variable": GoSub AssemOut
+                A$ = "JSR": B$ = "INT2FP": C$ = "Convert signed 16-BIT integer in D to floating point number and store it at U, U=U+5": GoSub AssemOut
+                Return
+            Case STRTOFLOAT_CMD
+                ' Handle String to Float command
+                EP = EP + 2 ' consume the open bracket
+                Expression$ = Mid$(Expression$, EP, Len(Expression$) - EP - 1)
+                GoSub ParseStringExpression ' Parse the String Expression, value will end up in _StrVar_PF00
+                ' Copy _StrVar_PF00 to string variable
+                A$ = "LDX": B$ = "#_StrVar_PF00": C$ = "X points at the start of the source string": GoSub AssemOut
+                A$ = "LDB": B$ = ",X+": C$ = "Get String length, Incrment X": GoSub AssemOut
+                A$ = "ABX": C$ = "X=X+B": GoSub AssemOut
+                A$ = "CLR": B$ = ",X": C$ = "Clear the end of the string": GoSub AssemOut
+                A$ = "LDY": B$ = "#_StrVar_PF00+1": C$ = "Y points at the start of the source string": GoSub AssemOut
+                A$ = "LDU": B$ = "#" + FPV$: C$ = "U points at the floating point number": GoSub AssemOut
+                A$ = "JSR": B$ = "SCANNUM": C$ = "Convert String at Y to FP number at U": GoSub AssemOut
+                Return
+            Case Else
+                Print "Can't figure out the type of number/expression, maybe it needs to use INT() on";: GoTo FoundError
+        End Select
+        If Asc(Mid$(Expression$, EP, 1)) = &HF5 And Asc(Mid$(Expression$, EP + 1, 1)) = &H28 Then
+            EP = EP + 2 'move past the open bracket
+            If ArgCount = 1 Then
+                v = Asc(Mid$(Expression$, EP, 1))
+                If v = Asc("-") Then
+                    negval = 1
+                Else
+                    negval = 0
+                End If
+                If v >= Asc("0") And v <= Asc("9") Then
+                    ' This is a number value
+                    A$ = "LDU": B$ = "#FPStackspace+5": C$ = "Point U at the beginning of the Floating point stack+5": GoSub AssemOut
+                    FPString$ = Mid$(Expression$, EP, Len(Expression$) - EP - 1)
+                    GoSub FPConversion ' Convert floating point string FPString$ to 5 Byte Floating point HEX value FPBytes$
+                    A$ = "LDD": B$ = "#$" + Left$(FPBytes$, 4): C$ = "First two digits of the FP number": GoSub AssemOut
+                    A$ = "STD": B$ = "-5,U": C$ = "Save it": GoSub AssemOut
+                    A$ = "LDD": B$ = "#$" + Mid$(FPBytes$, 5, 4): C$ = "Third and fourth digits of the FP number": GoSub AssemOut
+                    A$ = "STD": B$ = "-3,U": C$ = "Save it": GoSub AssemOut
+                    A$ = "LDA": B$ = "#$" + Right$(FPBytes$, 2): C$ = "Fifth digit of the FP number": GoSub AssemOut
+                    A$ = "STA": B$ = "-1,U": C$ = "Save it": GoSub AssemOut
+                    'If we have a minus sign make this a negative of current value
+                    If negval = 1 Then
+                        'there is a negative sign
+                        A$ = "JSR": B$ = "FPNEG": C$ = "Do FP negation": GoSub AssemOut
+                    End If
+                    A$ = "JSR": B$ = FloatCMD$: C$ = "Do the FP operation": GoSub AssemOut
+                    A$ = "LDD": B$ = "-5,U": C$ = "First two digits of the FP number": GoSub AssemOut
+                    A$ = "STD": B$ = FPV$: C$ = "Save it": GoSub AssemOut
+                    A$ = "LDD": B$ = "-3,U": C$ = "Third and fourth digits of the FP number": GoSub AssemOut
+                    A$ = "STD": B$ = FPV$ + "+2": C$ = "Save it": GoSub AssemOut
+                    A$ = "LDA": B$ = "-1,U": C$ = "Fifth digit of the FP number": GoSub AssemOut
+                    A$ = "STA": B$ = FPV$ + "+4": C$ = "Save it": GoSub AssemOut
+                Else
+                    If v = &HF4 Then
+                        ' We have a FP variable
+                        A$ = "LDU": B$ = "#FPStackspace+5": C$ = "Point U at the beginning of the Floating point stack+5": GoSub AssemOut
+                        EP = EP + 1 ' consume the &HF4
+                        v = Asc(Mid$(Expression$, EP, 1)) * 256 + Asc(Mid$(Expression$, EP + 1, 1))
+                        SourceFPV$ = "_FPVar_" + FloatVariable$(v)
+                        A$ = "LDD": B$ = SourceFPV$: C$ = "First two digits of the source FP number": GoSub AssemOut
+                        A$ = "STD": B$ = "-5,U": C$ = "Save it": GoSub AssemOut
+                        A$ = "LDD": B$ = SourceFPV$ + "+2": C$ = "Third and fourth digits of source the FP number": GoSub AssemOut
+                        A$ = "STD": B$ = "-3,U": C$ = "Save it": GoSub AssemOut
+                        A$ = "LDA": B$ = SourceFPV$ + "+4": C$ = "Fifth digit of the source FP number": GoSub AssemOut
+                        A$ = "STA": B$ = "-1,U": C$ = "Save it": GoSub AssemOut
+                        'If we have a minus sign make this a negative of current value
+                        If negval = 1 Then
+                            'there is a negative sign
+                            A$ = "JSR": B$ = "FPNEG": C$ = "Do FP negation": GoSub AssemOut
+                        End If
+                        A$ = "JSR": B$ = FloatCMD$: C$ = "Do the FP operation": GoSub AssemOut
+                        A$ = "LDD": B$ = "-5,U": C$ = "First two digits of the FP number": GoSub AssemOut
+                        A$ = "STD": B$ = FPV$: C$ = "Save it": GoSub AssemOut
+                        A$ = "LDD": B$ = "-3,U": C$ = "Third and fourth digits of the FP number": GoSub AssemOut
+                        A$ = "STD": B$ = FPV$ + "+2": C$ = "Save it": GoSub AssemOut
+                        A$ = "LDA": B$ = "-1,U": C$ = "Fifth digit of the FP number": GoSub AssemOut
+                        A$ = "STA": B$ = FPV$ + "+4": C$ = "Save it": GoSub AssemOut
+                    Else
+                        If v = &HFE Then
+                            ' Might have the INT command
+                            v = Asc(Mid$(Expression$, EP + 1, 1)) * 256 + Asc(Mid$(Expression$, EP + 2, 1)): EP = EP + 3 ' move past the INT command
+                            If v = INT_CMD Then
+                                ' Treat it like a normal unsigned integer expession
+                                EP = EP + 2 ' consume the open bracket
+                                Expression$ = Mid$(Expression$, EP, Len(Expression$) - EP - 3)
+                                ' Check Expression$ for a variable or numeric commands, if there aren't any, then ExType=0 and NewExpression$ will be the expression without any tokenized characters
+                                GoSub CheckForVariable
+                                If ExType = 0 Then
+                                    GoSub EvaluateNewExpression
+                                    num = D: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+                                    A$ = "LDD": B$ = "#" + Num$: C$ = "Since we don't have any variables or numeric commands, this is the calculated value": GoSub AssemOut
+                                Else
+                                    ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
+                                End If
+                                A$ = "LDU": B$ = "#FPStackspace": C$ = "Point U at the beginning of the Floating point stack": GoSub AssemOut
+                                A$ = "JSR": B$ = "INT2FP": C$ = "Convert signed 16-BIT integer in D to floating point number and store it at U, U=U+5": GoSub AssemOut
+                                A$ = "JSR": B$ = FloatCMD$: C$ = "Do the FP operation": GoSub AssemOut
+                                A$ = "LDD": B$ = "-5,U": C$ = "First two digits of the FP number": GoSub AssemOut
+                                A$ = "STD": B$ = FPV$: C$ = "Save it": GoSub AssemOut
+                                A$ = "LDD": B$ = "-3,U": C$ = "Third and fourth digits of the FP number": GoSub AssemOut
+                                A$ = "STD": B$ = FPV$ + "+2": C$ = "Save it": GoSub AssemOut
+                                A$ = "LDA": B$ = "-1,U": C$ = "Fifth digit of the FP number": GoSub AssemOut
+                                A$ = "STA": B$ = FPV$ + "+4": C$ = "Save it": GoSub AssemOut
+                            Else
+                                Print "Can't figure out the type of number/expression, maybe it needs to use INT() on";: GoTo FoundError
+                            End If
+                        End If
+                    End If
+                End If
+            Else
+                'Two arguments
+                x = Start1 + 5
+                If Array(x) = &HFC And Array(x + 1) = Asc("-") Then
+                    negval = 1
+                    x = x + 2
+                Else
+                    negval = 0
+                End If
+                v = Array(x)
+                Select Case v
+                    Case Asc("0") To Asc("9")
+                        ' This is a number value
+                        A$ = "LDU": B$ = "#FPStackspace+5": C$ = "Point U at the beginning of the Floating point stack+5": GoSub AssemOut
+                        FPString$ = Chr$(Array(x)): x = x + 1
+                        While Array(x) <> &HF5 And Array(x + 1) <> Asc(",")
+                            FPString$ = FPString$ + Chr$(Array(x)): x = x + 1
+                        Wend
+                        x = x + 2 'move past the comma
+                        GoSub FPConversion ' Convert floating point string FPString$ to 5 Byte Floating point HEX value FPBytes$
+                        A$ = "LDD": B$ = "#$" + Left$(FPBytes$, 4): C$ = "First two digits of the FP number": GoSub AssemOut
+                        A$ = "STD": B$ = "-5,U": C$ = "Save it": GoSub AssemOut
+                        A$ = "LDD": B$ = "#$" + Mid$(FPBytes$, 5, 4): C$ = "Third and fourth digits of the FP number": GoSub AssemOut
+                        A$ = "STD": B$ = "-3,U": C$ = "Save it": GoSub AssemOut
+                        A$ = "LDA": B$ = "#$" + Right$(FPBytes$, 2): C$ = "Fifth digit of the FP number": GoSub AssemOut
+                        A$ = "STA": B$ = "-1,U": C$ = "Save it": GoSub AssemOut
+                        'If we have a minus sign make this a negative of current value
+                        If negval = 1 Then
+                            'there is a negative sign
+                            A$ = "JSR": B$ = "FPNEG": C$ = "Do FP negation": GoSub AssemOut
+                        End If
+                    Case &HF4
+                        ' We have an FP variable
+                        A$ = "LDU": B$ = "#FPStackspace+5": C$ = "Point U at the beginning of the Floating point stack+5": GoSub AssemOut
+                        v = Array(x + 1) * 256 + Array(x + 2): x = x + 3 ' Consume the &HF4 and the variable  & the comma
+                        SourceFPV$ = "_FPVar_" + FloatVariable$(v)
+                        If Array(x) <> &HF5 And Array(x + 1) <> Asc(",") Then Print "Can't find comma with floating point command on";: GoTo FoundError
+                        x = x + 2 'move past the comma
+                        A$ = "LDD": B$ = SourceFPV$: C$ = "First two digits of the source FP number": GoSub AssemOut
+                        A$ = "STD": B$ = "-5,U": C$ = "Save it": GoSub AssemOut
+                        A$ = "LDD": B$ = SourceFPV$ + "+2": C$ = "Third and fourth digits of source the FP number": GoSub AssemOut
+                        A$ = "STD": B$ = "-3,U": C$ = "Save it": GoSub AssemOut
+                        A$ = "LDA": B$ = SourceFPV$ + "+4": C$ = "Fifth digit of the source FP number": GoSub AssemOut
+                        A$ = "STA": B$ = "-1,U": C$ = "Save it": GoSub AssemOut
+                        'If we have a minus sign make this a negative of current value
+                        If negval = 1 Then
+                            'there is a negative sign
+                            A$ = "JSR": B$ = "FPNEG": C$ = "Do FP negation": GoSub AssemOut
+                        End If
+                    Case &HFE
+                        ' Might have the INT command
+                        v = Array(x + 1) * 256 + Array(x + 2): x = x + 3 ' move past the INT command
+                        If v = INT_CMD Then
+                            ' Found INT Command, Get the first expression
+                            GoSub GetExpressionB4Comma: x = x + 2 'Handle an expression that ends with a comma skip brackets & move past it
+                            ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression result with value in D
+                            A$ = "LDU": B$ = "#FPStackspace": C$ = "Point U at the beginning of the Floating point stack": GoSub AssemOut
+                            A$ = "JSR": B$ = "INT2FP": C$ = "Convert signed 16-BIT integer in D to floating point number and store it at U, U=U+5": GoSub AssemOut
+                        Else
+                            Print "Can't figure out the type of number/expression, maybe it needs to use INT() on";: GoTo FoundError
+                        End If
+                End Select
+                If Array(x) = &HFC And Array(x + 1) = Asc("-") Then
+                    negval = 1
+                    x = x + 2
+                Else
+                    negval = 0
+                End If
+                v = Array(x)
+                Select Case v
+                    Case Asc("0") To Asc("9")
+                        ' This is a number value
+                        A$ = "LDU": B$ = "#FPStackspace+10": C$ = "Point U at the beginning of the Floating point stack+10": GoSub AssemOut
+                        FPString$ = Chr$(Array(x)): x = x + 1
+                        While Array(x) <> &HF5 And Array(x + 1) <> Asc(",")
+                            FPString$ = FPString$ + Chr$(Array(x)): x = x + 1
+                        Wend
+                        x = x + 2 'move past the comma
+                        GoSub FPConversion ' Convert floating point string FPString$ to 5 Byte Floating point HEX value FPBytes$
+                        A$ = "LDD": B$ = "#$" + Left$(FPBytes$, 4): C$ = "First two digits of the FP number": GoSub AssemOut
+                        A$ = "STD": B$ = "-5,U": C$ = "Save it": GoSub AssemOut
+                        A$ = "LDD": B$ = "#$" + Mid$(FPBytes$, 5, 4): C$ = "Third and fourth digits of the FP number": GoSub AssemOut
+                        A$ = "STD": B$ = "-3,U": C$ = "Save it": GoSub AssemOut
+                        A$ = "LDA": B$ = "#$" + Right$(FPBytes$, 2): C$ = "Fifth digit of the FP number": GoSub AssemOut
+                        A$ = "STA": B$ = "-1,U": C$ = "Save it": GoSub AssemOut
+                    Case &HF4
+                        ' We have a FP variable
+                        A$ = "LDU": B$ = "#FPStackspace+10": C$ = "Point U at the beginning of the Floating point stack+10": GoSub AssemOut
+                        v = Array(x + 1) * 256 + Array(x + 2): x = x + 3 ' Consume the &HF4 and the variable  & the close bracket
+                        SourceFPV$ = "_FPVar_" + FloatVariable$(v)
+                        If Array(x) <> &HF5 And Array(x + 1) <> Asc(")") Then Print "Can't find close bracket with floating point command on";: GoTo FoundError
+                        x = x + 2 'move past the comma
+                        A$ = "LDD": B$ = SourceFPV$: C$ = "First two digits of the source FP number": GoSub AssemOut
+                        A$ = "STD": B$ = "-5,U": C$ = "Save it": GoSub AssemOut
+                        A$ = "LDD": B$ = SourceFPV$ + "+2": C$ = "Third and fourth digits of source the FP number": GoSub AssemOut
+                        A$ = "STD": B$ = "-3,U": C$ = "Save it": GoSub AssemOut
+                        A$ = "LDA": B$ = SourceFPV$ + "+4": C$ = "Fifth digit of the source FP number": GoSub AssemOut
+                        A$ = "STA": B$ = "-1,U": C$ = "Save it": GoSub AssemOut
+                    Case &HFE
+                        ' Might have the INT command
+                        v = Array(x + 1) * 256 + Array(x + 2): x = x + 3 ' move past the INT command
+                        If v = INT_CMD Then
+                            ' Found INT Command, Get the 2nd expression
+                            GoSub GetExpressionB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+                            ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression result with value in D
+                            A$ = "LDU": B$ = "#FPStackspace+5": C$ = "Point U at the beginning of the Floating point stack": GoSub AssemOut
+                            A$ = "JSR": B$ = "INT2FP": C$ = "Convert signed 16-BIT integer in D to floating point number and store it at U, U=U+5": GoSub AssemOut
+                        Else
+                            Print "Can't figure out the type of number/expression, maybe it needs to use INT() on";: GoTo FoundError
+                        End If
+                End Select
+                'If we have a minus sign make this a negative of current value
+                If negval = 1 Then
+                    'there is a negative sign
+                    A$ = "JSR": B$ = "FPNEG": C$ = "Do FP negation": GoSub AssemOut
+                End If
+                A$ = "JSR": B$ = FloatCMD$: C$ = "Do the FP operation": GoSub AssemOut
+                If FloatCMD$ = "FPCMP" Then
+                    'Doing a Float Compare
+                    ' returns with a LDD with the result, zero is false, #$FFFF if true
+                    Select Case CompType
+                        Case 1
+                            'CMPGT_CMD
+                            A$ = "BGT": B$ = ">": C$ = "Branch if greater than": GoSub AssemOut
+                        Case 2
+                            'CMPGE_CMD
+                            A$ = "BGE": B$ = ">": C$ = "Branch if greater than or Equal": GoSub AssemOut
+                        Case 3
+                            'CMPEQ_CMD
+                            A$ = "BEQ": B$ = ">": C$ = "Branch if Equal": GoSub AssemOut
+                        Case 4
+                            'CMPLE_CMD
+                            A$ = "BLE": B$ = ">": C$ = "Branch if less than or equal": GoSub AssemOut
+                        Case 5
+                            'CMPLT_CMD
+                            A$ = "BLT": B$ = ">": C$ = "Branch if less than": GoSub AssemOut
+                    End Select
+                    A$ = "LDD": B$ = "#$0000": C$ = "Flag as false": GoSub AssemOut
+                    A$ = "BRA": B$ = "@FPComp": C$ = "skip ahead": GoSub AssemOut
+                    Z$ = "!"
+                    A$ = "LDD": B$ = "#$FFFF": C$ = "Flag as true": GoSub AssemOut
+                    Z$ = "@FPComp": GoSub AssemOut
+                    Print #1, ' Leave space so @ works correctly
+                    Return ' Go back to IF FloatingPoint Compare
+                Else
+                    A$ = "LDD": B$ = "-5,U": C$ = "First two digits of the FP number": GoSub AssemOut
+                    A$ = "STD": B$ = FPV$: C$ = "Save it": GoSub AssemOut
+                    A$ = "LDD": B$ = "-3,U": C$ = "Third and fourth digits of the FP number": GoSub AssemOut
+                    A$ = "STD": B$ = FPV$ + "+2": C$ = "Save it": GoSub AssemOut
+                    A$ = "LDA": B$ = "-1,U": C$ = "Fifth digit of the FP number": GoSub AssemOut
+                    A$ = "STA": B$ = FPV$ + "+4": C$ = "Save it": GoSub AssemOut
+                End If
+            End If
+        Else
+            Print "No bracket after Floatingpoint command on";: GoTo FoundError
+        End If
+    Case &HF2
+        'Integer numeric variable
+        v = Asc(Mid$(Expression$, 2, 1)) * 256 + Asc(Right$(Expression$, 1))
+        SourceVar$ = "_Var_" + NumericVariable$(v)
+        A$ = "LDD": B$ = SourceVar$: C$ = "Get the signed 16 bit number in D": GoSub AssemOut
+        A$ = "LDU": B$ = "#" + FPV$: C$ = "Point U at the start of the FP variable": GoSub AssemOut
+        A$ = "JSR": B$ = "INT2FP": C$ = "Convert signed 16-BIT integer in D to floating point number and store it at U, U=U+5": GoSub AssemOut
+    Case &HF4
+        'Floating point variable
+        If Len(Expression$) <> 3 Then
+            Print "Something is wrong with the floating point variable being assigned to "; FPV$; " on";: GoTo FoundError
+        End If
+        v = Asc(Mid$(Expression$, 2, 1)) * 256 + Asc(Right$(Expression$, 1))
+        SourceFPV$ = "_FPVar_" + FloatVariable$(v)
+        A$ = "LDD": B$ = SourceFPV$: C$ = "First two digits of the source FP number": GoSub AssemOut
+        A$ = "STD": B$ = FPV$: C$ = "Save it": GoSub AssemOut
+        A$ = "LDD": B$ = SourceFPV$ + "+2": C$ = "Third and fourth digits of source the FP number": GoSub AssemOut
+        A$ = "STD": B$ = FPV$ + "+2": C$ = "Save it": GoSub AssemOut
+        A$ = "LDA": B$ = SourceFPV$ + "+4": C$ = "Fifth digit of the source FP number": GoSub AssemOut
+        A$ = "STA": B$ = FPV$ + "+4": C$ = "Save it": GoSub AssemOut
+    Case Else
+        ' A number
+        FPString$ = Expression$
+        GoSub FPConversion ' Convert floating point string FPString$ to 5 Byte Floating point HEX value FPBytes$
+        A$ = "LDD": B$ = "#$" + Left$(FPBytes$, 4): C$ = "First two digits of the FP number": GoSub AssemOut
+        A$ = "STD": B$ = FPV$: C$ = "Save it": GoSub AssemOut
+        A$ = "LDD": B$ = "#$" + Mid$(FPBytes$, 5, 4): C$ = "Third and fourth digits of the FP number": GoSub AssemOut
+        A$ = "STD": B$ = FPV$ + "+2": C$ = "Save it": GoSub AssemOut
+        A$ = "LDA": B$ = "#$" + Right$(FPBytes$, 2): C$ = "Fifth digit of the FP number": GoSub AssemOut
+        A$ = "STA": B$ = FPV$ + "+4": C$ = "Save it": GoSub AssemOut
+End Select
+Return
+' Convert numbers to Floating point format
+FPConversion:
+' Read input from the user
+FPString$ = RTrim$(FPString$)
+
+' It's a number, convert it
+FloatNum = Val(FPString$)
+If FloatNum = 0 Then
+    sign = 0
+    expo = 0
+    mant = 0
+Else
+    If FloatNum < 0 Then sign = &H80 Else sign = 0
+    FloatNum = Abs(FloatNum)
+    expo = &H9F
+
+    ' Normalize mantissa
+    Do While FloatNum < 2147483648#
+        FloatNum = FloatNum * 2
+        expo = expo - 1
+    Loop
+    Do While FloatNum >= 4294967296#
+        FloatNum = FloatNum / 2
+        expo = expo + 1
+    Loop
+
+    mant = Int(FloatNum + 0.5)
+End If
+
+' Create the 5-byte floating point representation
+FPbyte(0) = expo
+FPbyte(1) = (Val("&H" + Left$(Hex$(mant), 2)) And &H7F) Or sign
+FPbyte(2) = Val("&H" + Mid$(Hex$(mant), 3, 2))
+FPbyte(3) = Val("&H" + Mid$(Hex$(mant), 5, 2))
+FPbyte(4) = Val("&H" + Right$(Hex$(mant), 2))
+FPBytes$ = Right$("00" + Hex$(FPbyte(0)), 2)
+FPBytes$ = FPBytes$ + Right$("00" + Hex$(FPbyte(1)), 2)
+FPBytes$ = FPBytes$ + Right$("00" + Hex$(FPbyte(2)), 2)
+FPBytes$ = FPBytes$ + Right$("00" + Hex$(FPbyte(3)), 2)
+FPBytes$ = FPBytes$ + Right$("00" + Hex$(FPbyte(4)), 2)
 Return
 
 CheckForVariable:
@@ -946,20 +1444,43 @@ If v <> &HFC Then Print "Syntax error14, looking for = sign in";: GoTo FoundErro
 v = Array(x): x = x + 1
 If v <> &H3D Then Print "Syntax error15, looking for = sign in";: GoTo FoundError
 GoSub GetExpressionB4EOL ' Get the expression before an End of Line in Expression$
-GoSub ParseStringExpression ' Parse the String Expression, value will end up in _StrVar_PF00
-' Copy _StrVar_PF00 to string variable
-A$ = "LDU": B$ = "#_StrVar_PF00": C$ = "U points at the start of the source string": GoSub AssemOut
-A$ = "LDB": B$ = ",U+": C$ = "B = length of the source string, move U to the first location where source data is stored": GoSub AssemOut
-A$ = "LDX": B$ = "#" + StringVar$: C$ = "X points at the length of the destination string": GoSub AssemOut
-A$ = "STB": B$ = ",X+": C$ = "Set the size of the destination string, X now points at the beginning of the destination data": GoSub AssemOut
-A$ = "BEQ": B$ = "Done@": C$ = "If the length of the string is zero then don't print it (Skip ahead)": GoSub AssemOut
-Z$ = "!"
-A$ = "LDA": B$ = ",U+": C$ = "Get a source byte": GoSub AssemOut
-A$ = "STA": B$ = ",X+": C$ = "Write the destination byte": GoSub AssemOut
-A$ = "DECB": C$ = "Decrement the counter": GoSub AssemOut
-A$ = "BNE": B$ = "<": C$ = "Loop until all data is copied to the destination string": GoSub AssemOut
-Z$ = "Done@": GoSub AssemOut
-Print #1, "" ' Leave a space between sections so Done@ will work for each section
+
+EP = 1 'pointer in Expression$
+FirstChar = Asc(Mid$(Expression$, EP, 1)): EP = EP + 1
+If FirstChar = &HFE Then
+    'Handle numeric/float command
+    v = Asc(Mid$(Expression$, EP, 1)) * 256 + Asc(Mid$(Expression$, EP + 1, 1)): EP = EP + 4 ' Get numeric command ID, move past open bracket
+    If v = FLOATTOSTR_CMD Then
+        ' Convert floating point number to string
+        v = Asc(Mid$(Expression$, EP, 1)): EP = EP + 1
+        If v = &HF4 Then
+            v = Asc(Mid$(Expression$, EP, 1)) * 256 + Asc(Mid$(Expression$, EP + 1, 1)): EP = EP + 2
+            FPV$ = "_FPVar_" + FloatVariable$(v)
+            A$ = "LDX": B$ = "#" + FPV$: C$ = "Point X at the beginning of the Floating point number": GoSub AssemOut
+            A$ = "LDU": B$ = "#FPStackspace+5": C$ = "Point U at the beginning of the Floating point stack+5": GoSub AssemOut
+            A$ = "JSR": B$ = "FPLOD": C$ = "LOAD FP NUMBER FROM ADDRESS X AND PUSH ONTO FP STACK": GoSub AssemOut
+            A$ = "LDY": B$ = "#" + StringVar$: C$ = "Y points at the destination string": GoSub AssemOut
+            A$ = "JSR": B$ = "FPSCIENT": C$ = "CONVERT FP NUMBER TO STRING AT ADDRESS Y IN SCIENTIFIC NOTATION": GoSub AssemOut
+        Else
+            Print "Must only have one floating point variable inside the FLOATTOSTR brackets on";: GoTo FoundError
+        End If
+    End If
+Else
+    GoSub ParseStringExpression ' Parse the String Expression, value will end up in _StrVar_PF00
+    ' Copy _StrVar_PF00 to string variable
+    A$ = "LDU": B$ = "#_StrVar_PF00": C$ = "U points at the start of the source string": GoSub AssemOut
+    A$ = "LDB": B$ = ",U+": C$ = "B = length of the source string, move U to the first location where source data is stored": GoSub AssemOut
+    A$ = "LDX": B$ = "#" + StringVar$: C$ = "X points at the length of the destination string": GoSub AssemOut
+    A$ = "STB": B$ = ",X+": C$ = "Set the size of the destination string, X now points at the beginning of the destination data": GoSub AssemOut
+    A$ = "BEQ": B$ = "Done@": C$ = "If the length of the string is zero then don't print it (Skip ahead)": GoSub AssemOut
+    Z$ = "!"
+    A$ = "LDA": B$ = ",U+": C$ = "Get a source byte": GoSub AssemOut
+    A$ = "STA": B$ = ",X+": C$ = "Write the destination byte": GoSub AssemOut
+    A$ = "DECB": C$ = "Decrement the counter": GoSub AssemOut
+    A$ = "BNE": B$ = "<": C$ = "Loop until all data is copied to the destination string": GoSub AssemOut
+    Z$ = "Done@": GoSub AssemOut
+    Print #1, "" ' Leave a space between sections so Done@ will work for each section
+End If
 Return
 
 ConsumeCommentsAndEOL:
@@ -1211,6 +1732,7 @@ ElseStack(IFSP) = IfCount
 ' We are inside a nested IF/THEN/ELSE we've already processed
 ' x points just past the IF        , ' This is the point where the expression starts
 CheckIfTrue$ = ""
+SaveIFX = x ' Save this position, just in case we have floating point compares to test for
 v = 0
 While v <> &HFF ' Keep copying until we get the next command which should be a THEN
     v = Array(x): x = x + 1
@@ -1220,8 +1742,27 @@ Wend
 v = Array(x) * 256 + Array(x + 1): x = x + 2
 If v <> THEN_CMD Then Print "Need a THEN after the IF statement on";: GoTo FoundError
 CheckIfTrue$ = Left$(CheckIfTrue$, Len(CheckIfTrue$) - 1) ' remove the &HFF on the end
+
+' Add code to handle
+'CMPGT(FP_A,10.432) THEN (do this if >)
+'CMPGE(FP_A,10.432) THEN (do this if >=)
+'CMPEQ(FP_A,10.432) THEN (do this if = )
+'CMPLE(FP_A,10.432) THEN (do this if <=)
+'CMPLT(FP_A,10.432) THEN (do this if <)
+If Left$(CheckIfTrue$, 1) <> Chr$(&HFE) Then GoTo NotFloatComp 'Skip and handle normal IF conditions
+'If we get here then we are doing a floating Point compare
+SaveX = x ' save the current position of x
+Start1 = SaveIFX ' x points just after the IF statement
+x = Start1
+GoSub GetExpressionB4EOL ' Get the expression before an End of Line in Expression$
+EP = 2 'pointer in Expression$
+GoSub CheckFloatIF ' Go handle Float Compares returns with a LDD with the result, zero is false so it will do an ELSE, if there is one otherwise do what is after the THEN
+x = SaveX ' Restore x
+GoTo CheckAfterFlotComp
+NotFloatComp:
 GoSub GoCheckIfTrue ' This parses CheckIfTrue$, gets it ready to be evaluated in the string NewString$
 GoSub EvaluateNewString ' This Evaluates NewString$ and returns with a LDD with the result, zero is false so it will do an ELSE, if there is one otherwise do what is after the THEN
+CheckAfterFlotComp:
 num = IFSTack(IFProc): GoSub NumAsString 'num=IFCount associated with this IFProc
 If num < 10 Then Num$ = "0" + Num$
 If ELSELocation(IFProc) > 0 Then
@@ -1310,27 +1851,27 @@ GoCheckIfTrue:
 
 ' Make sure CheckIfTrue$ has an operator, if not add <>0 to the end of CheckIfTrue$
 FoundOperator = 0
-i = 1
-While i < Len(CheckIfTrue$)
-    v = Asc(Mid$(CheckIfTrue$, i, 1)): i = i + 1
+I = 1
+While I < Len(CheckIfTrue$)
+    v = Asc(Mid$(CheckIfTrue$, I, 1)): I = I + 1
     If v > &HEF Then
         'We have a Token
         Select Case v
             Case &HF0, &HF1: ' Found a Numeric or String array
-                i = i + 3
+                I = I + 3
             Case &HF2, &HF3: ' Found a numeric or string variable
-                i = i + 2
+                I = I + 2
             Case &HF5 ' Found a special character
-                i = i + 1
+                I = I + 1
             Case &HFB: ' Found a DEF FN Function
-                i = i + 2
+                I = I + 2
             Case &HFC: ' Found an Operator
-                ii = Asc(Mid$(CheckIfTrue$, i, 1))
+                ii = Asc(Mid$(CheckIfTrue$, I, 1))
                 If ii > &H0F And ii < &H16 Then FoundOperator = 1 'we found an operator to deal with
                 If ii > &H3B And ii < &H3F Then FoundOperator = 1 'we found an operator to deal with
-                i = i + 1
+                I = I + 1
             Case &HFD, &HFE, &HFF: 'Found String,Numeric or General command
-                i = i + 2
+                I = I + 2
         End Select
     End If
 Wend
@@ -1343,7 +1884,7 @@ EC = 1 'Expression Counter
 BracketCount = 0
 NewString$ = ""
 CheckIfTrue$ = CheckIfTrue$ + Chr$(&HFC) + Chr$(&H3D) + "   " ' Add fake last expression of = so it ends with something
-i = 1
+I = 1
 Temp$ = ""
 BC$ = ""
 ExpressionFound$(EC) = ""
@@ -1354,9 +1895,9 @@ ExpressionFound$(EC) = ""
 '                   Hex - 10,11, 12, 13, 14,  15,    2A,2B,2D,2F     3C,3D,3E      5C,5E                                60 , 61 , 62
 ' FC = Operator Command  AND,OR,MOD,XOR,NOT,DIVR,..., *, +, -, /,..., <, =, >,...., \, ^  Extended for Evaluation code "<>","<=",">="
 
-Start = i
-While i < Len(CheckIfTrue$)
-    v = Asc(Mid$(CheckIfTrue$, i, 1)): i = i + 1
+Start = I
+While I < Len(CheckIfTrue$)
+    v = Asc(Mid$(CheckIfTrue$, I, 1)): I = I + 1
     'Keep track of brackets
     If v = Asc("(") Then BracketCount = BracketCount + 1
     If v = Asc(")") Then BracketCount = BracketCount - 1
@@ -1364,26 +1905,26 @@ While i < Len(CheckIfTrue$)
         'We have a Token
         Select Case v
             Case &HF0, &HF1: ' Found a Numeric or String array
-                i = i + 3
+                I = I + 3
             Case &HF2, &HF3: ' Found a numeric or string variable
-                i = i + 2
+                I = I + 2
             Case &HF5 ' Found a special character
-                i = i + 1
+                I = I + 1
             Case &HFB: ' Found a DEF FN Function
-                i = i + 2
+                I = I + 2
             Case &HFC: ' Found an Operator
-                v1 = Asc(Mid$(CheckIfTrue$, i, 1))
+                v1 = Asc(Mid$(CheckIfTrue$, I, 1))
                 If v1 = &H10 Or v1 = &H11 Or v1 = &H13 Or v1 = &H14 Or v1 = &H3C Or v1 = &H3D Or v1 = &H3E Then
                     'we found an operator to deal with
                     GoSub AddNewExpression
                     ' Everything is now copied properly in Newstring$ and ExpressionFound$()
-                    Op1 = Asc(Mid$(CheckIfTrue$, i, 1)): i = i + 1 ' Get the first operator, move index past the first operator
-                    If Asc(Mid$(CheckIfTrue$, i, 1)) = &HFC Then ' Check for another operator
+                    Op1 = Asc(Mid$(CheckIfTrue$, I, 1)): I = I + 1 ' Get the first operator, move index past the first operator
+                    If Asc(Mid$(CheckIfTrue$, I, 1)) = &HFC Then ' Check for another operator
                         ' We have two operators, so let's combine them
-                        Op2 = Asc(Mid$(CheckIfTrue$, i + 1, 1)): i = i + 2 ' get the 2nd operator and move the index past the 2nd operator
+                        Op2 = Asc(Mid$(CheckIfTrue$, I + 1, 1)): I = I + 2 ' get the 2nd operator and move the index past the 2nd operator
                         If Op2 = &H2D Then
                             ' it's a negative on the right side
-                            i = i - 2
+                            I = I - 2
                             NewOp = Op1
                         End If
                         If Op1 = &H3E And Op2 = &H3D Then NewOp = &H62 '>=
@@ -1396,10 +1937,10 @@ While i < Len(CheckIfTrue$)
                         NewOp = Op1
                     End If
                     NewString$ = NewString$ + Chr$(&HFC) + Chr$(NewOp)
-                    Start = i
+                    Start = I
                 End If
             Case &HFD, &HFE, &HFF: 'Found String,Numeric or General command
-                i = i + 2
+                I = I + 2
         End Select
     End If
 Wend
@@ -1415,7 +1956,7 @@ Select Case BracketCount
         ' Copy everything from Start to i as is to ExpressionFound$()
         ExpressionFound$(EC) = ""
         NewString$ = NewString$ + Chr$(0) + Chr$(EC) ' Add the expression token to NewString$
-        For ii = Start To i - 2 ' -2 because we don't want to include the operator
+        For ii = Start To I - 2 ' -2 because we don't want to include the operator
             ExpressionFound$(EC) = ExpressionFound$(EC) + Mid$(CheckIfTrue$, ii, 1)
         Next ii
         EC = EC + 1
@@ -1427,7 +1968,7 @@ Select Case BracketCount
         Wend
         ExpressionFound$(EC) = ""
         NewString$ = NewString$ + Chr$(0) + Chr$(EC) ' Add the expression token to NewString$
-        For ii = Start + BC To i - 2 ' -2 because we don't want to include the operator
+        For ii = Start + BC To I - 2 ' -2 because we don't want to include the operator
             ExpressionFound$(EC) = ExpressionFound$(EC) + Mid$(CheckIfTrue$, ii, 1)
         Next ii
         EC = EC + 1
@@ -1436,7 +1977,7 @@ Select Case BracketCount
         BC = BracketCount
         ExpressionFound$(EC) = ""
         NewString$ = NewString$ + Chr$(0) + Chr$(EC) ' Add the expression token to NewString$
-        For ii = Start To i + BC - 2 ' -2 because we don't want to include the operator
+        For ii = Start To I + BC - 2 ' -2 because we don't want to include the operator
             ExpressionFound$(EC) = ExpressionFound$(EC) + Mid$(CheckIfTrue$, ii, 1)
         Next ii
         EC = EC + 1
@@ -1895,9 +2436,9 @@ Do Until v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A)
         Loop
         EndPos = x - 2
         DataArray(DataArrayCount) = EndPos - StartPos + 1: DataArrayCount = DataArrayCount + 1 ' Length of string
-        For i = StartPos To EndPos
-            DataArray(DataArrayCount) = Array(i): DataArrayCount = DataArrayCount + 1 'copy the string
-        Next i
+        For I = StartPos To EndPos
+            DataArray(DataArrayCount) = Array(I): DataArrayCount = DataArrayCount + 1 'copy the string
+        Next I
         If Array(x) = &H22 Then
             x = x + 1 'Consume the quote
             If Array(x) = &HF5 And (Array(x + 1) = &H0D Or Array(x + 1) = &H3A) Then
@@ -1930,9 +2471,9 @@ Do Until v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A)
         Loop
         EndPos = x - 2
         DataArray(DataArrayCount) = EndPos - StartPos + 1: DataArrayCount = DataArrayCount + 1 ' Length of string
-        For i = StartPos To EndPos
-            DataArray(DataArrayCount) = Array(i): DataArrayCount = DataArrayCount + 1 'copy the string
-        Next i
+        For I = StartPos To EndPos
+            DataArray(DataArrayCount) = Array(I): DataArrayCount = DataArrayCount + 1 'copy the string
+        Next I
         If Array(x) = &H2C Then x = x - 1 ' if a comma then point at it again
     End If
 Loop
@@ -2048,6 +2589,17 @@ If v = &HF3 Then ' Printing a Regular String Variable, PRINT A$
     A$ = "BNE": B$ = "<": C$ = "Loop until all data is copied to the destination string": GoSub AssemOut
     Z$ = "Done@": GoSub AssemOut
     Print #1, "" ' Leave a space between sections so Done@ will work for each section
+    GoTo GetSectionToPrint
+End If
+If v = &HF4 Then ' Printing a Floating Point Variable, PRINT FP_A
+    v = Array(x) * 256 + Array(x + 1): x = x + 2 ' Get the Floating Point Variable
+    FPV$ = "_FPVar_" + FloatVariable$(v)
+    A$ = "LDX": B$ = "#" + FPV$: C$ = "Point at FP number": GoSub AssemOut
+    A$ = "LDU": B$ = "#FPStackspace": C$ = "Point at FP stack start": GoSub AssemOut
+    A$ = "JSR": B$ = "FPLOD": C$ = "LOAD FP NUMBER FROM ADDRESS X AND PUSH ONTO FP STACK": GoSub AssemOut
+    A$ = "LDY": B$ = "CURPOS": C$ = "Get cursor position in Y": GoSub AssemOut
+    A$ = "JSR": B$ = "FPSCIENT": C$ = "CONVERT FP NUMBER TO STRING AT ADDRESS Y IN SCIENTIFIC NOTATION": GoSub AssemOut
+    A$ = "STY": B$ = "CURPOS": C$ = "update the cursor position": GoSub AssemOut
     GoTo GetSectionToPrint
 End If
 If v = &HF5 Then
@@ -4350,6 +4902,8 @@ If ExpressionCount > 0 Then ' Check if we are in the middle of an expression
     Z$ = "@NotNegative": GoSub AssemOut
     A$ = "CMPA": B$ = "#'+": C$ = "Check if the user manually used a plus symbol": GoSub AssemOut
     A$ = "BNE": B$ = "@NotPlus": C$ = "If poistive we can only have a max of 5 numbers": GoSub AssemOut
+    A$ = "LDA": B$ = "#' '": C$ = "Make a + into a space, so it will be ignored": GoSub AssemOut
+    A$ = "STA": B$ = ",U": C$ = "make first byte of source a space": GoSub AssemOut
     A$ = "CMPB": B$ = "#6": C$ = "Check the number of decimal places": GoSub AssemOut
     A$ = "BHI": B$ = "@NotANumber": C$ = "If more than 6 then we have a problem": GoSub AssemOut
     A$ = "BRA": B$ = ">": C$ = "Skip ahead, we are good to go with a positive number this size": GoSub AssemOut
@@ -5572,14 +6126,14 @@ If Left$(Expression$, 2) = Chr$(&HFC) + Chr$(&H2B) Then Expression$ = Right$(Exp
 
 ' Check if Expression has a NOT in it which is &HFC &H14, if so we need to put a 1 in front of it
 NewExpression$ = ""
-For i = 1 To Len(Expression$) - 1
-    If Asc(Mid$(Expression$, i, 1)) = &HFC And Asc(Mid$(Expression$, i + 1, 1)) = &H14 Then
+For I = 1 To Len(Expression$) - 1
+    If Asc(Mid$(Expression$, I, 1)) = &HFC And Asc(Mid$(Expression$, I + 1, 1)) = &H14 Then
         'We found a NOT
         NewExpression$ = NewExpression$ + "1"
     End If
-    NewExpression$ = NewExpression$ + Mid$(Expression$, i, 1)
-Next i
-NewExpression$ = NewExpression$ + Mid$(Expression$, i, 1) 'copy the last byte
+    NewExpression$ = NewExpression$ + Mid$(Expression$, I, 1)
+Next I
+NewExpression$ = NewExpression$ + Mid$(Expression$, I, 1) 'copy the last byte
 Expression$ = NewExpression$
 Expression$(ExpressionCount) = Expression$ + "    "
 index(ExpressionCount) = 1
@@ -6407,6 +6961,7 @@ Return
 ' &HF1 = String Arrays            (3 Bytes)
 ' &HF2 = Regular Numeric Variable (3 Bytes)
 ' &HF3 = Regular String Variable  (3 Bytes)
+' &HF4 = Floating Point Variable  (3 Bytes)
 ' &HF5 = Special characters like a EOL, colon, comma, semi colon, quote, brackets    (2 Bytes)
 
 ' &HFB = DEF FN Function
@@ -6437,6 +6992,10 @@ If v = &HF3 Then 'Regular String Variable
     v = Array(x) * 256 + Array(x + 1): x = x + 2
     Temp$ = StringVariable$(v) + "$" ' add the $ back in to show it's a string
     Return
+End If
+If v = &HF4 Then 'Floating Point Variable
+    v = Array(x) * 256 + Array(x + 1): x = x + 2
+    Temp$ = FloatVariable$(v): Return
 End If
 If v = &HF5 Then ' Special Characters
     v = Array(x): x = x + 1
@@ -6507,6 +7066,10 @@ If v = &HF3 Then 'Regular String Variable
     v = Array(x) * 256 + Array(x + 1): x = x + 2
     Temp1$ = StringVariable$(v) + "$" ' add the $ back in to show it's a string
     Return
+End If
+If v = &HF4 Then 'Floating Point Variable
+    v = Array(x) * 256 + Array(x + 1): x = x + 2
+    Temp1$ = FloatVariable$(v): Return
 End If
 If v = &HF5 Then ' Special Characters
     v = Array(x): x = x + 1
@@ -6605,17 +7168,16 @@ For ii = 0 To NumericCommandsCount
 Next ii
 Return
 
-
 'Checks if position i in Expression$ has the command Check$, return Found=1 is found else Found=0
 FindGenCommandInExpression:
 Found = 0
-If Asc(Mid$(Expression$, i, 1)) = &HFF Then
+If Asc(Mid$(Expression$, I, 1)) = &HFF Then
     For ii = 0 To GeneralCommandsCount
         If GeneralCommands$(ii) = Check$ Then
             Exit For
         End If
     Next ii
-    If Asc(Mid$(Expression$, i + 1, 1)) * 256 + Asc(Mid$(Expression$, i + 2, 1)) = ii Then
+    If Asc(Mid$(Expression$, I + 1, 1)) * 256 + Asc(Mid$(Expression$, I + 2, 1)) = ii Then
         Found = 1
     End If
 End If
@@ -6635,39 +7197,39 @@ operators$ = "+-*/\^"
 valueIndex = 0
 opIndex = 0
 length = Len(Expression$)
-i = 1
-Do While i <= length
-    char$ = Mid$(Expression$, i, 1)
+I = 1
+Do While I <= length
+    char$ = Mid$(Expression$, I, 1)
 
     ' Check for unary minus
     If char$ = "-" Then
-        If i = 1 Or InStr(operators$ + "(", Mid$(Expression$, i - 1, 1)) Then
+        If I = 1 Or InStr(operators$ + "(", Mid$(Expression$, I - 1, 1)) Then
             ' It's a unary minus, so treat the next number as negative
             Num$ = "-"
-            i = i + 1
-            char$ = Mid$(Expression$, i, 1)
+            I = I + 1
+            char$ = Mid$(Expression$, I, 1)
         End If
     End If
 
     If InStr("0123456789.", char$) Then
         Num$ = Num$ + char$
-        Do While i < length And InStr("0123456789.", Mid$(Expression$, i + 1, 1))
-            i = i + 1
-            Num$ = Num$ + Mid$(Expression$, i, 1)
+        Do While I < length And InStr("0123456789.", Mid$(Expression$, I + 1, 1))
+            I = I + 1
+            Num$ = Num$ + Mid$(Expression$, I, 1)
         Loop
         valueIndex = valueIndex + 1
         values(valueIndex) = Val(Num$)
         Num$ = "" ' Reset for the next number
-    ElseIf Mid$(Expression$, i, 2) = "&H" Then
+    ElseIf Mid$(Expression$, I, 2) = "&H" Then
         Num$ = "&H"
-        i = i + 2
-        Do While i <= length And InStr("0123456789ABCDEFabcdef", Mid$(Expression$, i, 1))
-            Num$ = Num$ + Mid$(Expression$, i, 1)
-            i = i + 1
+        I = I + 2
+        Do While I <= length And InStr("0123456789ABCDEFabcdef", Mid$(Expression$, I, 1))
+            Num$ = Num$ + Mid$(Expression$, I, 1)
+            I = I + 1
         Loop
         valueIndex = valueIndex + 1
         values(valueIndex) = Val(Num$)
-        i = i - 1 ' Adjust for the next loop
+        I = I - 1 ' Adjust for the next loop
     ElseIf InStr(operators$, char$) Then
         ' Handle operator precedence as before
         Precedence$ = ops(opIndex)
@@ -6704,7 +7266,7 @@ Do While i <= length
         Wend
         opIndex = opIndex - 1 ' Remove the "(" from the stack
     End If
-    i = i + 1
+    I = I + 1
 Loop
 
 ' Apply remaining operators after processing the expression

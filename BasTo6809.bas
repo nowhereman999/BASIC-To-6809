@@ -3,7 +3,11 @@
 'Print "hex$(Array(x+2) "; Hex$(Array(x + 2))
 'System
 
-V$ = "2.14"
+V$ = "2.15"
+'       - Aadding limited Floating point operations
+'       - Fixed a bug compiling single lines with IF THEN ELSE
+'
+' V2.14
 '       - Added more commands for streaming audio directly off the CoCoSDC: SDCPLAYORCS, SDCPLAYORCL & SDCPLAYORCR
 '         These commands require either an Orchestra 90 or CocoFLASH (https://www.go4retro.com/products/cocoflash/) cartridge
 '         The SDCPLAYORCS command streams stereo 8 bit unsigned audio at 22,375hz to both the left and right channels
@@ -77,6 +81,10 @@ Dim GeneralCommands$(200)
 Dim GeneralCommandsCount As Integer
 Dim NumericCommands$(200)
 Dim NumericCommandsCount As Integer
+
+Dim FloatVariable$(100000)
+Dim FloatVariableCount As Integer
+
 Dim StringCommands$(200)
 Dim StringCommandsCount As Integer
 Dim OperatorCommands$(200)

@@ -4,6 +4,10 @@ A BASIC compiler for the TRS80 Color Computer
 For more info check out the blog post here:
 https://wordpress.com/post/nowhereman999.wordpress.com/5054
 
+V 2.15
+- Added limited Floating Point support by integrating the Floating point library - by Lennart Benschop
+- Fixed a bug compiling single lines with IF THEN ELSE
+
 V 2.14
 - Added more commands for streaming audio directly off the CoCo SDC: SDCPLAYORCS, SDCPLAYORCL & SDCPLAYORCR
   These commands require either an Orchestra 90 or CocoFLASH (https://www.go4retro.com/products/cocoflash/) cartridge

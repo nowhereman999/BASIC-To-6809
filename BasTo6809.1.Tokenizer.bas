@@ -9,6 +9,10 @@ Dim INArray(270000) As _Unsigned _Byte
 Dim LabelName$(100000)
 Dim NumericVariable$(100000)
 Dim NumericVariableCount As Integer
+
+Dim FloatVariable$(100000)
+Dim FloatVariableCount As Integer
+
 Dim StringVariable$(100000)
 Dim StringVariableCounter As Integer
 Dim NumericArrayVariables$(100000), NumericArrayDimensions(100000) As Integer, NumericArrayDimensionsVal$(100000)
@@ -148,6 +152,7 @@ x = 0
 INx = 0
 lc = 0
 LineCount = 0
+FloatVariableCount = 0 ' Floating Point variable name count
 StringVariableCounter = 0 ' String variable name count
 CommandsUsedCounter = 0 ' Counter for unique commmands used
 NumArrayVarsUsedCounter = 0 ' Counter for number of NumericArrays used
@@ -445,6 +450,10 @@ If Verbose > 0 Then
     For ii = 0 To NumericVariableCount - 1
         Print NumericVariable$(ii)
     Next ii
+    Print "Floating Point Variables Used:"
+    For ii = 0 To FloatVariableCount - 1
+        Print FloatVariable$(ii)
+    Next ii
     Print "String Variables Used:"
     For ii = 0 To StringVariableCounter - 1
         Print StringVariable$(ii)
@@ -514,8 +523,13 @@ While x <= filesize
         INArray(c) = MSB: c = c + 1: INArray(c) = LSB: c = c + 1 ' write command to ouput array
         x = x + 2 ' skip forward past command number
         ' Print "Checking for stuff after the THEN"
-        v = Array(x): x = x + 1 ' get a byte
-        While v = &HF5 And Array(x) = &H3A: v = Array(x): x = x + 1: Wend ' consume any colons directly after the THEN
+        v = Array(x) ' get a byte
+        If Array(x) = &HF5 And Array(x + 1) = &H3A Then
+            While Array(x) = &HF5 And Array(x + 1) = &H3A: x = x + 2: Wend ' consume any colons directly after the THEN
+            v = Array(x): x = x + 1
+        Else
+            x = x + 1
+        End If
         If v = (&HF5 And Array(x) = &H0D) Or (v = &HFF And Array(x) * 256 + Array(x + 1) = C_REM) Or (v = &HFF And Array(x) * 256 + Array(x + 1) = C_REMApostrophe) Then ' After THEN do we have an EOL, or REMarks?
             ' if so this is already an IF/THEN/ELSE/ELSEIF/ENDIF so don't need to change it to be a multi line IF
             INArray(c) = v: c = c + 1 ' write byte to ouput array
@@ -524,7 +538,7 @@ While x <= filesize
             ' Print "not a multi line IF"
             ' This is a one line IF/THEN/ELSE command that ends with a $F5 $0D
             ' Make it a multi line IF THEN ELSE
-            ' We've copied everything upto the and including the THEN
+            ' We've copied everything upto and including the THEN
             ' Make the byte after the THEN an EOL
             IfCounter = 1
             INArray(c) = &HF5: c = c + 1 ' Add EOL
@@ -541,7 +555,9 @@ While x <= filesize
                     INArray(c) = v: c = c + 1 ' write line number
                     v = Array(x): x = x + 1 ' copy the line number
                 Wend
-                While v = &HF5 And Array(x) = &H3A: v = Array(x): x = x + 1: Wend ' consume any colons
+                x = x - 1
+                While Array(x) = &HF5 And Array(x + 1) = &H3A: v = Array(x): x = x + 2: Wend ' consume any colons
+                v = Array(x): x = x + 1
                 If v = &HF5 And Array(x) = &H0D Then INArray(c) = &HF5: c = c + 1: GoTo FixedGoto ' The &H0D will be added below
             End If
             ' Not a line number after the THEN
@@ -577,10 +593,12 @@ While x <= filesize
                         v = Array(x): x = x + 1 ' get the next byte
                         If v = &HF5 And Array(x) = &H3A Then
                             ' We have a colon
-                            While v = &HF5 And Array(x) = &H3A: v = Array(x): x = x + 1: Wend ' consume any colons
-                            x = x - 1 ' point at this byte again
+                            x = x - 1
+                            While Array(x) = &HF5 And Array(x + 1) = &H3A: x = x + 2: Wend ' consume any colons
+                            v = Array(x): x = x + 1 ' get the next byte
                         End If
                         If v >= Asc("0") And v <= Asc("9") Then GoTo FoundLineNumber
+                        x = x - 1
                         INArray(c) = &HF5: c = c + 1 ' Add EOL
                         INArray(c) = &H0D: c = c + 1 ' Add EOL
                         INArray(c) = 0: c = c + 1 ' line label length of zero
@@ -612,6 +630,7 @@ Wend
 ' &HF1 = String Arrays            (3 Bytes)
 ' &HF2 = Regular Numeric Variable (3 Bytes)
 ' &HF3 = Regular String Variable  (3 Bytes)
+' &HF4 = Floating Point Variable
 ' &HF5 = Special characters like a EOL, colon, comma, semi colon, quote, brackets    (2 Bytes)
 
 ' &HFB = DEF FN Function
@@ -784,6 +803,11 @@ For I = 0 To NumericVariableCount - 1
     Print #1, NumericVariable$(I)
 Next I
 Close #1
+Open "FloatingPointVariablesUsed.txt" For Output As #1
+For I = 0 To FloatVariableCount - 1
+    Print #1, FloatVariable$(I)
+Next I
+Close #1
 Open "StringVariablesUsed.txt" For Output As #1
 For I = 0 To StringVariableCounter - 1
     Print #1, StringVariable$(I)
@@ -886,6 +910,11 @@ Print #1, "SoundDuration   RMB     2     ; SOUND Command duration value"
 Print #1, "CASFLG          RMB     1     ; Case flag for keyboard output $FF=UPPER (normal), 0=LOWER"
 Print #1, "OriginalIRQ     RMB     3     ; We save the original branch and location of the IRQ here, restored before we exit"
 Print #1, "_NumVar_IFRight RMB     2     ; Temp bytes for IF Compares"
+' Reserve space for Floating Point variables
+Print #1, "; Floating Point Variables Used:"; FloatVariableCount
+For ii = 0 To FloatVariableCount - 1
+    Print #1, "_FPVar_"; FloatVariable$(ii); T1$; "RMB "; T1$; "5"
+Next ii
 ' Add temp string space
 For Num = 0 To 1
     GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
@@ -1084,9 +1113,12 @@ For ii = 0 To NumericCommandsFoundCount - 1
         Temp$ = "DecimalStringToD": GoSub AddIncludeTemp
         Temp$ = "HexStringToD": GoSub AddIncludeTemp
     End If
+    if temp$="FLOATADD" or temp$="FLOATSUB" or temp$="FLOATMUL" or temp$="FLOATDIV" or temp$="FLOATSQRT" or temp$="FLOATSIN" or temp$="FLOATCOS" or temp$="FLOATTAN" _
+       or temp$="FLOATATAN" or temp$="FLOATEXP" or temp$="FLOATLOG" then
+        Temp$ = "FloatingPointMath": GoSub AddIncludeTemp 'Add floating point math routines
+    End If
 Next ii
-
-
+If FloatVariableCount > 0 Then Temp$ = "FloatingPointMath": GoSub AddIncludeTemp 'Add floating point math routines
 GoSub WriteIncludeListToFile ' Write all the INCLUDE files needed to the .ASM file
 
 If Disk = 0 Then
@@ -1324,6 +1356,7 @@ System 1 ' End with flag of 1 = All went OK
 ' &HF1 = String Arrays
 ' &HF2 = Regular Numeric Variable
 ' &HF3 = Regular String Variable
+' &HF4 = Floating Point Variable
 ' &HF5 = Special characters like a EOL, colon, comma, semi colon, quote, brackets
 
 ' &HFB = DEF FN Function
@@ -1954,6 +1987,7 @@ SkipCheckingSpecialCommands:
 ' &HF1 = String Arrays
 ' &HF2 = Regular Numeric Variable
 ' &HF3 = Regular String Variable
+' &HF4 = Floating Point Variable
 ' &HF5 = Special characters like a EOL, colon, comma, semi colon, quote, brackets
 
 ' &HFB = DEF FN Function
@@ -2265,6 +2299,7 @@ Wend
 ' &HF1 = String Arrays
 ' &HF2 = Regular Numeric Variable
 ' &HF3 = Regular String Variable
+' &HF4 = Floating Point Variable
 ' &HF5 = Special characters like a EOL, colon, comma, semi colon, quote, brackets
 
 ' &HFC = Operator Command
@@ -2421,13 +2456,36 @@ While I <= Len(Expression$)
                         ' We have a numeric variable to tokenize
                         Test$ = UCase$(Temp$) ' Make it all capital letters
                         If Test$ = "TIMER" Then Temp$ = "Timer" ' make sure the Timer variable is always the same
-                        GoSub AddNumericVariable ' Add variable Temp$ to the Numeric variable List
-                        If Found = 1 Then
-                            Num = ii: GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSB
-                            Tokenized$ = Tokenized$ + Chr$(&HF2) + Chr$(MSB) + Chr$(LSB)
+                        If Len(Temp$) > 3 Then
+                            If Left$(Temp$, 3) = "FP_" Then
+                                ' We found a floating point variable
+                                GoSub AddFloatingPointVariable ' Add Floating Point variable Temp$ to the Floating Point variable List
+                                If Found = 1 Then
+                                    Num = ii: GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSB
+                                    Tokenized$ = Tokenized$ + Chr$(&HF4) + Chr$(MSB) + Chr$(LSB)
+                                Else
+                                    Num = FloatVariableCount - 1: GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSB
+                                    Tokenized$ = Tokenized$ + Chr$(&HF4) + Chr$(MSB) + Chr$(LSB)
+                                End If
+                            Else
+                                GoSub AddNumericVariable ' Add variable Temp$ to the Numeric variable List
+                                If Found = 1 Then
+                                    Num = ii: GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSB
+                                    Tokenized$ = Tokenized$ + Chr$(&HF2) + Chr$(MSB) + Chr$(LSB)
+                                Else
+                                    Num = NumericVariableCount - 1: GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSB
+                                    Tokenized$ = Tokenized$ + Chr$(&HF2) + Chr$(MSB) + Chr$(LSB)
+                                End If
+                            End If
                         Else
-                            Num = NumericVariableCount - 1: GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSB
-                            Tokenized$ = Tokenized$ + Chr$(&HF2) + Chr$(MSB) + Chr$(LSB)
+                            GoSub AddNumericVariable ' Add variable Temp$ to the Numeric variable List
+                            If Found = 1 Then
+                                Num = ii: GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSB
+                                Tokenized$ = Tokenized$ + Chr$(&HF2) + Chr$(MSB) + Chr$(LSB)
+                            Else
+                                Num = NumericVariableCount - 1: GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSB
+                                Tokenized$ = Tokenized$ + Chr$(&HF2) + Chr$(MSB) + Chr$(LSB)
+                            End If
                         End If
                     Else
                         ' We found a label, write it out as is
@@ -2714,6 +2772,20 @@ Next ii
 NumericVariable$(NumericVariableCount) = Temp$
 NumericVariableCount = NumericVariableCount + 1
 Return
+
+' Found a Floating Point variable, add it to the list
+AddFloatingPointVariable:
+Found = 0
+For ii = 0 To FloatVariableCount
+    If FloatVariable$(ii) = Temp$ Then
+        Found = 1
+        Return
+    End If
+Next ii
+FloatVariable$(FloatVariableCount) = Temp$
+FloatVariableCount = FloatVariableCount + 1
+Return
+
 ' Found a string variable, add it to the list
 AddStringVariable:
 Found = 0
@@ -2963,6 +3035,81 @@ If Asc(Mid$(Expression$, I, 1)) = &HFF Then
 End If
 Return
 
+' Convert numbers to Floating point format
+'DECLARE FUNCTION FloatTo6809Format# (num AS DOUBLE)
+Dim num As Double
+Dim lineFC As String
+Dim label As String
+Dim expo As Integer, sign As _Byte, mant As Long
+Dim byte(5) As _Byte
+
+label = ""
+Print "* These are the floating point constants."
+Print "* They are generated by the QB64 version of makeflot."
+FPConversionLoop:
+Do
+    ' Read input from the user
+    Line Input lineFC
+    lineFC = RTrim$(lineFC)
+
+    If Len(lineFC) = 0 Then
+        ' Skip empty lines
+        GoTo FPConversionLoop
+    End If
+
+    If Left$(lineFC, 1) = "*" Then
+        ' Print comments as they are
+        Print lineFC
+        GoTo FPConversionLoop
+    End If
+
+    ' Check if it's a label or a number
+    If (Asc(Left$(lineFC, 1)) >= 65 And Asc(Left$(lineFC, 1)) <= 90) Or (Asc(Left$(lineFC, 1)) >= 97 And Asc(Left$(lineFC, 1)) <= 122) Then
+        ' It's a label
+        label = lineFC
+    Else
+        ' It's a number, convert it
+        num = Val(lineFC)
+        If num = 0 Then
+            sign = 0
+            expo = 0
+            mant = 0
+        Else
+            If num < 0 Then sign = &H80 Else sign = 0
+            num = Abs(num)
+            expo = &H9F
+
+            ' Normalize mantissa
+            Do While num < 2147483648#
+                num = num * 2
+                expo = expo - 1
+            Loop
+            Do While num >= 4294967296#
+                num = num / 2
+                expo = expo + 1
+            Loop
+
+            mant = Int(num + 0.5)
+        End If
+
+        ' Create the 5-byte floating point representation
+        byte(0) = expo
+        byte(1) = (Val("&H" + Left$(Hex$(mant), 2)) And &H7F) Or sign
+        byte(2) = Val("&H" + Mid$(Hex$(mant), 3, 2))
+        byte(3) = Val("&H" + Mid$(Hex$(mant), 5, 2))
+        byte(4) = Val("&H" + Right$(Hex$(mant), 2))
+
+        ' Print the floating-point constant in the same format
+        Print label; Spc(16 - Len(label));
+        Print "fcb $"; Hex$(byte(0)); ",$"; Hex$(byte(1)); ",$"; Hex$(byte(2)); ",$"; Hex$(byte(3)); ",$"; Hex$(byte(4)); " ;"; lineFC
+        label = ""
+    End If
+
+Loop Until 1 > 1
+
+Print "* End of floating point constants."
+System
+
 'Test if a string contains a number or a variable
 Function IsNumber (s$)
     If Val(s$) <> 0 Or (Val(s$) = 0 And Left$(s$, 1) = "0") Then
@@ -2985,4 +3132,6 @@ Function Replace (text$, old$, new$) 'can also be used as a SUB without the coun
     Loop While find
     Replace = count 'function returns the number of replaced words. Comment out in SUB
 End Function
+
+
 

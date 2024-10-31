@@ -15,7 +15,7 @@ DecToD:
 !       INCB
         CMPB    #7              ; Check the number of decimal places
         BHI     @NotANumber     ; If more than 7 then we have a problem
-        LDA     ,U+
+        LDA     ,U+             ; Get a character
         PSHS    A
         BNE     <               ; Copy string backwards onto the stack
         DECB                    ; Fix the counter

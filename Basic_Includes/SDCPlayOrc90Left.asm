@@ -23,8 +23,6 @@ SDCPLAYOrcL:
         ORCC    #$50            ; Turn off the interrupts
         STS     PlaySDCStackOrcL+2  ; Save the Stack (Self mod)
 
-* Add code to check version of the CoCoSDC we need version 127 or later for opening files with the
-* Lowercase m: which doesn't have a size length check
 ; Put "m:" at the start of the filename
         LDX     #_StrVar_PF00+1 ; Get the start of the filename string
         LDB     -1,X            ; Get the length byte
