@@ -220,7 +220,7 @@ While x < length - 1 ' Loop until we've processed the entire BASIC program
                 v = Array(x): x = x + 1
             Wend
             CheckLC$ = Check$
-            If v = Asc(":") Then
+            If v = Asc(":") And Array(x) = &H0D Then
                 'Could be a label or a general command with a colon after it
                 ' Check for a General command
                 Found = 0
@@ -348,7 +348,7 @@ While x < length - 1 ' Loop until we've processed the entire BASIC program
                 Check$ = Check$ + Chr$(v)
                 v = Array(x): x = x + 1
             Wend
-            If v = Asc(":") Then
+            If v = Asc(":") And Array(x) = &H0D Then
                 'Could be a label or a general command with a colon after it
                 ' Check for a General command
                 Found = 0
