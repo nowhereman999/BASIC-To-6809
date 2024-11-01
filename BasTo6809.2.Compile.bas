@@ -1111,7 +1111,7 @@ Select Case FirstChar
                 Else
                     negval = 0
                 End If
-                If v >= Asc("0") And v <= Asc("9") Then
+                If (v >= Asc("0") And v <= Asc("9")) Or v = Asc(".") Then
                     ' This is a number value
                     A$ = "LDU": B$ = "#FPStackspace+5": C$ = "Point U at the beginning of the Floating point stack+5": GoSub AssemOut
                     FPString$ = Mid$(Expression$, EP, Len(Expression$) - EP - 1)
@@ -1222,6 +1222,26 @@ Select Case FirstChar
                             'there is a negative sign
                             A$ = "JSR": B$ = "FPNEG": C$ = "Do FP negation": GoSub AssemOut
                         End If
+                    Case Asc(".")
+                        ' This is a number value that starts with a decimal
+                        A$ = "LDU": B$ = "#FPStackspace+5": C$ = "Point U at the beginning of the Floating point stack+5": GoSub AssemOut
+                        FPString$ = Chr$(Array(x)): x = x + 1
+                        While Array(x) <> &HF5 And Array(x + 1) <> Asc(",")
+                            FPString$ = FPString$ + Chr$(Array(x)): x = x + 1
+                        Wend
+                        x = x + 2 'move past the comma
+                        GoSub FPConversion ' Convert floating point string FPString$ to 5 Byte Floating point HEX value FPBytes$
+                        A$ = "LDD": B$ = "#$" + Left$(FPBytes$, 4): C$ = "First two digits of the FP number": GoSub AssemOut
+                        A$ = "STD": B$ = "-5,U": C$ = "Save it": GoSub AssemOut
+                        A$ = "LDD": B$ = "#$" + Mid$(FPBytes$, 5, 4): C$ = "Third and fourth digits of the FP number": GoSub AssemOut
+                        A$ = "STD": B$ = "-3,U": C$ = "Save it": GoSub AssemOut
+                        A$ = "LDA": B$ = "#$" + Right$(FPBytes$, 2): C$ = "Fifth digit of the FP number": GoSub AssemOut
+                        A$ = "STA": B$ = "-1,U": C$ = "Save it": GoSub AssemOut
+                        'If we have a minus sign make this a negative of current value
+                        If negval = 1 Then
+                            'there is a negative sign
+                            A$ = "JSR": B$ = "FPNEG": C$ = "Do FP negation": GoSub AssemOut
+                        End If
                     Case &HF4
                         ' We have an FP variable
                         A$ = "LDU": B$ = "#FPStackspace+5": C$ = "Point U at the beginning of the Floating point stack+5": GoSub AssemOut
@@ -1265,7 +1285,22 @@ Select Case FirstChar
                         ' This is a number value
                         A$ = "LDU": B$ = "#FPStackspace+10": C$ = "Point U at the beginning of the Floating point stack+10": GoSub AssemOut
                         FPString$ = Chr$(Array(x)): x = x + 1
-                        While Array(x) <> &HF5 And Array(x + 1) <> Asc(",")
+                        While Array(x) <> &HF5 And Array(x + 1) <> Asc(")")
+                            FPString$ = FPString$ + Chr$(Array(x)): x = x + 1
+                        Wend
+                        x = x + 2 'move past the comma
+                        GoSub FPConversion ' Convert floating point string FPString$ to 5 Byte Floating point HEX value FPBytes$
+                        A$ = "LDD": B$ = "#$" + Left$(FPBytes$, 4): C$ = "First two digits of the FP number": GoSub AssemOut
+                        A$ = "STD": B$ = "-5,U": C$ = "Save it": GoSub AssemOut
+                        A$ = "LDD": B$ = "#$" + Mid$(FPBytes$, 5, 4): C$ = "Third and fourth digits of the FP number": GoSub AssemOut
+                        A$ = "STD": B$ = "-3,U": C$ = "Save it": GoSub AssemOut
+                        A$ = "LDA": B$ = "#$" + Right$(FPBytes$, 2): C$ = "Fifth digit of the FP number": GoSub AssemOut
+                        A$ = "STA": B$ = "-1,U": C$ = "Save it": GoSub AssemOut
+                    Case Asc(".")
+                        ' This is a number value that starts with a decimal
+                        A$ = "LDU": B$ = "#FPStackspace+10": C$ = "Point U at the beginning of the Floating point stack+10": GoSub AssemOut
+                        FPString$ = Chr$(Array(x)): x = x + 1
+                        While Array(x) <> &HF5 And Array(x + 1) <> Asc(")")
                             FPString$ = FPString$ + Chr$(Array(x)): x = x + 1
                         Wend
                         x = x + 2 'move past the comma
@@ -1279,7 +1314,7 @@ Select Case FirstChar
                     Case &HF4
                         ' We have a FP variable
                         A$ = "LDU": B$ = "#FPStackspace+10": C$ = "Point U at the beginning of the Floating point stack+10": GoSub AssemOut
-                        v = Array(x + 1) * 256 + Array(x + 2): x = x + 3 ' Consume the &HF4 and the variable  & the close bracket
+                        v = Array(x + 1) * 256 + Array(x + 2): x = x + 3 ' Consume the &HF4 and the variable & the close bracket
                         SourceFPV$ = "_FPVar_" + FloatVariable$(v)
                         If Array(x) <> &HF5 And Array(x + 1) <> Asc(")") Then Print "Can't find close bracket with floating point command on";: GoTo FoundError
                         x = x + 2 'move past the comma

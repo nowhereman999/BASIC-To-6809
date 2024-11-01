@@ -4,6 +4,12 @@ A BASIC compiler for the TRS80 Color Computer
 For more info check out the blog post here:
 https://wordpress.com/post/nowhereman999.wordpress.com/5054
 
+V 2.16
+- Found a problem with comparing floating point numbers where the exponent was not being compared correctly
+- Tweaked getting the 2nd value in a floatting point number if it was a typed value
+- Tweaked getting umeric value in as a floating point number can now handle the value if it starts with a decimal
+- Tweaked the identification of a label and a variable
+
 V 2.15
 - Added limited Floating Point support by integrating the Floating point library - by Lennart Benschop
 - Fixed a bug compiling single lines with IF THEN ELSE

@@ -181,12 +181,23 @@ FPSTO:
 		STD 3,X
 		RTS
 
+
+FPCMPMAG_Comp:
+; Signs are biased by $80 so we must account for this
+                LDA -5,U
+		SUBA #$80
+		STA ,-S
+		LDA -10,U	;COMPARE EXPONENTS.
+		SUBA #$80
+		CMPA ,S+
+		BNE CMPEND
+		BRA >
 ; COMPARE MAGNITUDE (SECOND-TOP).
 FPCMPMAG	
                 LDA -10,U
 		CMPA -5,U	;COMPARE EXPONENTS.
 		BNE CMPEND
-		LDD -4,U
+!		LDD -4,U
 		ANDA #$7F	;ELIMINATE SIGN BIT.
 		STD ,--S
 		LDD -9,U
@@ -332,17 +343,21 @@ FPUNDF
 		BRA FPADDEND
 
 ; COMPARE FLOATING POINT NUMBERS, FLAGS AS WITH UNSIGNED COMPARISON.
-FPCMP		LDA -9,U
-		ANDA #$80
-		STA ,-S
-		LDA -4,U
-		ANDA #$80
-		SUBA ,S+	;SUBTRACT THE SIGNS, SUBTRACTION IS REVERSED.
-		BNE FPCMPEND
-		TST -9,U
-		BMI FPCMPNEG	;ARE NUMBERS NEGATIVE?	
-		JMP FPCMPMAG
-FPCMPNEG	JSR FPCMPMAG
+FPCMP		LDA -9,U	; Get Mantissa MSB of the first number
+		ANDA #$80	; Keep the sign bit
+		STA ,-S		; Save it on the stack
+		LDA -4,U	; get Mantissa MSB of the second number
+		ANDA #$80	; Keep the sign bit
+		SUBA ,S+	; SUBTRACT THE SIGNS, SUBTRACTION IS REVERSED.
+		BNE FPCMPEND	; If they differ then return
+		TST -9,U	; Is the first number negative?
+		BMI FPCMPNEG	; If both numbers are negative then skip ahead.	
+;		JMP FPCMPMAG	; Check the magnitude as they are and return with the result.
+		JMP	FPCMPMAG_Comp
+FPCMPNEG	
+;		JSR FPCMPMAG	; Check the magnitude as they are if they differ flip the carry flag.
+		JSR	FPCMPMAG_Comp
+
 		BEQ FPCMPEND	
 		TFR CC,A
 		EORA #$1
