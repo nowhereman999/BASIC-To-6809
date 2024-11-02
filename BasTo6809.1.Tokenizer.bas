@@ -1769,7 +1769,6 @@ While I <= Len(Expression$)
         Expression$ = Expression$ + Temp1$ + " " + EndPart$
     End If
 Wend
-
 If Verbose > 1 Then
     Print "1st:"
     For I = 1 To Len(Tokenized$)
@@ -2099,6 +2098,7 @@ While I <= Len(Expression$)
     CheckStart = I - 1 ' This is as far back as we can go looking for an array label
     ' Find an open bracket, which could be part of an array variable
     For ii = CheckStart + 1 To Len(Expression$)
+        If Mid$(Expression$, ii, 1) = "=" Then Exit For ' This is not an array
         If Mid$(Expression$, ii, 1) = "(" Then
             ' Found an open bracket
             ' Might be the start of an array variable

@@ -4,13 +4,16 @@ A BASIC compiler for the TRS80 Color Computer
 For more info check out the blog post here:
 https://wordpress.com/post/nowhereman999.wordpress.com/5054
 
+V 2.18
+- Fixed assignning a variable to numeric commands
+
 V 2.17
 - Added CMPNE(FP_A,FP_B) - Floating Point Compare if Not Equal
 
 V 2.16
 - Found a problem with comparing floating point numbers where the exponent was not being compared correctly
 - Tweaked getting the 2nd value in a floatting point number if it was a typed value
-- Tweaked getting umeric value in as a floating point number can now handle the value if it starts with a decimal
+- Tweaked getting numeric value in as a floating point number can now handle the value if it starts with a decimal
 - Tweaked the identification of a label and a variable
 
 V 2.15
