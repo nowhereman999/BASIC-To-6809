@@ -3,11 +3,14 @@
 'Print "hex$(Array(x+2) "; Hex$(Array(x + 2))
 'System
 
-V$ = "2.16"
-'- Found a problem with comparing floating point numbers where the exponent was not being compared correctly
-'- Tweaked getting the 2nd value in a floatting point number if it was a typed value
-'- Tweaked getting umeric value in as a floating point number can now handle the value if it starts with a decimal
-'- Tweaked the identification of a label and a variable
+V$ = "2.17"
+'       - Added CMPNE(FP_A,FP_B) - Floating Point Compare if Not Equal
+
+' V2.16
+'       - Found a problem with comparing floating point numbers where the exponent was not being compared correctly
+'       - Tweaked getting the 2nd value in a floatting point number if it was a typed value
+'       - Tweaked getting umeric value in as a floating point number can now handle the value if it starts with a decimal
+'       - Tweaked the identification of a label and a variable
 '
 ' V2.15
 '       - Aadding limited Floating point operations

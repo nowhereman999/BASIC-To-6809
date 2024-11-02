@@ -4,6 +4,9 @@ A BASIC compiler for the TRS80 Color Computer
 For more info check out the blog post here:
 https://wordpress.com/post/nowhereman999.wordpress.com/5054
 
+V 2.17
+- Added CMPNE(FP_A,FP_B) - Floating Point Compare if Not Equal
+
 V 2.16
 - Found a problem with comparing floating point numbers where the exponent was not being compared correctly
 - Tweaked getting the 2nd value in a floatting point number if it was a typed value

@@ -218,6 +218,8 @@ Check$ = "CMPGE": GoSub FindNumCommandNumber ' Gets the Numeric Command number o
 CMPGE_CMD = ii
 Check$ = "CMPEQ": GoSub FindNumCommandNumber ' Gets the Numeric Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
 CMPEQ_CMD = ii
+Check$ = "CMPNE": GoSub FindNumCommandNumber ' Gets the Numeric Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+CMPNE_CMD = ii
 Check$ = "CMPLE": GoSub FindNumCommandNumber ' Gets the Numeric Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
 CMPLE_CMD = ii
 Check$ = "CMPLT": GoSub FindNumCommandNumber ' Gets the Numeric Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
@@ -382,7 +384,7 @@ While x < Filesize
             ' this line starts with a REM, handle it
             x = x + 3
             GoSub DoREM ' Go handle a new line that starts with a REM or '
-            GoTo DoAnotherLine ' Jump to the general command pointed at by V, Ends with a RETURN
+            GoTo DoAnotherLine
         End If
     End If
     ' Check for a REMarks on the rest of this line, and modify line so the REMarks are skipped
@@ -394,19 +396,19 @@ While x < Filesize
     Do Until GenExpression$ = Chr$(&HF5) + Chr$(&H0D) Or GenExpression$ = Chr$(&HF5) + Chr$(&H3A)
         If GenExpression$ = Chr$(&HFF) + Chr$(Check1) + Chr$(Check2) Or GenExpression$ = Chr$(&HFF) + Chr$(Check3) + Chr$(Check4) Then
             ' This line has a REM, copy stuff before the REM to the end of the line and move x pointer to the start of actual commands
-            RemStart = x - 4: Exit Do
+            RemStart = x - 3: Exit Do
         Else
             Expression$ = Expression$ + GenExpression$
         End If
         GoSub GetGenExpression ' Returns with single expression in GenExpression$
     Loop
     If RemStart > 0 Then
+        Do Until Array(x) = &HF5 And Array(x + 1) = &H0D: x = x + 1: Loop
         ' this line has remarks to be ignored
-        ' x points at the start of the next line or just after a colon
-        Endx = x - 3 'Ignore the $F5 & $0D or $3A
+        Endx = x
         AmountToCopy = RemStart - Start
         Difference = Endx - RemStart
-        For ii = Endx To Endx - AmountToCopy Step -1
+        For ii = Endx - 1 To Endx - AmountToCopy Step -1
             Array(ii) = Array(ii - Difference)
         Next ii
         Start = Endx - AmountToCopy
@@ -1041,14 +1043,18 @@ Select Case FirstChar
                 FloatCMD$ = "FPCMP"
                 ArgCount = 2
                 CompType = 3
-            Case CMPLE_CMD
+            Case CMPNE_CMD
                 FloatCMD$ = "FPCMP"
                 ArgCount = 2
                 CompType = 4
-            Case CMPLT_CMD
+            Case CMPLE_CMD
                 FloatCMD$ = "FPCMP"
                 ArgCount = 2
                 CompType = 5
+            Case CMPLT_CMD
+                FloatCMD$ = "FPCMP"
+                ArgCount = 2
+                CompType = 6
             Case FLOATSQR_CMD
                 FloatCMD$ = "FPSQRT"
                 ArgCount = 1
@@ -1357,9 +1363,12 @@ Select Case FirstChar
                             'CMPEQ_CMD
                             A$ = "BEQ": B$ = ">": C$ = "Branch if Equal": GoSub AssemOut
                         Case 4
+                            'CMPNE_CMD
+                            A$ = "BNE": B$ = ">": C$ = "Branch if Equal": GoSub AssemOut
+                        Case 5
                             'CMPLE_CMD
                             A$ = "BLE": B$ = ">": C$ = "Branch if less than or equal": GoSub AssemOut
-                        Case 5
+                        Case 6
                             'CMPLT_CMD
                             A$ = "BLT": B$ = ">": C$ = "Branch if less than": GoSub AssemOut
                     End Select
