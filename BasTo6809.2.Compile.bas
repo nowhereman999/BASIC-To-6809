@@ -3668,7 +3668,7 @@ ContinueLine = 0
 If v = &HFC And Array(x) = &H2D Then
     ' Found a hyphen, this is a LINE-(x,y),PSET
     ContinueLine = 1
-    x = x - 2 ' Make it point to the same place it needs below
+    x = x - 1 ' Make it point to the same place it needs below
 End If
 If ContinueLine = 0 And Array(x) <> &H28 Then Print "Can't find open bracket for LINE command on";: GoTo FoundError
 

@@ -3,7 +3,10 @@
 'Print "hex$(Array(x+2) "; Hex$(Array(x + 2))
 'System
 
-V$ = "2.18"
+V$ = "2.19"
+'       - Fixed LINE-(x,y),PSET command, so it will work properly
+
+' V2.18
 '       - Fixed assignning a variable to numeric commands
 '
 ' V2.17

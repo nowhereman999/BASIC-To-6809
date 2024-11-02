@@ -860,6 +860,9 @@ For ii = 0 To GeneralCommandsFoundCount - 1
     If Temp$ = "PLAY" Then
         PlayCommand = 1 ' Flag that we use the Play Command
     End If
+    If Temp$ = "LINE" Then
+        LineCommand = 1 ' Flag that we will use the LINE command
+    End If
     If Temp$ = "SDCPLAY" Or Temp$ = "SDCPLAYORCL" Or Temp$ = "SDCPLAYORCR" Or Temp$ = "SDCPLAYORCS" Then
         SDCPLAY = 1 ' Flag that we need extra SDCPlayback buffer space
     End If
@@ -1221,6 +1224,12 @@ A$ = "LDA": B$ = "$FF23": C$ = "* PIA1_Byte_3_IRQ_Ct_Snd * $FF23 GET PIA": GoSub
 A$ = "ORA": B$ = "#%00001000": C$ = "* SET 6-BIT SOUND ENABLE": GoSub AssemOut
 A$ = "STA": B$ = "$FF23": C$ = "* PIA1_Byte_3_IRQ_Ct_Snd * $FF23 STORE": GoSub AssemOut
 
+If LineCommand = 1 Then
+    A$ = "LDD": B$ = "#128": C$ = "Set D to the middle of the screen": GoSub AssemOut
+    A$ = "STD": B$ = "endX": C$ = "Save as previous end position": GoSub AssemOut
+    A$ = "LDD": B$ = "#96": C$ = "Set D to the middle of the screen": GoSub AssemOut
+    A$ = "STD": B$ = "endY": C$ = "Save as the previous end position": GoSub AssemOut
+End If
 If PrintGraphicsText = 1 Then
     ' Found program uses PRINT #-3, to print to the graphics screen
     A$ = "LDD": B$ = "#$0E00": C$ = "Set D to the top left of the screen": GoSub AssemOut
