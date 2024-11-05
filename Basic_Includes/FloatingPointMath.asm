@@ -342,6 +342,7 @@ FPUNDF
 		LEAS 1,S	;DISCARD THE SIGN ON STACK.
 		BRA FPADDEND
 
+; Original - Used for SIN function as is
 ; COMPARE FLOATING POINT NUMBERS, FLAGS AS WITH UNSIGNED COMPARISON.
 FPCMP		LDA -9,U	; Get Mantissa MSB of the first number
 		ANDA #$80	; Keep the sign bit
@@ -352,17 +353,36 @@ FPCMP		LDA -9,U	; Get Mantissa MSB of the first number
 		BNE FPCMPEND	; If they differ then return
 		TST -9,U	; Is the first number negative?
 		BMI FPCMPNEG	; If both numbers are negative then skip ahead.	
-;		JMP FPCMPMAG	; Check the magnitude as they are and return with the result.
-		JMP	FPCMPMAG_Comp
+		JMP FPCMPMAG	; Check the magnitude as they are and return with the result.
 FPCMPNEG	
-;		JSR FPCMPMAG	; Check the magnitude as they are if they differ flip the carry flag.
-		JSR	FPCMPMAG_Comp
-
+		JSR FPCMPMAG	; Check the magnitude as they are if they differ flip the carry flag.
 		BEQ FPCMPEND	
 		TFR CC,A
 		EORA #$1
 		TFR A,CC	;REVERSE THE CARRY FLAG.
 FPCMPEND	RTS
+
+; Tweaked so comparison is done with the sign bits properly (both the exponents and the mantissa)
+; COMPARE FLOATING POINT NUMBERS, FLAGS AS WITH UNSIGNED COMPARISON.
+FPCMP_Tweak	LDA -4,U	; Get Mantissa MSB of the first number
+		ANDA #$80	; Keep the sign bit
+		STA ,-S		; Save it on the stack
+		LDA -9,U	; get Mantissa MSB of the second number
+		ANDA #$80	; Keep the sign bit
+		SUBA ,S+	; SUBTRACT THE SIGNS, SUBTRACTION IS not REVERSED.
+		BNE FPCMPENDTweak	; If they differ then return
+		TST -9,U	; Is the first number negative?
+		BMI FPCMPNEGTweak	; If both numbers are negative then skip ahead.	
+		JMP	FPCMPMAG_Comp	; Check the magnitude as they are and return with the result.
+FPCMPNEGTweak	
+;		JSR FPCMPMAG	; Check the magnitude as they are if they differ flip the carry flag.
+		JSR	FPCMPMAG_Comp	; Check the magnitude as they are
+		BEQ FPCMPENDTweak	
+		TFR CC,A
+		EORA #$1
+		TFR A,CC	;REVERSE THE CARRY FLAG.
+FPCMPENDTweak	RTS
+
 
 ; MULTIPLY FLOATING POINT NUMBERS.
 FPMUL		LDA -9,U

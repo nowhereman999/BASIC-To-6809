@@ -3,27 +3,27 @@
 'Print "hex$(Array(x+2) "; Hex$(Array(x + 2))
 'System
 
-V$ = "2.19"
-'       - Fixed LINE-(x,y),PSET command, so it will work properly
+V$ = "2.20"
+'       - Fixed handling of direct number conversion of a number that starts with a minus sign
+'       - Fixed handling of DATA values that start with a minus sign
+'       - Matched how BASIC converts a float to an INT (negative numbers always get the integer -1)
+'       - Fixed a bug in multidimensional arrays
 
-' V2.18
-'       - Fixed assignning a variable to numeric commands
+' V2.19 - Fixed LINE-(x,y),PSET command, so it will work properly
+
+' V2.18 - Fixed assignning a variable to numeric commands
 '
-' V2.17
-'       - Added CMPNE(FP_A,FP_B) - Floating Point Compare if Not Equal
+' V2.17 - Added CMPNE(FP_A,FP_B) - Floating Point Compare if Not Equal
 '
-' V2.16
-'       - Found a problem with comparing floating point numbers where the exponent was not being compared correctly
+' V2.16 - Found a problem with comparing floating point numbers where the exponent was not being compared correctly
 '       - Tweaked getting the 2nd value in a floatting point number if it was a typed value
 '       - Tweaked getting numeric value in as a floating point number can now handle the value if it starts with a decimal
 '       - Tweaked the identification of a label and a variable
 '
-' V2.15
-'       - Aadding limited Floating point operations
+' V2.15 - Aadding limited Floating point operations
 '       - Fixed a bug compiling single lines with IF THEN ELSE
 '
-' V2.14
-'       - Added more commands for streaming audio directly off the CoCoSDC: SDCPLAYORCS, SDCPLAYORCL & SDCPLAYORCR
+' V2.14 - Added more commands for streaming audio directly off the CoCoSDC: SDCPLAYORCS, SDCPLAYORCL & SDCPLAYORCR
 '         These commands require either an Orchestra 90 or CocoFLASH (https://www.go4retro.com/products/cocoflash/) cartridge
 '         The SDCPLAYORCS command streams stereo 8 bit unsigned audio at 22,375hz to both the left and right channels
 '         The SDCPLAYORCL streams mono 8 bit unsigned audio at 44,750hz to the Left channel output
@@ -32,31 +32,23 @@ V$ = "2.19"
 '       - Fixed handling of REM's that were commenting out actual code, it now display better in the .asm file
 '         It was also causing errors as some of the command values were printing as ASCII LF/BREAK/Carriage return symbols
 '
-' V2.13
-'       - Added command PLAYSDC"SAMPLE.RAW" which will play the sample stored on the SDC through the CoCo DAC
+' V2.13 - Added command PLAYSDC"SAMPLE.RAW" which will play the sample stored on the SDC through the CoCo DAC
 '
-' V2.12
-'       - Added GET and PUT commands, added option for PUT command to use the usual PSET (default), PRESET, AND, OR, NOT but also added XOR
+' V2.12 - Added GET and PUT commands, added option for PUT command to use the usual PSET (default), PRESET, AND, OR, NOT but also added XOR
 '
-' V2.11
-'       - Tweaked PLAY command to handle quoted strings a little better.
+' V2.11 - Tweaked PLAY command to handle quoted strings a little better.
 '
-' V2.10
-'       - Added PLAY command and tweaked DRAW command so it handles ;X with a string if the DRAW command doesn't end with a semi colon
+' V2.10 - Added PLAY command and tweaked DRAW command so it handles ;X with a string if the DRAW command doesn't end with a semi colon
 '       - Fixed a NASTY bug where certain bytes in ADDASSEM/ENDASSEM would write over actual program code
 '
-' V2.09
-'       - Fixed a bug with INKEY$
+' V2.09 - Fixed a bug with INKEY$
 '
-' V2.08
-'       - Broke some regular printing with the printing to graphics screen, this is now been fixed
+' V2.08 - Broke some regular printing with the printing to graphics screen, this is now been fixed
 '       - Fixed a bug with getting the value of an expression before an open bracket if an array was before the open bracket
 '
-' V2.07
-'       - Fixed problem with REM or ' at the end of a line, was causing that entire line to be ignored especially if it started with a variable
+' V2.07 - Fixed problem with REM or ' at the end of a line, was causing that entire line to be ignored especially if it started with a variable
 '
-' V2.06
-'       - Fixed a bug where the compiler needed a space after the PRINT command and before the # sign as PRINT#-2 or PRINT#-1 would give an error.
+' V2.06 - Fixed a bug where the compiler needed a space after the PRINT command and before the # sign as PRINT#-2 or PRINT#-1 would give an error.
 '       - Added support of PRINT#-3, which prints text to the PMODE 4 screen
 '       - Changed the LOCATE x,y command so it will position the PRINT #-3, cursor location on the PMODE 4 screen where x is from 0 to 31 and y is from 0 to 184
 '       - Added a new commandline option -f[fontname] where the user can supply the font name to use for printing to the graphics screen.  The font must be in the folder
@@ -64,8 +56,7 @@ V$ = "2.19"
 '         Arcade & CoCoT1 with Arcade being the default font as it is a bolder font and less likely to artifact.  The CoCoT1 font is a pixel accurate version
 '         of the CoCo's 6847 T1 VDG chip.  The fonts are already compiled sprites to make them print as fast as possible.
 '
-' V2.05
-'        - Added printing to serial port with Print #-2,
+' V2.05 - Added printing to serial port with Print #-2,
 '
 ' Things to do:
 ' - Add more commands (look through CoCo Extended basic book)
