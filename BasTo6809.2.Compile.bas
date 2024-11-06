@@ -1384,7 +1384,8 @@ Select Case FirstChar
                         v = Array(x + 1) * 256 + Array(x + 2): x = x + 3 ' move past the INT command
                         If v = INT_CMD Then
                             ' Found INT Command, Get the 2nd expression
-                            GoSub GetExpressionB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+                            GoSub GetExpressionB4EndBracket: x = x + 4 ' Get the expression that ends with a close bracket & move past it and the final close bracket
+                            Expression$ = Expression$ + Chr$(&HF5) + ")" 'add the close bracket
                             ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression result with value in D
                             A$ = "LDU": B$ = "#FPStackspace+5": C$ = "Point U at the beginning of the Floating point stack": GoSub AssemOut
                             A$ = "JSR": B$ = "INT2FP": C$ = "Convert signed 16-BIT integer in D to floating point number and store it at U, U=U+5": GoSub AssemOut
@@ -1820,7 +1821,7 @@ x = FirstIFLocation ' x = the point where the expression starts for the first IF
 IFProc = 0
 IFSP = 0
 
-' We get here after the IF and nested IFs are processed or a nested IF has just found
+' We get here after the IF and nested IFs are processed or a nested IF has just been found
 IFProcessed:
 IFProc = IFProc + 1
 IfCount = IfCount + 1
@@ -1997,8 +1998,6 @@ Start = I
 While I < Len(CheckIfTrue$)
     v = Asc(Mid$(CheckIfTrue$, I, 1)): I = I + 1
     'Keep track of brackets
-    If v = Asc("(") Then BracketCount = BracketCount + 1
-    If v = Asc(")") Then BracketCount = BracketCount - 1
     If v > &HEF Then
         'We have a Token
         Select Case v
@@ -2007,6 +2006,8 @@ While I < Len(CheckIfTrue$)
             Case &HF2, &HF3: ' Found a numeric or string variable
                 I = I + 2
             Case &HF5 ' Found a special character
+                If Asc(Mid$(CheckIfTrue$, I, 1)) = Asc("(") Then BracketCount = BracketCount + 1
+                If Asc(Mid$(CheckIfTrue$, I, 1)) = Asc(")") Then BracketCount = BracketCount - 1
                 I = I + 1
             Case &HFB: ' Found a DEF FN Function
                 I = I + 2
@@ -2066,7 +2067,7 @@ Select Case BracketCount
         Wend
         ExpressionFound$(EC) = ""
         NewString$ = NewString$ + Chr$(0) + Chr$(EC) ' Add the expression token to NewString$
-        For ii = Start + BC To I - 2 ' -2 because we don't want to include the operator
+        For ii = Start + (BC * 2) To I - 2 ' -2 because we don't want to include the operator
             ExpressionFound$(EC) = ExpressionFound$(EC) + Mid$(CheckIfTrue$, ii, 1)
         Next ii
         EC = EC + 1
@@ -2075,7 +2076,7 @@ Select Case BracketCount
         BC = BracketCount
         ExpressionFound$(EC) = ""
         NewString$ = NewString$ + Chr$(0) + Chr$(EC) ' Add the expression token to NewString$
-        For ii = Start To I + BC - 2 ' -2 because we don't want to include the operator
+        For ii = Start To I + (BC * 2) - 2 ' -2 because we don't want to include the operator
             ExpressionFound$(EC) = ExpressionFound$(EC) + Mid$(CheckIfTrue$, ii, 1)
         Next ii
         EC = EC + 1
@@ -2119,7 +2120,6 @@ Do While Eval <= Len(NewString$)
         operatorStack(operatorStackTop) = v ' Save the type of operation to do
         GoTo HandledV
     End If
-    ' Found a "parenthesis"
     If v = &H28 Or v = &H29 Then ' Is it an open or closed bracket?
         'Yes deal with them
         If v = Asc("(") Then
@@ -6690,6 +6690,8 @@ If Mid$(Expression$(ExpressionCount), index(ExpressionCount), 2) = Chr$(&HF5) + 
     If Mid$(Expression$(ExpressionCount), index(ExpressionCount), 2) = Chr$(&HF5) + ")" Then
         index(ExpressionCount) = index(ExpressionCount) + 2 ' Consume '$F5&)'
     Else
+        Print "ExpressionCount"; ExpressionCount
+        show$ = Expression$(ExpressionCount): GoSub show
         Print "Error2: Expected closing parenthesis in";: GoTo FoundError
     End If
 Else
@@ -6968,7 +6970,6 @@ Else
                             End If
                             index(ExpressionCount) = index(ExpressionCount) + 2 ' move past the close brackets
                         Else
-                            show$ = Expression$(ExpressionCount): GoSub show
                             Print "I can't process part of the numeric expression on";: GoTo FoundError
                         End If
                     End If
@@ -7535,9 +7536,9 @@ GoSub GetGenExpression ' Returns with single expression in GenExpression$
 If Left$(GenExpression$, 1) = Chr$(&HF5) Then
     ' Found a special character
     Sp = Asc(Right$(GenExpression$, 1))
-    If Sp = Asc(")") And InBracket < 1 Then x = x - 2: Return ' If last close bracket then point at it again and return
     If Sp = Asc("(") Then InBracket = InBracket + 1
     If Sp = Asc(")") Then InBracket = InBracket - 1
+    If Sp = Asc(")") And InBracket < 1 Then x = x - 2: Return ' If last close bracket then point at it again and return
 End If
 Expression$ = Expression$ + GenExpression$
 GoTo GEB4EndBracket

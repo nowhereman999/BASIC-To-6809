@@ -4,6 +4,9 @@ A BASIC compiler for the TRS80 Color Computer
 For more info check out the blog post here:
 https://wordpress.com/post/nowhereman999.wordpress.com/5054
 
+V 2.21
+- Fixed a bug handling close brackets
+
 V 2.20
 - Fixed handling of direct number conversion of a number that starts with a minus sign
 - Fixed handling of DATA values that start with a minus sign

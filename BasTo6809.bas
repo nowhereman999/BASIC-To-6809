@@ -3,8 +3,10 @@
 'Print "hex$(Array(x+2) "; Hex$(Array(x + 2))
 'System
 
-V$ = "2.20"
-'       - Fixed handling of direct number conversion of a number that starts with a minus sign
+V$ = "2.21"
+'       - Fixed bug with close brackets
+
+' V2.20 - Fixed handling of direct number conversion of a number that starts with a minus sign
 '       - Fixed handling of DATA values that start with a minus sign
 '       - Matched how BASIC converts a float to an INT (negative numbers always get the integer -1)
 '       - Fixed a bug in multidimensional arrays
