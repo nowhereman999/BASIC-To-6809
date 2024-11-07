@@ -3,6 +3,7 @@
 *** AND RETURN THEIR ABSOLUTE SCREEN ADDRESS IN THE X REGISTER
 *** WHICH OF THE FOUR PIXELS OF THE GRAPHIC BLOCK SELECTED
 *** IS RETURNED IN GRBLOK.
+* Speed improvement by using a table lookup for the screen address supplied by Tazman (Scott Cooper)
 
 GRBLOK       RMB    1              ; Graphics Block value
 
@@ -10,27 +11,28 @@ GRBLOK       RMB    1              ; Graphics Block value
 * Enter with ,S = HOR COORD (0 to 63), B = VERT COORD (0 to 31)
 * Returns with X = SCREEN ADDRESS and 
 GetSRPLocation:
-             LDU    ,S++           Get the return address off the stack
-             PSHS   B              SAVE VERT COORD
-             LSRB                  DIVIDE BY TWO BECAUSE THERE ARE 2 GRAPHIC PIXELS/HOR CHARACTER POSITION (BYTE)
-             LDA    #32            32 BYTES/ROW
-             MUL                   GET ROW OFFSET OF CHAR POSITION
-             LDX    #$400          SCREEN BUFFER ADDRESS
-             LEAX   D,X            ADD ROW OFFSET TO SCREEN BUFFER ADDRESS
-             LDB    1,S            GET HOR COORD
-             LSRB                  2 VERTICAL PIXELS/CHARACTER POSITION
-             ABX                   ADD VERTICAL OFFSET TO CHARACTER ADDRESS
-             PULS   A,B            GET VER COORD TO ACCA, HOR COORD TO ACCB
-             ANDA   #1             KEEP ONLY LSB OF VER COORD
-             RORB                  LSB OF HOR COORD TO CARRY FLAG
-             ROLA                  LSB OF HOR TO BIT 0 OF ACCA
-             LDB    #$10           MAKE A BIT MASK - TURN ON BIT 4
-!            LSRB                  SHIFT IT RIGHT ONCE
-             DECA                  SHIFTED IT ENOUGH?
-             BPL    <              NO
-             STB    GRBLOK         ACCB=8 FOR UPPER LEFT PIXEL, =4 FOR UPPER RIGHT PIXEL =2 FOR LOWER LEFT, =1 FOR LOWER RIGHT
-             JMP    ,U             Return
-
+            LDU    ,S++           Get the return address off the stack
+            PSHS   B              SAVE VERT COORD
+            LSLB					; DOUBLE Y COORD
+	        LDX    #YTABLE			; POINT TO (1024 + INT(Y/2)*32) TABLE
+            LDX    B,X 			; X = 1024 + INT(Y/2)*32
+			LDB    1,S 			; X COORD
+            LSRB 					; INT(X/2)
+			ABX 					; X = 1024 + INT(Y/2)*32 + INT(X/2)             
+            PULS   A,B            GET VER COORD TO ACCA, HOR COORD TO ACCB
+            ANDA   #1             KEEP ONLY LSB OF VER COORD
+            RORB                  LSB OF HOR COORD TO CARRY FLAG
+            ROLA                  LSB OF HOR TO BIT 0 OF ACCA
+            LDB    #$10           MAKE A BIT MASK - TURN ON BIT 4
+!           LSRB                  SHIFT IT RIGHT ONCE
+            DECA                  SHIFTED IT ENOUGH?
+            BPL    <              NO
+            STB    GRBLOK         ACCB=8 FOR UPPER LEFT PIXEL, =4 FOR UPPER RIGHT PIXEL =2 FOR LOWER LEFT, =1 FOR LOWER RIGHT
+            JMP    ,U             Return
+;GRBLOK      RMB    1			 
+YTABLE		FDB	   $0400,$0400,$0420,$0420,$0440,$0440,$0460,$0460,$0480,$0480,$04A0,$04A0,$04C0,$04C0,$04E0,$04E0
+			FDB    $0500,$0500,$0520,$0520,$0540,$0540,$0560,$0560,$0580,$0580,$05A0,$05A0,$05C0,$05C0,$05E0,$05E0
+			
 * Do the Set function
 * Enter with B = the Colour value from 0 to 8
 * X = the screen address
