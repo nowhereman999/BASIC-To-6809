@@ -676,7 +676,7 @@ Return 'X pointing at the memory location for the Numeric Array, D is unchanged
 
 ' Exits with a Return
 HandleNumericArray:
-If Verbose > 3 Then Print "Going to deal with  Numeric array"
+If Verbose > 3 Then Print "Going to deal with Numeric array"
 v = Array(x) * 256 + Array(x + 1): x = x + 2
 NV$ = NumericArrayVariables$(v)
 If Verbose > 3 Then Print "Numeric array variable is: "; NV$
@@ -753,14 +753,62 @@ A$ = "ROLA": C$ = "D=D*2, 16 bit integers in the numeric array": GoSub AssemOut
 num = NumDims: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
 A$ = "ADDD": B$ = "#_ArrayNum_" + NV$ + "+" + Num$: C$ = "D points at the start of the destination string": GoSub AssemOut
 A$ = "PSHS": B$ = "D": C$ = "Save the memory location to write the value that this array equals": GoSub AssemOut
-
 v = Array(x): x = x + 1
 If v <> &HFC Then Print "Syntax error, looking for = sign while getting Numeric Array in";: GoTo FoundError
 v = Array(x): x = x + 1
 If v <> &H3D Then Print "Syntax error, looking for = sign in while getting Numeric Array in";: GoTo FoundError
 'Get an expression that ends with an EOL
-GoSub GetExpressionB4EOL ' Get the expression before an End of Line
-ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
+GoSub GetExpressionB4EOL ' Get the expression before an End of Line in Expression$
+
+
+
+
+FirstChar = Asc(Left$(Expression$, 1))
+If FirstChar = &HF4 Then
+    ' We found a floating point number, round it to the nearest signed 16 bit integer value
+    If Len(Expression$) <> 3 Then
+        Print "Something is wrong with the floating point variable being assigned to "; NV; " on";: GoTo FoundError
+    End If
+    v = Asc(Mid$(Expression$, 2, 1)) * 256 + Asc(Right$(Expression$, 1))
+    SourceFPV$ = "_FPVar_" + FloatVariable$(v)
+    A$ = "LDU": B$ = "#FPStackspace+5": C$ = "Point U at the beginning of the Floating point stack+5": GoSub AssemOut
+    A$ = "LDX": B$ = "#" + SourceFPV$: C$ = "Point X at the floaing point variable": GoSub AssemOut
+    A$ = "JSR": B$ = "FPLOD": C$ = "Copy FP NUMBER FROM ADDRESS X AND PUSH ONTO USER STACK": GoSub AssemOut
+    A$ = "JSR": B$ = "FP2INT": C$ = "Convert FP number at -5,U to a signed 16-bit number in D": GoSub AssemOut
+    A$ = "STD": B$ = "[,S++]": C$ = "Save D in the array, and fix the stack": GoSub AssemOut
+    Return
+End If
+num = INT_CMD: GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSBs
+' The INT command on the CoCo truncates the decimal part of a floating point number, if the floating point number is a negative then it also subtracts 1 to the result
+If FirstChar = &HFE Then
+    If Len(Expression$) > 7 Then
+        If Asc(Mid$(Expression$, 2, 1)) = MSB And Asc(Mid$(Expression$, 3, 1)) = LSB Then
+            ' Found the INT command
+            If Asc(Mid$(Expression$, 6, 1)) = &HF4 Then
+                ' We found a floating point number, convert number to a signed 16 bit number (no rounding)
+                If Len(Expression$) <> 10 Then
+                    Print "Something is wrong with the floating point variable being converted to an integer assigned to "; NV; " on";: GoTo FoundError
+                End If
+                v = Asc(Mid$(Expression$, 7, 1)) * 256 + Asc(Mid$(Expression$, 8, 1))
+                SourceFPV$ = "_FPVar_" + FloatVariable$(v)
+                GoSub Float2INT ' Enter with  SourceFPV$ as the source FP string variable and NV$ as the destination signed 16 bit integer variable
+                Return
+            End If
+        End If
+    End If
+End If
+' Check Expression$ for a variable or numeric commands, if there aren't any, then ExType=0 and NewExpression$ will be the expression without any tokenized characters
+GoSub CheckForVariable
+If ExType = 0 Then
+    GoSub EvaluateNewExpression
+    num = D: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+    A$ = "LDD": B$ = "#" + Num$: C$ = "Since we don't have any variables or numeric commands, this is the calculated value": GoSub AssemOut
+Else
+    ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
+End If
+
+
+
 A$ = "STD": B$ = "[,S++]": C$ = "Save D in the array, and fix the stack": GoSub AssemOut
 Return
 
