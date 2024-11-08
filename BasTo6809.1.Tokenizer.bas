@@ -663,7 +663,7 @@ While OP <= filesize
                     End If
                 End If
             End If
-        Case &HF3: ' Found a string variable
+        Case &HF3, &HF4: ' Found a string or fating point variable
             OP = OP + 2
         Case &HF5 ' Found a special character
             OP = OP + 1
@@ -715,7 +715,7 @@ While x <= filesize
                 INArray(c) = v: c = c + 1 'write byte to ouput array
                 v = Array(x): x = x + 1 ' get a byte
                 INArray(c) = v: c = c + 1 'write byte to ouput array
-            Case &HF2, &HF3: ' Found a numeric or string variable
+            Case &HF2, &HF3, &HF4: ' Found a numeric or string or Floating point variable
                 v = Array(x): x = x + 1 ' get a byte
                 INArray(c) = v: c = c + 1 'write byte to ouput array
                 v = Array(x): x = x + 1 ' get a byte
@@ -2247,7 +2247,7 @@ While I <= Len(Expression$)
             v = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(v): I = I + 1 ' Copy MSB of Array ID
             v = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(v): I = I + 1 ' Copy LSB of Array ID
             v = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(v): I = I + 1 ' Copy # of dimensions
-        Case &HF2, &HF3: ' Found a numeric or string variable
+        Case &HF2, &HF3, &HF4: ' Found a numeric or string or floating point variable
             v = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(v): I = I + 1 ' Copy MSB of variable ID
             v = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(v): I = I + 1 ' Copy LSB of variable ID
         Case &HF5 ' Found a special character
@@ -2530,7 +2530,7 @@ While I <= Len(Expression$)
             v = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(v): I = I + 1 ' Copy MSB of Array ID
             v = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(v): I = I + 1 ' Copy LSB of Array ID
             v = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(v): I = I + 1 ' Copy # of dimensions
-        Case &HF2, &HF3: ' Found a numeric or string variable
+        Case &HF2, &HF3, &HF4: ' Found a numeric or string or floating point variable
             v = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(v): I = I + 1 ' Copy MSB of variable ID
             v = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(v): I = I + 1 ' Copy LSB of variable ID
         Case &HF5 ' Found a special character
@@ -2752,7 +2752,7 @@ Select Case v
         GenExpression$ = GenExpression$ + Chr$(Array(x)): x = x + 1 ' Copy MSB of Array ID
         GenExpression$ = GenExpression$ + Chr$(Array(x)): x = x + 1 ' Copy LSB of Array ID
         GenExpression$ = GenExpression$ + Chr$(Array(x)): x = x + 1 ' Copy # of dimensions
-    Case &HF2, &HF3: ' Found a numeric or string variable
+    Case &HF2, &HF3, &HF4: ' Found a numeric or string or floating point variable
         GenExpression$ = GenExpression$ + Chr$(Array(x)): x = x + 1 ' Copy MSB of variable ID
         GenExpression$ = GenExpression$ + Chr$(Array(x)): x = x + 1 ' Copy LSB of variable ID
     Case &HF5 ' Found a special character
