@@ -29,14 +29,14 @@ SDCPLAY:
 
 * This code masks off the two low bits written to $FF20
 * So you can send the PCM Unsigned 8 Bit sample as is, no masking needed
-	LDA	<$21
+	LDA	>$FF21
 	PSHS	A
 	ANDA	#%00110011      ; FORCE BIT2 LOW
-	STA	<$21            ; $FF20 NOW DATA DIRECTION REGISTER
+	STA	>$FF21          ; $FF20 NOW DATA DIRECTION REGISTER
 	LDA	#%11111100      ; OUTPUT ON DAC, INPUT ON RS-232 & CDI
-	STA	<$20
+	STA	>$FF20
 	PULS	A
-	STA	<$21
+	STA	>$FF21
 ; Put "m:" at the start of the filename
         LDX     #_StrVar_PF00+1 ; Get the start of the filename string
         LDB     -1,X            ; Get the length byte

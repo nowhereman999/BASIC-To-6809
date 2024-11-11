@@ -15,7 +15,7 @@
 ; 127 Added ability to stream small files using the m: command
 ;
 ; Put controller in Command mode:
-; This changes the mode the CoCo SDC work in.  It is now ready for direct communication
+; This changes the mode the CoCo SDC works in.  It is now ready for direct communication
 CheckSDCFirmwareVersion:
         LDA     #$43            ; control latch value to enable SDC command mode
         STA     >$FF40          ; Send the command to the SDC
