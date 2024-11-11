@@ -3,7 +3,10 @@
 'Print "hex$(Array(x+2) "; Hex$(Array(x + 2))
 'System
 
-V$ = "2.21"
+V$ = "2.22"
+'       - Fixed a bug with a comment at the end of a DATA statement, it was sometimes not being ignored
+
+' V2.21
 '       - Fixed bug with close brackets
 
 ' V2.20 - Fixed handling of direct number conversion of a number that starts with a minus sign

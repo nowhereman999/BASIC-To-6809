@@ -4,6 +4,9 @@ A BASIC compiler for the TRS80 Color Computer
 For more info check out the blog post here:
 https://wordpress.com/post/nowhereman999.wordpress.com/5054
 
+V 2.22
+- Fixed a bug with a comment at the end of a DATA statement, it was sometimes not being ignored
+
 V 2.21
 - Fixed a bug handling close brackets
 

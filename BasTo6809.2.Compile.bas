@@ -759,10 +759,6 @@ v = Array(x): x = x + 1
 If v <> &H3D Then Print "Syntax error, looking for = sign in while getting Numeric Array in";: GoTo FoundError
 'Get an expression that ends with an EOL
 GoSub GetExpressionB4EOL ' Get the expression before an End of Line in Expression$
-
-
-
-
 FirstChar = Asc(Left$(Expression$, 1))
 If FirstChar = &HF4 Then
     ' We found a floating point number, round it to the nearest signed 16 bit integer value
@@ -806,12 +802,8 @@ If ExType = 0 Then
 Else
     ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
 End If
-
-
-
 A$ = "STD": B$ = "[,S++]": C$ = "Save D in the array, and fix the stack": GoSub AssemOut
 Return
-
 
 ' Returns with X pointing at the memory location for the String Array, D is unchanged
 MakeXPointAtStringArray:
@@ -2559,7 +2551,7 @@ Return
 DoDATA:
 ' Add the data on this line to the DataArray, keeping track of the location/size with DataArrayCount
 ' DATA lines are special lines that may conatin spaces
-Do Until v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A)
+Do Until v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A) Or v = &H27
     v = Array(x): x = x + 1
     If v = &H2C Then
         ' Found a comma, check for another comma in a row
@@ -2596,7 +2588,7 @@ Do Until v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A)
     If (v >= Asc("0") And v <= Asc("9")) Or v = Asc("-") Or v = Asc(".") Then
         'We have a number to copy
         Temp$ = ""
-        Do Until (v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A)) Or v = &H2C ' copy until we reach an EOL or comma
+        Do Until (v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A)) Or v = &H2C Or v = &H27 ' copy until we reach an EOL or comma or '
             Temp$ = Temp$ + Chr$(v)
             v = Array(x): x = x + 1
         Loop
@@ -2607,12 +2599,12 @@ Do Until v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A)
         D1 = T1 - Int(T1 / 256) * 256
         DataArray(DataArrayCount) = D0: DataArrayCount = DataArrayCount + 1
         DataArray(DataArrayCount) = D1: DataArrayCount = DataArrayCount + 1
-        If Array(x) = &H2C Then x = x - 1 ' if a comma then point at it again
+        If v = &H2C Then x = x - 1 ' if a comma then point at it again
         GoTo DoDATA
     Else
         'Otherwise copy a string until we reach a comma or EOL/Colon
         StartPos = x - 1 ' Got the start pos of the string
-        Do Until (v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A)) Or v = &H2C ' copy until we reach an EOL or comma
+        Do Until (v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A)) Or v = &H2C Or v = &H27 ' copy until we reach an EOL or comma or '
             v = Array(x): x = x + 1
         Loop
         EndPos = x - 2
@@ -2623,7 +2615,13 @@ Do Until v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A)
         If Array(x) = &H2C Then x = x - 1 ' if a comma then point at it again
     End If
 Loop
-v = Array(x): x = x + 1
+If v = &H27 Then
+    ' We found an apostrophe, so ignore the rest of the line
+    Do Until v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A)
+        v = Array(x): x = x + 1
+    Loop
+End If
+v = Array(x): x = x + 1 ' move past the &0D or &H3A
 Return
 ' Prints in quotes, enter with x pointing at the first character after the open quote
 PrintInQuotes:
@@ -3334,7 +3332,7 @@ Do Until v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A)
         ' we are reading a numeric array value
         GoSub MakeXPointAtNumericArray ' Returns with X pointing at the memory location for the Numeric Array, D is unchanged
         A$ = "LDU": B$ = "DATAPointer": C$ = "Get the DATA pointer current value": GoSub AssemOut
-        A$ = "LDD": B$ = ",U++": C$ = "Load D with the value, move pointer to the next slot": GoSub AssemOut
+        A$ = "PULU": B$ = "D": C$ = "Load D with the value, move pointer to the next slot - One Cycle faster then  LDD  ,U++": GoSub AssemOut
         A$ = "STU": B$ = "DATAPointer": C$ = "Save the updated pointer": GoSub AssemOut
         A$ = "STD": B$ = ",X": C$ = "Save Numeric variable": GoSub AssemOut
         GoTo DoREAD
