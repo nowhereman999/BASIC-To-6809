@@ -6,21 +6,21 @@
 V$ = "3.00"
 '       - Added SDC file support, you can now read and write files on the SDC filesystem directly
 '       - If a 6309 is present it puts it in native mode (should speed up code about 15%)
-'       - Added compiler option -a which makes your program audostart
-'       - Fixed a bug where if a variable name had AND,OR,MOD,XOR,NOT or DIVR in the name it would create variable names and operatorsout of it
-'       - Fixed a bug with IF command with mulitple numeric commands that were'nt evavluating properly
-
+'       - Added compiler option -a which makes your program autostart
+'       - Fixed a bug where if a variable name had AND,OR,MOD,XOR,NOT or DIVR in the name it would create variable names and operators out of it
+'       - Fixed a bug with IF command with multiple numeric commands that weren't evaluating properly
+'
 ' V2.22
 '       - Fixed a bug with a comment at the end of a DATA statement, it was sometimes not being ignored
-
+'
 ' V2.21
 '       - Fixed bug with close brackets
-
+'
 ' V2.20 - Fixed handling of direct number conversion of a number that starts with a minus sign
 '       - Fixed handling of DATA values that start with a minus sign
 '       - Matched how BASIC converts a float to an INT (negative numbers always get the integer -1)
 '       - Fixed a bug in multidimensional arrays
-
+'
 ' V2.19 - Fixed LINE-(x,y),PSET command, so it will work properly
 
 ' V2.18 - Fixed assignning a variable to numeric commands
