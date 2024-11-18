@@ -6982,11 +6982,11 @@ While index(ExpressionCount) < Len(Expression$(ExpressionCount)) And Asc(Mid$(Ex
             num = NumParseCount - 1: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
             If num < 10 Then Num$ = "0" + Num$
             A$ = "LDD": B$ = "_Var_PF" + Num$: C$ = "D = the Base value": GoSub AO
-            A$ = "PSHS": B$ = "D": C$ = "Save the base value": GoSub AO
-            A$ = "PSHS": B$ = "D": C$ = "Save the base value": GoSub AO
             num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
             If num < 10 Then Num$ = "0" + Num$
             A$ = "LDX": B$ = "_Var_PF" + Num$: C$ = "X = the Exponent value": GoSub AO
+            A$ = "PSHS": B$ = "D": C$ = "Save the base value": GoSub AO
+            A$ = "PSHS": B$ = "D": C$ = "Save the base value": GoSub AO
             A$ = "BNE": B$ = ">": C$ = "If X <> zero then skip ahead": GoSub AO
             A$ = "LDD": B$ = "#1": C$ = "Exponent of zero results with 1": GoSub AO
             A$ = "BRA": B$ = "@GotD": C$ = "Done": GoSub AO

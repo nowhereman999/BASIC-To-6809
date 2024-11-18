@@ -3,7 +3,10 @@
 'Print "hex$(Array(x+2) "; Hex$(Array(x + 2))
 'System
 
-V$ = "3.01"
+V$ = "V3.02"
+'       - Fixed a bug with optimiing when it is doing exponents
+'
+' V3.01
 '       - Fixed a small bug with Printing of double quotes ""
 '
 ' V3.00

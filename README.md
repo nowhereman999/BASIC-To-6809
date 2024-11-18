@@ -4,6 +4,9 @@ A BASIC compiler for the TRS80 Color Computer
 For more info check out the blog post here:
 https://wordpress.com/post/nowhereman999.wordpress.com/5054
 
+V 3.02
+- Fixed a bug with optimiing when it is doing exponents
+
 V 3.01
 - Fixed a small bug with Printing of double quotes ""
 
