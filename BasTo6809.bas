@@ -4,7 +4,7 @@
 'System
 
 V$ = "3.01"
-'       - Fixed a small bug with ? of double quotes ""
+'       - Fixed a small bug with Printing of double quotes ""
 '
 ' V3.00
 '       - Added SDC file support, you can now read and write files on the SDC filesystem directly

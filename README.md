@@ -4,6 +4,9 @@ A BASIC compiler for the TRS80 Color Computer
 For more info check out the blog post here:
 https://wordpress.com/post/nowhereman999.wordpress.com/5054
 
+V 3.01
+- Fixed a small bug with Printing of double quotes ""
+
 V 3.00
 - Added SDC file support, you can now read and write files on the SDC filesystem directly
 - If a 6309 is present it puts it in native mode (should speed up code about 15%)
