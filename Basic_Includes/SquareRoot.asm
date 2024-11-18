@@ -8,6 +8,7 @@
 ; This routine is the complement to the integer square program.
 ;
 ; Destroys A, X registers.
+; Modeified to use B for Root and return with result in B
 
 SqRoot16:
 	STD	Numberh		; save number to get the square root

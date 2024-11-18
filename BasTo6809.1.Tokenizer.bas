@@ -115,7 +115,7 @@ If count = 0 Then
     Print "Compiler has no options given to it"
     System
 End If
-nt = 0: newp = 0: endp = 0: BranchCheck = 0: StringArraySize = 255
+nt = 0: newp = 0: endp = 0: BranchCheck = 0: StringArraySize = 255: AutoStart = 0
 Optimize = 2 ' Default to optimize level 2
 For check = 1 To count
     N$ = Command$(check)
@@ -126,6 +126,7 @@ For check = 1 To count
     If LCase$(Left$(N$, 2)) = "-v" Then Verbose = Val(Right$(N$, Len(N$) - 2)): GoTo CheckNextCMDOption
     If LCase$(Left$(N$, 2)) = "-p" Then ProgramStart$ = Right$(N$, Len(N$) - 2): GoTo CheckNextCMDOption
     If LCase$(Left$(N$, 2)) = "-f" Then Font$ = Right$(N$, Len(N$) - 2): GoTo CheckNextCMDOption
+    If LCase$(Left$(N$, 2)) = "-a" Then AutoStart = 1: GoTo CheckNextCMDOption
     ' check if we got a file name yet if so then the next filename will be output
     OutName$ = N$
     CheckNextCMDOption:
@@ -446,13 +447,13 @@ If Verbose > 0 Then
     For ii = 0 To StringCommandsFoundCount - 1
         Print StringCommandsFound$(ii)
     Next ii
-    Print "Numeric Variables Used:"
-    For ii = 0 To NumericVariableCount - 1
-        Print NumericVariable$(ii)
-    Next ii
     Print "Floating Point Variables Used:"
     For ii = 0 To FloatVariableCount - 1
         Print FloatVariable$(ii)
+    Next ii
+    Print "Numeric Variables Used:"
+    For ii = 0 To NumericVariableCount - 1
+        Print NumericVariable$(ii)
     Next ii
     Print "String Variables Used:"
     For ii = 0 To StringVariableCounter - 1
@@ -863,8 +864,11 @@ For ii = 0 To GeneralCommandsFoundCount - 1
     If Temp$ = "LINE" Then
         LineCommand = 1 ' Flag that we will use the LINE command
     End If
-    If Temp$ = "SDCPLAY" Or Temp$ = "SDCPLAYORCL" Or Temp$ = "SDCPLAYORCR" Or Temp$ = "SDCPLAYORCS" Then
+    If Temp$ = "SDC_PLAY" Or Temp$ = "SDC_PLAYORCL" Or Temp$ = "SDC_PLAYORCR" Or Temp$ = "SDC_PLAYORCS" Then
         SDCPLAY = 1 ' Flag that we need extra SDCPlayback buffer space
+    End If
+    If Temp$ = "SDC_OPEN" Or Temp$ = "SDC_LOADM" Or Temp$ = "SDC_SAVEM" Then
+        SDCVersionCheck = 1 ' include code to make sure we have the correct SDC firmware
     End If
 Next ii
 
@@ -877,12 +881,12 @@ DirectPage$ = Hex$(DirectPage)
 T1$ = "    ": T2$ = T1$ + T1$
 If BranchCheck > 0 Then
     ' User wants all branches checked for minimum size
-    A$ = "PRAGMA": B$ = "noforwardrefmax": C$ = "This option is necessary for auto branch size feature to work properly, makes lwasm REALLY slow, but code will be smaller and faster": GoSub AssemOut
+    A$ = "PRAGMA": B$ = "noforwardrefmax": C$ = "This option is necessary for auto branch size feature to work properly, makes lwasm REALLY slow, but code will be smaller and faster": GoSub AO
 End If
-A$ = "PRAGMA": B$ = "autobranchlength": C$ = "Tell LWASM to automatically use long branches if the short branch is too small, see compiler docs for option -b1 to make this work properly": GoSub AssemOut
+A$ = "PRAGMA": B$ = "autobranchlength": C$ = "Tell LWASM to automatically use long branches if the short branch is too small, see compiler docs for option -b1 to make this work properly": GoSub AO
 Print #1, "; Program reserves $100 bytes before the starting location below for stack space"
-A$ = "ORG": B$ = "$" + ProgramStart$: C$ = "Program code starts here": GoSub AssemOut
-A$ = "SETDP": B$ = "$" + DirectPage$: C$ = "Direct page is setup here": GoSub AssemOut
+A$ = "ORG": B$ = "$" + ProgramStart$: C$ = "Program code starts here": GoSub AO
+A$ = "SETDP": B$ = "$" + DirectPage$: C$ = "Direct page is setup here": GoSub AO
 Print #1, "Seed1           RMB     1     ; Random number seed location"
 Print #1, "Seed2           RMB     1     ; Random number seed location"
 Print #1, "RNDC            RMB     1     ; Used by Random number generator"
@@ -895,10 +899,6 @@ For Num = 0 To 10
     If Num < 10 Then Num$ = "0" + Num$
     Print #1, "_Var_PF"; Num$; T1$; "RMB "; T1$; "2"
 Next Num
-Print #1, "; Numeric Variables Used:"; NumericVariableCount
-For ii = 0 To NumericVariableCount - 1
-    Print #1, "_Var_"; NumericVariable$(ii); T1$; "RMB "; T1$; "2"
-Next ii
 Print #1, "Temp1           RMB     1     ; Temporary byte used for many routines"
 Print #1, "Temp2           RMB     1     ; Temporary byte used for many routines"
 Print #1, "Temp3           RMB     1     ; Temporary byte used for many routines"
@@ -906,18 +906,22 @@ Print #1, "Temp4           RMB     1     ; Temporary byte used for many routines
 Print #1, "Denominator     RMB     2     ; Denominator, used in division"
 Print #1, "Numerator       RMB     2     ; Numerator, used in division"
 Print #1, "DATAPointer     RMB     2     ; Variable that points to the current DATA location"
-Print #1, "EveryCasePointer  RMB   2     ; Pointer at the table to keep track of the CASE/EVERYCASE Flags"
-Print #1, "EveryCaseStack  RMB     10*2  ; Space Used for nested Cases"
-Print #1, "SoundTone       RMB     1     ; SOUND Tone value"
-Print #1, "SoundDuration   RMB     2     ; SOUND Command duration value"
-Print #1, "CASFLG          RMB     1     ; Case flag for keyboard output $FF=UPPER (normal), 0=LOWER"
-Print #1, "OriginalIRQ     RMB     3     ; We save the original branch and location of the IRQ here, restored before we exit"
 Print #1, "_NumVar_IFRight RMB     2     ; Temp bytes for IF Compares"
 ' Reserve space for Floating Point variables
 Print #1, "; Floating Point Variables Used:"; FloatVariableCount
 For ii = 0 To FloatVariableCount - 1
     Print #1, "_FPVar_"; FloatVariable$(ii); T1$; "RMB "; T1$; "5"
 Next ii
+Print #1, "; Numeric Variables Used:"; NumericVariableCount
+For ii = 0 To NumericVariableCount - 1
+    Print #1, "_Var_"; NumericVariable$(ii); T1$; "RMB "; T1$; "2"
+Next ii
+Print #1, "EveryCasePointer  RMB   2     ; Pointer at the table to keep track of the CASE/EVERYCASE Flags"
+Print #1, "EveryCaseStack  RMB     10*2  ; Space Used for nested Cases"
+Print #1, "SoundTone       RMB     1     ; SOUND Tone value"
+Print #1, "SoundDuration   RMB     2     ; SOUND Command duration value"
+Print #1, "CASFLG          RMB     1     ; Case flag for keyboard output $FF=UPPER (normal), 0=LOWER"
+Print #1, "OriginalIRQ     RMB     3     ; We save the original branch and location of the IRQ here, restored before we exit"
 ' Add temp string space
 For Num = 0 To 1
     GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
@@ -934,9 +938,9 @@ End If
 ' Add the String Variables used
 Print #1, "; String Variables Used:"; StringVariableCounter
 For ii = 0 To StringVariableCounter - 1
-    Z$ = "_StrVar_" + StringVariable$(ii): GoSub AssemOut
-    A$ = "RMB": B$ = "1": C$ = "String Variable " + StringVariable$(ii) + " length (0 to 255) initialized to 0": GoSub AssemOut
-    A$ = "RMB": B$ = "255": C$ = "255 bytes available for string variable " + StringVariable$(ii): GoSub AssemOut
+    Z$ = "_StrVar_" + StringVariable$(ii): GoSub AO
+    A$ = "RMB": B$ = "1": C$ = "String Variable " + StringVariable$(ii) + " length (0 to 255) initialized to 0": GoSub AO
+    A$ = "RMB": B$ = "255": C$ = "255 bytes available for string variable " + StringVariable$(ii): GoSub AO
 Next ii
 Print #1, "; Numeric Arrays Used:"; NumArrayVarsUsedCounter
 If NumArrayVarsUsedCounter > 0 Then
@@ -953,9 +957,9 @@ If NumArrayVarsUsedCounter > 0 Then
         For D1 = 0 To NumericArrayDimensions(ii) - 1
             Num = Val("&H" + Mid$(NumericArrayDimensionsVal$(ii), 1 + D1 * 4, 4)) + 1 ' + 1 because it is zero based
             GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-            A$ = "FCB": B$ = Num$: C$ = "Default size of each array element is 12 (0 to 11), changed with the DIM command": GoSub AssemOut
+            A$ = "FCB": B$ = Num$: C$ = "Default size of each array element is 12 (0 to 11), changed with the DIM command": GoSub AO
         Next D1
-        A$ = "RMB": B$ = Temp$: C$ = "Two bytes (16 bits) per element": GoSub AssemOut
+        A$ = "RMB": B$ = Temp$: C$ = "Two bytes (16 bits) per element": GoSub AO
     Next ii
 End If
 
@@ -978,9 +982,9 @@ If StringArrayVarsUsedCounter > 0 Then
         For D1 = 0 To StringArrayDimensions(ii) - 1
             Num = Val("&H" + Mid$(StringArrayDimensionsVal$(ii), 1 + D1 * 4, 4)) + 1 ' + 1 because it is zero based
             GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-            A$ = "FCB": B$ = Num$: C$ = "Default size of each array element is 11 (0 to 10), changed with the DIM command": GoSub AssemOut
+            A$ = "FCB": B$ = Num$: C$ = "Default size of each array element is 11 (0 to 10), changed with the DIM command": GoSub AO
         Next D1
-        A$ = "RMB": B$ = Temp$: C$ = "Reserve " + Temp$ + " bytes per element": GoSub AssemOut
+        A$ = "RMB": B$ = Temp$: C$ = "Reserve " + Temp$ + " bytes per element": GoSub AO
     Next ii
 End If
 Print #1, "EndClearHere:" ' This is the end address of variables that will all be cleared to zero when the program starts
@@ -1007,7 +1011,7 @@ Next c
 For c = 0 To vc - 1
     If Right$(var$(c), 3) = "Str" Then
         Print #1, "_StrVar_"; var$(c); T1$; "FCB "; T1$; "$00     ; String Variable "; var$(c); " length (0 to 255) initialized to 0"
-        A$ = "RMB": B$ = "255": C$ = "255 bytes available for string variable " + var$(c): GoSub AssemOut
+        A$ = "RMB": B$ = "255": C$ = "255 bytes available for string variable " + var$(c): GoSub AO
     End If
 Next c
 
@@ -1072,13 +1076,23 @@ For ii = 0 To GeneralCommandsFoundCount - 1
         If PUTNOT = 1 Then Temp$ = "GraphicCommandsPut_NOT": GoSub AddIncludeTemp ' Add code to handle Put NOT command
         If PUTXOR = 1 Then Temp$ = "GraphicCommandsPut_XOR": GoSub AddIncludeTemp ' Add code to handle Put XOR command
     End If
-    If Temp$ = "SDCPLAY" Or Temp$ = "SDCPLAYORCL" Or Temp$ = "SDCPLAYORCR" Or Temp$ = "SDCPLAYORCS" Then
+    If Temp$ = "SDC_PLAY" Or Temp$ = "SDC_PLAYORCL" Or Temp$ = "SDC_PLAYORCR" Or Temp$ = "SDC_PLAYORCS" Then
         If Temp$ = "SDCPLAY" Then Temp$ = "SDCPlay": GoSub AddIncludeTemp: Temp$ = "Audio_Muxer": GoSub AddIncludeTemp ' Add code for Selecting the audio muxer and to turn it on or off
         If Temp$ = "SDCPLAYORCL" Then Temp$ = "SDCPlayOrc90Left": GoSub AddIncludeTemp
         If Temp$ = "SDCPLAYORCR" Then Temp$ = "SDCPlayOrc90Right": GoSub AddIncludeTemp
         If Temp$ = "SDCPLAYORCS" Then Temp$ = "SDCPlayOrc90Stereo": GoSub AddIncludeTemp
         Temp$ = "StreamFile_Library": GoSub AddIncludeTemp
-        Temp$ = "SDCVersionCheck": GoSub AddIncludeTemp
+        '
+    End If
+    If Temp$ = "SDC_GETBYTE0" Or Temp$ = "SDC_GETBYTE1" Or Temp$ = "SDC_PUTBYTE0" Or Temp$ = "SDC_PUTBYTE1" Or Temp$ = "SDC_DIRPAGE" Or Temp$ = "SDC_SETPOS" Or Temp$ = "SDC_CLOSE" Or Temp$ = "SDC_OPEN" Then
+        Temp$ = "CommSDC": GoSub AddIncludeTemp
+        Temp$ = "SDCFileAccess": GoSub AddIncludeTemp
+        '
+    End If
+    If Temp$ = "SDC_LOADM" Or Temp$ = "SDC_SAVEM" Then
+        Temp$ = "CommSDC": GoSub AddIncludeTemp
+        Temp$ = "SDCFileAccess": GoSub AddIncludeTemp
+        Temp$ = "SDCLoadmSavem": GoSub AddIncludeTemp
     End If
     If Temp$ = "SET" Or Temp$ = "RESET" Then
         Temp$ = "SetResetPoint": GoSub AddIncludeTemp
@@ -1096,11 +1110,21 @@ For ii = 0 To StringCommandsFoundCount - 1
     If Temp$ = "STR$" Then
         Temp$ = "D_to_String": GoSub AddIncludeTemp ' Add the D_to_String library
     End If
+    If Temp$ = "SDC_FILEINFO$" Or Temp$ = "SDC_GETCURDIR$" Then
+        Temp$ = "CommSDC": GoSub AddIncludeTemp
+        Temp$ = "SDCFileAccess": GoSub AddIncludeTemp
+        '        Temp$ = "SDCVersionCheck": GoSub AddIncludeTemp
+    End If
 Next ii
 For ii = 0 To NumericCommandsFoundCount - 1
     Temp$ = UCase$(NumericCommandsFound$(ii))
     If Temp$ = "BUTTON" Then
         Temp$ = "JoyButton": GoSub AddIncludeTemp 'Add code to handle reading the joystick buttons
+    End If
+    If Temp$ = "SDC_GETBYTE" Or Temp$ = "SDC_MKDIR" Or Temp$ = "SDC_SETDIR" Or Temp$ = "SDC_INITDIR" Or Temp$ = "SDC_DELETE" Then
+        Temp$ = "CommSDC": GoSub AddIncludeTemp
+        Temp$ = "SDCFileAccess": GoSub AddIncludeTemp
+        '        Temp$ = "SDCVersionCheck": GoSub AddIncludeTemp
     End If
     If Temp$ = "JOYSTK" Then
         Temp$ = "Joystick": GoSub AddIncludeTemp 'Add code to handle analog Joystick input
@@ -1126,152 +1150,160 @@ GoSub WriteIncludeListToFile ' Write all the INCLUDE files needed to the .ASM fi
 
 If Disk = 0 Then
     ' Sound and Timer 60 Hz IRQ
-    Z$ = "; Sound and Timer 60hz IRQ ": GoSub AssemOut
-    Z$ = "BASIC_IRQ:": GoSub AssemOut
-    A$ = "LDA": B$ = "$FF03": C$ = "CHECK FOR 60HZ INTERRUPT": GoSub AssemOut
-    A$ = "BPL": B$ = "Not60Hz": C$ = "RETURN IF 63.5 MICROSECOND INTERRUPT": GoSub AssemOut
-    A$ = "LDA": B$ = "$FF02": C$ = "RESET PIA0, PORT B INTERRUPT FLAG": GoSub AssemOut
-    A$ = "LDX": B$ = "SoundDuration": C$ = "Get the new Sound duration value": GoSub AssemOut
-    A$ = "BEQ": B$ = ">": C$ = "RETURN IF TIMER = 0": GoSub AssemOut
-    A$ = "LEAX": B$ = "-1,X": C$ = "DECREMENT TIMER IF NOT = 0": GoSub AssemOut
-    A$ = "STX": B$ = "SoundDuration": C$ = "Save the new Sound duration value": GoSub AssemOut
+    Z$ = "; Sound and Timer 60hz IRQ ": GoSub AO
+    Z$ = "BASIC_IRQ:": GoSub AO
+    A$ = "LDA": B$ = "$FF03": C$ = "CHECK FOR 60HZ INTERRUPT": GoSub AO
+    A$ = "BPL": B$ = "Not60Hz": C$ = "RETURN IF 63.5 MICROSECOND INTERRUPT": GoSub AO
+    A$ = "LDA": B$ = "$FF02": C$ = "RESET PIA0, PORT B INTERRUPT FLAG": GoSub AO
+    A$ = "LDX": B$ = "SoundDuration": C$ = "Get the new Sound duration value": GoSub AO
+    A$ = "BEQ": B$ = ">": C$ = "RETURN IF TIMER = 0": GoSub AO
+    A$ = "LEAX": B$ = "-1,X": C$ = "DECREMENT TIMER IF NOT = 0": GoSub AO
+    A$ = "STX": B$ = "SoundDuration": C$ = "Save the new Sound duration value": GoSub AO
     Z$ = "!"
-    A$ = "INC": B$ = "_Var_Timer+1": C$ = "Increment the LSB of the Timer Value": GoSub AssemOut
-    A$ = "BNE": B$ = "Not60Hz": C$ = "Skip ahead if not zero": GoSub AssemOut
-    A$ = "INC": B$ = "_Var_Timer": C$ = "Increment the MSB of the Timer Value": GoSub AssemOut
+    A$ = "INC": B$ = "_Var_Timer+1": C$ = "Increment the LSB of the Timer Value": GoSub AO
+    A$ = "BNE": B$ = "Not60Hz": C$ = "Skip ahead if not zero": GoSub AO
+    A$ = "INC": B$ = "_Var_Timer": C$ = "Increment the MSB of the Timer Value": GoSub AO
     Z$ = "Not60Hz"
-    A$ = "RTI": B$ = "": C$ = "RETURN FROM INTERRUPT": GoSub AssemOut
+    A$ = "RTI": B$ = "": C$ = "RETURN FROM INTERRUPT": GoSub AO
 Else
     ' DISK controller Interrupts
     '; NMI SERVICE
     Z$ = "DNMISV:"
-    A$ = "LDA": B$ = "NMIFLG": C$ = "GET NMI FLAG": GoSub AssemOut
-    A$ = "BEQ": B$ = "LD8AE": C$ = "RETURN IF NOT ACTIVE": GoSub AssemOut
-    A$ = "LDX": B$ = "DNMIVC": C$ = "GET NEW RETURN VECTOR": GoSub AssemOut
-    A$ = "STX": B$ = "10,S": C$ = "STORE AT STACKED PC SLOT ON STACK": GoSub AssemOut
-    A$ = "CLR": B$ = "NMIFLG": C$ = "RESET NMI FLAG": GoSub AssemOut
+    A$ = "LDA": B$ = "NMIFLG": C$ = "GET NMI FLAG": GoSub AO
+    A$ = "BEQ": B$ = "LD8AE": C$ = "RETURN IF NOT ACTIVE": GoSub AO
+    A$ = "LDX": B$ = "DNMIVC": C$ = "GET NEW RETURN VECTOR": GoSub AO
+    A$ = "STX": B$ = "10,S": C$ = "STORE AT STACKED PC SLOT ON STACK": GoSub AO
+    A$ = "CLR": B$ = "NMIFLG": C$ = "RESET NMI FLAG": GoSub AO
     Z$ = "LD8AE"
-    A$ = "RTI": B$ = "": C$ = "RETURN FROM INTERRUPT": GoSub AssemOut
+    A$ = "RTI": B$ = "": C$ = "RETURN FROM INTERRUPT": GoSub AO
     '; Disk IRQ SERVICE and Sound and Timer 60 Hz IRQ
     Z$ = "BASIC_IRQ:"
-    A$ = "LDA": B$ = "$FF03": C$ = "63.5 MICRO SECOND OR 60 HZ INTERRUPT?": GoSub AssemOut
-    A$ = "BPL": B$ = "LD8AE": C$ = "RETURN IF 63.5 MICROSECOND": GoSub AssemOut
-    A$ = "LDA": B$ = "$FF02": C$ = "RESET 60 HZ PIA INTERRUPT FLAG": GoSub AssemOut
-    A$ = "LDA": B$ = "RDYTMR": C$ = "GET TIMER": GoSub AssemOut
-    A$ = "BEQ": B$ = "LD8CD": C$ = "BRANCH IF NOT ACTIVE": GoSub AssemOut
-    A$ = "DECA": C$ = "DECREMENT THE TIMER": GoSub AssemOut
-    A$ = "STA": B$ = "RDYTMR": C$ = "SAVE IT": GoSub AssemOut
-    A$ = "BNE": B$ = "LD8CD": C$ = "BRANCH IF NOT TIME TO TURN OFF DISK MOTORS": GoSub AssemOut
-    A$ = "LDA": B$ = "DRGRAM": C$ = "GET DSKREG IMAGE": GoSub AssemOut
-    A$ = "ANDA": B$ = "#$B0": C$ = "TURN ALL MOTORS AND DRIVE SELECTS OFF": GoSub AssemOut
-    A$ = "STA": B$ = "DRGRAM": C$ = "PUT IT BACK IN RAM IMAGE": GoSub AssemOut
-    A$ = "STA": B$ = "DSKREG": C$ = "SEND TO CONTROL REGISTER (MOTORS OFF)": GoSub AssemOut
+    A$ = "LDA": B$ = "$FF03": C$ = "63.5 MICRO SECOND OR 60 HZ INTERRUPT?": GoSub AO
+    A$ = "BPL": B$ = "LD8AE": C$ = "RETURN IF 63.5 MICROSECOND": GoSub AO
+    A$ = "LDA": B$ = "$FF02": C$ = "RESET 60 HZ PIA INTERRUPT FLAG": GoSub AO
+    A$ = "LDA": B$ = "RDYTMR": C$ = "GET TIMER": GoSub AO
+    A$ = "BEQ": B$ = "LD8CD": C$ = "BRANCH IF NOT ACTIVE": GoSub AO
+    A$ = "DECA": C$ = "DECREMENT THE TIMER": GoSub AO
+    A$ = "STA": B$ = "RDYTMR": C$ = "SAVE IT": GoSub AO
+    A$ = "BNE": B$ = "LD8CD": C$ = "BRANCH IF NOT TIME TO TURN OFF DISK MOTORS": GoSub AO
+    A$ = "LDA": B$ = "DRGRAM": C$ = "GET DSKREG IMAGE": GoSub AO
+    A$ = "ANDA": B$ = "#$B0": C$ = "TURN ALL MOTORS AND DRIVE SELECTS OFF": GoSub AO
+    A$ = "STA": B$ = "DRGRAM": C$ = "PUT IT BACK IN RAM IMAGE": GoSub AO
+    A$ = "STA": B$ = "DSKREG": C$ = "SEND TO CONTROL REGISTER (MOTORS OFF)": GoSub AO
     Z$ = "LD8CD"
-    A$ = "LDX": B$ = "SoundDuration": C$ = "Get the new Sound duration value": GoSub AssemOut
-    A$ = "BEQ": B$ = ">": C$ = "RETURN IF TIMER = 0": GoSub AssemOut
-    A$ = "LEAX": B$ = "-1,X": C$ = "DECREMENT TIMER IF NOT = 0": GoSub AssemOut
-    A$ = "STX": B$ = "SoundDuration": C$ = "Save the new Sound duration value": GoSub AssemOut
+    A$ = "LDX": B$ = "SoundDuration": C$ = "Get the new Sound duration value": GoSub AO
+    A$ = "BEQ": B$ = ">": C$ = "RETURN IF TIMER = 0": GoSub AO
+    A$ = "LEAX": B$ = "-1,X": C$ = "DECREMENT TIMER IF NOT = 0": GoSub AO
+    A$ = "STX": B$ = "SoundDuration": C$ = "Save the new Sound duration value": GoSub AO
     Z$ = "!"
-    A$ = "INC": B$ = "_Var_Timer+1": C$ = "Increment the LSB of the Timer Value": GoSub AssemOut
-    A$ = "BNE": B$ = "Not60Hz": C$ = "Skip ahead if not zero": GoSub AssemOut
-    A$ = "INC": B$ = "_Var_Timer": C$ = "Increment the MSB of the Timer Value": GoSub AssemOut
+    A$ = "INC": B$ = "_Var_Timer+1": C$ = "Increment the LSB of the Timer Value": GoSub AO
+    A$ = "BNE": B$ = "Not60Hz": C$ = "Skip ahead if not zero": GoSub AO
+    A$ = "INC": B$ = "_Var_Timer": C$ = "Increment the MSB of the Timer Value": GoSub AO
     Z$ = "Not60Hz"
-    A$ = "RTI": B$ = "": C$ = "RETURN FROM INTERRUPT": GoSub AssemOut
+    A$ = "RTI": B$ = "": C$ = "RETURN FROM INTERRUPT": GoSub AO
 End If
 If PlayCommand = 1 Then
     ' Include special PLAY IRQ to jump to while playing notes
-    Z$ = "; Timer & Play 60hz IRQ ": GoSub AssemOut
-    Z$ = "PLAY_IRQ:": GoSub AssemOut
-    A$ = "LDA": B$ = "$FF03": C$ = "CHECK FOR 60HZ INTERRUPT": GoSub AssemOut
-    A$ = "BPL": B$ = "Not60HzPlay": C$ = "RETURN IF 63.5 MICROSECOND INTERRUPT": GoSub AssemOut
-    A$ = "LDA": B$ = "$FF02": C$ = "RESET PIA0, PORT B INTERRUPT FLAG": GoSub AssemOut
-    A$ = "INC": B$ = "_Var_Timer+1": C$ = "Increment the LSB of the Timer Value": GoSub AssemOut
-    A$ = "BNE": B$ = ">": C$ = "Skip ahead if not zero": GoSub AssemOut
-    A$ = "INC": B$ = "_Var_Timer": C$ = "Increment the MSB of the Timer Value": GoSub AssemOut
+    Z$ = "; Timer & Play 60hz IRQ ": GoSub AO
+    Z$ = "PLAY_IRQ:": GoSub AO
+    A$ = "LDA": B$ = "$FF03": C$ = "CHECK FOR 60HZ INTERRUPT": GoSub AO
+    A$ = "BPL": B$ = "Not60HzPlay": C$ = "RETURN IF 63.5 MICROSECOND INTERRUPT": GoSub AO
+    A$ = "LDA": B$ = "$FF02": C$ = "RESET PIA0, PORT B INTERRUPT FLAG": GoSub AO
+    A$ = "INC": B$ = "_Var_Timer+1": C$ = "Increment the LSB of the Timer Value": GoSub AO
+    A$ = "BNE": B$ = ">": C$ = "Skip ahead if not zero": GoSub AO
+    A$ = "INC": B$ = "_Var_Timer": C$ = "Increment the MSB of the Timer Value": GoSub AO
     Z$ = "!"
-    A$ = "LDD": B$ = "PLYTMR": C$ = "GET THE PLAY TIMER": GoSub AssemOut
-    A$ = "BEQ": B$ = ">": C$ = "Exit IRQ": GoSub AssemOut
-    A$ = "SUBD": B$ = "VD5": C$ = "SUBTRACT OUT PLAY INTERVAL": GoSub AssemOut
-    A$ = "STD": B$ = "PLYTMR": C$ = "SAVE THE NEW TIMER VALUE": GoSub AssemOut
-    A$ = "BHI": B$ = ">": C$ = "BRANCH IF PLAY COMMAND NOT DONE": GoSub AssemOut
-    A$ = "CLR": B$ = "PLYTMR": C$ = "RESET MSB OF PLAY TIMER IF DONE": GoSub AssemOut
-    A$ = "CLR": B$ = "PLYTMR+1": C$ = "RESET LSB OF PLAY TIMER": GoSub AssemOut
-    Z$ = "PlayIRQExit:": GoSub AssemOut
-    A$ = "PULS": B$ = "A": C$ = "GET THE CONDITION CODE REG": GoSub AssemOut
-    A$ = "LDS": B$ = "7,S": C$ = "LOAD THE STACK POINTER WITH THE CONTENTS OF THE U REGISTER": GoSub AssemOut
+    A$ = "LDD": B$ = "PLYTMR": C$ = "GET THE PLAY TIMER": GoSub AO
+    A$ = "BEQ": B$ = ">": C$ = "Exit IRQ": GoSub AO
+    A$ = "SUBD": B$ = "VD5": C$ = "SUBTRACT OUT PLAY INTERVAL": GoSub AO
+    A$ = "STD": B$ = "PLYTMR": C$ = "SAVE THE NEW TIMER VALUE": GoSub AO
+    A$ = "BHI": B$ = ">": C$ = "BRANCH IF PLAY COMMAND NOT DONE": GoSub AO
+    A$ = "CLR": B$ = "PLYTMR": C$ = "RESET MSB OF PLAY TIMER IF DONE": GoSub AO
+    A$ = "CLR": B$ = "PLYTMR+1": C$ = "RESET LSB OF PLAY TIMER": GoSub AO
+    Z$ = "PlayIRQExit:": GoSub AO
+    A$ = "PULS": B$ = "A": C$ = "GET THE CONDITION CODE REG": GoSub AO
+    A$ = "LDS": B$ = "7,S": C$ = "LOAD THE STACK POINTER WITH THE CONTENTS OF THE U REGISTER": GoSub AO
     Print #1, "; WHICH WAS STACKED WHEN THE INTERRUPT WAS HONORED."
-    A$ = "ANDA": B$ = "#$7F": C$ = "CLEAR E FLAG - MAKE COMPUTER THINK THIS WAS AN FIRQ": GoSub AssemOut
-    A$ = "PSHS": B$ = "A": C$ = "Save Condition Code": GoSub AssemOut
+    A$ = "ANDA": B$ = "#$7F": C$ = "CLEAR E FLAG - MAKE COMPUTER THINK THIS WAS AN FIRQ": GoSub AO
+    A$ = "PSHS": B$ = "A": C$ = "Save Condition Code": GoSub AO
     Print #1, "; THE RTI WILL NOW NOT RETURN TO WHERE IT WAS"
     Print #1, "; INTERRUPTED FROM - IT WILL RETURN TO THE MAIN PLAY"
     Print #1, "; COMMAND INTERPRETATION LOOP."
     Print #1, "!"
     Z$ = "Not60HzPlay"
-    A$ = "RTI": B$ = "": C$ = "RETURN FROM INTERRUPT": GoSub AssemOut
+    A$ = "RTI": B$ = "": C$ = "RETURN FROM INTERRUPT": GoSub AO
 End If
 
 Print #1, "* Main Program"
 Print #1, "START:"
-A$ = "PSHS": B$ = "CC,D,DP,X,Y,U": C$ = "Save the original BASIC Register values": GoSub AssemOut
-A$ = "STS": B$ = "RestoreStack+2": C$ = "save the original BASIC stack pointer value (try to Return at the end of the program) (self modify code)": GoSub AssemOut
-A$ = "LDS": B$ = "#$0400": C$ = "Set up the stack pointer": GoSub AssemOut
-A$ = "ORCC": B$ = "#$50": C$ = "Turn off the interrupts": GoSub AssemOut
-A$ = "LDA": B$ = "#$" + DirectPage$: GoSub AssemOut
-A$ = "TFR": B$ = "A,DP": C$ = "Setup the Direct page to use our variable location": GoSub AssemOut
+A$ = "PSHS": B$ = "CC,D,DP,X,Y,U": C$ = "Save the original BASIC Register values": GoSub AO
+A$ = "STS": B$ = "RestoreStack+2": C$ = "save the original BASIC stack pointer value (try to Return at the end of the program) (self modify code)": GoSub AO
+A$ = "LDS": B$ = "#$0400": C$ = "Set up the stack pointer": GoSub AO
+A$ = "ORCC": B$ = "#$50": C$ = "Turn off the interrupts": GoSub AO
+A$ = "LDA": B$ = "#$" + DirectPage$: GoSub AO
+A$ = "TFR": B$ = "A,DP": C$ = "Setup the Direct page to use our variable location": GoSub AO
 
-Z$ = "* Enable 6 Bit DAC output": GoSub AssemOut
-A$ = "LDA": B$ = "$FF23": C$ = "* PIA1_Byte_3_IRQ_Ct_Snd * $FF23 GET PIA": GoSub AssemOut
-A$ = "ORA": B$ = "#%00001000": C$ = "* SET 6-BIT SOUND ENABLE": GoSub AssemOut
-A$ = "STA": B$ = "$FF23": C$ = "* PIA1_Byte_3_IRQ_Ct_Snd * $FF23 STORE": GoSub AssemOut
+Z$ = "* Enable 6309 native mode if it's present": GoSub AO
+A$ = "CLRA": GoSub AO
+A$ = "TFR": B$ = "A,X": C$ = "6809 - X will now be $FF00, 6309 - X will equal $0000 (in native mode or not, doesn't matter)": GoSub AO
+A$ = "CMPX": B$ = "#$0000": GoSub AO
+A$ = "BNE": B$ = ">": C$ = "If <> 0 then skip forward it's a 6809": GoSub AO
+A$ = "FCB": B$ = "$11,$3D,%00000001": C$ = "otherwise, put 6309 in native mode": GoSub AO
+Z$ = "!": GoSub AO
+
+Z$ = "* Enable 6 Bit DAC output": GoSub AO
+A$ = "LDA": B$ = "$FF23": C$ = "* PIA1_Byte_3_IRQ_Ct_Snd * $FF23 GET PIA": GoSub AO
+A$ = "ORA": B$ = "#%00001000": C$ = "* SET 6-BIT SOUND ENABLE": GoSub AO
+A$ = "STA": B$ = "$FF23": C$ = "* PIA1_Byte_3_IRQ_Ct_Snd * $FF23 STORE": GoSub AO
 
 If LineCommand = 1 Then
-    A$ = "LDD": B$ = "#128": C$ = "Set D to the middle of the screen": GoSub AssemOut
-    A$ = "STD": B$ = "endX": C$ = "Save as previous end position": GoSub AssemOut
-    A$ = "LDD": B$ = "#96": C$ = "Set D to the middle of the screen": GoSub AssemOut
-    A$ = "STD": B$ = "endY": C$ = "Save as the previous end position": GoSub AssemOut
+    A$ = "LDD": B$ = "#128": C$ = "Set D to the middle of the screen": GoSub AO
+    A$ = "STD": B$ = "endX": C$ = "Save as previous end position": GoSub AO
+    A$ = "LDD": B$ = "#96": C$ = "Set D to the middle of the screen": GoSub AO
+    A$ = "STD": B$ = "endY": C$ = "Save as the previous end position": GoSub AO
 End If
 If PrintGraphicsText = 1 Then
     ' Found program uses PRINT #-3, to print to the graphics screen
-    A$ = "LDD": B$ = "#$0E00": C$ = "Set D to the top left of the screen": GoSub AssemOut
-    A$ = "STD": B$ = "GraphicCURPOS": C$ = "Set the graphics cursor to the top left corner": GoSub AssemOut
+    A$ = "LDD": B$ = "#$0E00": C$ = "Set D to the top left of the screen": GoSub AO
+    A$ = "STD": B$ = "GraphicCURPOS": C$ = "Set the graphics cursor to the top left corner": GoSub AO
 End If
 If PlayCommand = 1 Then
     ' Initialize the PLAY command variables
-    A$ = "LDD": B$ = "#$BA42": C$ = "MID HIGH VALUE + MID LOW VALUE": GoSub AssemOut
-    A$ = "STD": B$ = "VOLHI": C$ = "INITIALIZE PLAY VOLUME": GoSub AssemOut
-    A$ = "LDA": B$ = "#$02": GoSub AssemOut
-    A$ = "STA": B$ = "TEMPO": C$ = "INITIALIZE TEMPO TO 2": GoSub AssemOut
-    A$ = "STA": B$ = "OCTAVE": C$ = "INITIALIZE OCTAVE TO 3": GoSub AssemOut
-    A$ = "ASLA": C$ = "X2": GoSub AssemOut
-    A$ = "STA": B$ = "NOTELN": C$ = "INITIALIZE NOTE LENGTH TO 5": GoSub AssemOut
-    A$ = "CLR": B$ = "DOTVAL": C$ = "CLEAR NOTE TIMER SCALE FACTOR": GoSub AssemOut
+    A$ = "LDD": B$ = "#$BA42": C$ = "MID HIGH VALUE + MID LOW VALUE": GoSub AO
+    A$ = "STD": B$ = "VOLHI": C$ = "INITIALIZE PLAY VOLUME": GoSub AO
+    A$ = "LDA": B$ = "#$02": GoSub AO
+    A$ = "STA": B$ = "TEMPO": C$ = "INITIALIZE TEMPO TO 2": GoSub AO
+    A$ = "STA": B$ = "OCTAVE": C$ = "INITIALIZE OCTAVE TO 3": GoSub AO
+    A$ = "ASLA": C$ = "X2": GoSub AO
+    A$ = "STA": B$ = "NOTELN": C$ = "INITIALIZE NOTE LENGTH TO 5": GoSub AO
+    A$ = "CLR": B$ = "DOTVAL": C$ = "CLEAR NOTE TIMER SCALE FACTOR": GoSub AO
 End If
 
-A$ = "BRA": B$ = "SkipClear": C$ = "On startup skip ahead and do a BSR to this section to clear the variables, as CLEAR will use this code": GoSub AssemOut
+A$ = "BRA": B$ = "SkipClear": C$ = "On startup skip ahead and do a BSR to this section to clear the variables, as CLEAR will use this code": GoSub AO
 ' Clear variable RAM  (make this a routine as the CLEAR command will use it to erase all the variables
-Z$ = "ClearVariables:": GoSub AssemOut
-A$ = "LDX": B$ = "#StartClearHere": C$ = "Set the start address of the variables that will be cleared to zero when the program starts": GoSub AssemOut
-A$ = "CLRA": C$ = "Clear Accumulator A": GoSub AssemOut
+Z$ = "ClearVariables:": GoSub AO
+A$ = "LDX": B$ = "#StartClearHere": C$ = "Set the start address of the variables that will be cleared to zero when the program starts": GoSub AO
+A$ = "CLRA": C$ = "Clear Accumulator A": GoSub AO
 Z$ = "!"
-A$ = "STA": B$ = ",X+": C$ = "Clear the variable space, move pointer forward": GoSub AssemOut
-A$ = "CMPX": B$ = "#EndClearHere": C$ = "Compare the current address to the end of the variables that will be cleared to zero when the program starts": GoSub AssemOut
-A$ = "BNE": B$ = "<": C$ = "Loop until all cleared": GoSub AssemOut
+A$ = "STA": B$ = ",X+": C$ = "Clear the variable space, move pointer forward": GoSub AO
+A$ = "CMPX": B$ = "#EndClearHere": C$ = "Compare the current address to the end of the variables that will be cleared to zero when the program starts": GoSub AO
+A$ = "BNE": B$ = "<": C$ = "Loop until all cleared": GoSub AO
 
 ' Restore sizes of numeric arrays
 Lastnum$ = ""
 If NumArrayVarsUsedCounter > 0 Then
     Print #1, "; Restore sizes of numeric array Elements"
     For ii = 0 To NumArrayVarsUsedCounter - 1
-        A$ = "LDX": B$ = "#_ArrayNum_" + NumericArrayVariables$(ii): C$ = "Set the base pointer": GoSub AssemOut
+        A$ = "LDX": B$ = "#_ArrayNum_" + NumericArrayVariables$(ii): C$ = "Set the base pointer": GoSub AO
         Lastnum$ = ""
         For D1 = 0 To NumericArrayDimensions(ii) - 1
             Num = Val("&H" + Mid$(NumericArrayDimensionsVal$(ii), 1 + D1 * 4, 4)) + 1 '+1 because it's zero based
             GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
             If Num$ <> Lastnum$ Then
-                A$ = "LDA": B$ = "#" + Num$: C$ = "Element size set with the DIM command": GoSub AssemOut
+                A$ = "LDA": B$ = "#" + Num$: C$ = "Element size set with the DIM command": GoSub AO
                 Lastnum$ = Num$
             End If
-            A$ = "STA": B$ = ",X+": GoSub AssemOut
+            A$ = "STA": B$ = ",X+": GoSub AO
         Next D1
     Next ii
 End If
@@ -1280,30 +1312,30 @@ End If
 If StringArrayVarsUsedCounter > 0 Then
     Print #1, "; Restore sizes of string array Elements"
     For ii = 0 To StringArrayVarsUsedCounter - 1
-        A$ = "LDX": B$ = "#_ArrayStr_" + StringArrayVariables$(ii): C$ = "Set the base pointer": GoSub AssemOut
+        A$ = "LDX": B$ = "#_ArrayStr_" + StringArrayVariables$(ii): C$ = "Set the base pointer": GoSub AO
         For D1 = 0 To StringArrayDimensions(ii) - 1
             Num = Val("&H" + Mid$(StringArrayDimensionsVal$(ii), 1 + D1 * 4, 4)) + 1 '+1 because it's zero based
             GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
             If Num$ <> Lastnum$ Then
-                A$ = "LDA": B$ = "#" + Num$: C$ = "Element size set with the DIM command": GoSub AssemOut
+                A$ = "LDA": B$ = "#" + Num$: C$ = "Element size set with the DIM command": GoSub AO
                 Lastnum$ = Num$
             End If
-            A$ = "STA": B$ = ",X+": GoSub AssemOut
+            A$ = "STA": B$ = ",X+": GoSub AO
         Next D1
     Next ii
 End If
-A$ = "LDD": B$ = "#DataStart": C$ = "Get the Address where DATA starts": GoSub AssemOut
-A$ = "STD": B$ = "DATAPointer": C$ = "Save it in the DATAPointer variable": GoSub AssemOut
-A$ = "LDD": B$ = "#EveryCaseStack-2": C$ = "Table for nested CASE's, -2 because we add 2 everytime we come across a SELECT CASE/EVERYCASE": GoSub AssemOut
-A$ = "STD": B$ = "EveryCasePointer": C$ = "Set the CASEpointer for keeping track of nested SELECT CASE commands": GoSub AssemOut
-A$ = "RTS": C$ = "Return from clearing the variables": GoSub AssemOut
+A$ = "LDD": B$ = "#DataStart": C$ = "Get the Address where DATA starts": GoSub AO
+A$ = "STD": B$ = "DATAPointer": C$ = "Save it in the DATAPointer variable": GoSub AO
+A$ = "LDD": B$ = "#EveryCaseStack-2": C$ = "Table for nested CASE's, -2 because we add 2 everytime we come across a SELECT CASE/EVERYCASE": GoSub AO
+A$ = "STD": B$ = "EveryCasePointer": C$ = "Set the CASEpointer for keeping track of nested SELECT CASE commands": GoSub AO
+A$ = "RTS": C$ = "Return from clearing the variables": GoSub AO
 
-Z$ = "SkipClear:": GoSub AssemOut
-A$ = "BSR": B$ = "ClearVariables": C$ = "Go clear the all the variables": GoSub AssemOut
-A$ = "DEC": B$ = "CASFLG": C$ = "set the case flag to $FF = Normal uppercase": GoSub AssemOut
-A$ = "LDD": B$ = ">$0112": C$ = "Get the Extended BASIC's TIMER value": GoSub AssemOut
-A$ = "STD": B$ = "_Var_Timer": C$ = "Use Basic's Timer as a starting point for the TIMER value, just in case someone uses it for Randomness": GoSub AssemOut
-A$ = "STD": B$ = "Seed1": C$ = "Save TIMER value as the Random number seed value": GoSub AssemOut
+Z$ = "SkipClear:": GoSub AO
+A$ = "BSR": B$ = "ClearVariables": C$ = "Go clear the all the variables": GoSub AO
+A$ = "DEC": B$ = "CASFLG": C$ = "set the case flag to $FF = Normal uppercase": GoSub AO
+A$ = "LDD": B$ = ">$0112": C$ = "Get the Extended BASIC's TIMER value": GoSub AO
+A$ = "STD": B$ = "_Var_Timer": C$ = "Use Basic's Timer as a starting point for the TIMER value, just in case someone uses it for Randomness": GoSub AO
+A$ = "STD": B$ = "Seed1": C$ = "Save TIMER value as the Random number seed value": GoSub AO
 
 ' Address    Interrupt    CoCo 2 Vector    CoCo 3 Vector
 ' $FFF2      SWI3         $100             $FEEE
@@ -1315,49 +1347,50 @@ A$ = "STD": B$ = "Seed1": C$ = "Save TIMER value as the Random number seed value
 ' $FFFE      RESET        $A027            $8C1B
 
 ' Setup IRQ jump address
-A$ = "LDX": B$ = "$FFFE": C$ = "Get the RESET location": GoSub AssemOut
-A$ = "CMPX": B$ = "#$8C1B": C$ = "Check if it's a CoCo 3": GoSub AssemOut
-A$ = "BNE": B$ = "SaveCoCo1": C$ = "Setup IRQ, using CoCo 1 IRQ Jump location": GoSub AssemOut
-A$ = "LDX": B$ = "#$FEF7": C$ = "X = Address for the COCO 3 IRQ JMP": GoSub AssemOut
-A$ = "LDY": B$ = "#$FEFD": C$ = "Y = Address for the COCO 3 NMI JMP": GoSub AssemOut
-A$ = "BRA": B$ = ">": C$ = "Skip ahead": GoSub AssemOut
-Z$ = "SaveCoCo1": GoSub AssemOut
-A$ = "LDX": B$ = "#$010C": C$ = "X = Address for the COCO 1 IRQ JMP": GoSub AssemOut
-A$ = "LDY": B$ = "#$0109": C$ = "Y = Address for the COCO 1 NMI JMP": GoSub AssemOut
+A$ = "LDX": B$ = "$FFFE": C$ = "Get the RESET location": GoSub AO
+A$ = "CMPX": B$ = "#$8C1B": C$ = "Check if it's a CoCo 3": GoSub AO
+A$ = "BNE": B$ = "SaveCoCo1": C$ = "Setup IRQ, using CoCo 1 IRQ Jump location": GoSub AO
+A$ = "STA": B$ = "$FFD9": C$ = "Put the CoCo 3 in double speed mode": GoSub AO
+A$ = "LDX": B$ = "#$FEF7": C$ = "X = Address for the COCO 3 IRQ JMP": GoSub AO
+A$ = "LDY": B$ = "#$FEFD": C$ = "Y = Address for the COCO 3 NMI JMP": GoSub AO
+A$ = "BRA": B$ = ">": C$ = "Skip ahead": GoSub AO
+Z$ = "SaveCoCo1": GoSub AO
+A$ = "LDX": B$ = "#$010C": C$ = "X = Address for the COCO 1 IRQ JMP": GoSub AO
+A$ = "LDY": B$ = "#$0109": C$ = "Y = Address for the COCO 1 NMI JMP": GoSub AO
 Z$ = "!"
 If PlayCommand = 1 Then
-    A$ = "STX": B$ = "IRQAddress": C$ = "Save the IRQ address for the PLAY command to change/restore": GoSub AssemOut
-    A$ = "INC": B$ = "IRQAddress+1": C$ = "Increment the IRQAddress so it points at the actual JMP location": GoSub AssemOut
+    A$ = "STX": B$ = "IRQAddress": C$ = "Save the IRQ address for the PLAY command to change/restore": GoSub AO
+    A$ = "INC": B$ = "IRQAddress+1": C$ = "Increment the IRQAddress so it points at the actual JMP location": GoSub AO
 End If
 ' Save the original IRQ jump address so we can restore it once done
-A$ = "LDU": B$ = "#OriginalIRQ": C$ = "U=Address of the IRQ": GoSub AssemOut
-A$ = "LDA": B$ = ",X": C$ = "A = Branch Instruction": GoSub AssemOut
-A$ = "STA": B$ = ",U": C$ = "Save Branch Instruction": GoSub AssemOut
-A$ = "LDD": B$ = "1,X": C$ = "D = Address": GoSub AssemOut
-A$ = "STD": B$ = "1,U": C$ = "Backup the Address of the IRQ": GoSub AssemOut
+A$ = "LDU": B$ = "#OriginalIRQ": C$ = "U=Address of the IRQ": GoSub AO
+A$ = "LDA": B$ = ",X": C$ = "A = Branch Instruction": GoSub AO
+A$ = "STA": B$ = ",U": C$ = "Save Branch Instruction": GoSub AO
+A$ = "LDD": B$ = "1,X": C$ = "D = Address": GoSub AO
+A$ = "STD": B$ = "1,U": C$ = "Backup the Address of the IRQ": GoSub AO
 ' Use our IRQ address
-A$ = "LDA": B$ = "#$7E": C$ = "JMP instruction": GoSub AssemOut
-A$ = "STA": B$ = ",X": C$ = "A = JMP Instruction": GoSub AssemOut
-A$ = "LDU": B$ = "#BASIC_IRQ": C$ = "D=Address of the our IRQ": GoSub AssemOut
-A$ = "STU": B$ = "1,X": C$ = "D=Address of the IRQ": GoSub AssemOut
+A$ = "LDA": B$ = "#$7E": C$ = "JMP instruction": GoSub AO
+A$ = "STA": B$ = ",X": C$ = "A = JMP Instruction": GoSub AO
+A$ = "LDU": B$ = "#BASIC_IRQ": C$ = "U=Address of the our IRQ": GoSub AO
+A$ = "STU": B$ = "1,X": C$ = "U=Address of the IRQ": GoSub AO
 If Disk = 1 Then
     ' Add our NMI
-    A$ = "STA": B$ = ",Y": C$ = "A = JMP Instruction": GoSub AssemOut
-    A$ = "LDU": B$ = "#DNMISV": C$ = "D=Address of the our NMIRQ": GoSub AssemOut
-    A$ = "STU": B$ = "1,Y": C$ = "D=Address of the IRQ": GoSub AssemOut
+    A$ = "STA": B$ = ",Y": C$ = "A = JMP Instruction": GoSub AO
+    A$ = "LDU": B$ = "#DNMISV": C$ = "D=Address of the our NMIRQ": GoSub AO
+    A$ = "STU": B$ = "1,Y": C$ = "D=Address of the IRQ": GoSub AO
 End If
 ' Make FIRQ an RTI
-A$ = "LDA": B$ = "#$3B": C$ = "RTI instruction": GoSub AssemOut
-A$ = "STA": B$ = "$010F": C$ = "Save instruction for the CoCo1": GoSub AssemOut
-A$ = "STA": B$ = "$FEF4": C$ = "Save instruction for the CoCo3": GoSub AssemOut
-If SDCPLAY = 1 Then ' If we are doing any SDC streaming check the version as it must byt V127 or higher
-    A$ = "JSR": B$ = "CheckSDCFirmwareVersion": C$ = "Check the version of the SDC controller must be > v126": GoSub AssemOut
+A$ = "LDA": B$ = "#$3B": C$ = "RTI instruction": GoSub AO
+A$ = "STA": B$ = "$010F": C$ = "Save instruction for the CoCo1": GoSub AO
+A$ = "STA": B$ = "$FEF4": C$ = "Save instruction for the CoCo3": GoSub AO
+If SDCPLAY = 1 Or SDCVersionCheck = 1 Then ' If we are doing any SDC streaming check the version as it must byt V127 or higher
+    A$ = "JSR": B$ = "CheckSDCFirmwareVersion": C$ = "Check the version of the SDC controller must be > v126": GoSub AO
 End If
 ' Start the IRQ
-Z$ = "* This is where we enable the IRQ": GoSub AssemOut
-A$ = "ANDCC": B$ = "#%11101111": C$ = "= %11101111 this will Enable the IRQ to start": GoSub AssemOut
+Z$ = "* This is where we enable the IRQ": GoSub AO
+A$ = "ANDCC": B$ = "#%11101111": C$ = "= %11101111 this will Enable the IRQ to start": GoSub AO
 
-Z$ = "; *** User's Program code starts here ***": GoSub AssemOut
+Z$ = "; *** User's Program code starts here ***": GoSub AO
 System 1 ' End with flag of 1 = All went OK
 
 ' Tokens for variables type:
@@ -1488,6 +1521,20 @@ While I <= Len(Expression$)
             If Temp$ = "PRESET" Then
                 ' Found 6 letter general command which may or may not have a space before the open bracket
                 If Mid$(BaseString$, 7, 1) = "(" Then
+                    'This general command does have an open bracket
+                    RightSpace = 1
+                End If
+            End If
+            If Temp$ = "SDC_CLOSE" Then
+                ' found a 8 character general command
+                If Mid$(BaseString$, 10, 1) = "(" Then
+                    'This general command does have an open bracket
+                    RightSpace = 1
+                End If
+            End If
+            If Temp$ = "SDC_SETPOS" Then
+                ' found a 9 character general command
+                If Mid$(BaseString$, 11, 1) = "(" Then
                     'This general command does have an open bracket
                     RightSpace = 1
                 End If
@@ -1627,16 +1674,30 @@ While I <= Len(Expression$)
         BaseString$ = UCase$(Right$(Expression$, Len(Expression$) - I + 1))
         If InStr(BaseString$, Temp$) = 1 Then
             'Found an Operator Command
-            If Temp$ = "NOT" Then
-                If InStr(UCase$(Expression$), "IF") > 0 Then
-                    ' Found NOT and IF so flag as NOT is a real operator
+            If c > &H29 Then
+                Tokenized$ = Tokenized$ + Chr$(&HFC) + Chr$(c) 'Token &HFC is for Operator Commands
+                I = I + Len(Temp$) ' move pointer forward
+                GoTo TokenAdded0
+            Else
+                If I > 1 Then
+                    ' Check for a stuff before the start of this command
+                    If Mid$(Expression$, I - 1, 1) = " " Then LeftSpace = 1 Else LeftSpace = 0
+                Else
                     LeftSpace = 1
+                End If
+                ' It could be a General command, check for a space after the found command
+                If I + Len(Temp$) < Len(Expression$) Then
+                    ' check if we have a space after the found command
+                    If Mid$(Expression$, I + Len(Temp$), 1) = " " Then RightSpace = 1 Else RightSpace = 0
+                Else
                     RightSpace = 1
                 End If
+                If LeftSpace = 1 And RightSpace = 1 Then
+                    Tokenized$ = Tokenized$ + Chr$(&HFC) + Chr$(c) 'Token &HFC is for Operator Commands
+                    I = I + Len(Temp$) ' move pointer forward
+                    GoTo TokenAdded0
+                End If
             End If
-            Tokenized$ = Tokenized$ + Chr$(&HFC) + Chr$(c) 'Token &HFC is for Operator Commands
-            I = I + Len(Temp$) ' move pointer forward
-            GoTo TokenAdded0
         End If
     Next c
     AddTokenAsIs0:
@@ -1710,8 +1771,6 @@ While I <= Len(Expression$)
             End If
             T1 = T1 + 1
         Wend
-
-
 
         If T1 < Len(Temp$) Then Temp1$ = Temp1$ + Right$(Temp$, Len(Temp$) - T1 + 1)
         ReplaceCount = Replace(Temp1$, "DRAW " + Chr$(&H22) + ";", "DRAW " + Chr$(&H22)) '  Replace(text$, old$, new$)  ' Change DRAW "; to DRAW "
@@ -2238,7 +2297,8 @@ While I <= Len(Expression$)
         If v = &H29 Then Tokenized$ = Tokenized$ + Chr$(&HF5) + Chr$(v): GoTo GetNextToken2 ' Found close bracket
         If v = &H2C Then Tokenized$ = Tokenized$ + Chr$(&HF5) + Chr$(v): GoTo GetNextToken2 ' Found comma
         If v = &H3B Then Tokenized$ = Tokenized$ + Chr$(&HF5) + Chr$(v): GoTo GetNextToken2 ' Found semi colon
-        Tokenized$ = Tokenized$ + Chr$(v): GoTo GetNextToken2 ' copy other values
+        Tokenized$ = Tokenized$ + Chr$(v)
+        GoTo GetNextToken2 ' copy other values
     End If
     'We have a Token
     Tokenized$ = Tokenized$ + Chr$(v) 'copy the token
@@ -2952,7 +3012,7 @@ v = Array(x): x = x + 1
 Return
 
 ' Send assembly instructions out to .asm file
-AssemOut:
+AO:
 'Print z$ at the beginning of the line
 If Len(Z$) < 8 Then
     Print #1, Left$(Z$ + "        ", 8); Left$(A$ + "        ", 8);

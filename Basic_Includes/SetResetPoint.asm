@@ -13,12 +13,12 @@ GRBLOK       RMB    1              ; Graphics Block value
 GetSRPLocation:
             LDU    ,S++           Get the return address off the stack
             PSHS   B              SAVE VERT COORD
-            LSLB					; DOUBLE Y COORD
-	        LDX    #YTABLE			; POINT TO (1024 + INT(Y/2)*32) TABLE
-            LDX    B,X 			; X = 1024 + INT(Y/2)*32
-			LDB    1,S 			; X COORD
-            LSRB 					; INT(X/2)
-			ABX 					; X = 1024 + INT(Y/2)*32 + INT(X/2)             
+            LSLB				  DOUBLE Y COORD
+	        LDX    #YTABLE		  POINT TO (1024 + INT(Y/2)*32) TABLE
+            LDX    B,X 			  X = 1024 + INT(Y/2)*32
+			LDB    1,S 			  X COORD
+            LSRB 				  INT(X/2)
+			ABX 				  X = 1024 + INT(Y/2)*32 + INT(X/2)             
             PULS   A,B            GET VER COORD TO ACCA, HOR COORD TO ACCB
             ANDA   #1             KEEP ONLY LSB OF VER COORD
             RORB                  LSB OF HOR COORD TO CARRY FLAG
@@ -29,6 +29,7 @@ GetSRPLocation:
             BPL    <              NO
             STB    GRBLOK         ACCB=8 FOR UPPER LEFT PIXEL, =4 FOR UPPER RIGHT PIXEL =2 FOR LOWER LEFT, =1 FOR LOWER RIGHT
             JMP    ,U             Return
+            RTS
 ;GRBLOK      RMB    1			 
 YTABLE		FDB	   $0400,$0400,$0420,$0420,$0440,$0440,$0460,$0460,$0480,$0480,$04A0,$04A0,$04C0,$04C0,$04E0,$04E0
 			FDB    $0500,$0500,$0520,$0520,$0540,$0540,$0560,$0560,$0580,$0580,$05A0,$05A0,$05C0,$05C0,$05E0,$05E0

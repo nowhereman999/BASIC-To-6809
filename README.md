@@ -4,6 +4,13 @@ A BASIC compiler for the TRS80 Color Computer
 For more info check out the blog post here:
 https://wordpress.com/post/nowhereman999.wordpress.com/5054
 
+V 3.00
+- Added SDC file support, you can now read and write files on the SDC filesystem directly
+- If a 6309 is present it puts it in native mode (should speed up code about 15%)
+- Added compiler option -a which makes your program audostart
+- Fixed a bug where if a variable name had AND,OR,MOD,XOR,NOT or DIVR in the name it would create variable names and operatorsout of it
+- Fixed a bug with IF command with mulitple numeric commands that were'nt evavluating properly 
+
 V 2.22
 - Fixed a bug with a comment at the end of a DATA statement, it was sometimes not being ignored
 
