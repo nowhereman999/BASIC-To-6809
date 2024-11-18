@@ -3,7 +3,10 @@
 'Print "hex$(Array(x+2) "; Hex$(Array(x + 2))
 'System
 
-V$ = "3.00"
+V$ = "3.01"
+'       - Fixed a small bug with ? of double quotes ""
+'
+' V3.00
 '       - Added SDC file support, you can now read and write files on the SDC filesystem directly
 '       - If a 6309 is present it puts it in native mode (should speed up code about 15%)
 '       - Added compiler option -a which makes your program autostart

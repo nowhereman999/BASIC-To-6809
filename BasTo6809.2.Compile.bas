@@ -2651,7 +2651,7 @@ If v = &HF5 Then GoTo PrintQGotCount ' end quote
 GoTo PrintQGetCount
 PrintQGotCount:
 c = x - Y - 1
-If c = 0 Then GoTo PrintQDone 'an empty string
+If c = 0 Then x = x + 1: GoTo PrintQDone 'an empty string, skip the &H22 and "move along, nothing to see here"
 ' string has a value
 x = Y
 If c > 5 Then
