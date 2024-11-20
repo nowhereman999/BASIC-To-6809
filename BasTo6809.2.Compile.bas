@@ -3098,7 +3098,7 @@ If count = 0 Then
         A$ = "BRA": B$ = ShowInputText$: C$ = "Show input text, if there was some and get the input again": GoSub AO
         Z$ = "!"
         C$ = "D now has the converted number :)": GoSub AO
-        Print #1, ""
+        Print #1, ' Leave a blank so @ labels work properly
         If v = &HF2 Then
             ' We are inputting a numeric value
             v = Array(x) * 256 + Array(x + 1): x = x + 2
@@ -3157,6 +3157,7 @@ Do Until v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A)
         ' Get our numeric variable location
         ' Convert buffer to a number
         ' Check if input number has too many digits
+        Print #1, ' Leave a blank so @ labels work properly
         A$ = "LDX": B$ = "#DecNumber": C$ = "X points at the start of the table of data to grab each time": GoSub AO
         A$ = "CLRB": GoSub AO
         Z$ = "!"
@@ -3175,7 +3176,7 @@ Do Until v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A)
         A$ = "BRA": B$ = ShowInputText$: C$ = "Show input text, if there was some and get the input again": GoSub AO
         Z$ = "!"
         C$ = "D now has the converted number :)": GoSub AO
-        Print #1, ""
+        Print #1, ' Leave a blank so @ labels work properly
         If v = &HF2 Then
             ' We are inputting a numeric value
             v = Array(x) * 256 + Array(x + 1): x = x + 2
@@ -6677,8 +6678,8 @@ While index(ExpressionCount) < Len(Expression$(ExpressionCount)) And Asc(Mid$(Ex
     GoSub ParseExpression02 ' Result in Parse00_Term
     num = NumParseCount - 1: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
     If num < 10 Then Num$ = "0" + Num$
-    A$ = "LDD": B$ = "_Var_PF" + Num$: GoSub AO
-    A$ = "PSHS": B$ = "D": C$ = "Save D on the Stack = The left value": GoSub AO ' Save the FIrst value
+    A$ = "LDX": B$ = "_Var_PF" + Num$: GoSub AO ' Changed to use X instead of D as the optimizer was killing it
+    A$ = "PSHS": B$ = "X": C$ = "Save X on the Stack = The left value": GoSub AO ' Save the FIrst value    ' Changed to use X instead of D as the optimizer was killing it
     num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
     If num < 10 Then Num$ = "0" + Num$
     A$ = "LDD": B$ = "_Var_PF" + Num$: GoSub AO ' D = Parse10_Term
@@ -6703,9 +6704,9 @@ While index(ExpressionCount) < Len(Expression$(ExpressionCount)) And Asc(Mid$(Ex
     'Do AND
     GoSub ParseExpression03 ' Result in Parse00_Term
     num = NumParseCount - 1: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-    If num < 10 Then Num$ = "0" + Num$
-    A$ = "LDD": B$ = "_Var_PF" + Num$: GoSub AO
-    A$ = "PSHS": B$ = "D": C$ = "Save D on the Stack = The left value": GoSub AO ' Save the FIrst value
+    If num < 10 Then Num$ = "0" + Num$ ' Changed to use X instead of D as the optimizer was killing it
+    A$ = "LDX": B$ = "_Var_PF" + Num$: GoSub AO ' Changed to use X instead of D as the optimizer was killing it
+    A$ = "PSHS": B$ = "X": C$ = "Save X on the Stack = The left value": GoSub AO ' Save the FIrst value    ' Changed to use X instead of D as the optimizer was killing it
     num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
     If num < 10 Then Num$ = "0" + Num$
     A$ = "LDD": B$ = "_Var_PF" + Num$: GoSub AO ' D = Parse10_Term
@@ -6856,8 +6857,8 @@ While index(ExpressionCount) < Len(Expression$(ExpressionCount)) And Asc(Mid$(Ex
     GoSub ParseExpression10 ' Result in Parse00_Term
     num = NumParseCount - 1: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
     If num < 10 Then Num$ = "0" + Num$
-    A$ = "LDD": B$ = "_Var_PF" + Num$: GoSub AO
-    A$ = "PSHS": B$ = "D": C$ = "Save D on the Stack = The Numerator": GoSub AO ' Save the Numerator
+    A$ = "LDX": B$ = "_Var_PF" + Num$: GoSub AO ' Changed to use X instead of D as the optimizer was killing it
+    A$ = "PSHS": B$ = "X": C$ = "Save X on the Stack = The left value": GoSub AO ' Save the FIrst value    ' Changed to use X instead of D as the optimizer was killing it
     num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
     If num < 10 Then Num$ = "0" + Num$
     A$ = "LDD": B$ = "_Var_PF" + Num$: GoSub AO ' D = Parse10_Term
@@ -7039,8 +7040,8 @@ While index(ExpressionCount) < Len(Expression$(ExpressionCount)) And Asc(Mid$(Ex
     GoSub ParseExpression28 ' Result in Parse00_Term
     num = NumParseCount - 1: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
     If num < 10 Then Num$ = "0" + Num$
-    A$ = "LDD": B$ = "_Var_PF" + Num$: GoSub AO
-    A$ = "PSHS": B$ = "D": C$ = "Save D on the Stack = The left value": GoSub AO ' Save the FIrst value
+    A$ = "LDX": B$ = "_Var_PF" + Num$: GoSub AO ' Changed to use X instead of D as the optimizer was killing it
+    A$ = "PSHS": B$ = "X": C$ = "Save X on the Stack = The left value": GoSub AO ' Save the FIrst value    ' Changed to use X instead of D as the optimizer was killing it
     num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
     If num < 10 Then Num$ = "0" + Num$
     A$ = "LDD": B$ = "_Var_PF" + Num$: GoSub AO ' D = Parse10_Term

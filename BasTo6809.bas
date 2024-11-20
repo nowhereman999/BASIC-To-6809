@@ -3,7 +3,11 @@
 'Print "hex$(Array(x+2) "; Hex$(Array(x + 2))
 'System
 
-V$ = "V3.02"
+V$ = "V3.03"
+'       - Tweaked the AND, OR, XOR commands as the optimizer was not handling them properly
+'
+' V3.02
+'       - Fixed a bug with optimiing when it is doing exponents
 '       - Fixed a bug with optimiing when it is doing exponents
 '
 ' V3.01
