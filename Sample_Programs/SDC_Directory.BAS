@@ -1,15 +1,33 @@
-10 CLS :PRINT "WELCOME TO THE COCO COMPILER    TEST PROGRAM. IF YOU ARE READINGTHIS THAN YOU HAVE SUCCESSFULLY COMPILED THE TEST PROGRAM."
-20 PRINT :INPUT "PRESS ENTER TO SEE THE PMODE 4  SCREEN FILL WITH DOTS" ; A$
-30 PMODE 4 , 1:PCLS :SCREEN 1 , 1
-40 FOR X = 1 TO 20000
-50 PSET( RND(255) , RND(191))
-60 NEXT X
-70 SOUND 100 , 20
-80 SCREEN 0 , 0
-90 CLS
-100 PRINT :PRINT " ALL GOOD, NOW COMPILE YOUR OWN   BASIC PROGRAMS AND HAVE FUN"
-110 PRINT :PRINT :PRINT "        COCO FOREVER!!!"
-120 FOR X = 1 TO 200 STEP 10
-130 SOUND X , 3
-140 NEXT X
 
+cls:?"SDC ACCESS"
+CD$="*.*" ' Start at the top folder on the SDC
+'CD$="TEST1/*.*" ' Start at the folder TEST on the SDC
+?"PATH:";CD$
+' Set the initial directory location
+x=SDC_INITDIR(CD$):GOSUB CheckForError
+?"GETTING DIR"
+SDC_DIRPAGE A$,B$,x:GOSUB CheckForError ' Get the directory listing & check for any errors
+X$=A$:GOSUB ShowDirX
+X$=B$:GOSUB ShowDirX
+
+SDC_DIRPAGE A$,B$,x:GOSUB CheckForError ' Get the directory listing & check for any errors
+X$=A$:GOSUB ShowDirX
+X$=B$:GOSUB ShowDirX
+END
+
+ShowDirX:
+P=1
+WHILE asc(MID$(X$,P,1))<>0 and P<129
+    FOR x=0 to 7:?MID$(X$,P+x,1);:NEXT x
+    ?".";
+    FOR x=8 to 10:?MID$(X$,P+x,1);:NEXT x
+    ?
+    P=P+16
+WEND
+RETURN
+
+CheckForError:
+if x<>0 then ?"ERROR NUMBER IS:";x:END
+RETURN
+' ADDASSEM:
+' ENDASSEM:
