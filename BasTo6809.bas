@@ -3,7 +3,12 @@
 'Print "hex$(Array(x+2) "; Hex$(Array(x + 2))
 'System
 
-V$ = "V3.03"
+V$ = "4.00"
+' Added New command GMODE which allows you to easily select every graphic mode the CoCo 1,2 or 3 can produce
+' Added New commands GCOPY which allows you to copy graphic pages to other graphic pages
+' Tweaked LINE, CIRCLE & PAINT commands to use all the available graphic modes and colours of the CoCo 1,2 or 3
+'
+' V3.03
 '       - Tweaked the AND, OR, XOR commands as the optimizer was not handling them properly
 '
 ' V3.02
@@ -93,7 +98,7 @@ $Console
 _Dest _Console
 
 ' Address in RAM where the compiled program starts
-ProgramStart$ = "2600" ' $2600, PMODE 4 graphics screen will be from $E00 to $25FF
+ProgramStart$ = "E00" ' $2600, PMODE 4 graphics screen will be from $E00 to $25FF
 
 'Dim CommandsUsed$(2000)
 ' Initialize variables for processing

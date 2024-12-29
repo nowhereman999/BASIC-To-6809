@@ -4,6 +4,11 @@ A BASIC compiler for the TRS80 Color Computer
 For more info check out the blog post here:
 https://wordpress.com/post/nowhereman999.wordpress.com/5054
 
+V 4.00
+- Added New command GMODE which allows you to easily select every graphic mode the CoCo 1,2 or 3 can produce
+- Added New command GCOPY which allows you to copy graphic pages to other graphic pages
+- Tweaked LINE, CIRCLE & PAINT commands to use all the available graphic modes and colours of the CoCo 1,2 or 3
+
 V 3.03
 - Tweaked the AND, OR, XOR commands as the optimizer was not handling them properly
 
