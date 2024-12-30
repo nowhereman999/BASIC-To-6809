@@ -28,7 +28,7 @@ Full_graphic_3_C        EQU     %11000100 ;  Full graphic 3-C      1   1   0   0
 Full_graphic_3_R        EQU     %11010101 ;  Full graphic 3-R      1   1   0   1   1 0 1   128x192x2 $C00(3072)
 Full_graphic_6_C        EQU     %11100110 ;  Full graphic 6-C      1   1   1   0   1 1 0   128x192x4 $1800(6144)
 Full_graphic_6_R        EQU     %11110110 ;  Full graphic 6-R      1   1   1   1   1 1 0   256x192x2 $1800(6144)
-DMAccess_grpahics       EQU     %00000111 ;  Direct memory access  X   X   X   X   1 1 1
+DMAccess_graphics       EQU     %00000111 ;  Direct memory access  X   X   X   X   1 1 1
 ;
 *****************************************************
 * A/G, GNM2, GM1, GM0, are set in $FF22 as:
