@@ -68,6 +68,9 @@ Dim expo As Integer, sign As _Byte, mant As Long
 Dim FPbyte(5) As _Byte
 
 ' For Graphics Modes
+Gmode = 0 ' Set the Gmode # as we need this in order to use all the correct graphics routines for this mode
+GmodePage = 1 ' set the page to 1
+
 Dim GMode$(200), GModeName$(200), GModeMaxX$(200), GModeMaxY$(200), GModeStartAddress$(200), GModeScreenSize$(200), GModeColours$(200)
 GMode$(0) = "Internal_Alphanumeric" ' Internal alphanumeric 0   X   X   0   0 0 0    32x 16   (5x7 pixel ch)
 GMode$(1) = "External_Alphanumeric" ' External alphanumeric 0   X   X   1   0 0 0    32x 16   (8x12 pixel ch)
