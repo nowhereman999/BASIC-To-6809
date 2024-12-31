@@ -5642,6 +5642,10 @@ A$ = "ABX": C$ = "X now points at the correct palette to set the colour value": 
 'Get colour value in D (we only use B)
 GoSub GetExpressionB4EOL 'Handle an expression that ends with a colon or End of a Line
 ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
+' Wait for vsync
+A$ = "LDA": B$ = "$FF02": C$ = "Reset Vsync flag": GoSub AO
+Z$ = "!": A$ = "LDA": B$ = "$FF03": C$ = "See if Vsync has occurred yet": GoSub AO
+A$ = "BPL": B$ = "<": C$ = "If not then keep looping, until the Vsync occurs": GoSub AO
 A$ = "STB": B$ = ",X": C$ = "Store B at X": GoSub AO
 Return
 
@@ -5757,20 +5761,18 @@ x = x + 1 ' Skip the &HF5
 v = Array(x): x = x + 1 ' Get the next byte in v
 If v = &H0D Or v = &H3A Then
     ' No Comma, then use the Start Address for the first page
-    GmodePage = 1 ' set the page to 1
+    A$ = "CLR": B$ = "GModePage": C$ = "Set page # to zero": GoSub AO
     GoTo GModeSkipScreen
 End If
 If v <> &H2C Then Print "Should have a Comma in the GMODE command on";: GoTo FoundError
 GModePage:
 ' Get the numeric value before an EOL or Colon
-v = Array(x): x = x + 1: v$ = Chr$(v)
-While Array(x) <> &HF5
-    v = Array(x): x = x + 1: v$ = v$ + Chr$(v)
-Wend
-'x=x+1' Skip the Colon or EOL
-GmodePage = Val(v$)
+'Get Page value in D (we only use B)
+GoSub GetExpressionB4EOL 'Handle an expression that ends with a colon or End of a Line
+ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
+A$ = "DECB": C$ = "Page values are zero based": GoSub AO
+A$ = "STB": B$ = "GModePage": C$ = "Save the screen Page #": GoSub AO
 GModeSkipScreen:
-If GmodePage = 0 Then GmodePage = 1
 If Gmode > 99 Then
     ' We are using a CoCo 3 graphics mode
     A$ = "LDD": B$ = "#$" + GModeStartAddress$(Gmode): C$ = "A = the location in RAM to start the graphics screen": GoSub AO
@@ -5779,36 +5781,51 @@ If Gmode > 99 Then
     A$ = "STA": B$ = "$FF99": C$ = "Vid_Res_Reg": GoSub AO
     A$ = "LDA": B$ = "#%10000000": GoSub AO
     A$ = "STA": B$ = "$FF98": C$ = "Video_Mode_Register, Graphics mode, Colour output, 60 hz, max vertical res": GoSub AO
+
     v1 = Val("&H" + GModeScreenSize$(Gmode))
     TempVal = 0
     While (TempVal < v1): TempVal = TempVal + &H2000: Wend ' Get the number of bytes needed per screen at this resolution
     TempVal = TempVal / &H2000 ' Get the block numbers required
-    TempVal = TempVal * (GmodePage - 1)
-    A$ = "LDA": B$ = "#$" + Right$("00" + Hex$(TempVal), 2): C$ = "Set the screen block location": GoSub AO
-    A$ = "STA": B$ = "CC3ScreenStart": C$ = "Save the screen block location": GoSub AO
-    ' Pointer value in RAM is Block Numer * $2000 / 8 or Block Number * $400 in our 512k of RAM
-    TempVal = TempVal * &H400
-    A$ = "LDD": B$ = "#$" + Right$("0000" + Hex$(TempVal), 4): C$ = "Set the screen start location": GoSub AO
+    A$ = "LDA": B$ = "#$" + Right$("00" + Hex$(TempVal), 2): C$ = "A = # of $2000 blocks required per screen": GoSub AO
+    A$ = "LDB": B$ = "GModePage": C$ = "Get the screen Page #": GoSub AO
+    A$ = "MUL": C$ = "B = Blocks required per screen * the Screen requested": GoSub AO
+    A$ = "STB": B$ = "CC3ScreenStart": C$ = "Save the screen block location": GoSub AO
+    ' Pointer value in RAM is Block Number * $2000 / 8 or Block Number * $400 in our 512k of RAM
+    A$ = "TFR": B$ = "B,A": C$ = "A = $2000 screen block location": GoSub AO
+    A$ = "CLRB": C$ = "Clear B": GoSub AO
+    A$ = "LSLA": C$ = "A=A*2": GoSub AO
+    A$ = "LSLA": C$ = "A=A*4, D=B * $400 = the screen start location": GoSub AO
     A$ = "STD": B$ = "$FF9D": C$ = "VidStart": GoSub AO
     A$ = "CLR": B$ = "$FF9F": C$ = "Hor_Offset_Reg, Don't use a Horizontal offset": GoSub AO
 Else
+    ' We are using a CoCo 1 or CoCo 2 graphics mode
     GScreenStart = Val("&H" + GModeStartAddress$(Gmode)) ' Get screen start location
-    v1 = Val("&H" + GModeScreenSize$(Gmode))
+    v1 = Val("&H" + GModeScreenSize$(Gmode)) ' v1 = The screen size
+    ' We are starting from the normal Text screen location
+    A$ = "LDA": B$ = "GModePage": C$ = "Get the screen Page #": GoSub AO
+    A$ = "BNE": B$ = ">": C$ = "If not the first page then go calc where to set the graphics page viewer": GoSub AO
+    A$ = "LDD": B$ = "#$" + Right$("0000" + Hex$(GScreenStart), 4): C$ = "A = the location in RAM to start the graphics screen": GoSub AO
+    A$ = "BRA": B$ = "@UpdateScreenStart": C$ = "Go update the screen start location": GoSub AO
+    Z$ = "!"
     If Gmode = 0 Or Gmode = 1 Or Gmode = 2 Or Gmode = 4 Then
-        If GmodePage = 1 Then
-            TempVal = GScreenStart + v1 * (GmodePage - 1)
-        Else
-            ' For the Text screen we move past the Disk variable area
-            TempVal = GScreenStart + v1 * (GmodePage - 1)
-            TempVal = TempVal + &HE00 - &H400 - &H200
-        End If
+        ' For the Text screen we move past the Disk variable area
+        TempVal = GScreenStart + &HE00 - &H400 - &H200 '2nd page start here
     Else
-        TempVal = GScreenStart + v1 * (GmodePage - 1)
+        TempVal = GScreenStart + v1 '2nd page starts here
     End If
-    GScreenEnd = TempVal + v1 ' Value needed to be reserved for the screen in the source code
-    A$ = "LDD": B$ = "#$" + Right$("0000" + Hex$(TempVal), 4): C$ = "A = the location in RAM to start the graphics screen": GoSub AO
+    A$ = "CLRA": C$ = "Clear MSB of D": GoSub AO
+    A$ = "LDB": B$ = "GModePage": C$ = "D = the screen Page #": GoSub AO
+    A$ = "DECB": C$ = "D = the screen Page # - 1": GoSub AO
+    A$ = "BEQ": B$ = ">": C$ = "If D = 0 then the result of the multiply will be zero so skip it": GoSub AO
+    A$ = "LDX": B$ = "#$" + Right$("0000" + Hex$(v1), 4): C$ = "X = the screen size": GoSub AO
+    A$ = "PSHS": B$ = "D,X": C$ = "Save the two 16 bit WORDS on the stack, to be multiplied": GoSub AO
+    A$ = "JSR": B$ = "MUL16": C$ = "Do 16 bit x 16 bit Multiply, D = WORD on Stack ,S * WORD on stack 2,S, lowest 16 bit result will be in D": GoSub AO ' D = D * X
+    A$ = "LEAS": B$ = "4,S": C$ = "Fix the Stack": GoSub AO
+    Z$ = "!"
+    A$ = "ADDD": B$ = "#$" + Right$("0000" + Hex$(TempVal), 4): C$ = "D = Screen Page + Screen start location": GoSub AO
+    Z$ = "@UpdateScreenStart": GoSub AO
     A$ = "STD": B$ = "BEGGRP": C$ = "Update the Screen starting location": GoSub AO
-
+    Print #1,
     A$ = "LSRA": C$ = "A = the location in RAM to start the graphics screen / 2 as it must start in a 512 byte block": GoSub AO
     ' Wait for vsync
     A$ = "LDB": B$ = "$FF02": C$ = "Reset Vsync flag": GoSub AO
@@ -5887,7 +5904,7 @@ If Gmode > 99 Then
     A$ = "LDD": B$ = "#$0FE0": GoSub AO
     A$ = "STD": B$ = "$FF9C": GoSub AO
 End If
-A$ = "LDA": B$ = "#Internal_alphanumeric": C$ = "A = Text mode requested": GoSub AO
+A$ = "LDA": B$ = "#Internal_Alphanumeric": C$ = "A = Text mode requested": GoSub AO
 A$ = "BRA": B$ = ">": GoSub AO
 Z$ = "@DoGraphicMode:": GoSub AO
 If Gmode > 99 Then
@@ -5915,7 +5932,7 @@ A$ = "ORA": B$ = "CSSVAL": C$ = "Add in the colour select value into A": GoSub A
 ' Update the Graphic mode and the screen viewer location
 A$ = "JSR": B$ = "SetGraphicModeA": C$ = "Go setup the mode": GoSub AO
 A$ = "LDA": B$ = "BEGGRP": C$ = "Get the MSB of the Screen starting location": GoSub AO
-A$ = "RORA": C$ = "Divide by 2 - 512 bytes per start location": GoSub AO
+A$ = "LSRA": C$ = "Divide by 2 - 512 bytes per start location": GoSub AO
 A$ = "JSR": B$ = "SetGraphicsStartA": C$ = "Go set the address of the screen": GoSub AO
 Print #1, ' Need a space for @ in assembly
 Return

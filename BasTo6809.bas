@@ -3,10 +3,14 @@
 'Print "hex$(Array(x+2) "; Hex$(Array(x + 2))
 'System
 
-V$ = "4.00"
-' Added New command GMODE which allows you to easily select every graphic mode the CoCo 1,2 or 3 can produce
-' Added New commands GCOPY which allows you to copy graphic pages to other graphic pages
-' Tweaked LINE, CIRCLE & PAINT commands to use all the available graphic modes and colours of the CoCo 1,2 or 3
+V$ = "4.01"
+'       - With the GMODE ModeNumber,GraphicsPage the compiler can now handle variables for the GraphicsPage value.  The ModeNumber value will always need to be an actual number
+'       - Palette command now will wait for a vsync to change the value (should make sure there's no sparkels
+'
+' V4.00
+'       - Added New command GMODE which allows you to easily select every graphic mode the CoCo 1,2 or 3 can produce
+'       - Added New command GCOPY which allows you to copy graphic pages to other graphic pages
+'       - Tweaked LINE, CIRCLE & PAINT commands to use all the available graphic modes and colours of the CoCo 1,2 or 3
 '
 ' V3.03
 '       - Tweaked the AND, OR, XOR commands as the optimizer was not handling them properly
