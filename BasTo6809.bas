@@ -5,7 +5,7 @@
 
 V$ = "4.01"
 '       - With the GMODE ModeNumber,GraphicsPage the compiler can now handle variables for the GraphicsPage value.  The ModeNumber value will always need to be an actual number
-'       - Palette command now will wait for a vsync to change the value (should make sure there's no sparkels
+'       - Palette command now will wait for a vsync to change the value (should make sure there's no sparkels)
 '
 ' V4.00
 '       - Added New command GMODE which allows you to easily select every graphic mode the CoCo 1,2 or 3 can produce
