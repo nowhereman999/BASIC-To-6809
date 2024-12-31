@@ -11,8 +11,8 @@
 *                                               Mode                   VDG Settings         SAM
 *                                                                A/G GM2 GM1 GM0 V2/V1/V0 Desc.      RAM used
 *                                                                                           X x YxColours hex(dec)
-Internal_alphanumeric   EQU     %00000000 ;  Internal alphanumeric 0   X   X   0   0 0 0    32x 16   (5x7 pixel ch)
-External_alphanumeric   EQU     %00010000 ;  External alphanumeric 0   X   X   1   0 0 0    32x 16   (8x12 pixel ch)
+Internal_Alphanumeric   EQU     %00000000 ;  Internal alphanumeric 0   X   X   0   0 0 0    32x 16   (5x7 pixel ch)
+External_Alphanumeric   EQU     %00010000 ;  External alphanumeric 0   X   X   1   0 0 0    32x 16   (8x12 pixel ch)
 Semi_graphic_4          EQU     %00000000 ;  Semi graphic-4        0   X   X   0   0 0 0    32x 16   ch, 64x32 pixels
 Semi_graphic_4Hybrid    EQU     %00000010 ;  Semi graphic-8        0   X   X   0   0 1 0    64x 32x9 $800(2048)
 Semi_graphic_6          EQU     %00010000 ;  Semi graphic-6        0   X   X   1   0 0 0    64x 48   pixels
@@ -207,14 +207,15 @@ SetSAM  STA     1,X     ; Write to the Set byte
 * Preferred start of 1st graphics screen page	$0E00
 *
 
-PMODE	  	RMB  1		* PMODE value
-Screen_Number	FCB  0		* Screen number to start at
-HORBYT		RMB  1		* Number of bytes per horizontal line
+;PMODE	  	RMB  1		* PMODE value
+;Screen_Number	FCB  0		* Screen number to start at
+;HORBYT		RMB  1		* Number of bytes per horizontal line
 PageSize	RMB  1		* MSB of the Size of the screen page
-FORCOL		FCB  1		* Foreground color (default to 1)
-BAKCOL		RMB  1		* Background color
+GModePage       FCB  0		* Graphics mode page # (zero based, although BASIC uses 1 based)
+;FORCOL		FCB  1		* Foreground color (default to 1)
+;BAKCOL		RMB  1		* Background color
 BEGGRP		RMB  2		* Start address of the screen page
-ENDGRP		RMB  2		* End address of the screen page
+;ENDGRP		RMB  2		* End address of the screen page
 CSSVAL		RMB  1		* CSS value
 LineColour      RMB  1          * Colour value for the Line command
 

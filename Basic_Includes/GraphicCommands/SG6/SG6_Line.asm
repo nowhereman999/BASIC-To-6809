@@ -25,7 +25,7 @@ LineNotHorizontal4_SG6:
         LDD     endX     
         SUBD    startX     
         BPL     >               ; If positive simply skip over changing D's value
-        STD     ,--S            ; Save D on the stack
+        PSHS    D               ; Save D on the stack
         LDD     #$0000          ; D=0
         SUBD    ,S++            ; D=0-D, fix the stack
 !       STD     deltaX          ; Save Numeric variable
@@ -33,7 +33,7 @@ LineNotHorizontal4_SG6:
         LDD     endY     
         SUBD    startY     
         BPL     >               ; If positive simply skip over changing D's value
-        STD     ,--S            ; Save D on the stack
+        PSHS    D               ; Save D on the stack
         LDD     #$0000          ; D=0
         SUBD    ,S++            ; D=0-D, fix the stack
 !       STD     deltaY     ; Save Numeric variable
