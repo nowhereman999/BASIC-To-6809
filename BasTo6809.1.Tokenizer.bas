@@ -13,10 +13,12 @@ Dim NumericVariableCount As Integer
 Dim FloatVariable$(100000)
 Dim FloatVariableCount As Integer
 
+Dim NumericArrayBits(100000) As Integer
+Dim NumericArrayVariables$(100000), NumericArrayDimensions(100000) As Integer, NumericArrayDimensionsVal$(100000)
+Dim StringArrayBits(100000) As Integer
+Dim StringArrayVariables$(100000), StringArrayDimensions(100000) As Integer, StringArrayDimensionsVal$(100000)
 Dim StringVariable$(100000)
 Dim StringVariableCounter As Integer
-Dim NumericArrayVariables$(100000), NumericArrayDimensions(100000) As Integer, NumericArrayDimensionsVal$(100000)
-Dim StringArrayVariables$(100000), StringArrayDimensions(100000) As Integer, StringArrayDimensionsVal$(100000)
 
 Dim GeneralCommands$(2000)
 Dim GeneralCommandsCount As Integer
@@ -1005,12 +1007,14 @@ Open "NumericArrayVarsUsed.txt" For Output As #1
 For I = 0 To NumArrayVarsUsedCounter - 1
     Print #1, NumericArrayVariables$(I)
     Print #1, NumericArrayDimensions(I)
+    Print #1, NumericArrayBits(I)
 Next I
 Close #1
 Open "StringArrayVarsUsed.txt" For Output As #1
 For I = 0 To StringArrayVarsUsedCounter - 1
     Print #1, StringArrayVariables$(I)
     Print #1, StringArrayDimensions(I)
+    Print #1, StringArrayBits(I)
 Next I
 Close #1
 Open "DefFNUsed.txt" For Output As #1
@@ -1139,16 +1143,27 @@ If NumArrayVarsUsedCounter > 0 Then
         Temp$ = Left$(Temp$, Len(Temp$) - 1) ' Remove the extra '*'
         Print #1, "_ArrayNum_"; NumericArrayVariables$(ii)
         Print #1, "; Reserve bytes per element size, set with the DIM command"
-        For D1 = 0 To NumericArrayDimensions(ii) - 1
-            Num = Val("&H" + Mid$(NumericArrayDimensionsVal$(ii), 1 + D1 * 4, 4)) + 1 ' + 1 because it is zero based
-            GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-            A$ = "FCB": B$ = Num$: C$ = "Default size of each array element is 12 (0 to 11), changed with the DIM command": GoSub AO
-        Next D1
+        If NumericArrayBits(ii) = 8 Then
+            ' Arraysize is 8 bits
+            For D1 = 0 To NumericArrayDimensions(ii) - 1
+                Num = Val("&H" + Mid$(NumericArrayDimensionsVal$(ii), 1 + D1 * 4, 4)) + 1 ' + 1 because it is zero based
+                GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+                A$ = "FCB": B$ = Num$: C$ = "Default size of each array element is 11 (0 to 10), changed with the DIM command": GoSub AO
+            Next D1
+        Else
+            ' Arraysize is 16 bits
+            For D1 = 0 To NumericArrayDimensions(ii) - 1
+                Num = Val("&H" + Mid$(NumericArrayDimensionsVal$(ii), 1 + D1 * 4, 4)) + 1 ' + 1 because it is zero based
+                GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+                A$ = "FDB": B$ = Num$: C$ = "Use 16 bit values, changed with the DIM command": GoSub AO
+            Next D1
+        End If
         A$ = "RMB": B$ = Temp$: C$ = "Two bytes (16 bits) per element": GoSub AO
     Next ii
 End If
 
 Print #1, "; String Arrays Used:"; StringArrayVarsUsedCounter
+Print "StringArrayVarsUsedCounter"; StringArrayVarsUsedCounter
 If StringArrayVarsUsedCounter > 0 Then
     For ii = 0 To StringArrayVarsUsedCounter - 1
         StringArrayReserveSize = StringArraySize + 1 ' Need an extra byte for the actual string size value
@@ -1164,12 +1179,22 @@ If StringArrayVarsUsedCounter > 0 Then
         Temp$ = Left$(Temp$, Len(Temp$) - 1) ' Remove the extra '*'
         Print #1, "_ArrayStr_"; StringArrayVariables$(ii)
         Print #1, "; Reserve bytes per element size, set with the DIM command"
-        For D1 = 0 To StringArrayDimensions(ii) - 1
-            Num = Val("&H" + Mid$(StringArrayDimensionsVal$(ii), 1 + D1 * 4, 4)) + 1 ' + 1 because it is zero based
-            GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-            A$ = "FCB": B$ = Num$: C$ = "Default size of each array element is 11 (0 to 10), changed with the DIM command": GoSub AO
-        Next D1
-        A$ = "RMB": B$ = Temp$: C$ = "Reserve " + Temp$ + " bytes per element": GoSub AO
+        If StringArrayBits(ii) = 8 Then
+            ' Arraysize is 8 bits
+            For D1 = 0 To StringArrayDimensions(ii) - 1
+                Num = Val("&H" + Mid$(StringArrayDimensionsVal$(ii), 1 + D1 * 4, 4)) + 1 ' + 1 because it is zero based
+                GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+                A$ = "FCB": B$ = Num$: C$ = "Default size of each array element is 11 (0 to 10), changed with the DIM command": GoSub AO
+            Next D1
+        Else
+            ' Arraysize is 16 bits
+            For D1 = 0 To StringArrayDimensions(ii) - 1
+                Num = Val("&H" + Mid$(StringArrayDimensionsVal$(ii), 1 + D1 * 4, 4)) + 1 ' + 1 because it is zero based
+                GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+                A$ = "FDB": B$ = Num$: C$ = "Use 16 bit values, changed with the DIM command": GoSub AO
+            Next D1
+        End If
+        A$ = "RMB": B$ = Temp$: C$ = "String size+1 per element": GoSub AO
     Next ii
 End If
 Print #1, "EndClearHere:" ' This is the end address of variables that will all be cleared to zero when the program starts
@@ -1525,15 +1550,30 @@ If NumArrayVarsUsedCounter > 0 Then
     For ii = 0 To NumArrayVarsUsedCounter - 1
         A$ = "LDX": B$ = "#_ArrayNum_" + NumericArrayVariables$(ii): C$ = "Set the base pointer": GoSub AO
         Lastnum$ = ""
-        For D1 = 0 To NumericArrayDimensions(ii) - 1
-            Num = Val("&H" + Mid$(NumericArrayDimensionsVal$(ii), 1 + D1 * 4, 4)) + 1 '+1 because it's zero based
-            GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-            If Num$ <> Lastnum$ Then
-                A$ = "LDA": B$ = "#" + Num$: C$ = "Element size set with the DIM command": GoSub AO
-                Lastnum$ = Num$
-            End If
-            A$ = "STA": B$ = ",X+": GoSub AO
-        Next D1
+        ArrayWidth = NumericArrayBits(ii)
+        If ArrayWidth = 8 Then
+            ' 8 bit array
+            For D1 = 0 To NumericArrayDimensions(ii) - 1
+                Num = Val("&H" + Mid$(NumericArrayDimensionsVal$(ii), 1 + D1 * 4, 4)) + 1 '+1 because it's zero based
+                GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+                If Num$ <> Lastnum$ Then
+                    A$ = "LDA": B$ = "#" + Num$: C$ = "Element size set with the DIM command": GoSub AO
+                    Lastnum$ = Num$
+                End If
+                A$ = "STA": B$ = ",X+": GoSub AO
+            Next D1
+        Else
+            ' 16 bit array
+            For D1 = 0 To NumericArrayDimensions(ii) - 1
+                Num = Val("&H" + Mid$(NumericArrayDimensionsVal$(ii), 1 + D1 * 4, 4)) + 1 '+1 because it's zero based
+                GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+                If Num$ <> Lastnum$ Then
+                    A$ = "LDD": B$ = "#" + Num$: C$ = "Element size set with the DIM command": GoSub AO
+                    Lastnum$ = Num$
+                End If
+                A$ = "STD": B$ = ",X++": GoSub AO
+            Next D1
+        End If
     Next ii
 End If
 ' Clear String Array RAM
@@ -1542,15 +1582,31 @@ If StringArrayVarsUsedCounter > 0 Then
     Print #1, "; Restore sizes of string array Elements"
     For ii = 0 To StringArrayVarsUsedCounter - 1
         A$ = "LDX": B$ = "#_ArrayStr_" + StringArrayVariables$(ii): C$ = "Set the base pointer": GoSub AO
-        For D1 = 0 To StringArrayDimensions(ii) - 1
-            Num = Val("&H" + Mid$(StringArrayDimensionsVal$(ii), 1 + D1 * 4, 4)) + 1 '+1 because it's zero based
-            GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-            If Num$ <> Lastnum$ Then
-                A$ = "LDA": B$ = "#" + Num$: C$ = "Element size set with the DIM command": GoSub AO
-                Lastnum$ = Num$
-            End If
-            A$ = "STA": B$ = ",X+": GoSub AO
-        Next D1
+        Lastnum$ = ""
+        ArrayWidth = StringArrayBits(ii)
+        If ArrayWidth = 8 Then
+            ' 8 bit array
+            For D1 = 0 To StringArrayDimensions(ii) - 1
+                Num = Val("&H" + Mid$(StringArrayDimensionsVal$(ii), 1 + D1 * 4, 4)) + 1 '+1 because it's zero based
+                GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+                If Num$ <> Lastnum$ Then
+                    A$ = "LDA": B$ = "#" + Num$: C$ = "Element size set with the DIM command": GoSub AO
+                    Lastnum$ = Num$
+                End If
+                A$ = "STA": B$ = ",X+": GoSub AO
+            Next D1
+        Else
+            ' 16 bit array
+            For D1 = 0 To StringArrayDimensions(ii) - 1
+                Num = Val("&H" + Mid$(StringArrayDimensionsVal$(ii), 1 + D1 * 4, 4)) + 1 '+1 because it's zero based
+                GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+                If Num$ <> Lastnum$ Then
+                    A$ = "LDD": B$ = "#" + Num$: C$ = "Element size set with the DIM command": GoSub AO
+                    Lastnum$ = Num$
+                End If
+                A$ = "STD": B$ = ",X++": GoSub AO
+            Next D1
+        End If
     Next ii
 End If
 A$ = "LDD": B$ = "#DataStart": C$ = "Get the Address where DATA starts": GoSub AO
@@ -3117,12 +3173,12 @@ Return
 AddToStringArrayVariableList:
 Found = 0
 For ii = 0 To StringArrayVarsUsedCounter
-    If StringArrayVariables$(ii) = Left$(Temp$, Len(Temp$) - 1) Then
+    If StringArrayVariables$(ii) = Temp$ Then
         Found = 1
         Return
     End If
 Next ii
-StringArrayVariables$(StringArrayVarsUsedCounter) = Left$(Temp$, Len(Temp$) - 1)
+StringArrayVariables$(StringArrayVarsUsedCounter) = Temp$
 StringArrayDimensions(StringArrayVarsUsedCounter) = Dimensions
 ' Default each array element to 11 (0 to 10)
 StringArrayDimensionsVal$(StringArrayVarsUsedCounter) = ""
@@ -3182,6 +3238,7 @@ V = Array(x): x = x + 1
 If V = &HF0 Then
     'Set the size of a numeric array
     ii = Array(x) * 256 + Array(x + 1): x = x + 2 ' Get the array identifier value
+    NumericArrayBits(ii) = 8 ' Set the default # of bits needed for the array as 8 bits
     NumericArrayDimensionsVal$(ii) = "" ' clear the # of Element values per dimension
     NumOfDims = Array(x): x = x + 1 ' Get the number of dimensions for the arrays
     ' Get the number of elements per dimension
@@ -3197,12 +3254,14 @@ If V = &HF0 Then
         V = Array(x): x = x + 1 ' consume the comma or close bracket
         DimVal$ = Hex$(Val(Temp$)) ' Make the value a hex string
         DimVal$ = Right$("0000" + DimVal$, 4) ' Make sure the value is four digits
+        If Val("&H" + DimVal$) > 254 Then NumericArrayBits(ii) = 16 ' If any of the Element sizes are more that 254 flag as 16 bit array
         NumericArrayDimensionsVal$(ii) = NumericArrayDimensionsVal$(ii) + DimVal$
     Next T1
 Else
     If V = &HF1 Then
         'Set the size of a string array
         ii = Array(x) * 256 + Array(x + 1): x = x + 2 ' Get the array identifier value
+        StringArrayBits(ii) = 8 ' Set the default # of bits needed for the array as 8 bits
         StringArrayDimensionsVal$(ii) = "" ' clear the # of Element values per dimension
         NumOfDims = Array(x): x = x + 1 ' Get the number of dimensions for the arrays
         ' Get the number of elements per dimension
@@ -3218,6 +3277,7 @@ Else
             V = Array(x): x = x + 1 ' consume the comma or close bracket
             DimVal$ = Hex$(Val(Temp$)) ' Make the value a hex string
             DimVal$ = Right$("0000" + DimVal$, 4) ' Make sure the value is four digits
+            If Val("&H" + DimVal$) > 254 Then StringArrayBits(ii) = 16 ' If any of the Element sizes are more that 254 flag as 16 bit array
             StringArrayDimensionsVal$(ii) = StringArrayDimensionsVal$(ii) + DimVal$
         Next T1
     End If

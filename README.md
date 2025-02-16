@@ -4,6 +4,14 @@ A BASIC compiler for the TRS80 Color Computer
 For more info check out the blog post here:
 https://wordpress.com/post/nowhereman999.wordpress.com/5054
 
+V 4.02
+- Numeric array sizes can now be larger than 255, it will now accept DIM A(1000) or DIM MyArray(300,2,2)
+- String array sizes can now be larger than 255, it will now accept DIM A$(1000) or DIM MyArray$(300,2,2), the default size for strings (which includes array elements) is 255 therefore you must use the compiler option -sxx where xxx is the size of the string and make it a smaller string size if you are going to use many string arrays
+
+V 4.01
+- With the GMODE ModeNumber,GraphicsPage the compiler can now handle variables for the GraphicsPage value.  The ModeNumber value will always need to be an actual number
+- Palette command now will wait for a vsync to change the value (should make sure there's no sparkels)
+
 V 4.00
 - Added New command GMODE which allows you to easily select every graphic mode the CoCo 1,2 or 3 can produce
 - Added New command GCOPY which allows you to copy graphic pages to other graphic pages
