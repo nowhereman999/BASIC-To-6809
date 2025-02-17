@@ -6417,7 +6417,7 @@ Else
     GScreenStart = Val("&H" + GModeStartAddress$(Gmode)) ' Get screen start location
     v1 = Val("&H" + GModeScreenSize$(Gmode)) ' v1 = The screen size
     ' We are starting from the normal Text screen location
-    A$ = "LDA": B$ = "GModePage": C$ = "Get the screen Page #": GoSub AO
+    '    A$ = "LDA": B$ = "GModePage": C$ = "Get the screen Page #": GoSub AO
     A$ = "BNE": B$ = ">": C$ = "If not the first page then go calc where to set the graphics page viewer": GoSub AO
     A$ = "LDD": B$ = "#$" + Right$("0000" + Hex$(GScreenStart), 4): C$ = "A = the location in RAM to start the graphics screen": GoSub AO
     A$ = "BRA": B$ = "@UpdateScreenStart": C$ = "Go update the screen start location": GoSub AO
@@ -6426,17 +6426,16 @@ Else
         ' For the Text screen we move past the Disk variable area
         TempVal = GScreenStart + &HE00 - &H400 - &H200 '2nd page start here
     Else
-        TempVal = GScreenStart + v1 '2nd page starts here
+        TempVal = GScreenStart '1st Page starts here
     End If
-    A$ = "CLRA": C$ = "Clear MSB of D": GoSub AO
-    A$ = "LDB": B$ = "GModePage": C$ = "D = the screen Page #": GoSub AO
-    A$ = "DECB": C$ = "D = the screen Page # - 1": GoSub AO
-    A$ = "BEQ": B$ = ">": C$ = "If D = 0 then the result of the multiply will be zero so skip it": GoSub AO
+    '    A$ = "CLRA": C$ = "Clear MSB of D": GoSub AO
+    '    A$ = "LDB": B$ = "GModePage": C$ = "D = the screen Page #": GoSub AO
+    '    A$ = "DECB": C$ = "D = the screen Page # - 1": GoSub AO
+    '    A$ = "BEQ": B$ = ">": C$ = "If D = 0 then the result of the multiply will be zero so skip it": GoSub AO
     A$ = "LDX": B$ = "#$" + Right$("0000" + Hex$(v1), 4): C$ = "X = the screen size": GoSub AO
     A$ = "PSHS": B$ = "D,X": C$ = "Save the two 16 bit WORDS on the stack, to be multiplied": GoSub AO
     A$ = "JSR": B$ = "MUL16": C$ = "Do 16 bit x 16 bit Multiply, D = WORD on Stack ,S * WORD on stack 2,S, lowest 16 bit result will be in D": GoSub AO ' D = D * X
     A$ = "LEAS": B$ = "4,S": C$ = "Fix the Stack": GoSub AO
-    Z$ = "!"
     A$ = "ADDD": B$ = "#$" + Right$("0000" + Hex$(TempVal), 4): C$ = "D = Screen Page + Screen start location": GoSub AO
     Z$ = "@UpdateScreenStart": GoSub AO
     A$ = "STD": B$ = "BEGGRP": C$ = "Update the Screen starting location": GoSub AO

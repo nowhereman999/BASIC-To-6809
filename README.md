@@ -4,6 +4,10 @@ A BASIC compiler for the TRS80 Color Computer
 For more info check out the blog post here:
 https://wordpress.com/post/nowhereman999.wordpress.com/5054
 
+V 4.03
+- Fixed a bug in the GCOPY command
+- Tweaked the code for the GMODE command
+
 V 4.02
 - Numeric array sizes can now be larger than 255, it will now accept DIM A(1000) or DIM MyArray(300,2,2)
 - String array sizes can now be larger than 255, it will now accept DIM A$(1000) or DIM MyArray$(300,2,2), the default size for strings (which includes array elements) is 255 therefore you must use the compiler option -sxx where xxx is the size of the string and make it a smaller string size if you are going to use many string arrays
