@@ -1096,6 +1096,12 @@ Print #1, "Denominator     RMB     2     ; Denominator, used in division"
 Print #1, "Numerator       RMB     2     ; Numerator, used in division"
 Print #1, "DATAPointer     RMB     2     ; Variable that points to the current DATA location"
 Print #1, "_NumVar_IFRight RMB     2     ; Temp bytes for IF Compares"
+
+If PrintGraphicsText = 1 Then
+    ' Found program uses PRINT #-3, to print to the graphics screen
+    Print #1, "GraphicCURPOS   RMB     2     ; Reserve RAM for the Graphics Cursor"
+End If
+
 ' Reserve space for Floating Point variables
 Print #1, "; Floating Point Variables Used:"; FloatVariableCount
 For ii = 0 To FloatVariableCount - 1
@@ -1163,7 +1169,6 @@ If NumArrayVarsUsedCounter > 0 Then
 End If
 
 Print #1, "; String Arrays Used:"; StringArrayVarsUsedCounter
-Print "StringArrayVarsUsedCounter"; StringArrayVarsUsedCounter
 If StringArrayVarsUsedCounter > 0 Then
     For ii = 0 To StringArrayVarsUsedCounter - 1
         StringArrayReserveSize = StringArraySize + 1 ' Need an extra byte for the actual string size value
@@ -1284,6 +1289,16 @@ For ii = 0 To GeneralCommandsFoundCount - 1
         If PUTXOR = 1 Then Temp$ = "GraphicCommandsPut_XOR": GoSub AddIncludeTemp ' Add code to handle Put XOR command
     End If
 Next ii
+If PrintGraphicsText = 1 Then
+    ' Found program uses PRINT #-3, to print to the graphics screen
+    For i3 = 0 To 171
+        If GModeLib(i3) = 1 Then
+            Temp$ = "GraphicCommands/" + GModeName$(i3) + "/" + GModeName$(i3) + "_Print_Graphic_Screen": GoSub AddIncludeTemp
+            Temp$ = "GraphicCommands/" + GModeName$(i3) + "/" + GModeName$(i3) + "_Locate": GoSub AddIncludeTemp
+            Temp$ = "GraphicCommands/" + GModeName$(i3) + "/Graphic_Screen_Fonts/" + Font$: GoSub AddIncludeTemp
+        End If
+    Next i3
+End If
 
 ' List of includes needs to be added, only if it's not already in the list
 Print #1, "; Section of necessary included code:"
@@ -1384,11 +1399,6 @@ If FloatVariableCount > 0 Then Temp$ = "FloatingPointMath": GoSub AddIncludeTemp
 Temp$ = "Equates": GoSub AddIncludeTemp
 Temp$ = "Print": GoSub AddIncludeTemp
 Temp$ = "Print_Serial": GoSub AddIncludeTemp
-If PrintGraphicsText = 1 Then
-    ' Found program uses PRINT #-3, to print to the graphics screen
-    Temp$ = "Print_Graphic_Screen": GoSub AddIncludeTemp
-    Temp$ = "Graphic_Screen_Fonts/" + Font$: GoSub AddIncludeTemp
-End If
 Temp$ = "D_to_String": GoSub AddIncludeTemp
 Temp$ = "DHex_to_String": GoSub AddIncludeTemp
 Temp$ = "Mulitply16x16": GoSub AddIncludeTemp

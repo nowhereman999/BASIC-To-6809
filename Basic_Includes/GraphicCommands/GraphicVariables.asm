@@ -259,7 +259,7 @@ spanAbove       RMB     2
 spanBelow       RMB     2
 
 ***********************************************************
-* Set Hires Screen Resolution and the number of Colours
+* Set Hires Screen Resolution and the number of Colours for the CoCo 3
 *
 * Bit Pattern   Rows Displayed
 *    x00xxxxx   192

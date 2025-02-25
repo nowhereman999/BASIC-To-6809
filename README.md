@@ -1,8 +1,15 @@
 # BASIC-To-6809
-A BASIC compiler for the TRS80 Color Computer
+A BASIC compiler for the TRS-80 Color Computer
 
 For more info check out the blog post here:
 https://wordpress.com/post/nowhereman999.wordpress.com/5054
+
+V 4.10
+- Added text fonts that can be used directly in any graphics mode, use LOCATE x,y and PRINT #-3,"Hello World" to print
+  to the graphics screen.  You must select the font using the -f option.  The font names end with _Bx_Fx where Bx is the Background
+  colour and Fx is the Foreground colour. Example: -fCoCoT1_B0_F2
+- Can now put compiler options on the first line of the program using ' CompilerOptins:
+  Example:  'CompileOptions: -fArcade_B0_F1 -o -s32
 
 V 4.03
 - Fixed a bug in the GCOPY command

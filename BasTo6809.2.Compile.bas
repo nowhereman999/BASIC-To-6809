@@ -4989,7 +4989,13 @@ If c > 5 Then
     A$ = "LDU": B$ = ",S++": C$ = "Load U with the string start location off the stack and fix the stack": GoSub AO
     Z$ = "!"
     A$ = "LDA": B$ = ",U+": C$ = "Get the string data": GoSub AO
-    A$ = "JSR": B$ = PrintA$: C$ = "Go print A" + PrintDev$: GoSub AO
+    If PrintCC3 = 1 Then
+        A$ = "LDY": B$ = "#" + PrintA$: C$ = "Y points at the routine to do, Go print A" + PrintDev$: GoSub AO
+        A$ = "JSR": B$ = "DoCC3Graphics": C$ = "Prep for CoCo 3 graphics and then JSR ,Y and restore & return": GoSub AO
+    Else
+        ' Print to the CoCo 2 graphic screen
+        A$ = "JSR": B$ = PrintA$: C$ = "Go print A" + PrintDev$: GoSub AO
+    End If
     A$ = "DECB": C$ = "decrement the string length counter": GoSub AO
     A$ = "BNE": B$ = "<": C$ = "If not counted down to zero then loop": GoSub AO
 Else
@@ -4997,7 +5003,13 @@ Else
     For c = 1 To c
         v = Array(x): x = x + 1: 'Get next byte
         A$ = "LDA": B$ = "#$" + Hex$(v): C$ = "A = Byte to print, " + Chr$(v): GoSub AO
-        A$ = "JSR": B$ = PrintA$: C$ = "Go print A" + PrintDev$: GoSub AO
+        If PrintCC3 = 1 Then
+            A$ = "LDY": B$ = "#" + PrintA$: C$ = "Y points at the routine to do, Go print A" + PrintDev$: GoSub AO
+            A$ = "JSR": B$ = "DoCC3Graphics": C$ = "Prep for CoCo 3 graphics and then JSR ,Y and restore & return": GoSub AO
+        Else
+            ' Print to the CoCo 2 graphic screen
+            A$ = "JSR": B$ = PrintA$: C$ = "Go print A" + PrintDev$: GoSub AO
+        End If
     Next c
     x = x + 2 ' skip past the end quote
 End If
@@ -5006,6 +5018,7 @@ Return
 
 DoPRINT:
 PrintD$ = "PRINT_D": PrintA$ = "PrintA_On_Screen": PrintDev$ = " on screen"
+PrintCC3 = 0
 ' Parse parts of it, upto a ";" print it, then do the next part
 ' Figure out what we need to print...
 GetSectionToPrint:
@@ -5020,16 +5033,30 @@ If v >= Asc("0") And v <= Asc("9") Or (v = Asc("&") And Array(x) = Asc("H")) The
     x = x - 1 ' make sure to inlcude the first Numeric variable
     GoSub GetExB4SemiComQ13D_EOL ' Get an Expression before a semi colon, a comma a quote, an &HF1,&HF3 or &HFD an EOL/Colon
     ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression, value will end up in D
-    A$ = "JSR": B$ = PrintD$: C$ = "Go print D" + PrintDev$: GoSub AO
-    GoTo GetSectionToPrint
+    If PrintCC3 = 1 Then
+        A$ = "LDY": B$ = "#" + PrintD$: C$ = "Y points at the routine to do, Go print D" + PrintDev$: GoSub AO
+        A$ = "JSR": B$ = "DoCC3Graphics": C$ = "Prep for CoCo 3 graphics and then JSR ,Y and restore & return": GoSub AO
+        GoTo GetSectionToPrint
+    Else
+        ' Print to the CoCo 2 graphic screen
+        A$ = "JSR": B$ = PrintD$: C$ = "Go print D" + PrintDev$: GoSub AO
+        GoTo GetSectionToPrint
+    End If
 End If
 
 If v = &HF0 Then ' Printing a Numeric Array variable, PRINT A(5)
     x = x - 1 ' make sure to inlcude the first Numeric array variable
     GoSub GetExB4SemiComQ13D_EOL ' Get an Expression before a semi colon, a comma a quote, an &HF1,&HF3 or &HFD an EOL/Colon
     ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression, value will end up in D
-    A$ = "JSR": B$ = PrintD$: C$ = "Go print D" + PrintDev$: GoSub AO
-    GoTo GetSectionToPrint
+    If PrintCC3 = 1 Then
+        A$ = "LDY": B$ = "#" + PrintD$: C$ = "Y points at the routine to do, Go print D" + PrintDev$: GoSub AO
+        A$ = "JSR": B$ = "DoCC3Graphics": C$ = "Prep for CoCo 3 graphics and then JSR ,Y and restore & return": GoSub AO
+        GoTo GetSectionToPrint
+    Else
+        ' Print to the CoCo 2 graphic screen
+        A$ = "JSR": B$ = PrintD$: C$ = "Go print D" + PrintDev$: GoSub AO
+        GoTo GetSectionToPrint
+    End If
 End If
 
 If v = &HF1 Then ' Printing a String Array variable, PRINT A$(6)
@@ -5043,7 +5070,13 @@ If v = &HF1 Then ' Printing a String Array variable, PRINT A$(6)
     A$ = "BEQ": B$ = "Done@": C$ = "If the length of the string is zero then don't print it (Skip ahead)": GoSub AO
     Z$ = "!"
     A$ = "LDA": B$ = ",U+": C$ = "Get a source byte": GoSub AO
-    A$ = "JSR": B$ = PrintA$: C$ = "Go print A" + PrintDev$: GoSub AO
+    If PrintCC3 = 1 Then
+        A$ = "LDY": B$ = "#" + PrintA$: C$ = "Y points at the routine to do, Go print A" + PrintDev$: GoSub AO
+        A$ = "JSR": B$ = "DoCC3Graphics": C$ = "Prep for CoCo 3 graphics and then JSR ,Y and restore & return": GoSub AO
+    Else
+        ' Print to the CoCo 2 graphic screen
+        A$ = "JSR": B$ = PrintA$: C$ = "Go print A" + PrintDev$: GoSub AO
+    End If
     A$ = "DECB": C$ = "Decrement the counter": GoSub AO
     A$ = "BNE": B$ = "<": C$ = "Loop until all data is copied to the destination string": GoSub AO
     Z$ = "Done@": GoSub AO
@@ -5055,8 +5088,15 @@ If v = &HF2 Then ' Printing a Regular Numeric Variable, PRINT A
     x = x - 1 ' make sure to inlcude the first Numeric variable
     GoSub GetExB4SemiComQ13D_EOL ' Get an Expression before a semi colon, a comma a quote, an &HF1,&HF3 or &HFD an EOL/Colon
     ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression, value will end up in D
-    A$ = "JSR": B$ = PrintD$: C$ = "Go print D" + PrintDev$: GoSub AO
-    GoTo GetSectionToPrint
+    If PrintCC3 = 1 Then
+        A$ = "LDY": B$ = "#" + PrintD$: C$ = "Y points at the routine to do, Go print D" + PrintDev$: GoSub AO
+        A$ = "JSR": B$ = "DoCC3Graphics": C$ = "Prep for CoCo 3 graphics and then JSR ,Y and restore & return": GoSub AO
+        GoTo GetSectionToPrint
+    Else
+        ' Print to the CoCo 2 graphic screen
+        A$ = "JSR": B$ = PrintD$: C$ = "Go print D" + PrintDev$: GoSub AO
+        GoTo GetSectionToPrint
+    End If
 End If
 If v = &HF3 Then ' Printing a Regular String Variable, PRINT A$
     x = x - 1 ' make sure to inlcude the first String variable
@@ -5068,7 +5108,13 @@ If v = &HF3 Then ' Printing a Regular String Variable, PRINT A$
     A$ = "BEQ": B$ = "Done@": C$ = "If the length of the string is zero then don't print it (Skip ahead)": GoSub AO
     Z$ = "!"
     A$ = "LDA": B$ = ",U+": C$ = "Get a source byte": GoSub AO
-    A$ = "JSR": B$ = PrintA$: C$ = "Go print A" + PrintDev$: GoSub AO
+    If PrintCC3 = 1 Then
+        A$ = "LDY": B$ = "#" + PrintA$: C$ = "Y points at the routine to do, Go print A" + PrintDev$: GoSub AO
+        A$ = "JSR": B$ = "DoCC3Graphics": C$ = "Prep for CoCo 3 graphics and then JSR ,Y and restore & return": GoSub AO
+    Else
+        ' Print to the CoCo 2 graphic screen
+        A$ = "JSR": B$ = PrintA$: C$ = "Go print A" + PrintDev$: GoSub AO
+    End If
     A$ = "DECB": C$ = "Decrement the counter": GoSub AO
     A$ = "BNE": B$ = "<": C$ = "Loop until all data is copied to the destination string": GoSub AO
     Z$ = "Done@": GoSub AO
@@ -5094,7 +5140,13 @@ If v = &HF5 Then
             Return 'if we previously did a comma or semicolon then Return
         Else
             A$ = "LDA": B$ = "#$0D": C$ = "Do a Line Feed/Carriage Return": GoSub AO
-            A$ = "JSR": B$ = PrintA$: C$ = "Go print A" + PrintDev$: GoSub AO
+            If PrintCC3 = 1 Then
+                A$ = "LDY": B$ = "#" + PrintA$: C$ = "Y points at the routine to do, Go print A" + PrintDev$: GoSub AO
+                A$ = "JSR": B$ = "DoCC3Graphics": C$ = "Prep for CoCo 3 graphics and then JSR ,Y and restore & return": GoSub AO
+            Else
+                ' Print to the CoCo 2 graphic screen
+                A$ = "JSR": B$ = PrintA$: C$ = "Go print A" + PrintDev$: GoSub AO
+            End If
             Return ' we have reached the end of the line return
         End If
     End If
@@ -5143,7 +5195,14 @@ If v = &HF5 Then
                         If v <> &H2C Then
                             Print "Print command should have a comma after # on";: GoTo FoundError
                         Else
-                            PrintD$ = "PRINT_D_Graphics_Screen": PrintA$ = "AtoGraphics_Screen": PrintDev$ = " to graphic screen"
+                            If Gmode > 99 Then
+                                ' Print to the CoCo 3 graphic screen
+                                PrintCC3 = 1
+                            Else
+                                ' Print to the CoCo 2 graphic screen
+                                PrintCC3 = 0
+                            End If
+                            PrintD$ = "PRINT_D_Graphics_Screen_" + GModeName$(Gmode): PrintA$ = "AtoGraphics_Screen_" + GModeName$(Gmode): PrintDev$ = " to graphic screen"
                             GoTo GetSectionToPrint
                         End If
                     End If
@@ -5162,7 +5221,13 @@ If v = &HF5 Then
             GoSub GetExpressionB4EndBracket: x = x + 2 ' get expression before an end bracket, move past it
             Expression$ = Expression$ + Chr$(&HF5) + Chr$(&H29) ' add close bracket
             ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression, value will end up in D
-            A$ = "JSR": B$ = PrintD$: C$ = "Go print D" + PrintDev$: GoSub AO
+            If PrintCC3 = 1 Then
+                A$ = "LDY": B$ = "#" + PrintD$: C$ = "Y points at the routine to do, Go print D" + PrintDev$: GoSub AO
+                A$ = "JSR": B$ = "DoCC3Graphics": C$ = "Prep for CoCo 3 graphics and then JSR ,Y and restore & return": GoSub AO
+            Else
+                ' Print to the CoCo 2 graphic screen
+                A$ = "JSR": B$ = PrintD$: C$ = "Go print D" + PrintDev$: GoSub AO
+            End If
         End If
         GoTo GetSectionToPrint
     End If
@@ -5180,8 +5245,15 @@ If v = &HFB Then ' Printing a FN - function
     x = x - 1 ' make sure to inlcude the first Numeric command byte
     GoSub GetExB4SemiComQ13D_EOL ' Get an Expression before a semi colon, a comma a quote, an &HF1,&HF3 or &HFD an EOL/Colon
     ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression, value will end up in D
-    A$ = "JSR": B$ = PrintD$: C$ = "Go print D" + PrintDev$: GoSub AO
-    GoTo GetSectionToPrint
+    If PrintCC3 = 1 Then
+        A$ = "LDY": B$ = "#" + PrintD$: C$ = "Y points at the routine to do, Go print D" + PrintDev$: GoSub AO
+        A$ = "JSR": B$ = "DoCC3Graphics": C$ = "Prep for CoCo 3 graphics and then JSR ,Y and restore & return": GoSub AO
+        GoTo GetSectionToPrint
+    Else
+        ' Print to the CoCo 2 graphic screen
+        A$ = "JSR": B$ = PrintD$: C$ = "Go print D" + PrintDev$: GoSub AO
+        GoTo GetSectionToPrint
+    End If
 End If
 If v = &HFC Then
     'Printing an operator command
@@ -5189,8 +5261,15 @@ If v = &HFC Then
         x = x - 1 ' make sure to inlcude the first Numeric variable
         GoSub GetExB4SemiComQ13D_EOL ' Get an Expression before a semi colon, a comma a quote, an &HF1,&HF3 or &HFD an EOL/Colon
         ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression, value will end up in D
-        A$ = "JSR": B$ = PrintD$: C$ = "Go print D" + PrintDev$: GoSub AO
-        GoTo GetSectionToPrint
+        If PrintCC3 = 1 Then
+            A$ = "LDY": B$ = "#" + PrintD$: C$ = "Y points at the routine to do, Go print D" + PrintDev$: GoSub AO
+            A$ = "JSR": B$ = "DoCC3Graphics": C$ = "Prep for CoCo 3 graphics and then JSR ,Y and restore & return": GoSub AO
+            GoTo GetSectionToPrint
+        Else
+            ' Print to the CoCo 2 graphic screen
+            A$ = "JSR": B$ = PrintD$: C$ = "Go print D" + PrintDev$: GoSub AO
+            GoTo GetSectionToPrint
+        End If
     Else
         If Array(x) = &H2B Then
             ' Found a Plus, Make sure it's not a number to print
@@ -5199,8 +5278,15 @@ If v = &HFC Then
                 x = x - 1 ' make it start at the +
                 GoSub GetExB4SemiComQ13D_EOL ' Get an Expression before a semi colon, a comma a quote, an &HF1,&HF3 or &HFD an EOL/Colon
                 ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression, value will end up in D
-                A$ = "JSR": B$ = PrintD$: C$ = "Go print D" + PrintDev$: GoSub AO
-                GoTo GetSectionToPrint
+                If PrintCC3 = 1 Then
+                    A$ = "LDY": B$ = "#" + PrintD$: C$ = "Y points at the routine to do, Go print D" + PrintDev$: GoSub AO
+                    A$ = "JSR": B$ = "DoCC3Graphics": C$ = "Prep for CoCo 3 graphics and then JSR ,Y and restore & return": GoSub AO
+                    GoTo GetSectionToPrint
+                Else
+                    ' Print to the CoCo 2 graphic screen
+                    A$ = "JSR": B$ = PrintD$: C$ = "Go print D" + PrintDev$: GoSub AO
+                    GoTo GetSectionToPrint
+                End If
             Else
                 '  treat it like a semicolon
                 If Array(x + 1) = &HF5 And (Array(x + 2) = &H0D Or Array(x + 2) = &H3A) Then
@@ -5232,7 +5318,13 @@ If v = &HFD Then ' Printing a String Command, PRINT CHR$(67)
     A$ = "BEQ": B$ = "Done@": C$ = "If the length of the string is zero then don't print it (Skip ahead)": GoSub AO
     Z$ = "!"
     A$ = "LDA": B$ = ",U+": C$ = "Get a source byte": GoSub AO
-    A$ = "JSR": B$ = PrintA$: C$ = "Go print A" + PrintDev$: GoSub AO
+    If PrintCC3 = 1 Then
+        A$ = "LDY": B$ = "#" + PrintA$: C$ = "Y points at the routine to do, Go print A" + PrintDev$: GoSub AO
+        A$ = "JSR": B$ = "DoCC3Graphics": C$ = "Prep for CoCo 3 graphics and then JSR ,Y and restore & return": GoSub AO
+    Else
+        ' Print to the CoCo 2 graphic screen
+        A$ = "JSR": B$ = PrintA$: C$ = "Go print A" + PrintDev$: GoSub AO
+    End If
     A$ = "DECB": C$ = "Decrement the counter": GoSub AO
     A$ = "BNE": B$ = "<": C$ = "Loop until all data is copied to the destination string": GoSub AO
     Z$ = "Done@": GoSub AO
@@ -5247,7 +5339,13 @@ If v = &HFE Then ' Printing a Numeric Command, PRINT PEEK(10)
         ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression, value will end up in D
         A$ = "LDA": B$ = "#$20": C$ = "A = SPACE": GoSub AO
         Z$ = "!"
-        A$ = "JSR": B$ = PrintA$: C$ = "Go print A" + PrintDev$: GoSub AO
+        If PrintCC3 = 1 Then
+            A$ = "LDY": B$ = "#" + PrintA$: C$ = "Y points at the routine to do, Go print A" + PrintDev$: GoSub AO
+            A$ = "JSR": B$ = "DoCC3Graphics": C$ = "Prep for CoCo 3 graphics and then JSR ,Y and restore & return": GoSub AO
+        Else
+            ' Print to the CoCo 2 graphic screen
+            A$ = "JSR": B$ = PrintA$: C$ = "Go print A" + PrintDev$: GoSub AO
+        End If
         A$ = "DECB": C$ = "Decrement the count": GoSub AO
         A$ = "BNE": B$ = "<": C$ = "keep looping": GoSub AO
         GoTo GetSectionToPrint
@@ -5258,8 +5356,15 @@ If v = &HFE Then ' Printing a Numeric Command, PRINT PEEK(10)
         '        Print Hex$(x + 2), Hex$(Array(x + 2))
         GoSub GetExB4SemiComQ13D_EOL ' Get an Expression before a semi colon, a comma a quote, an &HF1,&HF3 or &HFD an EOL/Colon
         ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression, value will end up in D
-        A$ = "JSR": B$ = PrintD$: C$ = "Go print D" + PrintDev$: GoSub AO
-        GoTo GetSectionToPrint
+        If PrintCC3 = 1 Then
+            A$ = "LDY": B$ = "#" + PrintD$: C$ = "Y points at the routine to do, Go print D" + PrintDev$: GoSub AO
+            A$ = "JSR": B$ = "DoCC3Graphics": C$ = "Prep for CoCo 3 graphics and then JSR ,Y and restore & return": GoSub AO
+            GoTo GetSectionToPrint
+        Else
+            ' Print to the CoCo 2 graphic screen
+            A$ = "JSR": B$ = PrintD$: C$ = "Go print D" + PrintDev$: GoSub AO
+            GoTo GetSectionToPrint
+        End If
     End If
 End If
 If v = &HFF Then
@@ -5267,7 +5372,13 @@ If v = &HFF Then
     x = x - 1
     v = Array(x)
     A$ = "LDA": B$ = "#$0D": C$ = "Do a Line Feed/Carriage Return": GoSub AO
-    A$ = "JSR": B$ = PrintA$: C$ = "Go print A" + PrintDev$: GoSub AO
+    If PrintCC3 = 1 Then
+        A$ = "LDY": B$ = "#" + PrintA$: C$ = "Y points at the routine to do, Go print A" + PrintDev$: GoSub AO
+        A$ = "JSR": B$ = "DoCC3Graphics": C$ = "Prep for CoCo 3 graphics and then JSR ,Y and restore & return": GoSub AO
+    Else
+        ' Print to the CoCo 2 graphic screen
+        A$ = "JSR": B$ = PrintA$: C$ = "Go print A" + PrintDev$: GoSub AO
+    End If
     Return
 End If
 If v = &H40 Then
@@ -5355,6 +5466,7 @@ Return
 
 DoINPUT:
 PrintD$ = "PRINT_D": PrintA$ = "PrintA_On_Screen": PrintDev$ = " on screen" ' Make sure we are printing on the text screen
+PrintCC3 = 0
 v = Array(x): x = x + 1
 ShowInputCount = ShowInputCount + 1
 num = ShowInputCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
@@ -5741,25 +5853,14 @@ DoLOCATE:
 ' Get first number in D
 GoSub GetExpressionB4Comma: x = x + 2 ' Get the expression before a Comma, & move past it
 ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
-A$ = "CMPB": B$ = "#31": C$ = "Check if it's beyond the right side of the screen": GoSub AO
-A$ = "BLS": B$ = ">": C$ = "Skip ahead if good": GoSub AO
-A$ = "LDB": B$ = "#31": C$ = "If it's beyond the screen, make it the bottom row": GoSub AO
-Z$ = "!"
-A$ = "ADDD": B$ = "#$E00": C$ = "D = Column + $E00, start of the screen in RAM": GoSub AO
-A$ = "TFR": B$ = "D,X": C$ = "Save D = Column in X": GoSub AO
+A$ = "STD": B$ = "x0": C$ = "Save the x location": GoSub AO
 'x in the array will now be pointing just past the ,
-'Get value to poke in D (we only use B)
 GoSub GetExpressionB4EOL ' Get the expression before an End of Line in Expression$
 ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
-A$ = "CMPB": B$ = "#184": C$ = "Check if it's beyond the bottom of the screen": GoSub AO
-A$ = "BLS": B$ = ">": C$ = "Skip ahead if good": GoSub AO
-A$ = "LDB": B$ = "#184": C$ = "If it's beyond the screen, make it the bottom row": GoSub AO
-Z$ = "!"
-A$ = "LDA": B$ = "#32": C$ = "32 bytes per row": GoSub AO
-A$ = "MUL": C$ = "Move down the screen B Rows": GoSub AO
-A$ = "LEAX": B$ = "D,X": C$ = "X=X+D, which now has the screen location": GoSub AO
-A$ = "STX": B$ = "GraphicCURPOS": C$ = "Update the location of the cursor": GoSub AO
+A$ = "STD": B$ = "y0": C$ = "Save the y location": GoSub AO
+A$ = "JSR": B$ = "LOCATE_" + GModeName$(Gmode): C$ = "Setup the location to print text on the graphics screen": GoSub AO
 Return
+
 ' Quickly get the joystick values of 0,31,63 of both joysticks both horizontally and vertically
 ' Results are stored same place BASIC normally has the Joystick readings:
 ' LEFT  LEFT   RIGHT RIGHT
@@ -6502,7 +6603,7 @@ A$ = "PULS": B$ = "B": C$ = "Get the Screen Mode off the stack": GoSub AO
 ScreenSkipColourSet:
 ' B = Screen mode 0 = Text, anything else is graphics screen mode
 A$ = "TSTB": C$ = "Test B": GoSub AO
-A$ = "BNE": B$ = "@DoGraphicMode": C$ = "Skip ahead if grpahics mode requested": GoSub AO
+A$ = "BNE": B$ = "@DoGraphicMode": C$ = "Skip ahead if graphics mode requested": GoSub AO
 A$ = "LDX": B$ = "#$0400": C$ = "Text screen starts here": GoSub AO
 A$ = "STX": B$ = "BEGGRP": C$ = "Update the Screen starting location": GoSub AO
 A$ = "LDA": B$ = "#$0F": C$ = "$0F Back to Text Mode for the CoCo 3": GoSub AO
@@ -6527,9 +6628,15 @@ If Gmode > 99 Then
     A$ = "STA": B$ = "$FF99": C$ = "Vid_Res_Reg": GoSub AO
     A$ = "LDA": B$ = "#%10000000": GoSub AO
     A$ = "STA": B$ = "$FF98": C$ = "Video_Mode_Register, Graphics mode, Colour output, 60 hz, max vertical res": GoSub AO
-    A$ = "LDD": B$ = "#$0000": GoSub AO
-    A$ = "STD": B$ = "$FF9D": C$ = "VidStart": GoSub AO
+    A$ = "LDA": B$ = "CC3ScreenStart": C$ = "A = $2000 screen block location": GoSub AO
+    A$ = "CLRB": C$ = "CLEAR B": GoSub AO
+    A$ = "LSLA": C$ = "A=A*2": GoSub AO
+    A$ = "LSLA": C$ = "A=A*4": GoSub AO
+    A$ = "STD": B$ = "$FF9D": C$ = "Update the VidStart": GoSub AO
     A$ = "CLR": B$ = "$FF9F": C$ = "Hor_Offset_Reg, Don't use a Horizontal offset": GoSub AO
+    '    Z$ = "!": GoSub AO
+    '    Print #1, ' Need a space for @ in assembly
+    '    Return
 Else
     If Gmode = 4 Or Gmode = 7 Then
         A$ = "LDA": B$ = "#9": C$ = "9 for Semigrpahics 6 or 12": GoSub AO

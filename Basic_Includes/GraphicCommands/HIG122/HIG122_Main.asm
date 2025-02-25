@@ -2,6 +2,7 @@
 ; Resolution of 128x200x2 colours
 ScreenWidth_HIG122    EQU 128
 ScreenHeight_HIG122   EQU 200
+BytesPerRow_HIG122    EQU ScreenWidth_HIG122/8
 Screen_Size_HIG122    EQU $0C80
 ;
 ; Do SET

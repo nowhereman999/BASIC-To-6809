@@ -1,4 +1,4 @@
-CircleScale_HIG121    EQU 64
+CircleScale_HIG112    EQU 64
 ;
 * Circle command
 * Enter with:
@@ -6,21 +6,21 @@ CircleScale_HIG121    EQU 64
 * y Center is at 3,S
 * radius is at 2,S
 ; CIRCLE routine to draw a circle centered at (x_Center, y_Center) with radius r
-CIRCLE_HIG121:
+CIRCLE_HIG112:
         LDA     LineColour      ; Get the line colour
         BNE     @Colour1        ; If it's not zero then draw white
-        LDD     #DoReSetYXCheck_HIG121     ; Get address of RESET for black pixels
+        LDD     #DoReSetYXCheck_HIG112     ; Get address of RESET for black pixels
         BRA     >
 @Colour1:
-        LDD     #DoSetYXCheck_HIG121       ; Get address of SET for white pixels
-!       STD     SelfModC1_HIG121+1 ; Selfmod the jump address
-        STD     SelfModC2_HIG121+1 ; Selfmod the jump address
-        STD     SelfModC3_HIG121+1 ; Selfmod the jump address
-        STD     SelfModC4_HIG121+1 ; Selfmod the jump address
-        STD     SelfModC5_HIG121+1 ; Selfmod the jump address
-        STD     SelfModC6_HIG121+1 ; Selfmod the jump address
-        STD     SelfModC7_HIG121+1 ; Selfmod the jump address
-        STD     SelfModC8_HIG121+1 ; Selfmod the jump address
+        LDD     #DoSetYXCheck_HIG112       ; Get address of SET for white pixels
+!       STD     SelfModC1_HIG112+1 ; Selfmod the jump address
+        STD     SelfModC2_HIG112+1 ; Selfmod the jump address
+        STD     SelfModC3_HIG112+1 ; Selfmod the jump address
+        STD     SelfModC4_HIG112+1 ; Selfmod the jump address
+        STD     SelfModC5_HIG112+1 ; Selfmod the jump address
+        STD     SelfModC6_HIG112+1 ; Selfmod the jump address
+        STD     SelfModC7_HIG112+1 ; Selfmod the jump address
+        STD     SelfModC8_HIG112+1 ; Selfmod the jump address
         CLRA
         LDB     9,S             ; Load x coordinate (x_Center) from stack
         STD     x_Center        ; Store in x_Center
@@ -41,12 +41,12 @@ CIRCLE_HIG121:
         STD     decision          
 
 ; WHILE x < = y
-CircleLoop_HIG121:     
+CircleLoop_HIG112:     
         LDD     x0        
         CMPD    y0         ; Compare D with the value on the stack, fix the stack
         BLE     >
         RTS
-!       BSR     PlotPoints_HIG121
+!       BSR     PlotPoints_HIG112
 ; Update x, x = x + 1
         LDD     x0
         ADDD    #1
@@ -71,7 +71,7 @@ CircleLoop_HIG121:
         ADDD    #10
         ADDD    decision
         STD     decision
-        BRA     CircleLoop_HIG121          ; Loop until x <= y
+        BRA     CircleLoop_HIG112          ; Loop until x <= y
 ; else:
 ; decision = decision+ 4 * x + 6
 !       LDD     x0
@@ -82,17 +82,17 @@ CircleLoop_HIG121:
         ADDD    #6
         ADDD    decision
         STD     decision
-        BRA     CircleLoop_HIG121      ; Loop until x <= y
+        BRA     CircleLoop_HIG112      ; Loop until x <= y
 
-PlotPoints_HIG121:
+PlotPoints_HIG112:
 ; Plot (x + x_Center, y + y_Center)
         LDB     x0+1
         LSRB                            ; Scale B
         ADDB    x_Center+1
         LDA     y0+1
         ADDA    y_Center+1
-SelfModC1_HIG121:
-        JSR     DoSetYXCheck_HIG121            ; Plot the pixel
+SelfModC1_HIG112:
+        JSR     DoSetYXCheck_HIG112            ; Plot the pixel
 ; Plot (-x + x_Center, y + y_Center)
         LDB     x0+1
         LSRB                            ; Scale B
@@ -100,16 +100,16 @@ SelfModC1_HIG121:
         ADDB    x_Center+1
         LDA     y0+1
         ADDA    y_Center+1
-SelfModC2_HIG121:
-        JSR     DoSetYXCheck_HIG121            ; Plot the pixel
+SelfModC2_HIG112:
+        JSR     DoSetYXCheck_HIG112            ; Plot the pixel
 ; Plot (x + x_Center, -y + y_Center)
         LDB     x0+1
         LSRB                            ; Scale B
         ADDB    x_Center+1
         LDA     y_Center+1
         SUBA    y0+1
-SelfModC3_HIG121:
-        JSR     DoSetYXCheck_HIG121            ; Plot the pixel
+SelfModC3_HIG112:
+        JSR     DoSetYXCheck_HIG112            ; Plot the pixel
 ; Plot (-x + x_Center, -y + y_Center)
         LDB     x0+1
         LSRB                            ; Scale B
@@ -117,16 +117,16 @@ SelfModC3_HIG121:
         ADDB    x_Center+1
         LDA     y_Center+1
         SUBA    y0+1
-SelfModC4_HIG121:
-        JSR     DoSetYXCheck_HIG121            ; Plot the pixel
+SelfModC4_HIG112:
+        JSR     DoSetYXCheck_HIG112            ; Plot the pixel
 ; Plot (y + x_Center, x + y_Center)
         LDB     y0+1
         LSRB                            ; Scale B
         ADDB    x_Center+1
         LDA     x0+1
         ADDA    y_Center+1
-SelfModC5_HIG121:
-        JSR     DoSetYXCheck_HIG121            ; Plot the pixel
+SelfModC5_HIG112:
+        JSR     DoSetYXCheck_HIG112            ; Plot the pixel
 ; Plot (-y + x_Center, x + y_Center)
         LDB     y0+1
         LSRB                            ; Scale B
@@ -134,16 +134,16 @@ SelfModC5_HIG121:
         ADDB    x_Center+1
         LDA     x0+1
         ADDA    y_Center+1
-SelfModC6_HIG121:
-        JSR     DoSetYXCheck_HIG121            ; Plot the pixel
+SelfModC6_HIG112:
+        JSR     DoSetYXCheck_HIG112            ; Plot the pixel
 ; Plot (y + x_Center, -x + y_Center)
         LDB     y0+1
         LSRB                            ; Scale B
         ADDB    x_Center+1
         LDA     y_Center+1
         SUBA	x0+1    
-SelfModC7_HIG121:
-        JSR     DoSetYXCheck_HIG121            ; Plot the pixel
+SelfModC7_HIG112:
+        JSR     DoSetYXCheck_HIG112            ; Plot the pixel
 ; Plot (-y + x_Center, -x + y_Center)
         LDB     y0+1
         LSRB                            ; Scale B
@@ -151,46 +151,46 @@ SelfModC7_HIG121:
         ADDB    x_Center+1
         LDA     y_Center+1
         SUBA    x0+1
-SelfModC8_HIG121:
-        JMP     DoSetYXCheck_HIG121            ; Plot the pixel
+SelfModC8_HIG112:
+        JMP     DoSetYXCheck_HIG112            ; Plot the pixel
 
 ;
 ; Circle Command comes here
 ; Do the set command, but check to make sure Y & X co-ordinates are not beyond the screen
-DoSetYXCheck_HIG121:
-!           CMPA    #ScreenHeight_HIG121-1
+DoSetYXCheck_HIG112:
+!           CMPA    #ScreenHeight_HIG112-1
             BLS     @GoodA
 ; If we get here the value is not in screen's range
-			CMPA	#255-((255-ScreenHeight_HIG121-1)/2) 
+			CMPA	#255-((255-ScreenHeight_HIG112-1)/2) 
 			BLS		>			; If we are <= the midpoint beyond the screen size then use max value
 			CLRA				; otherwise make it zero
 			BRA		@GoodA
-!           LDA     #ScreenHeight_HIG121-1
-@GoodA      CMPB    #ScreenWidth_HIG121-1
+!           LDA     #ScreenHeight_HIG112-1
+@GoodA      CMPB    #ScreenWidth_HIG112-1
             BLS     @GoodB
 ; If we get here the value is not in screen's range
-			CMPB	#255-((255-ScreenWidth_HIG121-1)/2) 
+			CMPB	#255-((255-ScreenWidth_HIG112-1)/2) 
 			BLS		>			; If we are <= the midpoint beyond the screen size then use max value
 			CLRB				; otherwise make it zero
 			BRA		@GoodB
-!           LDB     #ScreenWidth_HIG121-1
-@GoodB      JMP     SET_HIG121    ; go set the pixel
+!           LDB     #ScreenWidth_HIG112-1
+@GoodB      JMP     SET_HIG112    ; go set the pixel
 
-DoReSetYXCheck_HIG121:
-!           CMPA    #ScreenHeight_HIG121-1
+DoReSetYXCheck_HIG112:
+!           CMPA    #ScreenHeight_HIG112-1
             BLS     @GoodA
 ; If we get here the value is not in screen's range
-			CMPA	#255-((255-ScreenHeight_HIG121-1)/2) 
+			CMPA	#255-((255-ScreenHeight_HIG112-1)/2) 
 			BLS		>			; If we are <= the midpoint beyond the screen size then use max value
 			CLRA				; otherwise make it zero
 			BRA		@GoodA
-!           LDA     #ScreenHeight_HIG121-1
-@GoodA      CMPB    #ScreenWidth_HIG121-1
+!           LDA     #ScreenHeight_HIG112-1
+@GoodA      CMPB    #ScreenWidth_HIG112-1
             BLS     @GoodB
 ; If we get here the value is not in screen's range
-			CMPB	#255-((255-ScreenWidth_HIG121-1)/2) 
+			CMPB	#255-((255-ScreenWidth_HIG112-1)/2) 
 			BLS		>			; If we are <= the midpoint beyond the screen size then use max value
 			CLRB				; otherwise make it zero
 			BRA		@GoodB
-!           LDB     #ScreenWidth_HIG121-1
-@GoodB      JMP     RESET_HIG121    ; go set the pixel
+!           LDB     #ScreenWidth_HIG112-1
+@GoodB      JMP     RESET_HIG112    ; go set the pixel

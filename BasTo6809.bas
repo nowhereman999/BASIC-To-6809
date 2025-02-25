@@ -3,7 +3,14 @@
 'Print "hex$(Array(x+2) "; Hex$(Array(x + 2))
 'System
 
-V$ = "4.03"
+V$ = "4.10"
+'       - Added text fonts that can be used directly in any graphics mode, use LOCATE x,y and PRINT #-3,"Hello World" to print
+'         to the graphics screen.  You must select the font using the -f option.  The font names end with _Bx_Fx where Bx is the Background
+'         colour and Fx is the Foreground colour. Example: -fCoCoT1_B0_F2
+'       - Can now put compiler options on the first line of the program using ' CompilerOptins:
+'         Example first line of your program: ' CompileOptions: -fArcade_B0_F1 -o -s32
+'
+' V4.03
 '       - Fixed a bug in the GCOPY command
 '       - Tweaked the code for the GMODE command
 
@@ -270,7 +277,8 @@ If count = 0 Then
 End If
 nt = 0: newp = 0: endp = 0: BranchCheck = 0: StringArraySize = 255: KeepTempFiles = 0: AutoStart = 0
 Optimize = 2 ' Default to optimize level 2
-Font$ = "Arcade" ' Default font to use for graphics screen
+Font$ = "Arcade_B0_F1" ' Default font to use for graphics screen
+
 For check = 1 To count
     N$ = Command$(check)
     If LCase$(Left$(N$, 5)) = "-coco" Then BASICMode = 1: GoTo CheckNextCMDOption
@@ -306,23 +314,6 @@ For check = 1 To count
     Close #1
     CheckNextCMDOption:
 Next check
-If LCase$(Right$(Font$, 4)) = ".asm" Then Font$ = Left$(Font$, Len(Font$) - 4) ' remove .asm from font name (if the user supplied it)
-Open "Basic_Includes/Graphic_Screen_Fonts/" + Font$ + ".asm" For Append As #1
-FontLength = LOF(1)
-Close #1
-If FontLength < 1 Then
-    Print "Error font file: "; Font$; " doesn't exist."
-    Kill "Basic_Includes/Graphic_Screen_Fonts/" + Font$ + ".asm"
-    Print "Fonts available are:"
-    Filelist$ = _Files$("Basic_Includes/Graphic_Screen_Fonts/")
-    Do While Len(Filelist$) > 0
-        If LCase$(Right$(Filelist$, 4)) = ".asm" Then
-            Print Left$(Filelist$, Len(Filelist$) - 4)
-        End If
-        Filelist$ = _Files$
-    Loop
-    System
-End If
 
 If BASICMode = 0 Then
     ' Let's detect the input filetype
@@ -337,6 +328,38 @@ If Verbose > 0 Then
     Print "BASIC program: "; Fname$
     Print "Output filename is: "; OutName$
 End If
+
+' Check if the first line of the program has commandline options
+Open Fname$ For Input As #1
+Line Input #1, I$
+If InStr(LCase$(I$), "compileoptions") > 0 Then
+    ' Found compiler options on first line of the BASIC program
+    p = 1
+    Do
+        s = InStr(p, I$, "-") ' Find the next "-"
+        If s = 0 Then Exit Do ' No more options
+        e = InStr(s + 1, I$, " ") ' Find the next space
+        If e = 0 Then e = Len(I$) + 1 ' If no space found, assume end of line
+        N$ = Mid$(I$, s, e - s) ' Extract and print the option
+        If LCase$(Left$(N$, 5)) = "-coco" Then BASICMode = 1
+        If LCase$(Left$(N$, 6)) = "-ascii" Then BASICMode = 3
+        If LCase$(Left$(N$, 2)) = "-s" Then StringArraySize = Val(Right$(N$, Len(N$) - 2))
+        If LCase$(Left$(N$, 2)) = "-o" Then Optimize = Val(Right$(N$, Len(N$) - 2))
+        If LCase$(Left$(N$, 2)) = "-b" Then BranchCheck = Val(Right$(N$, Len(N$) - 2))
+        If Left$(N$, 2) = "-V" Then Verbose = Val(Right$(N$, Len(N$) - 2))
+        If LCase$(Left$(N$, 2)) = "-p" Then ProgramStart$ = Right$(N$, Len(N$) - 2)
+        If LCase$(Left$(N$, 2)) = "-k" Then KeepTempFiles = 1
+        If LCase$(Left$(N$, 2)) = "-f" Then Font$ = Right$(N$, Len(N$) - 2)
+        If LCase$(Left$(N$, 2)) = "-a" Then AutoStart = 1
+        If Left$(N$, 2) = "-v" Then
+            ' Show the Version number and exit
+            Print "BasTo6809 - BASIC to 6809 Assembly converter V"; V$
+            System
+        End If
+        p = e + 1 ' Move past the last found option
+    Loop
+End If
+Close #1
 
 If StringArraySize < 1 Or StringArraySize > 255 Then Print "String Array size option of"; StringArraySize; "is out of range. Must be between 1 and 255": System
 
@@ -506,25 +529,25 @@ For i = 0 To length - 1
 Next i
 
 ' Erase double or more spaces and double or more colons
-i = 0: n = 0
+i = 0: N = 0
 q = 0
 EraseExtraSpacesColons:
-While n < length
-    y = n
+While N < length
+    y = N
     ' get a line and look for ADDASSEM
     Temp$ = "": c = 0
-    While n <= length And c <> &H0D
-        c = Array(n): n = n + 1
+    While N <= length And c <> &H0D
+        c = Array(N): N = N + 1
         Temp$ = Temp$ + Chr$(c)
     Wend
     If InStr(Temp$, "ADDASSEM") > 0 Then
         ' This line is an ADDASSEM line, copy everything as it is until we get to an ENDASSEM line
         'Copy Top line
-        n = y
+        N = y
         CopyAssemCodeAsIs:
         Temp$ = "": c = 0
-        While n <= length And c <> &H0D
-            c = Array(n): n = n + 1
+        While N <= length And c <> &H0D
+            c = Array(N): N = N + 1
             Temp$ = Temp$ + Chr$(c)
         Wend
         For ii = 1 To Len(Temp$)
@@ -533,32 +556,32 @@ While n < length
         If InStr(Temp$, "ENDASSEM") > 0 Then GoTo EraseExtraSpacesColons 'Copied the last line
         GoTo CopyAssemCodeAsIs
     Else
-        n = y
-        c = Array(n)
-        While n < length And c <> &H0D
-            c = Array(n)
+        N = y
+        c = Array(N)
+        While N < length And c <> &H0D
+            c = Array(N)
             Array(i) = c
             If c = &H22 Then q = q + 1 ' Found a quote
             If (q And 1) = 0 Then
                 '  Not in a Quote
                 If c = Asc(" ") Then
                     ' Found a space and not in a quote
-                    n = n + 1
-                    While Array(n) = Asc(" ")
-                        n = n + 1 ' skip the spaces
+                    N = N + 1
+                    While Array(N) = Asc(" ")
+                        N = N + 1 ' skip the spaces
                     Wend
-                    n = n - 1
+                    N = N - 1
                 End If
                 If c = Asc(":") Then
                     'Found a colon
                     q = 0
-                    While Array(n) = Asc(":")
-                        n = n + 1 ' skip extra colons
+                    While Array(N) = Asc(":")
+                        N = N + 1 ' skip extra colons
                     Wend
-                    n = n - 1
+                    N = N - 1
                 End If
             End If
-            n = n + 1
+            N = N + 1
             i = i + 1
         Wend
         q = 0
