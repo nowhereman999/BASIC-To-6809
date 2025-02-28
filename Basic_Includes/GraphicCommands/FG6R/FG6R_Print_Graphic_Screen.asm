@@ -1,5 +1,6 @@
 ; Print Command
 ; Print number in D to the graphics screen
+BytesPerChar    EQU     1
 PRINT_D_Graphics_Screen_FG6R:
         TSTA              ; See if the value is negative or positive
         BPL     >         ; Skip ahead if positive
@@ -97,8 +98,8 @@ AtoGraphics_Screen_FG6R:
         BNE   >
         CMPX  BEGGRP    ; Start of the screen?
         BEQ   @DoneGraphicText   ; Retore the registers and return
-        LDA   #$20      ; Blank
-        LEAX  -1,X
+                LDA   #$20      ; Draw a Blank
+        LEAX  -BytesPerChar,X ; Back up the position
         BSR   @GraphicTextDrawAatX  ; Go Draw character A on screen at X
         BRA   @GraphicsTextUpdateCursor  ; Update Cursor and exit
 !       LDU   BEGGRP    ; U = screen start
