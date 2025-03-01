@@ -5,8 +5,8 @@ For more info check out the blog post here:
 https://wordpress.com/post/nowhereman999.wordpress.com/5054
 
 V 4.20
-- Fixed a bug in GMODE 1 graphic commands (This mode only supprts two colours, not 9 like GMODE 0)
-- Added printing to the screen using the semi-graphic modes, the sime graphics modes use the built in VDG font except for GMODE 4
+- Fixed a bug in GMODE 1 graphic commands (This mode only supports two colours, not 9 like GMODE 0)
+- Added printing to the screen using the semi-graphic modes, the semi-graphics modes use the built in VDG font except for GMODE 4
   which uses SG6 and the built in fonts aren't supported in the this mode.  So the font that is shown is a large 6x6 matrix font.
   Now every GMODE can now print text on the screen using LOCATE x,y:PRINT #-3,"Hello World"
 
