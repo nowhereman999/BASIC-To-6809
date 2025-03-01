@@ -4,6 +4,16 @@ A BASIC compiler for the TRS-80 Color Computer
 For more info check out the blog post here:
 https://wordpress.com/post/nowhereman999.wordpress.com/5054
 
+V 4.20
+- Fixed a bug in GMODE 1 graphic commands (This mode only supprts two colours, not 9 like GMODE 0)
+- Added printing to the screen using the semi-graphic modes, the sime graphics modes use the built in VDG font except for GMODE 4
+  which uses SG6 and the built in fonts aren't supported in the this mode.  So the font that is shown is a large 6x6 matrix font.
+  Now every GMODE can now print text on the screen using LOCATE x,y:PRINT #-3,"Hello World"
+
+V 4.11
+- Can now handle MID$(String,Start) which will copy the String starting at location Start copying the rest of the string.  It no
+  longer needs to be MID$(String,Start,Length).  
+
 V 4.10
 - Added text fonts that can be used directly in any graphics mode including CoCo 3 modes but not the semi graphic modes
   Use LOCATE x,y and PRINT #-3,"Hello World" to print

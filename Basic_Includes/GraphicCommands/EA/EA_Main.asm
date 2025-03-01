@@ -78,11 +78,11 @@ GCLSComp_EA:
         RTS
 EA_ColourTable:
         FCB     $80     ; 0
-        FCB     $8F     ; 1
-        FCB     $9F     ; 2
-        FCB     $AF     ; 3
+        FCB     $BF     ; 1
+        FCB     $BF     ; 2
+        FCB     $BF     ; 3
         FCB     $BF     ; 4
-        FCB     $CF     ; 5
-        FCB     $DF     ; 6
-        FCB     $EF     ; 7
+        FCB     $FF     ; 5
+        FCB     $FF     ; 6
+        FCB     $FF     ; 7
         FCB     $FF     ; 8

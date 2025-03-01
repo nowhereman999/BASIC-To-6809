@@ -8572,7 +8572,6 @@ StringPointerTemp$ = "_StrVar_PF" + Num$ 'StringPointerTemp$ = the Temp string p
 index(ExpressionCount) = index(ExpressionCount) + 2 ' Consume the $F5 & comma
 GoSub ParseExpression0FlagErase ' Recursively check the next numeric value
 ' D now has the Starting point in the MID$ command
-
 A$ = "PSHS": B$ = "D": C$ = "Save the starting location on the stack": GoSub AO
 A$ = "BLE": B$ = "@NullString1": C$ = "If the Starting point is zero or a negative then return with NULL string": GoSub AO
 A$ = "LDX": B$ = "#" + StringPointerTemp$: C$ = "X is now pointing at the size of this string": GoSub AO
@@ -8580,12 +8579,19 @@ A$ = "CMPB": B$ = ",X": C$ = "compare B with the length of _StrVar_PF00": GoSub 
 A$ = "BHI": B$ = "@NullString1": C$ = "If the start location is higher than the size of the string, then return with NULL string": GoSub AO
 A$ = "ABX": C$ = "Move the pointer to the starting location in the string": GoSub AO
 
-' Get the numeric value after the comma
-index(ExpressionCount) = index(ExpressionCount) + 2 ' Consume the $F5 & comma
-GoSub ParseExpression0FlagErase ' Recursively check the next numeric value
-resultP30(PE30Count) = Parse00_Term ' this will return with the next value
-' D now has the Length value in the MID$ command
-
+If Asc(Mid$(Expression$(ExpressionCount), index(ExpressionCount), 1)) = &HF5 And Asc(Mid$(Expression$(ExpressionCount), index(ExpressionCount), 2)) = &H2C Then
+    ' Get the numeric value after the comma
+    index(ExpressionCount) = index(ExpressionCount) + 2 ' Consume the $F5 & comma
+    GoSub ParseExpression0FlagErase ' Recursively check the next numeric value
+    resultP30(PE30Count) = Parse00_Term ' this will return with the next value
+    ' D now has the Length value in the MID$ command
+Else
+    ' MID$ has no 2nd comma, so we copy the rest of the string similar to RIGHT$(a$,len(a$)-x)
+    A$ = "CLRA": C$ = "Clear A": GoSub AO
+    A$ = "NEGB": C$ = "Make B a negative": GoSub AO
+    A$ = "ADDB": B$ = StringPointerTemp$: C$ = "B now has the length of this string to copy": GoSub AO
+    A$ = "INCB": C$ = "B=B+1": GoSub AO
+End If
 A$ = "PSHS": B$ = "D": C$ = "Save the length on the stack": GoSub AO
 A$ = "BEQ": B$ = "@NullString0": C$ = "If the length is zero then return with a NULL string": GoSub AO
 A$ = "ADDD": B$ = "2,S": C$ = "D = Length + starting location": GoSub AO
@@ -8619,6 +8625,8 @@ A$ = "CLR": B$ = StringPointerTemp$: C$ = "Make the size of the string zero (NUL
 Print #1, "!"
 Print #1,
 Return
+
+
 DoINKEY:
 num = StrParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
 If num < 10 Then Num$ = "0" + Num$

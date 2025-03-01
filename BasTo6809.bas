@@ -2,54 +2,52 @@
 'Print "hex$(Array(x+1) "; Hex$(Array(x + 1))
 'Print "hex$(Array(x+2) "; Hex$(Array(x + 2))
 'System
+V$ = "4.20"
+'       - Fixed a bug in GMODE 1 graphic commands (This mode only supprts two colours, not 9 like GMODE 0)
+'       - Added printing to the screen using the semi-graphic modes, the sime graphics modes use the built in VDG font except for GMODE 4
+'       - which uses SG6 and the built in fonts aren't supported in the this mode.  So the font that is shown is a large 6x6 matrix font.
+'       - Now every GMODE can now print text on the screen using LOCATE x,y:PRINT #-3,"Hello World"
 
-V$ = "4.10"
-'       - Added text fonts that can be used directly in any graphics mode, use LOCATE x,y and PRINT #-3,"Hello World" to print
+' V 4.11
+'       - Can now handle MID$(String,Start) which will copy the String starting at location Start copying the rest of the string.  It no
+'         longer needs to be MID$(String,Start,Length).
+
+' V4.10 - Added text fonts that can be used directly in any graphics mode, use LOCATE x,y and PRINT #-3,"Hello World" to print
 '         to the graphics screen.  You must select the font using the -f option.  The font names end with _Bx_Fx where Bx is the Background
 '         colour and Fx is the Foreground colour. Example: -fCoCoT1_B0_F2
 '       - Can now put compiler options on the first line of the program using ' CompilerOptins:
 '         Example first line of your program: ' CompileOptions: -fArcade_B0_F1 -o -s32
 '
-' V4.03
-'       - Fixed a bug in the GCOPY command
+' V4.03 - Fixed a bug in the GCOPY command
 '       - Tweaked the code for the GMODE command
 
-' V4.02
-'       - Numeric array sizes can now be larger than 255, so it will now accept DIM A(1000) or DIM MyArray(300,2,2)
+' V4.02 - Numeric array sizes can now be larger than 255, so it will now accept DIM A(1000) or DIM MyArray(300,2,2)
 '       - String array sizes can now be larger than 255, so it will now accept DIM A$(1000) or DIM MyArray$(300,2), the default size for strings (which includes array elements)
 '         is 255 therefore you must use the compiler option -sxxx where xxx is the size of the string and make it a smaller string size if you are going to use many string arrays
 '
-' V4.01
-'       - With the GMODE ModeNumber,GraphicsPage the compiler can now handle variables for the GraphicsPage value.  The ModeNumber value will always need to be an actual number
+' V4.01 - With the GMODE ModeNumber,GraphicsPage the compiler can now handle variables for the GraphicsPage value.  The ModeNumber value will always need to be an actual number
 '       - Palette command now will wait for a vsync to change the value (should make sure there's no sparkels)
 '
-' V4.00
-'       - Added New command GMODE which allows you to easily select every graphic mode the CoCo 1,2 or 3 can produce
+' V4.00 - Added New command GMODE which allows you to easily select every graphic mode the CoCo 1,2 or 3 can produce
 '       - Added New command GCOPY which allows you to copy graphic pages to other graphic pages
 '       - Tweaked LINE, CIRCLE & PAINT commands to use all the available graphic modes and colours of the CoCo 1,2 or 3
 '
-' V3.03
-'       - Tweaked the AND, OR, XOR commands as the optimizer was not handling them properly
+' V3.03 - Tweaked the AND, OR, XOR commands as the optimizer was not handling them properly
 '
-' V3.02
-'       - Fixed a bug with optimiing when it is doing exponents
+' V3.02 - Fixed a bug with optimiing when it is doing exponents
 '       - Fixed a bug with optimiing when it is doing exponents
 '
-' V3.01
-'       - Fixed a small bug with Printing of double quotes ""
+' V3.01 - Fixed a small bug with Printing of double quotes ""
 '
-' V3.00
-'       - Added SDC file support, you can now read and write files on the SDC filesystem directly
+' V3.00 - Added SDC file support, you can now read and write files on the SDC filesystem directly
 '       - If a 6309 is present it puts it in native mode (should speed up code about 15%)
 '       - Added compiler option -a which makes your program autostart
 '       - Fixed a bug where if a variable name had AND,OR,MOD,XOR,NOT or DIVR in the name it would create variable names and operators out of it
 '       - Fixed a bug with IF command with multiple numeric commands that weren't evaluating properly
 '
-' V2.22
-'       - Fixed a bug with a comment at the end of a DATA statement, it was sometimes not being ignored
+' V2.22 - Fixed a bug with a comment at the end of a DATA statement, it was sometimes not being ignored
 '
-' V2.21
-'       - Fixed bug with close brackets
+' V2.21 - Fixed bug with close brackets
 '
 ' V2.20 - Fixed handling of direct number conversion of a number that starts with a minus sign
 '       - Fixed handling of DATA values that start with a minus sign

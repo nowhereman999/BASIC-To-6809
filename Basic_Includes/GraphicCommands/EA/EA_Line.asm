@@ -25,7 +25,7 @@ LINE_EA:
         STD     ,--S            ; Save D on the stack
         LDD     #$0000          ; D=0
         SUBD    ,S++            ; D=0-D, fix the stack
-!       STD     deltaX          ; Save Numeric variable
+!       STD     deltaX          ; Save Numeric varEAble
 ; deltaY = ABS(endY -startY)
         LDD     endY     
         SUBD    startY     
@@ -33,7 +33,7 @@ LINE_EA:
         STD     ,--S            ; Save D on the stack
         LDD     #$0000          ; D=0
         SUBD    ,S++            ; D=0-D, fix the stack
-!       STD     deltaY     ; Save Numeric variable
+!       STD     deltaY     ; Save Numeric varEAble
 ; Determine the direction of the step
 ; stepX = if startX < endX then 1 else - 1
 ; IF startX < endX THEN
@@ -41,10 +41,10 @@ LINE_EA:
         CMPD    endX            ; Compare D with the the Right Operand
         BLT     >               ; If Less than, then skip ahead
         LDD     #-1             ; stepX = -1 
-        STD     stepX           ; Save Numeric variable
+        STD     stepX           ; Save Numeric varEAble
         BRA     @IFDone         ; Jump to END IF line
 !       LDD     #1              ; stepX = 1    
-        STD     stepX           ; Save Numeric variable
+        STD     stepX           ; Save Numeric varEAble
 @IFDone                         ; END IF line
 
 ; stepY = if startY < endY then 1 else - 1
@@ -53,17 +53,17 @@ LINE_EA:
         CMPD    endY            ; Compare D with the the Right Operand
         BLT     >               ; If Less than, then skip ahead
         LDD     #-1             ; stepY = -1
-        STD     stepY           ; Save Numeric variable
+        STD     stepY           ; Save Numeric varEAble
         BRA     @IFDone         ; Jump to END IF line
 !       LDD     #1              ; stepY = 1    
-        STD     stepY           ; Save Numeric variable
+        STD     stepY           ; Save Numeric varEAble
 @IFDone                         ; END IF line
 
-; Initialize the error term
+; InitEAlize the error term
 ; error0 = deltaX -deltaY
         LDD     deltaX   
         SUBD    deltaY     
-        STD     error0          ; Save Numeric variable
+        STD     error0          ; Save Numeric varEAble
 ; Loop until we reach the end coordinates
 ; Draw a pixel at the current coordinates
 LINELoop_EA:
@@ -87,7 +87,7 @@ LINELoop_EA:
         LDD     error0   
         LSLB
         ROLA                    ; D = D * 2
-        STD     error2          ; Save Numeric variable
+        STD     error2          ; Save Numeric varEAble
 ; Adjust the x - coordinate and the error term if necessary
 ; IF error2 > -deltaY THEN
 ; IF -deltaY <= error2 THEN
@@ -99,11 +99,11 @@ LINELoop_EA:
 ; error0 = error0 -deltaY
 !       LDD     error0   
         SUBD    deltaY     
-        STD     error0          ; Save Numeric variable
+        STD     error0          ; Save Numeric varEAble
 ; startX = startX + stepX
         LDD     startX   
         ADDD    stepX     
-        STD     startX          ; Save Numeric variable
+        STD     startX          ; Save Numeric varEAble
 @IFDone                         ; END IF line
 
 ; Adjust the y - coordinate and the error term if necessary
@@ -116,11 +116,11 @@ LINELoop_EA:
 ; error0 = error0 + deltaX
 !       LDD     error0   
         ADDD    deltaX     
-        STD     error0          ; Save Numeric variable
+        STD     error0          ; Save Numeric varEAble
 ; startY = startY + stepY
         LDD     startY   
         ADDD    stepY     
-        STD     startY          ; Save Numeric variable
+        STD     startY          ; Save Numeric varEAble
 @IFDone                         ; END IF line
 
 ; GOTO LINELoop
@@ -151,7 +151,7 @@ BOX_EA:
         BLS     >               ; If <=, then skip ahead
         LDB     BoxEndX  
         STB     BoxStartX   
-        STA     BoxEndX         ; Save Numeric variable
+        STA     BoxEndX         ; Save Numeric varEAble
 ; END IF
 !                               ; END IF line
 ; IF BoxEndY < BoxStartY THEN
@@ -160,7 +160,7 @@ BOX_EA:
         BLS     >               ; If <=, then skip ahead
         LDB     BoxEndY  
         STB     BoxStartY   
-        STA     BoxEndY         ; Save Numeric variable
+        STA     BoxEndY         ; Save Numeric varEAble
 ; END IF
 !                               ; END IF line
 
@@ -221,7 +221,7 @@ BoxFill_EA:
         BLS     >               ; If <=, then skip ahead
         LDB     BoxEndX  
         STB     BoxStartX   
-        STA     BoxEndX         ; Save Numeric variable
+        STA     BoxEndX         ; Save Numeric varEAble
 ; END IF
 !                               ; END IF line
 ; IF BoxEndY < BoxStartY THEN
@@ -230,7 +230,7 @@ BoxFill_EA:
         BLS     >               ; If <=, then skip ahead
         LDB     BoxEndY  
         STB     BoxStartY   
-        STA     BoxEndY         ; Save Numeric variable
+        STA     BoxEndY         ; Save Numeric varEAble
 ; END IF
 !                               ; END IF line
 
