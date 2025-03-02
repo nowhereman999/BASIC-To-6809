@@ -1052,9 +1052,9 @@ For ii = 0 To 171
     If GModeLib(ii) = 1 Then
         If ii < 100 Then
             ' CoCo 1 & 2 graphics mode, Check if ProgramStart should be changed
-            If GModePageLib(ii) > 1 Then
+            If GModePageLib(ii) <> 0 Then
                 ' the user wants to use multiple graphics pages
-                PStart = &HE00 + Val("&H" + GModeScreenSize$(ii)) * GModePageLib(ii)
+                PStart = Val("&H" + ProgramStart$) + Val("&H" + GModeScreenSize$(ii)) * GModePageLib(ii)
                 ProgramStart$ = Hex$(PStart)
             End If
         End If
@@ -1242,9 +1242,9 @@ For ii = 0 To 171
             Temp$ = "GraphicCommands/GraphicCC3_Code": GoSub AddIncludeTemp ' Add code for CoCo3 graphics handling
         Else
             ' CoCo 1 & 2 graphics mode, Check if ProgramStart should be changed
-            If GModePageLib(ii) > 1 Then
+            If GModePageLib(ii) <> 0 Then
                 ' the user wants to use multiple graphics pages
-                PStart = &HE00 + Val("&H" + GModeScreenSize$(ii)) * GModePageLib(ii)
+                PStart = Val("&H" + ProgramStart$) + Val("&H" + GModeScreenSize$(ii)) * GModePageLib(ii)
                 ProgramStart$ = Hex$(PStart)
             End If
         End If

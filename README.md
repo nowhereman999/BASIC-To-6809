@@ -4,6 +4,10 @@ A BASIC compiler for the TRS-80 Color Computer
 For more info check out the blog post here:
 https://wordpress.com/post/nowhereman999.wordpress.com/5054
 
+V 4.21
+- Fixed a bug where the PROGRAM start was not being setup to the correct address when GMODE was being used.  Thanks to 
+  Tazman (Scott Cooper) for finding the bug.
+
 V 4.20
 - Fixed a bug in GMODE 1 graphic commands (This mode only supports two colours, not 9 like GMODE 0)
 - Added printing to the screen using the semi-graphic modes, the semi-graphics modes use the built in VDG font except for GMODE 4
