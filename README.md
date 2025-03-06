@@ -4,6 +4,9 @@ A BASIC compiler for the TRS-80 Color Computer
 For more info check out the blog post here:
 https://wordpress.com/post/nowhereman999.wordpress.com/5054
 
+V 4.22
+- Fixed a bug with large BASIC programs especially if it used a large amount of space for the ADDASSEM: section
+
 V 4.21
 - Fixed a bug where the PROGRAM start was not being setup to the correct address when GMODE was being used.  Thanks to 
   Tazman (Scott Cooper) for finding the bug.

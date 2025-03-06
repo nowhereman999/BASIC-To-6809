@@ -2,7 +2,10 @@
 'Print "hex$(Array(x+1) "; Hex$(Array(x + 1))
 'Print "hex$(Array(x+2) "; Hex$(Array(x + 2))
 'System
-V$ = "4.21"
+V$ = "4.22"
+'       - Fixed a bug with large BASIC programs especially if it used a large amount of space for the ADDASSEM: section
+
+' V 4.21
 '       - Fixed a bug where the PROGRAM start was not being setup to the correct address when GMODE was being used.  Thanks to
 '         Tazman (Scott Cooper) for finding the bug.
 
@@ -470,8 +473,10 @@ If BASICMode = 1 Then
 Else
     ' BASICMode is <> 1 copy the input INArray to array adding a space after each set of quotes
     x = 0: q = 0
-    For i = 0 To length - 1
-        v = INArray(i)
+    Dim i2 As Long
+    For i2 = 0 To length - 1
+        Print "length"; length, x
+        v = INArray(i2)
         Array(x) = v: x = x + 1
         If v = &H0D Or v = &H0A Then q = 0 ' if at an EOL then reset the quote counter
         If v = &H22 Then
@@ -482,7 +487,7 @@ Else
                 Array(x) = &H20: x = x + 1
             End If
         End If
-    Next i
+    Next i2
     length = x
 End If
 ProgramIsNowText:
@@ -526,12 +531,12 @@ If INArray(c - 1) <> &H0D Then INArray(c) = &H0D: c = c + 1
 length = c
 
 ' BASICMode is <> 1 copy the input INArray to array
-For i = 0 To length - 1
-    Array(i) = INArray(i)
-Next i
+For i2 = 0 To length - 1
+    Array(i2) = INArray(i2)
+Next i2
 
 ' Erase double or more spaces and double or more colons
-i = 0: N = 0
+i2 = 0: N = 0
 q = 0
 EraseExtraSpacesColons:
 While N < length
@@ -553,7 +558,7 @@ While N < length
             Temp$ = Temp$ + Chr$(c)
         Wend
         For ii = 1 To Len(Temp$)
-            Array(i) = Asc(Mid$(Temp$, ii, 1)): i = i + 1
+            Array(i2) = Asc(Mid$(Temp$, ii, 1)): i2 = i2 + 1
         Next ii
         If InStr(Temp$, "ENDASSEM") > 0 Then GoTo EraseExtraSpacesColons 'Copied the last line
         GoTo CopyAssemCodeAsIs
@@ -562,7 +567,7 @@ While N < length
         c = Array(N)
         While N < length And c <> &H0D
             c = Array(N)
-            Array(i) = c
+            Array(i2) = c
             If c = &H22 Then q = q + 1 ' Found a quote
             If (q And 1) = 0 Then
                 '  Not in a Quote
@@ -584,12 +589,12 @@ While N < length
                 End If
             End If
             N = N + 1
-            i = i + 1
+            i2 = i2 + 1
         Wend
         q = 0
     End If
 Wend
-length = i
+length = i2
 
 ' We now have the BASIC program as a text file in array() size is from 0 to length-1
 ' Format program so it has spaces where it needs them to be:
@@ -729,17 +734,17 @@ Wend
 'Now that it's formatted copy INArray to array
 INArray(c) = &H0D ' Make last byte of the file an Enter
 length = c
-For i = 0 To length
-    Array(i) = INArray(i)
-Next i
+For i2 = 0 To length
+    Array(i2) = INArray(i2)
+Next i2
 
 If Verbose > 2 Then
     ' Let's print the current program listing:
-    For i = 0 To length - 1
-        If Array(i) = &H0D Then Print
-        If Verbose = 3 Then Print Chr$(Array(i));
-        If Verbose > 3 Then Print Hex$(Array(i)); " ";
-    Next i
+    For i2 = 0 To length - 1
+        If Array(i2) = &H0D Then Print
+        If Verbose = 3 Then Print Chr$(Array(i2));
+        If Verbose > 3 Then Print Hex$(Array(i2)); " ";
+    Next i2
     Print
 End If
 
