@@ -475,7 +475,6 @@ Else
     x = 0: q = 0
     Dim i2 As Long
     For i2 = 0 To length - 1
-        Print "length"; length, x
         v = INArray(i2)
         Array(x) = v: x = x + 1
         If v = &H0D Or v = &H0A Then q = 0 ' if at an EOL then reset the quote counter
