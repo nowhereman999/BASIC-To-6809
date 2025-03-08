@@ -5,7 +5,7 @@
 
 V$ = "4.23"
 '       - Made the Tokenizer a little more robust, it now detects array names better if there aren't spaces before the array name and
-'         the array is being used inside a function or equation.
+'         the array is being used in an equation.
 
 ' V 4.22
 '       - Fixed a bug with large BASIC programs especially if it used a large amount of space for the ADDASSEM: section
