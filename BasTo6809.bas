@@ -1,8 +1,3 @@
-'Print "hex$(Array(x) "; Hex$(Array(x))
-'Print "hex$(Array(x+1) "; Hex$(Array(x + 1))
-'Print "hex$(Array(x+2) "; Hex$(Array(x + 2))
-'System
-
 V$ = "4.23"
 '       - Made the Tokenizer a little more robust, it now detects array names better if there aren't spaces before the array name and
 '         the array is being used in an equation.
