@@ -278,9 +278,8 @@ Check$ = "PUT": GoSub FindGenCommandNumber ' Gets the General Command number of 
 C_PUT = ii
 Check$ = "GMODE": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
 C_GMODE = ii
-
-
-
+Check$ = "SPRITE_LOAD": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+C_SPRITE_LOAD = ii
 
 ' Handle command line options
 FI = 0
@@ -962,14 +961,32 @@ While x < filesize
     V = Array(x): x = x + 1 ' get the command to do
     If V = &HFF Then ' Found a command
         V = Array(x) * 256 + Array(x + 1): x = x + 2
-        If V = C_PRINT Then ' Is it the PRINT command?
-            ' Found a PRINT command, see if we have a print #-3, which will print to the graphics screen
-            '#-3, =  F5 23 FC 2D 33 F5 2C
-            If Array(x) = &HF5 And Array(x + 1) = &H23 And Array(x + 2) = &HFC And Array(x + 3) = &H2D And Array(x + 4) = &H33 And Array(x + 5) = &HF5 And Array(x + 6) = &H2C Then
-                x = x + 7
-                PrintGraphicsText = 1
-            End If
-        End If
+        Select Case V
+            Case C_PRINT 'This is the PRINT command
+                ' Found a PRINT command, see if we have a print #-3, which will print to the graphics screen
+                ' #-3, =  F5 23 FC 2D 33 F5 2C
+                If Array(x) = &HF5 And Array(x + 1) = &H23 And Array(x + 2) = &HFC And Array(x + 3) = &H2D And Array(x + 4) = &H33 And Array(x + 5) = &HF5 And Array(x + 6) = &H2C Then
+                    x = x + 7
+                    PrintGraphicsText = 1
+                End If
+            Case C_SPRITE_LOAD
+                ' Found a Sprite Load command
+                ' Get the address and name of the sprite to load
+                If Array(x) = &HF5 And Array(x + 1) = &H22 Then
+                    ' Found an open quote
+                    x = x + 2 ' move past the open quote
+
+                    '       sdfgsdfg
+                Else
+
+
+                End If
+                For c = 1 To 25
+                    Print Hex$(Array(x)): x = x + 1
+                Next c
+                System
+
+        End Select
     End If
 Wend
 
@@ -2471,8 +2488,14 @@ While I <= Len(Expression$)
                 'We found a string array to tokenize
                 Start = ii - 1 ' start points at the character before the "("
                 While Start >= CheckStart
-                    If Mid$(Expression$, Start, 1) = " " Or Mid$(Expression$, Start, 1) = "(" Or Mid$(Expression$, Start, 1) = ":" Then Exit While
-                    Start = Start - 1
+                    Check$ = Mid$(Expression$, Start, 1)
+                        If (Asc(Check$) >= Asc("A") And Asc(Check$) <= Asc("Z")) Or (Asc(Check$) >= Asc("0") And Asc(Check$) <= Asc("9")) Or _
+                           (Asc(Check$) >= Asc("a") And Asc(Check$) <= Asc("z")) Then
+                        ' It is a letter or number?
+                        Start = Start - 1
+                    Else
+                        Exit While
+                    End If
                 Wend
                 LabelStart = Start + 1
                 If LabelStart <> CheckStart Then GoTo CopyOtherBytes 'We missed some bytes before this array, go deal with them first
@@ -2508,8 +2531,14 @@ While I <= Len(Expression$)
                     ' It is part of a Numeric array variable name
                     Start = ii - 1 ' start points at the character before the "("
                     While Start >= CheckStart
-                        If Mid$(Expression$, Start, 1) = " " Or Mid$(Expression$, Start, 1) = "(" Or Mid$(Expression$, Start, 1) = ":" Then Exit While
-                        Start = Start - 1
+                        Check$ = Mid$(Expression$, Start, 1)
+                        If (Asc(Check$) >= Asc("A") And Asc(Check$) <= Asc("Z")) Or (Asc(Check$) >= Asc("0") And Asc(Check$) <= Asc("9")) Or _
+                           (Asc(Check$) >= Asc("a") And Asc(Check$) <= Asc("z")) Then
+                            ' It is a letter or number?
+                            Start = Start - 1
+                        Else
+                            Exit While
+                        End If
                     Wend
                     LabelStart = Start + 1
                     If LabelStart <> CheckStart Then GoTo CopyOtherBytes 'We missed some bytes before this array, go deal with them first

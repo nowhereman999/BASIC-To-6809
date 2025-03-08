@@ -4,6 +4,10 @@ A BASIC compiler for the TRS-80 Color Computer
 For more info check out the blog post here:
 https://wordpress.com/post/nowhereman999.wordpress.com/5054
 
+V 4.23
+- Made the Tokenizer a little more robust, it now detects array names better if there aren't spaces before the array name and
+  the array is being used inside a function or equation.
+
 V 4.22
 - Fixed a bug with large BASIC programs especially if it used a large amount of space for the ADDASSEM: section
 
