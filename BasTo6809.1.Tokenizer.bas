@@ -35,6 +35,7 @@ Dim NumericCommandsFound$(2000)
 Dim NumericCommandsFoundCount As Integer
 Dim StringCommandsFound$(2000)
 Dim StringCommandsFoundCount As Integer
+Dim Sprite$(255)
 
 Dim IncludeList$(10000)
 
@@ -957,6 +958,7 @@ Wend
 
 If Verbose > 0 Then Print "Doing Pass 4 - Finding special cases that will need other files to be included..."
 x = 0
+
 While x < filesize
     V = Array(x): x = x + 1 ' get the command to do
     If V = &HFF Then ' Found a command
@@ -975,17 +977,36 @@ While x < filesize
                 If Array(x) = &HF5 And Array(x + 1) = &H22 Then
                     ' Found an open quote
                     x = x + 2 ' move past the open quote
-
-                    '       sdfgsdfg
+                    Temp$ = ""
+                    While Array(x) < &HF0
+                        ' Get the path and filename of the compiled sprite
+                        Temp$ = Temp$ + Chr$(Array(x))
+                        x = x + 1
+                    Wend
+                    If Array(x) <> &HF5 And Array(x + 1) <> &H22 Then
+                        ' Couldn't find an end quote for the compiled sprite name
+                        Print "Error1: Couldn't find an end quote for the compiled sprite name";: GoTo FoundError
+                    End If
+                    x = x + 2 ' move past the close quote
+                    ' Check for a comma
+                    If Array(x) = &HF5 And Array(x + 1) = &H2C Then
+                        ' Found a comma
+                        x = x + 2
+                        ' get the sprite number
+                        N$ = ""
+                        While Array(x) < &HF0
+                            N$ = N$ + Chr$(Array(x)): x = x + 1
+                        Wend
+                        ' Got the number of the sprite
+                        n = Val(N$)
+                        If n > 127 Then Print "Error1: Can't use sprite number"; n; " please use a smaller sprite number";: GoTo FoundError
+                        Sprite$(n) = Temp$
+                    Else
+                        Print "Error1: Can't find a comma with the sprite number";: GoTo FoundError
+                    End If
                 Else
-
-
+                    Print "Error1: Can't find an open quote for the compiled sprite name";: GoTo FoundError
                 End If
-                For c = 1 To 25
-                    Print Hex$(Array(x)): x = x + 1
-                Next c
-                System
-
         End Select
     End If
 Wend
@@ -1044,6 +1065,12 @@ For I = 0 To DefVarCount - 1
     Print #1, DefVar(I)
 Next I
 Close #1
+Open "SpritesUsed.txt" For Output As #1
+For I = 0 To 127
+    Print #1, Sprite$(I)
+Next I
+Close #1
+
 
 'See if we should need to use Disk access and Background sound
 For ii = 0 To GeneralCommandsFoundCount - 1
@@ -1421,7 +1448,81 @@ Temp$ = "DHex_to_String": GoSub AddIncludeTemp
 Temp$ = "Mulitply16x16": GoSub AddIncludeTemp
 Temp$ = "Divide16with16": GoSub AddIncludeTemp
 Temp$ = "SquareRoot": GoSub AddIncludeTemp
+
+' Sprite setup stuff
+Sprites = 0
+For I = 0 To 127
+    If Sprite$(I) <> "" Then Sprites = 1
+Next I
+If Sprites = 1 Then
+    Print #1, "; Adding the Compiled Sprites and pointers..."
+    Temp$ = "GraphicCommands/SpriteHandler": GoSub AddIncludeTemp
+
+    ' Add Compiled sprites and pointers to be included
+    For I = 0 To 127
+        If Sprite$(I) <> "" Then
+            Print #1, T2$; "INCLUDE     ./"; Sprite$(I)
+        End If
+    Next I
+    Z$ = "SpriteJumpTable:": GoSub AO
+    For I = 0 To 127
+        If Sprite$(I) <> "" Then
+            ' Find the last backslash
+            p = _InStrRev(Sprite$(I), "/")
+            If p = 0 Then p = _InStrRev(Sprite$(I), "\")
+            ' Extract the filename
+            If p > 0 Then
+                SpriteName$ = Mid$(Sprite$(I), p + 1)
+            Else
+                SpriteName$ = Sprite$(I) ' No backslash found, assume it's just a filename
+            End If
+            SpriteName$ = Left$(SpriteName$, Len(SpriteName$) - 4) ' remove the .asm
+            For p = 0 To 7
+                Num = p: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+                A$ = "FDB": B$ = SpriteName$ + "_" + Num$: C$ = "Point at the sprite pixel position " + Num$: GoSub AO
+            Next p
+        End If
+    Next I
+    Z$ = "SpriteSizeTable:": GoSub AO
+    For I = 0 To 127
+        If Sprite$(I) <> "" Then
+            ' Find the last backslash
+            p = _InStrRev(Sprite$(I), "/")
+            If p = 0 Then p = _InStrRev(Sprite$(I), "\")
+            ' Extract the filename
+            If p > 0 Then
+                SpriteName$ = Mid$(Sprite$(I), p + 1)
+            Else
+                SpriteName$ = Sprite$(I) ' No backslash found, assume it's just a filename
+            End If
+            SpriteName$ = Left$(SpriteName$, Len(SpriteName$) - 4) ' remove the .asm
+            A$ = "FCB": B$ = SpriteName$ + "_Width": C$ = "Width in Bytes": GoSub AO
+            A$ = "FCB": B$ = SpriteName$ + "_Height": C$ = "Hieght in pixels": GoSub AO
+        End If
+    Next I
+    Z$ = "SpriteEraseTable:": GoSub AO
+    For I = 0 To 127
+        If Sprite$(I) <> "" Then
+            ' Find the last backslash
+            p = _InStrRev(Sprite$(I), "/")
+            If p = 0 Then p = _InStrRev(Sprite$(I), "\")
+            ' Extract the filename
+            If p > 0 Then
+                SpriteName$ = Mid$(Sprite$(I), p + 1)
+            Else
+                SpriteName$ = Sprite$(I) ' No backslash found, assume it's just a filename
+            End If
+            SpriteName$ = Left$(SpriteName$, Len(SpriteName$) - 4) ' remove the .asm
+            A$ = "FDB": B$ = SpriteName$ + "_Restore": C$ = "Address of the restore routine": GoSub AO
+        End If
+    Next I
+
+
+End If
+
 GoSub WriteIncludeListToFile ' Write all the INCLUDE files needed to the .ASM file
+
+
 
 If Disk = 0 Then
     ' Sound and Timer 60 Hz IRQ

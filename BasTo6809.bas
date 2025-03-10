@@ -1,21 +1,27 @@
-V$ = "4.23"
+
+V$ = "4.24"
+'       - Fixed a bug in the compiler when it was assigning the value of an equation to a variable.  If the equation didn't have a
+'         variable and it was doing AND, OR, XOR or MOD it was not setting the variable properly.  It also wasn't handling HEX values
+'         properly in this same routine.
+
+' V4.23
 '       - Made the Tokenizer a little more robust, it now detects array names better if there aren't spaces before the array name and
 '         the array is being used in an equation.
 
-' V 4.22
+' V4.22
 '       - Fixed a bug with large BASIC programs especially if it used a large amount of space for the ADDASSEM: section
 
-' V 4.21
+' V4.21
 '       - Fixed a bug where the PROGRAM start was not being setup to the correct address when GMODE was being used.  Thanks to
 '         Tazman (Scott Cooper) for finding the bug.
 
-' V 4.20
+' V4.20
 '       - Fixed a bug in GMODE 1 graphic commands (This mode only supprts two colours, not 9 like GMODE 0)
 '       - Added printing to the screen using the semi-graphic modes, the sime graphics modes use the built in VDG font except for GMODE 4
 '       - which uses SG6 and the built in fonts aren't supported in the this mode.  So the font that is shown is a large 6x6 matrix font.
 '       - Now every GMODE can now print text on the screen using LOCATE x,y:PRINT #-3,"Hello World"
 
-' V 4.11
+' V4.11
 '       - Can now handle MID$(String,Start) which will copy the String starting at location Start copying the rest of the string.  It no
 '         longer needs to be MID$(String,Start,Length).
 

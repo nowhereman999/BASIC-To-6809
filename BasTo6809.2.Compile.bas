@@ -38,6 +38,7 @@ Dim NumericCommandsFoundCount As Integer
 Dim StringCommandsFound$(2000)
 Dim StringCommandsFoundCount As Integer
 
+Dim Sprite$(255)
 ' No More
 ' PSET
 ' PCLS
@@ -488,6 +489,13 @@ While EOF(1) = 0
     DefVarCount = DefVarCount + 1
 Wend
 Close #1
+Open "SpritesUsed.txt" For Input As #1
+For I = 0 To 127
+    Input #1, Sprite$(I)
+Next I
+Close #1
+
+
 ' Start writing to the .asm file
 Open OutName$ For Append As #1
 
@@ -770,6 +778,7 @@ If KeepTempFiles = 0 Then
     Kill "StringArrayVarsUsed.txt"
     Kill "DefFNUsed.txt"
     Kill "DefVarUsed.txt"
+    Kill "SpritesUsed.txt"
     Kill "BASIC_Text.bas"
     Kill "BasicTokenized.bin"
     Kill "BasicTokenizedB4Pass2.bin"
@@ -4595,7 +4604,33 @@ Return
 
 ' Tokenize the expression into operators and operands, handling hex values
 DirectTokenizeExpression:
-operators$ = "+-*/\^"
+
+' Convert Hex to decimal
+result$ = Expression$
+pos1 = InStr(result$, "&H")
+Do While pos1 > 0
+    ' Find the end of the hex number
+    pos2 = pos1 + 2
+    Do While pos2 <= Len(result$) And ((Mid$(result$, pos2, 1) >= "0" And Mid$(result$, pos2, 1) <= "9") Or (Mid$(result$, pos2, 1) >= "A" And Mid$(result$, pos2, 1) <= "F") Or (Mid$(result$, pos2, 1) >= "a" And Mid$(result$, pos2, 1) <= "f"))
+        pos2 = pos2 + 1
+    Loop
+
+    ' Extract hex value
+    hexValue$ = Mid$(result$, pos1 + 2, pos2 - pos1 - 2)
+
+    ' Convert to decimal
+    decValue$ = LTrim$(Str$(Val("&H" + hexValue$))) ' Convert hex to decimal as string
+
+    ' Replace hex with decimal in string
+    result$ = Left$(result$, pos1 - 1) + decValue$ + Mid$(result$, pos2)
+
+    ' Find next occurrence of &H
+    pos1 = InStr(pos1 + Len(decValue$), result$, "&H")
+Loop
+
+Expression$ = result$
+
+operators$ = "+-%*/\^" + Chr$(&H10) + Chr$(&H11) + Chr$(&H12) + Chr$(&H13)
 valueIndex = 0
 opIndex = 0
 length = Len(Expression$)
@@ -4701,18 +4736,30 @@ Select Case ops(opIndex)
         result = values(valueIndex - 1) \ values(valueIndex)
     Case "^"
         result = values(valueIndex - 1) ^ values(valueIndex)
+    Case Chr$(&H10) ' AND
+        result = values(valueIndex - 1) And values(valueIndex)
+    Case Chr$(&H11) ' OR
+        result = values(valueIndex - 1) Or values(valueIndex)
+    Case Chr$(&H12) ' MOD
+        result = values(valueIndex - 1) Mod values(valueIndex)
+    Case Chr$(&H13) ' XOR
+        result = values(valueIndex - 1) Xor values(valueIndex)
 End Select
 Return
 
 ' Determine the precedence of operators using GOSUB
 Precedence:
 Select Case Precedence$
-    Case "+", "-"
+    Case Chr$(&H11), Chr$(&H13) ' OR, XOR
         Precedence = 1
-    Case "*", "/", "\"
+    Case Chr$(&H10) ' AND
         Precedence = 2
-    Case "^"
+    Case "+", "-"
         Precedence = 3
+    Case "*", "/", "\", Chr$(&H12) ' MOD
+        Precedence = 4
+    Case "^"
+        Precedence = 5
     Case Else
         Precedence = 0
 End Select
@@ -4887,6 +4934,7 @@ GoTo GEB4CommaEndBracket
 
 ' All commands use: 'Commands.bas'
 ' Minimal commands use: 'CommandsMin.bas'
+
 
 DoDATA:
 ' Add the data on this line to the DataArray, keeping track of the location/size with DataArrayCount
@@ -8704,6 +8752,46 @@ Print "Can't do command MKN yet, found on";: GoTo FoundError
 Color 15
 System
 
+
+' GModeName$(16) = "FG6R": GModeMaxX$(16) = "255": GModeMaxY$(16) = "191": GModeStartAddress$(16) = "E00": GModeScreenSize$(16) = "1800"
+DoSPRITE:
+' Get the numeric value before a comma
+' Get first number in D
+GoSub GetExpressionB4Comma: x = x + 2 ' Get the expression before a Comma, & move past it
+ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
+A$ = "PSHS": B$ = "B": C$ = "Save the sprite #": GoSub AO
+
+' Get the numeric value before a comma
+' Get first number in D
+GoSub GetExpressionB4Comma: x = x + 2 ' Get the expression before a Comma, & move past it
+ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
+A$ = "PSHS": B$ = "B": C$ = "Save the x co-ordinate": GoSub AO
+
+' Get the numeric value before a comma
+' Get first number in D
+GoSub GetExpressionB4Comma: x = x + 2 ' Get the expression before a Comma, & move past it
+ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
+A$ = "PSHS": B$ = "B": C$ = "Save the y co-ordinate": GoSub AO
+
+GoSub GetExpressionB4EOL 'Handle an expression that ends with a colon or End of a Line
+ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
+
+num = (Val(GModeMaxX$(Gmode)) + 1) / 8: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+A$ = "LDA": B$ = "#" + Num$: C$ = "A = number of bytes per row for GMODE " + Str$(Gmode): GoSub AO
+A$ = "PSHS": B$ = "D": C$ = "Save the draw/erase flag": GoSub AO
+A$ = "JSR": B$ = "SpriteHandler": C$ = "Go handle sprite": GoSub AO
+A$ = "LEAS": B$ = "5,S": C$ = "Fix the Stack": GoSub AO
+Return
+
+' Skip over the SPRITE_LOAD command, this is handled in the tokenizer
+DoSPRITE_LOAD:
+While Array(x) <> &HF5
+    x = x + 1
+Wend
+x = x + 1
+If Array(x) = &H0D Or Array(x) = &H3A Then x = x + 1: Return
+GoTo DoSPRITE_LOAD
+
 ' Jump to the numeric command pointed at by v
 JumpToNumericCommand:
 Select Case NumericCommands$(v)
@@ -9015,6 +9103,10 @@ Select Case GeneralCommands$(v)
         GoTo DoSKIPF
     Case "SOUND"
         GoTo DoSOUND
+    Case "SPRITE"
+        GoTo DoSPRITE
+    Case "SPRITE_LOAD"
+        GoTo DoSPRITE_LOAD
     Case "STEP"
         GoTo DoSTEP
     Case "STOP"
@@ -9051,4 +9143,5 @@ Select Case GeneralCommands$(v)
         Print "Unknown General command on";: GoTo FoundError
         System
 End Select
+
 
