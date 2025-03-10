@@ -1,13 +1,12 @@
 ' Sprint Compiler
-' Version 0.01 - initial version, mod from my 6309_Sprite_Compiler, start with handling 2 colour sprites
+
+VersionNumber$ = "0.01"
+'       - initial version, mod from my 6309_Sprite_Compiler, start with handling 2 colour sprites
+'         lots of old code can be cleared out, but seems to work for CoCo 1 GMODEs with 2 color graphics screens
 
 $ScreenHide
 $Console
 _Dest _Console
-
-VersionNumber$ = "0.01"
-'     - Original version, lots of old code can be cleared out, but seems to work for CoCo 1 GMODEs with 2 color graphics screens
-
 
 Dim OriginalValue As Integer
 Dim RotatedValue As Integer
