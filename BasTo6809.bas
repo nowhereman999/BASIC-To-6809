@@ -1,5 +1,7 @@
+V$ = "4.25"
+'       - Fixed a bug with with using numeric commands like RNDZ(x) before an close bracket of a graphics command like SET(x,y,RNDZ(3))
 
-V$ = "4.24"
+' V4.24
 '       - Fixed a bug in the compiler when it was assigning the value of an equation to a variable.  If the equation didn't have a
 '         variable and it was doing AND, OR, XOR or MOD it was not setting the variable properly.  It also wasn't handling HEX values
 '         properly in this same routine.

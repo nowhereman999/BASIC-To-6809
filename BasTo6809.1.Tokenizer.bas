@@ -36,6 +36,9 @@ Dim NumericCommandsFoundCount As Integer
 Dim StringCommandsFound$(2000)
 Dim StringCommandsFoundCount As Integer
 Dim Sprite$(255)
+Dim SpriteNumberOfFrames(255)
+Dim Sprite8KBlocks(255)
+Dim SpriteLivesAt(255)
 
 Dim IncludeList$(10000)
 
@@ -67,24 +70,24 @@ GMode$(15) = "Full_graphic_6_C" '     Full graphic 6-C      1   1   1   0   1 1 
 GMode$(16) = "Full_graphic_6_R" '     Full graphic 6-R      1   1   1   1   1 1 0   256x192x2 $1800(6144)
 GMode$(17) = "DMAccess_grpahics" '    Direct memory access  X   X   X   X   1 1 1
 
-GModeName$(0) = "IA": GModeMaxX$(0) = "31": GModeMaxY$(0) = "15": GModeStartAddress$(0) = "400": GModeScreenSize$(0) = "200"
-GModeName$(1) = "EA": GModeMaxX$(1) = "31": GModeMaxY$(1) = "15": GModeStartAddress$(1) = "400": GModeScreenSize$(1) = "200"
-GModeName$(2) = "SG4": GModeMaxX$(2) = "63": GModeMaxY$(2) = "31": GModeStartAddress$(2) = "400": GModeScreenSize$(2) = "200"
-GModeName$(3) = "SG4H": GModeMaxX$(3) = "63": GModeMaxY$(3) = "31": GModeStartAddress$(3) = "E00": GModeScreenSize$(3) = "800"
-GModeName$(4) = "SG6": GModeMaxX$(4) = "63": GModeMaxY$(4) = "47": GModeStartAddress$(4) = "400": GModeScreenSize$(4) = "200"
-GModeName$(5) = "SG6H": GModeMaxX$(5) = "63": GModeMaxY$(5) = "47": GModeStartAddress$(5) = "E00": GModeScreenSize$(5) = "C00"
-GModeName$(6) = "SG8": GModeMaxX$(6) = "63": GModeMaxY$(6) = "63": GModeStartAddress$(6) = "E00": GModeScreenSize$(6) = "800"
-GModeName$(7) = "SG12": GModeMaxX$(7) = "63": GModeMaxY$(7) = "95": GModeStartAddress$(7) = "E00": GModeScreenSize$(7) = "C00"
-GModeName$(8) = "SG24": GModeMaxX$(8) = "63": GModeMaxY$(8) = "191": GModeStartAddress$(8) = "E00": GModeScreenSize$(8) = "1800"
-GModeName$(9) = "FG1C": GModeMaxX$(9) = "63": GModeMaxY$(9) = "63": GModeStartAddress$(9) = "E00": GModeScreenSize$(9) = "400"
-GModeName$(10) = "FG1R": GModeMaxX$(10) = "127": GModeMaxY$(10) = "63": GModeStartAddress$(10) = "E00": GModeScreenSize$(10) = "400"
-GModeName$(11) = "FG2C": GModeMaxX$(11) = "127": GModeMaxY$(11) = "63": GModeStartAddress$(11) = "E00": GModeScreenSize$(11) = "800"
-GModeName$(12) = "FG2R": GModeMaxX$(12) = "127": GModeMaxY$(12) = "95": GModeStartAddress$(12) = "E00": GModeScreenSize$(12) = "600"
-GModeName$(13) = "FG3C": GModeMaxX$(13) = "127": GModeMaxY$(13) = "95": GModeStartAddress$(13) = "E00": GModeScreenSize$(13) = "C00"
-GModeName$(14) = "FG3R": GModeMaxX$(14) = "127": GModeMaxY$(14) = "191": GModeStartAddress$(14) = "E00": GModeScreenSize$(14) = "C00"
-GModeName$(15) = "FG6C": GModeMaxX$(15) = "127": GModeMaxY$(15) = "191": GModeStartAddress$(15) = "E00": GModeScreenSize$(15) = "1800"
-GModeName$(16) = "FG6R": GModeMaxX$(16) = "255": GModeMaxY$(16) = "191": GModeStartAddress$(16) = "E00": GModeScreenSize$(16) = "1800"
-GModeName$(17) = "DMAGraphic": GModeMaxX$(17) = "255": GModeMaxY$(17) = "191": GModeStartAddress$(17) = "E00": GModeScreenSize$(17) = "1800"
+GModeName$(0) = "IA": GModeMaxX$(0) = "31": GModeMaxY$(0) = "15": GModeStartAddress$(0) = "400": GModeScreenSize$(0) = "200": GModeColours$(0) = "2"
+GModeName$(1) = "EA": GModeMaxX$(1) = "31": GModeMaxY$(1) = "15": GModeStartAddress$(1) = "400": GModeScreenSize$(1) = "200": GModeColours$(1) = "2"
+GModeName$(2) = "SG4": GModeMaxX$(2) = "63": GModeMaxY$(2) = "31": GModeStartAddress$(2) = "400": GModeScreenSize$(2) = "200": GModeColours$(2) = "2"
+GModeName$(3) = "SG4H": GModeMaxX$(3) = "63": GModeMaxY$(3) = "31": GModeStartAddress$(3) = "E00": GModeScreenSize$(3) = "800": GModeColours$(3) = "9"
+GModeName$(4) = "SG6": GModeMaxX$(4) = "63": GModeMaxY$(4) = "47": GModeStartAddress$(4) = "400": GModeScreenSize$(4) = "200": GModeColours$(4) = "2"
+GModeName$(5) = "SG6H": GModeMaxX$(5) = "63": GModeMaxY$(5) = "47": GModeStartAddress$(5) = "E00": GModeScreenSize$(5) = "C00": GModeColours$(5) = "9"
+GModeName$(6) = "SG8": GModeMaxX$(6) = "63": GModeMaxY$(6) = "63": GModeStartAddress$(6) = "E00": GModeScreenSize$(6) = "800": GModeColours$(6) = "9"
+GModeName$(7) = "SG12": GModeMaxX$(7) = "63": GModeMaxY$(7) = "95": GModeStartAddress$(7) = "E00": GModeScreenSize$(7) = "C00": GModeColours$(7) = "9"
+GModeName$(8) = "SG24": GModeMaxX$(8) = "63": GModeMaxY$(8) = "191": GModeStartAddress$(8) = "E00": GModeScreenSize$(8) = "1800": GModeColours$(8) = "9"
+GModeName$(9) = "FG1C": GModeMaxX$(9) = "63": GModeMaxY$(9) = "63": GModeStartAddress$(9) = "E00": GModeScreenSize$(9) = "400": GModeColours$(9) = "4"
+GModeName$(10) = "FG1R": GModeMaxX$(10) = "127": GModeMaxY$(10) = "63": GModeStartAddress$(10) = "E00": GModeScreenSize$(10) = "400": GModeColours$(10) = "2"
+GModeName$(11) = "FG2C": GModeMaxX$(11) = "127": GModeMaxY$(11) = "63": GModeStartAddress$(11) = "E00": GModeScreenSize$(11) = "800": GModeColours$(11) = "4"
+GModeName$(12) = "FG2R": GModeMaxX$(12) = "127": GModeMaxY$(12) = "95": GModeStartAddress$(12) = "E00": GModeScreenSize$(12) = "600": GModeColours$(12) = "2"
+GModeName$(13) = "FG3C": GModeMaxX$(13) = "127": GModeMaxY$(13) = "95": GModeStartAddress$(13) = "E00": GModeScreenSize$(13) = "C00": GModeColours$(13) = "4"
+GModeName$(14) = "FG3R": GModeMaxX$(14) = "127": GModeMaxY$(14) = "191": GModeStartAddress$(14) = "E00": GModeScreenSize$(14) = "C00": GModeColours$(14) = "2"
+GModeName$(15) = "FG6C": GModeMaxX$(15) = "127": GModeMaxY$(15) = "191": GModeStartAddress$(15) = "E00": GModeScreenSize$(15) = "1800": GModeColours$(15) = "4"
+GModeName$(16) = "FG6R": GModeMaxX$(16) = "255": GModeMaxY$(16) = "191": GModeStartAddress$(16) = "E00": GModeScreenSize$(16) = "1800": GModeColours$(16) = "2"
+GModeName$(17) = "DMAGraphic": GModeMaxX$(17) = "255": GModeMaxY$(17) = "191": GModeStartAddress$(17) = "E00": GModeScreenSize$(17) = "1800": GModeColours$(17) = "2"
 
 ' CoCo 3 Graphic Modes    CoCo 3 Modes Resolution Memory
 GMode$(100) = "Hires_Graphic_100" '   EQU     %00000001    ;  64x192x4,  $0C00 (3200)
@@ -958,7 +961,7 @@ Wend
 
 If Verbose > 0 Then Print "Doing Pass 4 - Finding special cases that will need other files to be included..."
 x = 0
-
+Gmode = -1 ' Flag no GMODE command found
 While x < filesize
     V = Array(x): x = x + 1 ' get the command to do
     If V = &HFF Then ' Found a command
@@ -970,6 +973,19 @@ While x < filesize
                 If Array(x) = &HF5 And Array(x + 1) = &H23 And Array(x + 2) = &HFC And Array(x + 3) = &H2D And Array(x + 4) = &H33 And Array(x + 5) = &HF5 And Array(x + 6) = &H2C Then
                     x = x + 7
                     PrintGraphicsText = 1
+                End If
+            Case C_GMODE
+                ' Found a GMODE command
+                If Gmode = -1 Then
+                    ' This is the first GMODE command, the user should have entered the actual GMODE number used for the program here
+                    Temp$ = ""
+                    Tempx = x
+                    While Array(x) < &HF0
+                        Temp$ = Temp$ + Chr$(Array(x))
+                        x = x + 1
+                    Wend
+                    Gmode = Val(Temp$)
+                    x = Tempx 'Set things back to normal
                 End If
             Case C_SPRITE_LOAD
                 ' Found a Sprite Load command
@@ -1001,6 +1017,22 @@ While x < filesize
                         n = Val(N$)
                         If n > 127 Then Print "Error1: Can't use sprite number"; n; " please use a smaller sprite number";: GoTo FoundError
                         Sprite$(n) = Temp$
+                        ' Check for a comma
+                        If Array(x) = &HF5 And Array(x + 1) = &H2C Then
+                            ' Found a comma
+                            x = x + 2
+                            ' get the sprite number
+                            N$ = ""
+                            While Array(x) < &HF0
+                                N$ = N$ + Chr$(Array(x)): x = x + 1
+                            Wend
+                            ' Got the number of the sprite
+                            AnimFrames = Val(N$)
+                            If AnimFrames <= 0 Then AnimFrames = 1
+                            SpriteNumberOfFrames(n) = AnimFrames - 1
+                        Else
+                            SpriteNumberOfFrames(n) = 0
+                        End If
                     Else
                         Print "Error1: Can't find a comma with the sprite number";: GoTo FoundError
                     End If
@@ -1065,12 +1097,39 @@ For I = 0 To DefVarCount - 1
     Print #1, DefVar(I)
 Next I
 Close #1
+
+CoCo3 = 0
+For ii = 0 To 171
+    If GModeLib(ii) = 1 Then
+        If ii >= 100 Then
+            CoCo3 = 1
+        End If
+    End If
+Next ii
+
+' Sprite setup stuff
+Sprites = 0
+For I = 0 To 127
+    If Sprite$(I) <> "" Then Sprites = 1
+Next I
+
 Open "SpritesUsed.txt" For Output As #1
+Print #1, CoCo3
+Print #1, Sprites
 For I = 0 To 127
     Print #1, Sprite$(I)
+    Print #1, SpriteNumberOfFrames(I)
+    Sprite8KBlocks(I) = 0
+    If Sprite$(I) <> "" Then
+        Open Sprite$(I) For Input As #2
+        Input #2, i$
+        Input #2, i$
+        Sprite8KBlocks(I) = Val(Right$(i$, 1))
+        Close #2
+    End If
+    Print #1, Sprite8KBlocks(I)
 Next I
 Close #1
-
 
 'See if we should need to use Disk access and Background sound
 For ii = 0 To GeneralCommandsFoundCount - 1
@@ -1092,6 +1151,15 @@ For ii = 0 To GeneralCommandsFoundCount - 1
     End If
 Next ii
 
+' *** Start writing to the .asm file ***
+T1$ = "    ": T2$ = T1$ + T1$
+Open OutName$ For Output As #1
+If BranchCheck > 0 Then
+    ' User wants all branches checked for minimum size
+    A$ = "PRAGMA": B$ = "noforwardrefmax": C$ = "This option is necessary for auto branch size feature to work properly, makes lwasm REALLY slow, but code will be smaller and faster": GoSub AO
+End If
+A$ = "PRAGMA": B$ = "autobranchlength": C$ = "Tell LWASM to automatically use long branches if the short branch is too small, see compiler docs for option -b1 to make this work properly": GoSub AO
+
 For ii = 0 To 171
     If GModeLib(ii) = 1 Then
         If ii < 100 Then
@@ -1104,26 +1172,97 @@ For ii = 0 To 171
         End If
     End If
 Next ii
+'If we are doing CoCo3 sprites load them first
+' Add blocks needed per grapics screen if we are using a coco 3
+If CoCo3 = 1 And Sprites = 1 Then
+    For ii = 0 To 171
+        If GModeLib(ii) = 1 Then
+            If GModePageLib(ii) <> 0 Then
+                ' the user wants to use multiple graphics pages
+                '                Print "GModePageLib(ii)"; GModePageLib(ii), ii
+                CC3BlocksPerScreen = Val("&H" + GModeScreenSize$(ii)) / &H2000
+                '                Print "CC3BlocksPerScreen"; CC3BlocksPerScreen
+                If CC3BlocksPerScreen <> Int(CC3BlocksPerScreen) Then CC3BlocksPerScreen = Int(CC3BlocksPerScreen) + 1
+                '                Print "CC3BlocksPerScreen"; CC3BlocksPerScreen
+                CC3SpritesStartAt = CC3BlocksPerScreen * GModePageLib(ii)
+                '                Print "CC3SpritesStartAt"; CC3SpritesStartAt
+            End If
+        End If
+    Next ii
+    For ii = 0 To 171
+        If GModeLib(ii) = 1 Then
+            CC3SpriteBlockTotal = CC3SpritesStartAt ' Need to calculate where these need to really start (after the last GMODE screen reserved)
+            For c = 0 To 127
+                If Sprite8KBlocks(c) > 0 Then
+                    Select Case CC3SpriteBlockTotal
+                        Case Is < &H37
+                            SpriteLivesAt(c) = CC3SpriteBlockTotal
+                        Case &H37
+                            If Sprite8KBlocks(c) = 1 Then
+                                SpriteLivesAt(c) = CC3SpriteBlockTotal
+                            Else
+                                SpriteLivesAt(c) = CC3SpriteBlockTotal + 9 ' Skip the blocks where normal CC3 code lives ($38-$3F)
+                            End If
+                        Case Else
+                            SpriteLivesAt(c) = CC3SpriteBlockTotal + 8 ' Skip the blocks where normal CC3 code lives ($38-$3F)
+                    End Select
+                    CC3SpriteBlockTotal = CC3SpriteBlockTotal + Sprite8KBlocks(c)
+                End If
+            Next c
+        End If
+    Next ii
+    Select Case Val(GModeColours$(Gmode))
+        Case 2
+            ColourDiv = 8
+        Case 4
+            ColourDiv = 4
+        Case 16
+            ColourDiv = 2
+    End Select
+    Num = (Val(GModeMaxX$(Gmode)) + 1) / ColourDiv: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+    Z$ = "GmodeBytesPerRow EQU     " + Num$ + "        ; # of bytes per graphics row, used by the sprite rendering code": GoSub AO
+    Num = Val("&H" + GModeScreenSize$(Gmode)): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+    Z$ = "ScreenSize       EQU     " + Num$ + "        ; Size of a graphics screen": GoSub AO
+    Num = Val(GModeMaxX$(Gmode)): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+    Z$ = "PixelsMaxX       EQU     " + Num$ + "        ; Screen width Max from 0 to this value": GoSub AO
+    Num = Val(GModeColours$(Gmode)): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+    Z$ = "NumberOfColours  EQU     " + Num$ + "        ; Number of Colours on this screen": GoSub AO
 
-' Start writing to the .asm file
-Open OutName$ For Output As #1
+    ' add code to save in the correct block for $FFA1 & $FFA2  ($2000 & $4000)
+    For I = 0 To 127
+        If Sprite$(I) <> "" Then
+            Print #1, "; Loading Sprites into RAM"
+            ' Get the location after the last GMODE screen will be used
+            A$ = "ORG": B$ = "$FFA1": C$ = "Address to control $2000 block": GoSub AO
+            Num = SpriteLivesAt(I): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+            A$ = "FCB": B$ = Num$: C$ = "Block to use for this compiled sprite code": GoSub AO
+            If Sprite8KBlocks(I) = 2 Then
+                Num = SpriteLivesAt(I) + 1: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+                A$ = "FCB": B$ = Num$: C$ = "16k Sprite code": GoSub AO
+            End If
+            A$ = "ORG": B$ = "$2000": C$ = "Add the sprite at $2000": GoSub AO
+            Print #1, T2$; "INCLUDE     ./"; Sprite$(I)
+        End If
+    Next I
+    A$ = "ORG": B$ = "$FFA1": C$ = "Address to control $2000 block": GoSub AO
+    A$ = "FDB": B$ = "$393A": C$ = "Blocks are back to normal": GoSub AO
+End If
+
+If CoCo3 = 1 Then
+    ProgramStart$ = "E00" ' Force the CoCo 3 to start at $E00
+End If
 DirectPage$ = ProgramStart$
 DirectPage = Val("&H" + DirectPage$)
 DirectPage = DirectPage / 256
 DirectPage$ = Hex$(DirectPage)
-T1$ = "    ": T2$ = T1$ + T1$
-If BranchCheck > 0 Then
-    ' User wants all branches checked for minimum size
-    A$ = "PRAGMA": B$ = "noforwardrefmax": C$ = "This option is necessary for auto branch size feature to work properly, makes lwasm REALLY slow, but code will be smaller and faster": GoSub AO
-End If
-A$ = "PRAGMA": B$ = "autobranchlength": C$ = "Tell LWASM to automatically use long branches if the short branch is too small, see compiler docs for option -b1 to make this work properly": GoSub AO
-Print #1, "; Program reserves $100 bytes before the starting location below for stack space"
+
 A$ = "ORG": B$ = "$" + ProgramStart$: C$ = "Program code starts here": GoSub AO
 A$ = "SETDP": B$ = "$" + DirectPage$: C$ = "Direct page is setup here": GoSub AO
 Print #1, "Seed1           RMB     1     ; Random number seed location"
 Print #1, "Seed2           RMB     1     ; Random number seed location"
 Print #1, "RNDC            RMB     1     ; Used by Random number generator"
 Print #1, "RNDX            RMB     1     ; Used by Random number generator"
+Print #1, "_Var_Timer      RMB     2     ; TIMER value"
 Print #1, "StartClearHere:" ' This is the start address of variables that will all be cleared to zero when the program starts
 ' Save space for 10 temporary 16 bit numbers
 Print #1, "; Temporary Numbers:"
@@ -1152,7 +1291,7 @@ For ii = 0 To FloatVariableCount - 1
     Print #1, "_FPVar_"; FloatVariable$(ii); T1$; "RMB "; T1$; "5"
 Next ii
 Print #1, "; Numeric Variables Used:"; NumericVariableCount
-For ii = 0 To NumericVariableCount - 1
+For ii = 1 To NumericVariableCount - 1 ' 0 is the Timer Variable, but we don't want to clear it so we mannually enter it above
     Print #1, "_Var_"; NumericVariable$(ii); T1$; "RMB "; T1$; "2"
 Next ii
 Print #1, "EveryCasePointer  RMB   2     ; Pointer at the table to keep track of the CASE/EVERYCASE Flags"
@@ -1161,6 +1300,102 @@ Print #1, "SoundTone       RMB     1     ; SOUND Tone value"
 Print #1, "SoundDuration   RMB     2     ; SOUND Command duration value"
 Print #1, "CASFLG          RMB     1     ; Case flag for keyboard output $FF=UPPER (normal), 0=LOWER"
 Print #1, "OriginalIRQ     RMB     3     ; We save the original branch and location of the IRQ here, restored before we exit"
+
+Print #1, "EndClearHere:" ' This is the end address of variables that will all be cleared to zero when the program starts
+
+If Disk = 0 Then
+    ' Sound and Timer 60 Hz IRQ
+    Z$ = "; Sound and Timer 60hz IRQ ": GoSub AO
+    Z$ = "BASIC_IRQ:": GoSub AO
+    A$ = "LDA": B$ = "$FF03": C$ = "CHECK FOR 60HZ INTERRUPT": GoSub AO
+    A$ = "BPL": B$ = "Not60Hz": C$ = "RETURN IF 63.5 MICROSECOND INTERRUPT": GoSub AO
+    A$ = "LDA": B$ = "$FF02": C$ = "RESET PIA0, PORT B INTERRUPT FLAG": GoSub AO
+    A$ = "LDX": B$ = "SoundDuration": C$ = "Get the new Sound duration value": GoSub AO
+    A$ = "BEQ": B$ = ">": C$ = "RETURN IF TIMER = 0": GoSub AO
+    A$ = "LEAX": B$ = "-1,X": C$ = "DECREMENT TIMER IF NOT = 0": GoSub AO
+    A$ = "STX": B$ = "SoundDuration": C$ = "Save the new Sound duration value": GoSub AO
+    Z$ = "!"
+    A$ = "INC": B$ = "_Var_Timer+1": C$ = "Increment the LSB of the Timer Value": GoSub AO
+    A$ = "BNE": B$ = "Not60Hz": C$ = "Skip ahead if not zero": GoSub AO
+    A$ = "INC": B$ = "_Var_Timer": C$ = "Increment the MSB of the Timer Value": GoSub AO
+    Z$ = "Not60Hz"
+    A$ = "RTI": B$ = "": C$ = "RETURN FROM INTERRUPT": GoSub AO
+Else
+    ' DISK controller Interrupts
+    '; NMI SERVICE
+    Z$ = "DNMISV:"
+    A$ = "LDA": B$ = "NMIFLG": C$ = "GET NMI FLAG": GoSub AO
+    A$ = "BEQ": B$ = "LD8AE": C$ = "RETURN IF NOT ACTIVE": GoSub AO
+    A$ = "LDX": B$ = "DNMIVC": C$ = "GET NEW RETURN VECTOR": GoSub AO
+    A$ = "STX": B$ = "10,S": C$ = "STORE AT STACKED PC SLOT ON STACK": GoSub AO
+    A$ = "CLR": B$ = "NMIFLG": C$ = "RESET NMI FLAG": GoSub AO
+    Z$ = "LD8AE"
+    A$ = "RTI": B$ = "": C$ = "RETURN FROM INTERRUPT": GoSub AO
+    '; Disk IRQ SERVICE and Sound and Timer 60 Hz IRQ
+    Z$ = "BASIC_IRQ:"
+    A$ = "LDA": B$ = "$FF03": C$ = "63.5 MICRO SECOND OR 60 HZ INTERRUPT?": GoSub AO
+    A$ = "BPL": B$ = "LD8AE": C$ = "RETURN IF 63.5 MICROSECOND": GoSub AO
+    A$ = "LDA": B$ = "$FF02": C$ = "RESET 60 HZ PIA INTERRUPT FLAG": GoSub AO
+    A$ = "LDA": B$ = "RDYTMR": C$ = "GET TIMER": GoSub AO
+    A$ = "BEQ": B$ = "LD8CD": C$ = "BRANCH IF NOT ACTIVE": GoSub AO
+    A$ = "DECA": C$ = "DECREMENT THE TIMER": GoSub AO
+    A$ = "STA": B$ = "RDYTMR": C$ = "SAVE IT": GoSub AO
+    A$ = "BNE": B$ = "LD8CD": C$ = "BRANCH IF NOT TIME TO TURN OFF DISK MOTORS": GoSub AO
+    A$ = "LDA": B$ = "DRGRAM": C$ = "GET DSKREG IMAGE": GoSub AO
+    A$ = "ANDA": B$ = "#$B0": C$ = "TURN ALL MOTORS AND DRIVE SELECTS OFF": GoSub AO
+    A$ = "STA": B$ = "DRGRAM": C$ = "PUT IT BACK IN RAM IMAGE": GoSub AO
+    A$ = "STA": B$ = "DSKREG": C$ = "SEND TO CONTROL REGISTER (MOTORS OFF)": GoSub AO
+    Z$ = "LD8CD"
+    A$ = "LDX": B$ = "SoundDuration": C$ = "Get the new Sound duration value": GoSub AO
+    A$ = "BEQ": B$ = ">": C$ = "RETURN IF TIMER = 0": GoSub AO
+    A$ = "LEAX": B$ = "-1,X": C$ = "DECREMENT TIMER IF NOT = 0": GoSub AO
+    A$ = "STX": B$ = "SoundDuration": C$ = "Save the new Sound duration value": GoSub AO
+    Z$ = "!"
+    A$ = "INC": B$ = "_Var_Timer+1": C$ = "Increment the LSB of the Timer Value": GoSub AO
+    A$ = "BNE": B$ = "Not60Hz": C$ = "Skip ahead if not zero": GoSub AO
+    A$ = "INC": B$ = "_Var_Timer": C$ = "Increment the MSB of the Timer Value": GoSub AO
+    Z$ = "Not60Hz"
+    A$ = "RTI": B$ = "": C$ = "RETURN FROM INTERRUPT": GoSub AO
+End If
+If PlayCommand = 1 Then
+    ' Include special PLAY IRQ to jump to while playing notes
+    Z$ = "; Timer & Play 60hz IRQ ": GoSub AO
+    Z$ = "PLAY_IRQ:": GoSub AO
+    A$ = "LDA": B$ = "$FF03": C$ = "CHECK FOR 60HZ INTERRUPT": GoSub AO
+    A$ = "BPL": B$ = "Not60HzPlay": C$ = "RETURN IF 63.5 MICROSECOND INTERRUPT": GoSub AO
+    A$ = "LDA": B$ = "$FF02": C$ = "RESET PIA0, PORT B INTERRUPT FLAG": GoSub AO
+    A$ = "INC": B$ = "_Var_Timer+1": C$ = "Increment the LSB of the Timer Value": GoSub AO
+    A$ = "BNE": B$ = ">": C$ = "Skip ahead if not zero": GoSub AO
+    A$ = "INC": B$ = "_Var_Timer": C$ = "Increment the MSB of the Timer Value": GoSub AO
+    Z$ = "!"
+    A$ = "LDD": B$ = "PLYTMR": C$ = "GET THE PLAY TIMER": GoSub AO
+    A$ = "BEQ": B$ = ">": C$ = "Exit IRQ": GoSub AO
+    A$ = "SUBD": B$ = "VD5": C$ = "SUBTRACT OUT PLAY INTERVAL": GoSub AO
+    A$ = "STD": B$ = "PLYTMR": C$ = "SAVE THE NEW TIMER VALUE": GoSub AO
+    A$ = "BHI": B$ = ">": C$ = "BRANCH IF PLAY COMMAND NOT DONE": GoSub AO
+    A$ = "CLR": B$ = "PLYTMR": C$ = "RESET MSB OF PLAY TIMER IF DONE": GoSub AO
+    A$ = "CLR": B$ = "PLYTMR+1": C$ = "RESET LSB OF PLAY TIMER": GoSub AO
+    Z$ = "PlayIRQExit:": GoSub AO
+    A$ = "PULS": B$ = "A": C$ = "GET THE CONDITION CODE REG": GoSub AO
+    A$ = "LDS": B$ = "7,S": C$ = "LOAD THE STACK POINTER WITH THE CONTENTS OF THE U REGISTER": GoSub AO
+    Print #1, "; WHICH WAS STACKED WHEN THE INTERRUPT WAS HONORED."
+    A$ = "ANDA": B$ = "#$7F": C$ = "CLEAR E FLAG - MAKE COMPUTER THINK THIS WAS AN FIRQ": GoSub AO
+    A$ = "PSHS": B$ = "A": C$ = "Save Condition Code": GoSub AO
+    Print #1, "; THE RTI WILL NOW NOT RETURN TO WHERE IT WAS"
+    Print #1, "; INTERRUPTED FROM - IT WILL RETURN TO THE MAIN PLAY"
+    Print #1, "; COMMAND INTERPRETATION LOOP."
+    Print #1, "!"
+    Z$ = "Not60HzPlay"
+    A$ = "RTI": B$ = "": C$ = "RETURN FROM INTERRUPT": GoSub AO
+End If
+If CoCo3 = 1 And Sprites = 1 Then
+    ' include the cc3 sprite drawing code here:
+    Print #1, T2$; "INCLUDE        ./Basic_Includes/GraphicCommands/SpriteHandlerCC3.asm" ' Add the sprite drawing code near the start of the program othrewise if we have too many string variables the
+    ' sprite code could end up past $1FFF which would be bad!!!
+End If
+
+Print #1, "ClearHere2nd:" ' This is the start address of variables that will all be cleared to zero when the program starts
+
 ' Add temp string space
 For Num = 0 To 1
     GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
@@ -1246,7 +1481,7 @@ If StringArrayVarsUsedCounter > 0 Then
         A$ = "RMB": B$ = Temp$: C$ = "String size+1 per element": GoSub AO
     Next ii
 End If
-Print #1, "EndClearHere:" ' This is the end address of variables that will all be cleared to zero when the program starts
+Print #1, "EndClearHere2nd:" ' This is the end address of variables that will all be cleared to zero when the program starts
 
 Print #1, "; General Commands Used:"; GeneralCommandsFoundCount
 For ii = 0 To GeneralCommandsFoundCount - 1
@@ -1274,6 +1509,26 @@ For c = 0 To vc - 1
     End If
 Next c
 
+If CoCo3 = 1 And Sprites = 1 Then
+    For ii = 0 To 171
+        If GModeLib(ii) = 1 Then
+            v1 = Val("&H" + GModeScreenSize$(Gmode))
+            TempVal = 0
+            While (TempVal < v1): TempVal = TempVal + &H2000: Wend ' Get the number of bytes needed per screen at this resolution
+            TempVal = TempVal / &H2000 ' Get the block numbers required
+            Print #1, "CC3ScreenBlockSize EQU  $"; Right$("00" + Hex$(TempVal), 2); "        # of $2000 blocks required per screen"
+        End If
+    Next ii
+    Print #1, "CC3SpritesStartBLKTable:"
+    For c = 0 To 127
+        If Sprite8KBlocks(c) > 0 Then
+            Num = SpriteLivesAt(c): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+            If Num$ = "" Then Num$ = "00"
+            A$ = "FCB": B$ = "$" + Num$: C$ = "8k block # where Sprite #" + Str$(c) + " begins": GoSub AO
+        End If
+    Next c
+End If
+
 If Verbose > 0 Then Print "Adding the required Libraries..."
 ' Need to tweak code so we only include code that we need in our program
 ' Add includes that are necessary
@@ -1282,7 +1537,6 @@ For ii = 0 To 171
     If GModeLib(ii) = 1 Then
         Temp$ = "GraphicCommands/GraphicVariables": GoSub AddIncludeTemp ' Add code for graphics variables
         If ii > 99 Then
-            CoCo3 = 1
             Temp$ = "GraphicCommands/GraphicCC3_Code": GoSub AddIncludeTemp ' Add code for CoCo3 graphics handling
         Else
             ' CoCo 1 & 2 graphics mode, Check if ProgramStart should be changed
@@ -1449,22 +1703,35 @@ Temp$ = "Mulitply16x16": GoSub AddIncludeTemp
 Temp$ = "Divide16with16": GoSub AddIncludeTemp
 Temp$ = "SquareRoot": GoSub AddIncludeTemp
 
-' Sprite setup stuff
-Sprites = 0
-For I = 0 To 127
-    If Sprite$(I) <> "" Then Sprites = 1
-Next I
+' GModeName$(15) = "FG6C": GModeMaxX$(15) = "127": GModeMaxY$(15) = "191": GModeStartAddress$(15) = "E00": GModeScreenSize$(15) = "1800": GModeColours$(15) = "4"
 If Sprites = 1 Then
     Print #1, "; Adding the Compiled Sprites and pointers..."
-    Temp$ = "GraphicCommands/SpriteHandler": GoSub AddIncludeTemp
-
-    ' Add Compiled sprites and pointers to be included
-    For I = 0 To 127
-        If Sprite$(I) <> "" Then
-            Print #1, T2$; "INCLUDE     ./"; Sprite$(I)
-        End If
-    Next I
-    Z$ = "SpriteJumpTable:": GoSub AO
+    Select Case Val(GModeColours$(Gmode))
+        Case 2
+            ColourDiv = 8
+        Case 4
+            ColourDiv = 4
+        Case 16
+            ColourDiv = 2
+    End Select
+    If CoCo3 <> 1 Then
+        ' Do this for CoCo 1 & 2
+        Num = (Val(GModeMaxX$(Gmode)) + 1) / ColourDiv: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+        Z$ = "GmodeBytesPerRow EQU     " + Num$ + "        ; # of bytes per graphics row, used by the sprite rendering code": GoSub AO
+        Num = Val("&H" + GModeScreenSize$(Gmode)): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+        Z$ = "ScreenSize       EQU     " + Num$ + "        ; Size of a graphics screen": GoSub AO
+        Num = Val(GModeMaxX$(Gmode)): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+        Z$ = "PixelsMaxX       EQU     " + Num$ + "        ; Screen width Max from 0 to this value": GoSub AO
+        Num = Val(GModeColours$(Gmode)): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+        Z$ = "NumberOfColours  EQU     " + Num$ + "        ; Number of Colours on this screen": GoSub AO
+        For I = 0 To 127
+            If Sprite$(I) <> "" Then
+                Print #1, T2$; "INCLUDE     ./"; Sprite$(I)
+            End If
+        Next I
+        Temp$ = "GraphicCommands/SpriteHandler": GoSub AddIncludeTemp
+    End If
+    Z$ = "SpriteDrawTable:": GoSub AO
     For I = 0 To 127
         If Sprite$(I) <> "" Then
             ' Find the last backslash
@@ -1477,13 +1744,10 @@ If Sprites = 1 Then
                 SpriteName$ = Sprite$(I) ' No backslash found, assume it's just a filename
             End If
             SpriteName$ = Left$(SpriteName$, Len(SpriteName$) - 4) ' remove the .asm
-            For p = 0 To 7
-                Num = p: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-                A$ = "FDB": B$ = SpriteName$ + "_" + Num$: C$ = "Point at the sprite pixel position " + Num$: GoSub AO
-            Next p
+            A$ = "FDB": B$ = SpriteName$ + "_Draw": C$ = "Points to the Sprite Drawing Table (in the compiled sprite.asm file)": GoSub AO
         End If
     Next I
-    Z$ = "SpriteSizeTable:": GoSub AO
+    Z$ = "SpriteBackupTable:": GoSub AO
     For I = 0 To 127
         If Sprite$(I) <> "" Then
             ' Find the last backslash
@@ -1496,11 +1760,10 @@ If Sprites = 1 Then
                 SpriteName$ = Sprite$(I) ' No backslash found, assume it's just a filename
             End If
             SpriteName$ = Left$(SpriteName$, Len(SpriteName$) - 4) ' remove the .asm
-            A$ = "FCB": B$ = SpriteName$ + "_Width": C$ = "Width in Bytes": GoSub AO
-            A$ = "FCB": B$ = SpriteName$ + "_Height": C$ = "Hieght in pixels": GoSub AO
+            A$ = "FDB": B$ = "Backup_" + SpriteName$: C$ = "Address of the Make Backup code": GoSub AO
         End If
     Next I
-    Z$ = "SpriteEraseTable:": GoSub AO
+    Z$ = "SpriteRestoreTable:": GoSub AO ' For VSYNC 0
     For I = 0 To 127
         If Sprite$(I) <> "" Then
             ' Find the last backslash
@@ -1513,102 +1776,13 @@ If Sprites = 1 Then
                 SpriteName$ = Sprite$(I) ' No backslash found, assume it's just a filename
             End If
             SpriteName$ = Left$(SpriteName$, Len(SpriteName$) - 4) ' remove the .asm
-            A$ = "FDB": B$ = SpriteName$ + "_Restore": C$ = "Address of the restore routine": GoSub AO
+            A$ = "FDB": B$ = "Restore_" + SpriteName$ + "_0": C$ = "Address of the restore code": GoSub AO
+            A$ = "FDB": B$ = "Restore_" + SpriteName$ + "_1": C$ = "Address of the restore code": GoSub AO
         End If
     Next I
-
-
 End If
 
 GoSub WriteIncludeListToFile ' Write all the INCLUDE files needed to the .ASM file
-
-
-
-If Disk = 0 Then
-    ' Sound and Timer 60 Hz IRQ
-    Z$ = "; Sound and Timer 60hz IRQ ": GoSub AO
-    Z$ = "BASIC_IRQ:": GoSub AO
-    A$ = "LDA": B$ = "$FF03": C$ = "CHECK FOR 60HZ INTERRUPT": GoSub AO
-    A$ = "BPL": B$ = "Not60Hz": C$ = "RETURN IF 63.5 MICROSECOND INTERRUPT": GoSub AO
-    A$ = "LDA": B$ = "$FF02": C$ = "RESET PIA0, PORT B INTERRUPT FLAG": GoSub AO
-    A$ = "LDX": B$ = "SoundDuration": C$ = "Get the new Sound duration value": GoSub AO
-    A$ = "BEQ": B$ = ">": C$ = "RETURN IF TIMER = 0": GoSub AO
-    A$ = "LEAX": B$ = "-1,X": C$ = "DECREMENT TIMER IF NOT = 0": GoSub AO
-    A$ = "STX": B$ = "SoundDuration": C$ = "Save the new Sound duration value": GoSub AO
-    Z$ = "!"
-    A$ = "INC": B$ = "_Var_Timer+1": C$ = "Increment the LSB of the Timer Value": GoSub AO
-    A$ = "BNE": B$ = "Not60Hz": C$ = "Skip ahead if not zero": GoSub AO
-    A$ = "INC": B$ = "_Var_Timer": C$ = "Increment the MSB of the Timer Value": GoSub AO
-    Z$ = "Not60Hz"
-    A$ = "RTI": B$ = "": C$ = "RETURN FROM INTERRUPT": GoSub AO
-Else
-    ' DISK controller Interrupts
-    '; NMI SERVICE
-    Z$ = "DNMISV:"
-    A$ = "LDA": B$ = "NMIFLG": C$ = "GET NMI FLAG": GoSub AO
-    A$ = "BEQ": B$ = "LD8AE": C$ = "RETURN IF NOT ACTIVE": GoSub AO
-    A$ = "LDX": B$ = "DNMIVC": C$ = "GET NEW RETURN VECTOR": GoSub AO
-    A$ = "STX": B$ = "10,S": C$ = "STORE AT STACKED PC SLOT ON STACK": GoSub AO
-    A$ = "CLR": B$ = "NMIFLG": C$ = "RESET NMI FLAG": GoSub AO
-    Z$ = "LD8AE"
-    A$ = "RTI": B$ = "": C$ = "RETURN FROM INTERRUPT": GoSub AO
-    '; Disk IRQ SERVICE and Sound and Timer 60 Hz IRQ
-    Z$ = "BASIC_IRQ:"
-    A$ = "LDA": B$ = "$FF03": C$ = "63.5 MICRO SECOND OR 60 HZ INTERRUPT?": GoSub AO
-    A$ = "BPL": B$ = "LD8AE": C$ = "RETURN IF 63.5 MICROSECOND": GoSub AO
-    A$ = "LDA": B$ = "$FF02": C$ = "RESET 60 HZ PIA INTERRUPT FLAG": GoSub AO
-    A$ = "LDA": B$ = "RDYTMR": C$ = "GET TIMER": GoSub AO
-    A$ = "BEQ": B$ = "LD8CD": C$ = "BRANCH IF NOT ACTIVE": GoSub AO
-    A$ = "DECA": C$ = "DECREMENT THE TIMER": GoSub AO
-    A$ = "STA": B$ = "RDYTMR": C$ = "SAVE IT": GoSub AO
-    A$ = "BNE": B$ = "LD8CD": C$ = "BRANCH IF NOT TIME TO TURN OFF DISK MOTORS": GoSub AO
-    A$ = "LDA": B$ = "DRGRAM": C$ = "GET DSKREG IMAGE": GoSub AO
-    A$ = "ANDA": B$ = "#$B0": C$ = "TURN ALL MOTORS AND DRIVE SELECTS OFF": GoSub AO
-    A$ = "STA": B$ = "DRGRAM": C$ = "PUT IT BACK IN RAM IMAGE": GoSub AO
-    A$ = "STA": B$ = "DSKREG": C$ = "SEND TO CONTROL REGISTER (MOTORS OFF)": GoSub AO
-    Z$ = "LD8CD"
-    A$ = "LDX": B$ = "SoundDuration": C$ = "Get the new Sound duration value": GoSub AO
-    A$ = "BEQ": B$ = ">": C$ = "RETURN IF TIMER = 0": GoSub AO
-    A$ = "LEAX": B$ = "-1,X": C$ = "DECREMENT TIMER IF NOT = 0": GoSub AO
-    A$ = "STX": B$ = "SoundDuration": C$ = "Save the new Sound duration value": GoSub AO
-    Z$ = "!"
-    A$ = "INC": B$ = "_Var_Timer+1": C$ = "Increment the LSB of the Timer Value": GoSub AO
-    A$ = "BNE": B$ = "Not60Hz": C$ = "Skip ahead if not zero": GoSub AO
-    A$ = "INC": B$ = "_Var_Timer": C$ = "Increment the MSB of the Timer Value": GoSub AO
-    Z$ = "Not60Hz"
-    A$ = "RTI": B$ = "": C$ = "RETURN FROM INTERRUPT": GoSub AO
-End If
-If PlayCommand = 1 Then
-    ' Include special PLAY IRQ to jump to while playing notes
-    Z$ = "; Timer & Play 60hz IRQ ": GoSub AO
-    Z$ = "PLAY_IRQ:": GoSub AO
-    A$ = "LDA": B$ = "$FF03": C$ = "CHECK FOR 60HZ INTERRUPT": GoSub AO
-    A$ = "BPL": B$ = "Not60HzPlay": C$ = "RETURN IF 63.5 MICROSECOND INTERRUPT": GoSub AO
-    A$ = "LDA": B$ = "$FF02": C$ = "RESET PIA0, PORT B INTERRUPT FLAG": GoSub AO
-    A$ = "INC": B$ = "_Var_Timer+1": C$ = "Increment the LSB of the Timer Value": GoSub AO
-    A$ = "BNE": B$ = ">": C$ = "Skip ahead if not zero": GoSub AO
-    A$ = "INC": B$ = "_Var_Timer": C$ = "Increment the MSB of the Timer Value": GoSub AO
-    Z$ = "!"
-    A$ = "LDD": B$ = "PLYTMR": C$ = "GET THE PLAY TIMER": GoSub AO
-    A$ = "BEQ": B$ = ">": C$ = "Exit IRQ": GoSub AO
-    A$ = "SUBD": B$ = "VD5": C$ = "SUBTRACT OUT PLAY INTERVAL": GoSub AO
-    A$ = "STD": B$ = "PLYTMR": C$ = "SAVE THE NEW TIMER VALUE": GoSub AO
-    A$ = "BHI": B$ = ">": C$ = "BRANCH IF PLAY COMMAND NOT DONE": GoSub AO
-    A$ = "CLR": B$ = "PLYTMR": C$ = "RESET MSB OF PLAY TIMER IF DONE": GoSub AO
-    A$ = "CLR": B$ = "PLYTMR+1": C$ = "RESET LSB OF PLAY TIMER": GoSub AO
-    Z$ = "PlayIRQExit:": GoSub AO
-    A$ = "PULS": B$ = "A": C$ = "GET THE CONDITION CODE REG": GoSub AO
-    A$ = "LDS": B$ = "7,S": C$ = "LOAD THE STACK POINTER WITH THE CONTENTS OF THE U REGISTER": GoSub AO
-    Print #1, "; WHICH WAS STACKED WHEN THE INTERRUPT WAS HONORED."
-    A$ = "ANDA": B$ = "#$7F": C$ = "CLEAR E FLAG - MAKE COMPUTER THINK THIS WAS AN FIRQ": GoSub AO
-    A$ = "PSHS": B$ = "A": C$ = "Save Condition Code": GoSub AO
-    Print #1, "; THE RTI WILL NOW NOT RETURN TO WHERE IT WAS"
-    Print #1, "; INTERRUPTED FROM - IT WILL RETURN TO THE MAIN PLAY"
-    Print #1, "; COMMAND INTERPRETATION LOOP."
-    Print #1, "!"
-    Z$ = "Not60HzPlay"
-    A$ = "RTI": B$ = "": C$ = "RETURN FROM INTERRUPT": GoSub AO
-End If
 
 Print #1, "* Main Program"
 Print #1, "START:"
@@ -1669,6 +1843,13 @@ A$ = "CLRA": C$ = "Clear Accumulator A": GoSub AO
 Z$ = "!"
 A$ = "STA": B$ = ",X+": C$ = "Clear the variable space, move pointer forward": GoSub AO
 A$ = "CMPX": B$ = "#EndClearHere": C$ = "Compare the current address to the end of the variables that will be cleared to zero when the program starts": GoSub AO
+A$ = "BNE": B$ = "<": C$ = "Loop until all cleared": GoSub AO
+
+A$ = "LDX": B$ = "#ClearHere2nd": C$ = "Set the start address of the variables that will be cleared to zero when the program starts": GoSub AO
+A$ = "CLRA": C$ = "Clear Accumulator A": GoSub AO
+Z$ = "!"
+A$ = "STA": B$ = ",X+": C$ = "Clear the variable space, move pointer forward": GoSub AO
+A$ = "CMPX": B$ = "#EndClearHere2nd": C$ = "Compare the current address to the end of the variables that will be cleared to zero when the program starts": GoSub AO
 A$ = "BNE": B$ = "<": C$ = "Loop until all cleared": GoSub AO
 
 ' Restore sizes of numeric arrays
@@ -1799,6 +1980,7 @@ A$ = "STA": B$ = "$FEF4": C$ = "Save instruction for the CoCo3": GoSub AO
 If SDCPLAY = 1 Or SDCVersionCheck = 1 Then ' If we are doing any SDC streaming check the version as it must byt V127 or higher
     A$ = "JSR": B$ = "CheckSDCFirmwareVersion": C$ = "Check the version of the SDC controller must be > v126": GoSub AO
 End If
+
 ' Start the IRQ
 Z$ = "* This is where we enable the IRQ": GoSub AO
 A$ = "ANDCC": B$ = "#%11101111": C$ = "= %11101111 this will Enable the IRQ to start": GoSub AO
@@ -3620,16 +3802,37 @@ I = 1
 Num = ii
 GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSBs
 While InStr(I, Tokenized$, Chr$(&HFF) + Chr$(MSB) + Chr$(LSB)) > 0
+    I = InStr(I, Tokenized$, Chr$(&HFF) + Chr$(MSB) + Chr$(LSB))
     StartLine = I ' Start of the line
     ' Does this command end with a Colon?
     EndLine = InStr(I, Tokenized$, Chr$(&HF5) + Chr$(&H3A))
     If EndLine = 0 Then
-        ' No other LINE commands after colons, this is the last
-        EndLine = Len(Tokenized$)
+        FoundREM = 0
+        ' no colon found at the end of the line, check for a REM or an apostrophe
+        Num = C_REM
+        GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSBs
+        If InStr(I, Tokenized$, " " + Chr$(&HFF) + Chr$(MSB) + Chr$(LSB)) > 0 Then
+            EndLine = InStr(I, Tokenized$, " " + Chr$(&HFF) + Chr$(MSB) + Chr$(LSB)) - 1
+            FoundREM = 1
+        End If
+        Num = C_REMApostrophe
+        GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSBs
+        If InStr(I, Tokenized$, " " + Chr$(&HFF) + Chr$(MSB) + Chr$(LSB)) > 0 Then
+            EndLine = InStr(I, Tokenized$, " " + Chr$(&HFF) + Chr$(MSB) + Chr$(LSB)) - 1
+            FoundREM = 1
+        End If
+    End If
+    If FoundREM = 1 Then
         FoundColon$ = ""
     Else
-        EndLine = EndLine - 1
-        FoundColon$ = Chr$(&HF5)
+        If EndLine = 0 Then
+            ' No other LINE commands after colons, this is the last
+            EndLine = Len(Tokenized$)
+            FoundColon$ = ""
+        Else
+            EndLine = EndLine - 1
+            FoundColon$ = Chr$(&HF5)
+        End If
     End If
     BFTemp$ = ",0,0"
     If Mid$(Tokenized$, EndLine - 2, 3) = ", B" Then BFTemp$ = ",1,0"

@@ -39,6 +39,8 @@ Dim StringCommandsFound$(2000)
 Dim StringCommandsFoundCount As Integer
 
 Dim Sprite$(255)
+Dim SpriteNumberOfFrames(255)
+Dim Sprite8KBlocks(255)
 ' No More
 ' PSET
 ' PCLS
@@ -94,24 +96,24 @@ GMode$(15) = "Full_graphic_6_C" '     Full graphic 6-C      1   1   1   0   1 1 
 GMode$(16) = "Full_graphic_6_R" '     Full graphic 6-R      1   1   1   1   1 1 0   256x192x2 $1800(6144)
 GMode$(17) = "DMAccess_graphics" '    Direct memory access  X   X   X   X   1 1 1             $1800(6144)
 
-GModeName$(0) = "IA": GModeMaxX$(0) = "31": GModeMaxY$(0) = "15": GModeStartAddress$(0) = "400": GModeScreenSize$(0) = "200"
-GModeName$(1) = "EA": GModeMaxX$(1) = "31": GModeMaxY$(1) = "15": GModeStartAddress$(1) = "400": GModeScreenSize$(1) = "200"
-GModeName$(2) = "SG4": GModeMaxX$(2) = "63": GModeMaxY$(2) = "31": GModeStartAddress$(2) = "400": GModeScreenSize$(2) = "200"
-GModeName$(3) = "SG4H": GModeMaxX$(3) = "63": GModeMaxY$(3) = "31": GModeStartAddress$(3) = "E00": GModeScreenSize$(3) = "800"
-GModeName$(4) = "SG6": GModeMaxX$(4) = "63": GModeMaxY$(4) = "47": GModeStartAddress$(4) = "400": GModeScreenSize$(4) = "200"
-GModeName$(5) = "SG6H": GModeMaxX$(5) = "63": GModeMaxY$(5) = "47": GModeStartAddress$(5) = "E00": GModeScreenSize$(5) = "C00"
-GModeName$(6) = "SG8": GModeMaxX$(6) = "63": GModeMaxY$(6) = "63": GModeStartAddress$(6) = "E00": GModeScreenSize$(6) = "800"
-GModeName$(7) = "SG12": GModeMaxX$(7) = "63": GModeMaxY$(7) = "95": GModeStartAddress$(7) = "E00": GModeScreenSize$(7) = "C00"
-GModeName$(8) = "SG24": GModeMaxX$(8) = "63": GModeMaxY$(8) = "191": GModeStartAddress$(8) = "E00": GModeScreenSize$(8) = "1800"
-GModeName$(9) = "FG1C": GModeMaxX$(9) = "63": GModeMaxY$(9) = "63": GModeStartAddress$(9) = "E00": GModeScreenSize$(9) = "400"
-GModeName$(10) = "FG1R": GModeMaxX$(10) = "127": GModeMaxY$(10) = "63": GModeStartAddress$(10) = "E00": GModeScreenSize$(10) = "400"
-GModeName$(11) = "FG2C": GModeMaxX$(11) = "127": GModeMaxY$(11) = "63": GModeStartAddress$(11) = "E00": GModeScreenSize$(11) = "800"
-GModeName$(12) = "FG2R": GModeMaxX$(12) = "127": GModeMaxY$(12) = "95": GModeStartAddress$(12) = "E00": GModeScreenSize$(12) = "600"
-GModeName$(13) = "FG3C": GModeMaxX$(13) = "127": GModeMaxY$(13) = "95": GModeStartAddress$(13) = "E00": GModeScreenSize$(13) = "C00"
-GModeName$(14) = "FG3R": GModeMaxX$(14) = "127": GModeMaxY$(14) = "191": GModeStartAddress$(14) = "E00": GModeScreenSize$(14) = "C00"
-GModeName$(15) = "FG6C": GModeMaxX$(15) = "127": GModeMaxY$(15) = "191": GModeStartAddress$(15) = "E00": GModeScreenSize$(15) = "1800"
-GModeName$(16) = "FG6R": GModeMaxX$(16) = "255": GModeMaxY$(16) = "191": GModeStartAddress$(16) = "E00": GModeScreenSize$(16) = "1800"
-GModeName$(17) = "DMAGraphic": GModeMaxX$(17) = "255": GModeMaxY$(17) = "191": GModeStartAddress$(17) = "E00": GModeScreenSize$(17) = "1800"
+GModeName$(0) = "IA": GModeMaxX$(0) = "31": GModeMaxY$(0) = "15": GModeStartAddress$(0) = "400": GModeScreenSize$(0) = "200": GModeColours$(0) = "2"
+GModeName$(1) = "EA": GModeMaxX$(1) = "31": GModeMaxY$(1) = "15": GModeStartAddress$(1) = "400": GModeScreenSize$(1) = "200": GModeColours$(1) = "2"
+GModeName$(2) = "SG4": GModeMaxX$(2) = "63": GModeMaxY$(2) = "31": GModeStartAddress$(2) = "400": GModeScreenSize$(2) = "200": GModeColours$(2) = "2"
+GModeName$(3) = "SG4H": GModeMaxX$(3) = "63": GModeMaxY$(3) = "31": GModeStartAddress$(3) = "E00": GModeScreenSize$(3) = "800": GModeColours$(3) = "9"
+GModeName$(4) = "SG6": GModeMaxX$(4) = "63": GModeMaxY$(4) = "47": GModeStartAddress$(4) = "400": GModeScreenSize$(4) = "200": GModeColours$(4) = "2"
+GModeName$(5) = "SG6H": GModeMaxX$(5) = "63": GModeMaxY$(5) = "47": GModeStartAddress$(5) = "E00": GModeScreenSize$(5) = "C00": GModeColours$(5) = "9"
+GModeName$(6) = "SG8": GModeMaxX$(6) = "63": GModeMaxY$(6) = "63": GModeStartAddress$(6) = "E00": GModeScreenSize$(6) = "800": GModeColours$(6) = "9"
+GModeName$(7) = "SG12": GModeMaxX$(7) = "63": GModeMaxY$(7) = "95": GModeStartAddress$(7) = "E00": GModeScreenSize$(7) = "C00": GModeColours$(7) = "9"
+GModeName$(8) = "SG24": GModeMaxX$(8) = "63": GModeMaxY$(8) = "191": GModeStartAddress$(8) = "E00": GModeScreenSize$(8) = "1800": GModeColours$(8) = "9"
+GModeName$(9) = "FG1C": GModeMaxX$(9) = "63": GModeMaxY$(9) = "63": GModeStartAddress$(9) = "E00": GModeScreenSize$(9) = "400": GModeColours$(9) = "4"
+GModeName$(10) = "FG1R": GModeMaxX$(10) = "127": GModeMaxY$(10) = "63": GModeStartAddress$(10) = "E00": GModeScreenSize$(10) = "400": GModeColours$(10) = "2"
+GModeName$(11) = "FG2C": GModeMaxX$(11) = "127": GModeMaxY$(11) = "63": GModeStartAddress$(11) = "E00": GModeScreenSize$(11) = "800": GModeColours$(11) = "4"
+GModeName$(12) = "FG2R": GModeMaxX$(12) = "127": GModeMaxY$(12) = "95": GModeStartAddress$(12) = "E00": GModeScreenSize$(12) = "600": GModeColours$(12) = "2"
+GModeName$(13) = "FG3C": GModeMaxX$(13) = "127": GModeMaxY$(13) = "95": GModeStartAddress$(13) = "E00": GModeScreenSize$(13) = "C00": GModeColours$(13) = "4"
+GModeName$(14) = "FG3R": GModeMaxX$(14) = "127": GModeMaxY$(14) = "191": GModeStartAddress$(14) = "E00": GModeScreenSize$(14) = "C00": GModeColours$(14) = "2"
+GModeName$(15) = "FG6C": GModeMaxX$(15) = "127": GModeMaxY$(15) = "191": GModeStartAddress$(15) = "E00": GModeScreenSize$(15) = "1800": GModeColours$(15) = "4"
+GModeName$(16) = "FG6R": GModeMaxX$(16) = "255": GModeMaxY$(16) = "191": GModeStartAddress$(16) = "E00": GModeScreenSize$(16) = "1800": GModeColours$(16) = "2"
+GModeName$(17) = "DMAGraphic": GModeMaxX$(17) = "255": GModeMaxY$(17) = "191": GModeStartAddress$(17) = "E00": GModeScreenSize$(17) = "1800": GModeColours$(17) = "2"
 
 ' CoCo 3 Graphic Modes    CoCo 3 Modes Resolution Memory
 GMode$(100) = "Hires_Graphic_100" '   EQU     %00000001    ;  64x192x4,  $0C00 (3200)
@@ -405,8 +407,18 @@ Check$ = "CMPLT": GoSub FindNumCommandNumber ' Gets the Numeric Command number o
 CMPLT_CMD = ii
 Check$ = "STRTOFLOAT": GoSub FindNumCommandNumber ' Gets the Numeric Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
 STRTOFLOAT_CMD = ii
+Check$ = "VBL": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+VBL_CMD = ii
+Check$ = "LOCATE": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+LOCATE_CMD = ii
+Check$ = "ERASE": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+ERASE_CMD = ii
+Check$ = "SHOW": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+SHOW_CMD = ii
+Check$ = "BACK": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+BACK_CMD = ii
 
-
+DoingSprites = 0
 x = 0
 INx = 0
 lc = 0
@@ -489,12 +501,18 @@ While EOF(1) = 0
     DefVarCount = DefVarCount + 1
 Wend
 Close #1
+'Get info from this file about the CoCo3 and if sprites are used
 Open "SpritesUsed.txt" For Input As #1
-For I = 0 To 127
-    Input #1, Sprite$(I)
-Next I
+Input #1, CoCo3
+Input #1, Sprites
+If Sprites = 1 Then
+    For I = 0 To 127
+        Input #1, Sprite$(I)
+        Input #1, SpriteNumberOfFrames(I)
+        Input #1, Sprite8KBlocks(I)
+    Next I
+End If
 Close #1
-
 
 ' Start writing to the .asm file
 Open OutName$ For Append As #1
@@ -667,7 +685,6 @@ If DataArrayCount > 0 Then
         Print #1, Right$("00" + Hex$(DataArray(x + 2)), 2); " "; Right$("00" + Hex$(DataArray(x + 3)), 2)
     Next x
 End If
-
 If AutoStart = 1 Then
     ' Make the program autostart (takes over the IRQ JMP routine)
     A$ = "ORG": B$ = "$0176": C$ = "Make the program autostart by changing the CLOSE ONE FILE jump to jump to ours instead": GoSub AO
@@ -808,7 +825,7 @@ If ArrayWidth = 8 Then
         ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression returns with D = the value
         A$ = "LSLB": GoSub AO
         A$ = "ROLA": C$ = "D=D*2, 16 bit integers in the numeric array": GoSub AO
-        num = NumDims: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+        Num = NumDims: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
         A$ = "ADDD": B$ = "#_ArrayNum_" + NV$ + "+" + Num$: C$ = "D points at the start of the destination mem location in the array": GoSub AO
     Else
         ' Handle multi dimensional arrays
@@ -870,7 +887,7 @@ If ArrayWidth = 8 Then
     End If
     A$ = "LSLB": GoSub AO
     A$ = "ROLA": C$ = "D=D*2, 16 bit integers in the numeric array": GoSub AO
-    num = NumDims: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+    Num = NumDims: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
     A$ = "ADDD": B$ = "#_ArrayNum_" + NV$ + "+" + Num$: C$ = "D points at the start of the destination mem location in the array": GoSub AO
 Else
     ' 16 bit array can't use 6809 MUL must use MUL16
@@ -882,7 +899,7 @@ Else
         ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression returns with D = the value
         A$ = "LSLB": GoSub AO
         A$ = "ROLA": C$ = "D=D*2, 16 bit integers in the numeric array": GoSub AO
-        num = NumDims: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+        Num = NumDims: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
         A$ = "ADDD": B$ = "#_ArrayNum_" + NV$ + "+" + Num$: C$ = "D points at the start of the destination mem location in the array": GoSub AO
     Else
         ' Handle multi dimensional arrays
@@ -957,7 +974,7 @@ Else
     End If
     A$ = "LSLB": GoSub AO
     A$ = "ROLA": C$ = "D=D*2, 16 bit integers in the numeric array": GoSub AO
-    num = NumDims: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+    Num = NumDims: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
     A$ = "ADDD": B$ = "#_ArrayNum_" + NV$ + "+" + Num$: C$ = "D points at the start of the destination mem location in the array": GoSub AO
 
 
@@ -1045,7 +1062,7 @@ If ArrayWidth = 8 Then
     End If
     A$ = "LSLB": GoSub AO
     A$ = "ROLA": C$ = "D=D*2, 16 bit integers in the numeric array": GoSub AO
-    num = NumDims: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+    Num = NumDims: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
     A$ = "ADDD": B$ = "#_ArrayNum_" + NV$ + "+" + Num$: C$ = "D points at the start of the destination string": GoSub AO
 Else
     ' 16 bit array can't use 6809 MUL must use MUL16
@@ -1127,7 +1144,7 @@ Else
     End If
     A$ = "LSLB": GoSub AO
     A$ = "ROLA": C$ = "D=D*2, 16 bit integers in the numeric array": GoSub AO
-    num = NumDims * 2: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+    Num = NumDims * 2: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
     A$ = "ADDD": B$ = "#_ArrayNum_" + NV$ + "+" + Num$: C$ = "D points at the start of the destination string": GoSub AO
 End If
 
@@ -1153,7 +1170,7 @@ If FirstChar = &HF4 Then
     A$ = "STD": B$ = "[,S++]": C$ = "Save D in the array, and fix the stack": GoSub AO
     Return
 End If
-num = INT_CMD: GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSBs
+Num = INT_CMD: GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSBs
 ' The INT command on the CoCo truncates the decimal part of a floating point number, if the floating point number is a negative then it also subtracts 1 to the result
 If FirstChar = &HFE Then
     If Len(Expression$) > 7 Then
@@ -1176,7 +1193,7 @@ End If
 GoSub CheckForVariable
 If ExType = 0 Then
     GoSub EvaluateNewExpression
-    num = D: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+    Num = D: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
     A$ = "LDD": B$ = "#" + Num$: C$ = "Since we don't have any variables or numeric commands, this is the calculated value": GoSub AO
 Else
     ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
@@ -1261,12 +1278,12 @@ If ArrayWidth = 8 Then
         A$ = "LEAS": B$ = "6,S": C$ = "Fix the stack": GoSub AO
     End If
     ' * size of each element
-    num = StringArraySize: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+    Num = StringArraySize: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
     A$ = "LDX": B$ = "#" + Num$ + "+1": C$ = "String Array size requested by the user +1 because first digit is the string length": GoSub AO
     A$ = "PSHS": B$ = "D,X": C$ = "Save the two 16 bit WORDS on the stack, to be multiplied": GoSub AO
     A$ = "JSR": B$ = "MUL16": C$ = "Multiply D * X, result in D": GoSub AO ' D=d1* NumElements2
     A$ = "LEAS": B$ = "4,S": C$ = "Fix the Stack": GoSub AO
-    num = NumDims: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+    Num = NumDims: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
     A$ = "ADDD": B$ = "#_ArrayStr_" + SV$ + "+" + Num$: C$ = "D points at the start of the destination string": GoSub AO
     A$ = "TFR": B$ = "D,X": C$ = "Make X the pointer to where this array is stored in RAM": GoSub AO
 Else
@@ -1346,12 +1363,12 @@ Else
         A$ = "LEAS": B$ = "6,S": C$ = "Fix the stack": GoSub AO
     End If
     ' * size of each element
-    num = StringArraySize: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+    Num = StringArraySize: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
     A$ = "LDX": B$ = "#" + Num$ + "+1": C$ = "String Array size requested by the user +1 because first digit is the string length": GoSub AO
     A$ = "PSHS": B$ = "D,X": C$ = "Save the two 16 bit WORDS on the stack, to be multiplied": GoSub AO
     A$ = "JSR": B$ = "MUL16": C$ = "Multiply D * X, result in D": GoSub AO ' D=d1* NumElements2
     A$ = "LEAS": B$ = "4,S": C$ = "Fix the Stack": GoSub AO
-    num = NumDims * 2: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+    Num = NumDims * 2: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
     A$ = "ADDD": B$ = "#_ArrayStr_" + SV$ + "+" + Num$: C$ = "D points at the start of the destination string": GoSub AO
     A$ = "TFR": B$ = "D,X": C$ = "Make X the pointer to where this array is stored in RAM": GoSub AO
 End If
@@ -1434,12 +1451,12 @@ If ArrayWidth = 8 Then
         A$ = "LEAS": B$ = "6,S": C$ = "Fix the stack": GoSub AO
     End If
     ' * size of each element
-    num = StringArraySize: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+    Num = StringArraySize: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
     A$ = "LDX": B$ = "#" + Num$ + "+1": C$ = "String Array size requested by the user +1 because first digit is the string length": GoSub AO
     A$ = "PSHS": B$ = "D,X": C$ = "Save the two 16 bit WORDS on the stack, to be multiplied": GoSub AO
     A$ = "JSR": B$ = "MUL16": C$ = "Multiply D * X, result in D": GoSub AO ' D=d1* NumElements2
     A$ = "LEAS": B$ = "4,S": C$ = "Fix the Stack": GoSub AO
-    num = NumDims: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+    Num = NumDims: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
     A$ = "ADDD": B$ = "#_ArrayStr_" + SV$ + "+" + Num$: C$ = "D = D + Start of this array memory": GoSub AO
     A$ = "PSHS": B$ = "D": C$ = "Save it on the stack": GoSub AO
 Else
@@ -1513,12 +1530,12 @@ Else
         A$ = "LEAS": B$ = "6,S": C$ = "Fix the stack": GoSub AO
     End If
     ' * size of each element
-    num = StringArraySize: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+    Num = StringArraySize: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
     A$ = "LDX": B$ = "#" + Num$ + "+1": C$ = "String Array size requested by the user +1 because first digit is the string length": GoSub AO
     A$ = "PSHS": B$ = "D,X": C$ = "Save the two 16 bit WORDS on the stack, to be multiplied": GoSub AO
     A$ = "JSR": B$ = "MUL16": C$ = "Multiply D * X, result in D": GoSub AO ' D=d1* NumElements2
     A$ = "LEAS": B$ = "4,S": C$ = "Fix the Stack": GoSub AO
-    num = NumDims * 2: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+    Num = NumDims * 2: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
     A$ = "ADDD": B$ = "#_ArrayStr_" + SV$ + "+" + Num$: C$ = "D = D + Start of this array memory": GoSub AO
     A$ = "PSHS": B$ = "D": C$ = "Save it on the stack": GoSub AO
 End If
@@ -1570,7 +1587,7 @@ If FirstChar = &HF4 Then
     A$ = "STD": B$ = NV$: C$ = "Save to numeric variable": GoSub AO
     Return
 End If
-num = INT_CMD: GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSBs
+Num = INT_CMD: GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSBs
 ' The INT command on the CoCo truncates the decimal part of a floating point number, if the floating point number is a negative then it also subtracts 1 to the result
 If FirstChar = &HFE Then
     If Len(Expression$) > 7 Then
@@ -1593,7 +1610,7 @@ End If
 GoSub CheckForVariable
 If ExType = 0 Then
     GoSub EvaluateNewExpression
-    num = D: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+    Num = D: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
     A$ = "LDD": B$ = "#" + Num$: C$ = "Since we don't have any variables or numeric commands, this is the calculated value": GoSub AO
 Else
     ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
@@ -1698,7 +1715,7 @@ Select Case FirstChar
                 GoSub CheckForVariable
                 If ExType = 0 Then
                     GoSub EvaluateNewExpression
-                    num = D: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+                    Num = D: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
                     A$ = "LDD": B$ = "#" + Num$: C$ = "Since we don't have any variables or numeric commands, this is the calculated value": GoSub AO
                 Else
                     ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
@@ -1792,7 +1809,7 @@ Select Case FirstChar
                                 GoSub CheckForVariable
                                 If ExType = 0 Then
                                     GoSub EvaluateNewExpression
-                                    num = D: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+                                    Num = D: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
                                     A$ = "LDD": B$ = "#" + Num$: C$ = "Since we don't have any variables or numeric commands, this is the calculated value": GoSub AO
                                 Else
                                     ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
@@ -2179,8 +2196,8 @@ v = Array(x): x = x + 1
 Return
 
 DoELSE:
-num = ElseStack(IFSP): GoSub NumAsString 'num=IFCount associated with this IFProc
-If num < 10 Then Num$ = "0" + Num$
+Num = ElseStack(IFSP): GoSub NumAsString 'num=IFCount associated with this IFProc
+If Num < 10 Then Num$ = "0" + Num$
 A$ = "BRA": B$ = "_IFDone_" + Num$: C$ = "Jump to END IF line": GoSub AO
 Z$ = "_ELSE_" + Num$: C$ = "If result is zero = FALSE then jump to ELSE/Next line": GoSub AO
 GoTo ConsumeCommentsAndEOL ' Consume any comments and the EOL and Return
@@ -2333,8 +2350,8 @@ NotFloatComp:
 GoSub GoCheckIfTrue ' This parses CheckIfTrue$, gets it ready to be evaluated in the string NewString$
 GoSub EvaluateNewString ' This Evaluates NewString$ and returns with a LDD with the result, zero is false so it will do an ELSE, if there is one otherwise do what is after the THEN
 CheckAfterFlotComp:
-num = IFSTack(IFProc): GoSub NumAsString 'num=IFCount associated with this IFProc
-If num < 10 Then Num$ = "0" + Num$
+Num = IFSTack(IFProc): GoSub NumAsString 'num=IFCount associated with this IFProc
+If Num < 10 Then Num$ = "0" + Num$
 If ELSELocation(IFProc) > 0 Then
     'There is an ELSE to jump
     A$ = "BEQ": B$ = "_ELSE_" + Num$: C$ = "If result is zero = FALSE then jump to ELSE/Next line": GoSub AO
@@ -2971,23 +2988,23 @@ While index(ExpressionCount) < Len(Expression$(ExpressionCount)) And Asc(Mid$(Ex
             index(ExpressionCount) = index(ExpressionCount) + 1 ' Consume the +
             ' Do concatenation
             GoSub ParseStringExpression10 ' Result in Parse00_Term$
-            num = StrParseCount - 1: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-            If num < 10 Then Num$ = "0" + Num$
+            Num = StrParseCount - 1: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+            If Num < 10 Then Num$ = "0" + Num$
             ' string at StrParseCount-1 = string at StrParseCount-1 + string at StrParseCount
             ' Leave blank so the assembler knows the Loop@ & Done@ are for this bit of code only
             Print #1,
             A$ = "LDX": B$ = "#_StrVar_PF" + Num$: C$ = "X points at the start of the old string (which is the final Destination)": GoSub AO
             A$ = "LDB": B$ = ",X+": C$ = "B = length of the old string, move X to the first location where data is stored": GoSub AO
             A$ = "ABX": C$ = "X now points at the location to start copying to (Destination is setup)": GoSub AO
-            num = StrParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-            If num < 10 Then Num$ = "0" + Num$
+            Num = StrParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+            If Num < 10 Then Num$ = "0" + Num$
             A$ = "ADDB": B$ = "_StrVar_PF" + Num$: C$ = "Add the length of the new string to the old string": GoSub AO
             A$ = "BEQ": B$ = "Done@": C$ = "Skip ahead if they are both empty": GoSub AO
             A$ = "LDU": B$ = "#_StrVar_PF" + Num$: C$ = "U points at the length of the source string": GoSub AO
             A$ = "LDA": B$ = ",U+": C$ = "A = the length of the source string, move U to the first byte of source data": GoSub AO
             A$ = "BEQ": B$ = "Done@": C$ = "Skip ahead if the source is empty": GoSub AO
-            num = StrParseCount - 1: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-            If num < 10 Then Num$ = "0" + Num$
+            Num = StrParseCount - 1: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+            If Num < 10 Then Num$ = "0" + Num$
             A$ = "STB": B$ = "_StrVar_PF" + Num$: C$ = "Update the size of the final Destination string": GoSub AO
             Z$ = "Loop@"
             A$ = "LDB": B$ = ",U+": C$ = "Get a source byte": GoSub AO
@@ -3020,8 +3037,8 @@ If Mid$(Expression$(ExpressionCount), index(ExpressionCount), 2) = Chr$(&HF5) + 
     'We exit and index pointer is now at the character after the quote
     If x$ = "" Then 'Is it an empty string?
         ' if it's an empty string then simply, write zero to the size
-        num = StrParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-        If num < 10 Then Num$ = "0" + Num$
+        Num = StrParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+        If Num < 10 Then Num$ = "0" + Num$
         A$ = "CLR": B$ = "_StrVar_PF" + Num$: C$ = "Set size of string as zero bytes": GoSub AO
     Else
         ' Copy the string to the temp string pointer
@@ -3030,10 +3047,10 @@ If Mid$(Expression$(ExpressionCount), index(ExpressionCount), 2) = Chr$(&HF5) + 
             A$ = "FCB": B$ = "$" + Hex$(Asc(Mid$(x$, ii, 1))): C$ = Mid$(x$, ii, 1): GoSub AO 'write the quote text
         Next ii
         Z$ = "!"
-        num = Len(x$): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+        Num = Len(x$): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
         A$ = "LDB": B$ = "#" + Num$: C$ = "Length of this string": GoSub AO
-        num = StrParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-        If num < 10 Then Num$ = "0" + Num$
+        Num = StrParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+        If Num < 10 Then Num$ = "0" + Num$
         A$ = "LDX": B$ = "#_StrVar_PF" + Num$: C$ = "X points at the Temp string variable start location ": GoSub AO ' X points at the Temp string variable start location
         A$ = "STB": B$ = ",X+": C$ = "store the length of the string data": GoSub AO
         A$ = "LDU": B$ = ",S++": C$ = "Stack points to the string start location, remove the return address off the stack": GoSub AO
@@ -3054,8 +3071,8 @@ Else
         ' Copy String variable X$ to temp variable  "_StrVar_PF" + Num$
         A$ = "LDU": B$ = "#_StrVar_" + x$: C$ = "U points at the start of the source string": GoSub AO
         A$ = "LDB": B$ = ",U+": C$ = "B = length of the source string, move U to the first location where source data is stored": GoSub AO
-        num = StrParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-        If num < 10 Then Num$ = "0" + Num$
+        Num = StrParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+        If Num < 10 Then Num$ = "0" + Num$
         A$ = "LDX": B$ = "#_StrVar_PF" + Num$: C$ = "X points at the length of the destination string": GoSub AO
         A$ = "STB": B$ = ",X+": C$ = "Set the size of the destination string, X now points at the beginning of the destination data": GoSub AO
         A$ = "BEQ": B$ = "Done@": C$ = "If B=0 then no need to copy the string": GoSub AO
@@ -3116,7 +3133,7 @@ Else
                         A$ = "CLRB": C$ = Chr$(&H22) + Chr$(&H22): GoSub AO
                     Else
                         ' A little slower but saves RAM
-                        num = StringArraySize: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+                        Num = StringArraySize: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
                         A$ = "LDA": B$ = "#" + Num$ + "+1": C$ = "String Array size requested by the user +1 because first digit is the string length": GoSub AO
                         A$ = "MUL": C$ = "D = A * B": GoSub AO
                     End If
@@ -3124,8 +3141,8 @@ Else
                     ' Copy String variable That D points at to temp variable  "_StrVar_PF" + Num$
                     A$ = "TFR": B$ = "D,U": C$ = "U points at the start of the source string": GoSub AO
                     A$ = "LDB": B$ = ",U+": C$ = "B = length of the source string, move U to the first location where source data is stored": GoSub AO
-                    num = StrParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-                    If num < 10 Then Num$ = "0" + Num$
+                    Num = StrParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+                    If Num < 10 Then Num$ = "0" + Num$
                     A$ = "LDX": B$ = "#_StrVar_PF" + Num$: C$ = "X points at the length of the destination string": GoSub AO
                     A$ = "STB": B$ = ",X+": C$ = "Set the size of the destination string, X now points at the beginning of the destination data": GoSub AO
                     A$ = "BEQ": B$ = "Done@": C$ = "If B=0 then no need to copy the string": GoSub AO
@@ -3209,18 +3226,18 @@ Else
                     A$ = "ADDD": B$ = ",S": C$ = "D=D+ old D": GoSub AO
                     A$ = "LEAS": B$ = "6,S": C$ = "Fix the stack": GoSub AO
                     ' We only use B string arrays are 256 bytes each, we can't have more than 255 (actually way less)
-                    num = StringArraySize: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+                    Num = StringArraySize: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
                     A$ = "LDX": B$ = "#" + Num$ + "+1": C$ = "String Array size requested by the user +1 because first digit is the string length": GoSub AO
                     A$ = "PSHS": B$ = "D,X": C$ = "Save the two 16 bit WORDS on the stack, to be multiplied": GoSub AO
                     A$ = "JSR": B$ = "MUL16": C$ = "Multiply D * X, result in D": GoSub AO ' D=d1* NumElements2
                     A$ = "LEAS": B$ = "4,S": C$ = "Fix the Stack": GoSub AO
                     ' Copy String variable That D points at to temp variable  "_StrVar_PF" + Num$
-                    num = StrArrayNameParseNum(StrArrayParseNum): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+                    Num = StrArrayNameParseNum(StrArrayParseNum): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
                     A$ = "ADDD": B$ = "#_ArrayStr_" + StrArrayNameParseNum$(StrArrayParseNum) + "+" + Num$: C$ = "D = D + the the start of the source string": GoSub AO
                     A$ = "TFR": B$ = "D,U": C$ = "U points at the start of the source string": GoSub AO
                     A$ = "LDB": B$ = ",U+": C$ = "B = length of the source string, move U to the first location where source data is stored": GoSub AO
-                    num = StrParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-                    If num < 10 Then Num$ = "0" + Num$
+                    Num = StrParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+                    If Num < 10 Then Num$ = "0" + Num$
                     A$ = "LDX": B$ = "#_StrVar_PF" + Num$: C$ = "X points at the start of the destination string": GoSub AO
                     A$ = "STB": B$ = ",X+": C$ = "Set the size of the destination string, X now points at the beginning of the destination data": GoSub AO
                     A$ = "BEQ": B$ = "Done@": C$ = "If B=0 then no need to copy the string": GoSub AO
@@ -3244,7 +3261,7 @@ Else
                     ' Print #1, "; Started handling the array here:"
                     GoSub ParseExpression0FlagErase ' Recursively check the next value, this will return with the next value in D
                     resultP30(PE30Count) = Parse00_Term ' this will return with the next value in D
-                    num = StringArraySize: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+                    Num = StringArraySize: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
                     A$ = "LDX": B$ = "#" + Num$ + "+1": C$ = "String Array size requested by the user +1 because first digit is the string length": GoSub AO
                     A$ = "PSHS": B$ = "D,X": C$ = "Save the two 16 bit WORDS on the stack, to be multiplied": GoSub AO
                     A$ = "JSR": B$ = "MUL16": C$ = "Multiply D * X, result in D": GoSub AO ' D=d1* NumElements2
@@ -3253,8 +3270,8 @@ Else
                     ' Copy String variable That D points at to temp variable  "_StrVar_PF" + Num$
                     A$ = "TFR": B$ = "D,U": C$ = "U points at the start of the source string": GoSub AO
                     A$ = "LDB": B$ = ",U+": C$ = "B = length of the source string, move U to the first location where source data is stored": GoSub AO
-                    num = StrParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-                    If num < 10 Then Num$ = "0" + Num$
+                    Num = StrParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+                    If Num < 10 Then Num$ = "0" + Num$
                     A$ = "LDX": B$ = "#_StrVar_PF" + Num$: C$ = "X points at the length of the destination string": GoSub AO
                     A$ = "STB": B$ = ",X+": C$ = "Set the size of the destination string, X now points at the beginning of the destination data": GoSub AO
                     A$ = "BEQ": B$ = "Done@": C$ = "If B=0 then no need to copy the string": GoSub AO
@@ -3343,18 +3360,18 @@ Else
                     ExType = 0: GoSub ParseNumericExpression ' Go parse the new expression ' Value will end up in D where the Value can never be larger than 255
                     A$ = "ADDD": B$ = ",S": C$ = "D=D+ old D": GoSub AO
                     A$ = "LEAS": B$ = "6,S": C$ = "Fix the stack": GoSub AO
-                    num = StringArraySize: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+                    Num = StringArraySize: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
                     A$ = "LDX": B$ = "#" + Num$ + "+1": C$ = "String Array size requested by the user +1 because first digit is the string length": GoSub AO
                     A$ = "PSHS": B$ = "D,X": C$ = "Save the two 16 bit WORDS on the stack, to be multiplied": GoSub AO
                     A$ = "JSR": B$ = "MUL16": C$ = "Multiply D * X, result in D": GoSub AO ' D=d1* NumElements2
                     A$ = "LEAS": B$ = "4,S": C$ = "Fix the Stack": GoSub AO
                     ' Copy String variable That D points at to temp variable  "_StrVar_PF" + Num$
-                    num = StrArrayNameParseNum(StrArrayParseNum) * 2: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+                    Num = StrArrayNameParseNum(StrArrayParseNum) * 2: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
                     A$ = "ADDD": B$ = "#_ArrayStr_" + StrArrayNameParseNum$(StrArrayParseNum) + "+" + Num$: C$ = "D = D + the the start of the source string": GoSub AO
                     A$ = "TFR": B$ = "D,U": C$ = "U points at the start of the source string": GoSub AO
                     A$ = "LDB": B$ = ",U+": C$ = "B = length of the source string, move U to the first location where source data is stored": GoSub AO
-                    num = StrParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-                    If num < 10 Then Num$ = "0" + Num$
+                    Num = StrParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+                    If Num < 10 Then Num$ = "0" + Num$
                     A$ = "LDX": B$ = "#_StrVar_PF" + Num$: C$ = "X points at the start of the destination string": GoSub AO
                     A$ = "STB": B$ = ",X+": C$ = "Set the size of the destination string, X now points at the beginning of the destination data": GoSub AO
                     A$ = "BEQ": B$ = "Done@": C$ = "If B=0 then no need to copy the string": GoSub AO
@@ -3443,18 +3460,18 @@ While index(ExpressionCount) < Len(Expression$(ExpressionCount)) And Asc(Mid$(Ex
     index(ExpressionCount) = index(ExpressionCount) + 2 ' point past the actual operator
     'Do OR
     GoSub ParseExpression02 ' Result in Parse00_Term
-    num = NumParseCount - 1: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-    If num < 10 Then Num$ = "0" + Num$
+    Num = NumParseCount - 1: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+    If Num < 10 Then Num$ = "0" + Num$
     A$ = "LDX": B$ = "_Var_PF" + Num$: GoSub AO ' Changed to use X instead of D as the optimizer was killing it
     A$ = "PSHS": B$ = "X": C$ = "Save X on the Stack = The left value": GoSub AO ' Save the FIrst value    ' Changed to use X instead of D as the optimizer was killing it
-    num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-    If num < 10 Then Num$ = "0" + Num$
+    Num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+    If Num < 10 Then Num$ = "0" + Num$
     A$ = "LDD": B$ = "_Var_PF" + Num$: GoSub AO ' D = Parse10_Term
     A$ = "ORA": B$ = ",S+": C$ = "ORA": GoSub AO ' A = A OR Parse10_Term
     A$ = "ORB": B$ = ",S+": C$ = "ORB": GoSub AO ' B = B OR Parse10_Term
     NumParseCount = NumParseCount - 1
-    num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-    If num < 10 Then Num$ = "0" + Num$
+    Num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+    If Num < 10 Then Num$ = "0" + Num$
     A$ = "STD": B$ = "_Var_PF" + Num$: GoSub AO
 Wend
 Return
@@ -3470,18 +3487,18 @@ While index(ExpressionCount) < Len(Expression$(ExpressionCount)) And Asc(Mid$(Ex
     index(ExpressionCount) = index(ExpressionCount) + 2 ' point past the actual operator
     'Do AND
     GoSub ParseExpression03 ' Result in Parse00_Term
-    num = NumParseCount - 1: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-    If num < 10 Then Num$ = "0" + Num$ ' Changed to use X instead of D as the optimizer was killing it
+    Num = NumParseCount - 1: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+    If Num < 10 Then Num$ = "0" + Num$ ' Changed to use X instead of D as the optimizer was killing it
     A$ = "LDX": B$ = "_Var_PF" + Num$: GoSub AO ' Changed to use X instead of D as the optimizer was killing it
     A$ = "PSHS": B$ = "X": C$ = "Save X on the Stack = The left value": GoSub AO ' Save the FIrst value    ' Changed to use X instead of D as the optimizer was killing it
-    num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-    If num < 10 Then Num$ = "0" + Num$
+    Num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+    If Num < 10 Then Num$ = "0" + Num$
     A$ = "LDD": B$ = "_Var_PF" + Num$: GoSub AO ' D = Parse10_Term
     A$ = "ANDA": B$ = ",S+": C$ = "ANDA": GoSub AO ' A = A AND Parse10_Term
     A$ = "ANDB": B$ = ",S+": C$ = "ANDB": GoSub AO ' B = B AND Parse10_Term
     NumParseCount = NumParseCount - 1
-    num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-    If num < 10 Then Num$ = "0" + Num$
+    Num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+    If Num < 10 Then Num$ = "0" + Num$
     A$ = "STD": B$ = "_Var_PF" + Num$: GoSub AO
 Wend
 Return
@@ -3538,11 +3555,11 @@ While index(ExpressionCount) < Len(Expression$(ExpressionCount)) And Asc(Mid$(Ex
         NumParseCount = NumParseCount + 1
         index(ExpressionCount) = index(ExpressionCount) + 1
         GoSub ParseExpression05 ' Result in Parse00_Term
-        num = NumParseCount - 1: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-        If num < 10 Then Num$ = "0" + Num$
+        Num = NumParseCount - 1: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+        If Num < 10 Then Num$ = "0" + Num$
         A$ = "LDD": B$ = "_Var_PF" + Num$: GoSub AO
-        num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-        If num < 10 Then Num$ = "0" + Num$
+        Num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+        If Num < 10 Then Num$ = "0" + Num$
         A$ = "CMPD": B$ = "_Var_PF" + Num$: GoSub AO
         A$ = BranchType$: B$ = "@IsTrue": C$ = "skip ahead if TRUE": GoSub AO
         A$ = "LDD": B$ = "#$0000": C$ = "False repsonse": GoSub AO
@@ -3550,8 +3567,8 @@ While index(ExpressionCount) < Len(Expression$(ExpressionCount)) And Asc(Mid$(Ex
         Z$ = "@IsTrue": GoSub AO
         A$ = "LDD": B$ = "#$FFFF": C$ = "True repsonse": GoSub AO
         NumParseCount = NumParseCount - 1
-        num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-        If num < 10 Then Num$ = "0" + Num$
+        Num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+        If Num < 10 Then Num$ = "0" + Num$
         Z$ = "!": GoSub AO
         Print #1,
         A$ = "STD": B$ = "_Var_PF" + Num$: GoSub AO
@@ -3581,25 +3598,25 @@ While index(ExpressionCount) < Len(Expression$(ExpressionCount)) And Asc(Mid$(Ex
             If Asc(Mid$(Expression$(ExpressionCount), index(ExpressionCount) - 1, 1)) = &H2B Then
                 ' Do addition
                 GoSub ParseExpression09 ' Result in Parse00_Term
-                num = NumParseCount - 1: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-                If num < 10 Then Num$ = "0" + Num$
+                Num = NumParseCount - 1: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+                If Num < 10 Then Num$ = "0" + Num$
                 A$ = "LDD": B$ = "_Var_PF" + Num$: GoSub AO
-                num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-                If num < 10 Then Num$ = "0" + Num$
+                Num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+                If Num < 10 Then Num$ = "0" + Num$
                 A$ = "ADDD": B$ = "_Var_PF" + Num$: GoSub AO
             Else
                 'Do subtraction
                 GoSub ParseExpression09 ' Result in Parse00_Term
-                num = NumParseCount - 1: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-                If num < 10 Then Num$ = "0" + Num$
+                Num = NumParseCount - 1: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+                If Num < 10 Then Num$ = "0" + Num$
                 A$ = "LDD": B$ = "_Var_PF" + Num$: GoSub AO
-                num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-                If num < 10 Then Num$ = "0" + Num$
+                Num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+                If Num < 10 Then Num$ = "0" + Num$
                 A$ = "SUBD": B$ = "_Var_PF" + Num$: GoSub AO
             End If
             NumParseCount = NumParseCount - 1
-            num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-            If num < 10 Then Num$ = "0" + Num$
+            Num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+            If Num < 10 Then Num$ = "0" + Num$
             A$ = "STD": B$ = "_Var_PF" + Num$: GoSub AO
         End If
     End If
@@ -3622,19 +3639,19 @@ While index(ExpressionCount) < Len(Expression$(ExpressionCount)) And Asc(Mid$(Ex
     index(ExpressionCount) = index(ExpressionCount) + 2 ' point past the actual operator
     'Do MOD
     GoSub ParseExpression10 ' Result in Parse00_Term
-    num = NumParseCount - 1: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-    If num < 10 Then Num$ = "0" + Num$
+    Num = NumParseCount - 1: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+    If Num < 10 Then Num$ = "0" + Num$
     A$ = "LDX": B$ = "_Var_PF" + Num$: GoSub AO ' Changed to use X instead of D as the optimizer was killing it
     A$ = "PSHS": B$ = "X": C$ = "Save X on the Stack = The left value": GoSub AO ' Save the FIrst value    ' Changed to use X instead of D as the optimizer was killing it
-    num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-    If num < 10 Then Num$ = "0" + Num$
+    Num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+    If Num < 10 Then Num$ = "0" + Num$
     A$ = "LDD": B$ = "_Var_PF" + Num$: GoSub AO ' D = Parse10_Term
     A$ = "PULS": B$ = "X": C$ = "Get X off the Stack = The Numerator": GoSub AO ' Get the Numerator
     A$ = "JSR": B$ = "DIV16": C$ = "Do 16bit by 16bit division, result in D and Remainder (MOD) in X": GoSub AO
     A$ = "TFR": B$ = "X,D": C$ = "Transfer the Remainder into D": GoSub AO
     NumParseCount = NumParseCount - 1
-    num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-    If num < 10 Then Num$ = "0" + Num$
+    Num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+    If Num < 10 Then Num$ = "0" + Num$
     A$ = "STD": B$ = "_Var_PF" + Num$: GoSub AO
 Wend
 Return
@@ -3669,11 +3686,11 @@ While index(ExpressionCount) < Len(Expression$(ExpressionCount)) And Asc(Mid$(Ex
             If Asc(Mid$(Expression$(ExpressionCount), index(ExpressionCount) - 1, 1)) = &H2A Then
                 ' Do multiplication
                 GoSub ParseExpression20 ' Result in Parse20_Term
-                num = NumParseCount - 1: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-                If num < 10 Then Num$ = "0" + Num$
+                Num = NumParseCount - 1: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+                If Num < 10 Then Num$ = "0" + Num$
                 A$ = "LDD": B$ = "_Var_PF" + Num$: GoSub AO
-                num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-                If num < 10 Then Num$ = "0" + Num$
+                Num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+                If Num < 10 Then Num$ = "0" + Num$
                 A$ = "LDX": B$ = "_Var_PF" + Num$: GoSub AO
                 A$ = "PSHS": B$ = "D,X": C$ = "Save the two 16 bit WORDS on the stack, to be multiplied": GoSub AO
                 A$ = "JSR": B$ = "MUL16": C$ = "Do 16 bit x 16 bit Multiply, D = WORD on Stack ,S * WORD on stack 2,S, lowest 16 bit result will be in D": GoSub AO ' D = D * X
@@ -3685,11 +3702,11 @@ While index(ExpressionCount) < Len(Expression$(ExpressionCount)) And Asc(Mid$(Ex
                Asc(Mid$(Expression$(ExpressionCount), index(ExpressionCount) - 1, 1)) = &H5C Then
                 'Do division
                 GoSub ParseExpression20 ' Result in Parse20_Term
-                num = NumParseCount - 1: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-                If num < 10 Then Num$ = "0" + Num$
+                Num = NumParseCount - 1: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+                If Num < 10 Then Num$ = "0" + Num$
                 A$ = "LDX": B$ = "_Var_PF" + Num$: GoSub AO
-                num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-                If num < 10 Then Num$ = "0" + Num$
+                Num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+                If Num < 10 Then Num$ = "0" + Num$
                 A$ = "LDD": B$ = "_Var_PF" + Num$: GoSub AO
                 ' X = X/D, remainder in D
                 A$ = "JSR": B$ = "DIV16": C$ = "Do 16 bit / 16 bit Division, D = X/D No rounding will occur": GoSub AO ' D = D * X
@@ -3699,11 +3716,11 @@ While index(ExpressionCount) < Len(Expression$(ExpressionCount)) And Asc(Mid$(Ex
             If Asc(Mid$(Expression$(ExpressionCount), index(ExpressionCount) - 1, 1)) = &H15 Then
                 ' Do DIVR (division that will round the value)
                 GoSub ParseExpression20 ' Result in Parse20_Term
-                num = NumParseCount - 1: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-                If num < 10 Then Num$ = "0" + Num$
+                Num = NumParseCount - 1: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+                If Num < 10 Then Num$ = "0" + Num$
                 A$ = "LDX": B$ = "_Var_PF" + Num$: GoSub AO
-                num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-                If num < 10 Then Num$ = "0" + Num$
+                Num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+                If Num < 10 Then Num$ = "0" + Num$
                 A$ = "LDD": B$ = "_Var_PF" + Num$: GoSub AO
                 ' D = X/D
                 A$ = "JSR": B$ = "DIV16Rounding": C$ = "Do 16 bit / 16 bit Division, D = X/D rounds the result": GoSub AO ' D = D * X
@@ -3712,8 +3729,8 @@ While index(ExpressionCount) < Len(Expression$(ExpressionCount)) And Asc(Mid$(Ex
             End If
             DoneMD:
             NumParseCount = NumParseCount - 1
-            num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-            If num < 10 Then Num$ = "0" + Num$
+            Num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+            If Num < 10 Then Num$ = "0" + Num$
             A$ = "STD": B$ = "_Var_PF" + Num$: GoSub AO ' Save new resultP10(PE10Count)
         End If
     End If
@@ -3747,11 +3764,11 @@ While index(ExpressionCount) < Len(Expression$(ExpressionCount)) And Asc(Mid$(Ex
             index(ExpressionCount) = index(ExpressionCount) + 1
             ' Do Exponent
             GoSub ParseExpression25 ' Result in Parse30_Term
-            num = NumParseCount - 1: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-            If num < 10 Then Num$ = "0" + Num$
+            Num = NumParseCount - 1: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+            If Num < 10 Then Num$ = "0" + Num$
             A$ = "LDD": B$ = "_Var_PF" + Num$: C$ = "D = the Base value": GoSub AO
-            num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-            If num < 10 Then Num$ = "0" + Num$
+            Num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+            If Num < 10 Then Num$ = "0" + Num$
             A$ = "LDX": B$ = "_Var_PF" + Num$: C$ = "X = the Exponent value": GoSub AO
             A$ = "PSHS": B$ = "D": C$ = "Save the base value": GoSub AO
             A$ = "PSHS": B$ = "D": C$ = "Save the base value": GoSub AO
@@ -3778,8 +3795,8 @@ While index(ExpressionCount) < Len(Expression$(ExpressionCount)) And Asc(Mid$(Ex
             Print #1,
             resultP20(PE20Count) = resultP20(PE20Count) ^ Parse30_Term
             NumParseCount = NumParseCount - 1
-            num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-            If num < 10 Then Num$ = "0" + Num$
+            Num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+            If Num < 10 Then Num$ = "0" + Num$
             A$ = "STD": B$ = "_Var_PF" + Num$: GoSub AO ' Save new resultP20(PE20Count)
         End If
     End If
@@ -3805,18 +3822,18 @@ While index(ExpressionCount) < Len(Expression$(ExpressionCount)) And Asc(Mid$(Ex
     index(ExpressionCount) = index(ExpressionCount) + 2 ' point past the actual operator
     'Do XOR
     GoSub ParseExpression28 ' Result in Parse00_Term
-    num = NumParseCount - 1: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-    If num < 10 Then Num$ = "0" + Num$
+    Num = NumParseCount - 1: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+    If Num < 10 Then Num$ = "0" + Num$
     A$ = "LDX": B$ = "_Var_PF" + Num$: GoSub AO ' Changed to use X instead of D as the optimizer was killing it
     A$ = "PSHS": B$ = "X": C$ = "Save X on the Stack = The left value": GoSub AO ' Save the FIrst value    ' Changed to use X instead of D as the optimizer was killing it
-    num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-    If num < 10 Then Num$ = "0" + Num$
+    Num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+    If Num < 10 Then Num$ = "0" + Num$
     A$ = "LDD": B$ = "_Var_PF" + Num$: GoSub AO ' D = Parse10_Term
     A$ = "EORA": B$ = ",S+": C$ = "EORA MSB on the stack, move stack forward": GoSub AO
     A$ = "EORB": B$ = ",S+": C$ = "EORB LSB on the stack, stack is now back to normal": GoSub AO
     NumParseCount = NumParseCount - 1
-    num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-    If num < 10 Then Num$ = "0" + Num$
+    Num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+    If Num < 10 Then Num$ = "0" + Num$
     A$ = "STD": B$ = "_Var_PF" + Num$: GoSub AO
 Wend
 Return
@@ -3832,8 +3849,8 @@ While index(ExpressionCount) < Len(Expression$(ExpressionCount)) And Asc(Mid$(Ex
     index(ExpressionCount) = index(ExpressionCount) + 2 ' point past the actual operator
     ' Do NOT
     GoSub ParseExpression30 ' Result in Parse00_Term
-    num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-    If num < 10 Then Num$ = "0" + Num$
+    Num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+    If Num < 10 Then Num$ = "0" + Num$
     A$ = "LDD": B$ = "_Var_PF" + Num$: GoSub AO
     A$ = "COMA": C$ = "Flip the bits": GoSub AO
     A$ = "COMB": C$ = "Flip the bits": GoSub AO
@@ -3888,19 +3905,19 @@ Else
             x$(ExpressionCount) = Mid$(Expression$(ExpressionCount), Start, index(ExpressionCount) - Start)
             If index(ExpressionCount) = Len(Expression$(ExpressionCount)) Then x$(ExpressionCount) = x$(ExpressionCount) + Mid$(Expression$(ExpressionCount), index(ExpressionCount), 1)
         End If
-        '   Print  x$(ExpressionCount), Expression$(ExpressionCount), Start, index(ExpressionCount), index(ExpressionCount) - Start
+        ' Print  x$(ExpressionCount), Expression$(ExpressionCount), Start, index(ExpressionCount), index(ExpressionCount) - Start
         ' Apply negation if flagged
         If negative(PE30Count) = 1 Then
-            num = -Val(x$(ExpressionCount)):
+            Num = -Val(x$(ExpressionCount)):
             resultP30(PE30Count) = -Val(x$(ExpressionCount))
         Else
-            num = Val(x$(ExpressionCount)):
+            Num = Val(x$(ExpressionCount)):
             resultP30(PE30Count) = Val(x$(ExpressionCount))
         End If
         GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
         A$ = "LDD": B$ = "#" + Num$: GoSub AO ' D = Val( x$(ExpressionCount))
-        num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-        If num < 10 Then Num$ = "0" + Num$
+        Num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+        If Num < 10 Then Num$ = "0" + Num$
         A$ = "STD": B$ = "_Var_PF" + Num$: GoSub AO ' Save Temp_Var_NumParseCount
     Else
         ' Handle hex values
@@ -3923,17 +3940,17 @@ Else
             End If
             ' Apply negation if flagged
             If negative(PE30Count) = 1 Then
-                num = -Val("&H" + x$(ExpressionCount))
+                Num = -Val("&H" + x$(ExpressionCount))
                 resultP30(PE30Count) = -Val(x$(ExpressionCount))
             Else
-                num = Val("&H" + x$(ExpressionCount))
+                Num = Val("&H" + x$(ExpressionCount))
                 resultP30(PE30Count) = Val(x$(ExpressionCount))
             End If
             '     Print "val(x$)="; Val("&H" +  x$(ExpressionCount))
             GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-            A$ = "LDD": B$ = "#" + Num$: C$ = "Converted &H" + x$(ExpressionCount) + " to" + Str$(num): GoSub AO ' D = Val(x$)
-            num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-            If num < 10 Then Num$ = "0" + Num$
+            A$ = "LDD": B$ = "#" + Num$: C$ = "Converted &H" + x$(ExpressionCount) + " to" + Str$(Num): GoSub AO ' D = Val(x$)
+            Num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+            If Num < 10 Then Num$ = "0" + Num$
             A$ = "STD": B$ = "_Var_PF" + Num$: GoSub AO ' Save Temp_Var_NumParseCount
         Else
             'Check for Numeric variable
@@ -3954,8 +3971,8 @@ Else
                 Else
                     A$ = "LDD": B$ = "_Var_" + x$(ExpressionCount): GoSub AO: StoreFlag = 0
                 End If
-                num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-                If num < 10 Then Num$ = "0" + Num$
+                Num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+                If Num < 10 Then Num$ = "0" + Num$
                 A$ = "STD": B$ = "_Var_PF" + Num$: GoSub AO ' Save Temp_Var_NumParseCount
                 index(ExpressionCount) = index(ExpressionCount) + 2
             Else
@@ -4013,8 +4030,8 @@ Else
                             Else
                                 A$ = "LDD": B$ = ",X": GoSub AO: StoreFlag = 0
                             End If
-                            num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-                            If num < 10 Then Num$ = "0" + Num$
+                            Num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+                            If Num < 10 Then Num$ = "0" + Num$
                             A$ = "STD": B$ = "_Var_PF" + Num$: GoSub AO ' Save Temp_Var_NumParseCount
                             index(ExpressionCount) = index(ExpressionCount) + 2 ' Skip the $F5 & close bracket
                         Else
@@ -4090,7 +4107,7 @@ Else
                             A$ = "LEAS": B$ = "6,S": C$ = "Fix the stack": GoSub AO
                             A$ = "LSLB": GoSub AO
                             A$ = "ROLA": C$ = "D=D*2, 16 bit integers in the numeric array": GoSub AO
-                            num = NumArrayNameParseNum(NumArrayParseNum): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+                            Num = NumArrayNameParseNum(NumArrayParseNum): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
                             A$ = "ADDD": B$ = "#_ArrayNum_" + NumArrayNameParseNum$(NumArrayParseNum) + "+" + Num$: C$ = "D points at the start of the destination string": GoSub AO
                             A$ = "TFR": B$ = "D,X": C$ = "X now points at the memory location for the array": GoSub AO
                             ' Apply negation if flagged
@@ -4101,8 +4118,8 @@ Else
                             Else
                                 A$ = "LDD": B$ = ",X": GoSub AO: StoreFlag = 0
                             End If
-                            num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-                            If num < 10 Then Num$ = "0" + Num$
+                            Num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+                            If Num < 10 Then Num$ = "0" + Num$
                             A$ = "STD": B$ = "_Var_PF" + Num$: GoSub AO ' Save Temp_Var_NumParseCount
                         End If
                         NumArrayParseNum = NumArrayParseNum - 1
@@ -4130,8 +4147,8 @@ Else
                             Else
                                 A$ = "LDD": B$ = ",X": GoSub AO: StoreFlag = 0
                             End If
-                            num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-                            If num < 10 Then Num$ = "0" + Num$
+                            Num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+                            If Num < 10 Then Num$ = "0" + Num$
                             A$ = "STD": B$ = "_Var_PF" + Num$: GoSub AO ' Save Temp_Var_NumParseCount
                             index(ExpressionCount) = index(ExpressionCount) + 2 ' Skip the $F5 & close bracket
                         Else
@@ -4217,7 +4234,7 @@ Else
                             A$ = "LEAS": B$ = "6,S": C$ = "Fix the stack": GoSub AO
                             A$ = "LSLB": GoSub AO
                             A$ = "ROLA": C$ = "D=D*2, 16 bit integers in the numeric array": GoSub AO
-                            num = NumArrayNameParseNum(NumArrayParseNum) * 2: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+                            Num = NumArrayNameParseNum(NumArrayParseNum) * 2: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
                             A$ = "ADDD": B$ = "#_ArrayNum_" + NumArrayNameParseNum$(NumArrayParseNum) + "+" + Num$: C$ = "D points at the start of the destination string": GoSub AO
                             A$ = "TFR": B$ = "D,X": C$ = "X now points at the memory location for the array": GoSub AO
                             ' Apply negation if flagged
@@ -4228,8 +4245,8 @@ Else
                             Else
                                 A$ = "LDD": B$ = ",X": GoSub AO: StoreFlag = 0
                             End If
-                            num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-                            If num < 10 Then Num$ = "0" + Num$
+                            Num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+                            If Num < 10 Then Num$ = "0" + Num$
                             A$ = "STD": B$ = "_Var_PF" + Num$: GoSub AO ' Save Temp_Var_NumParseCount
                         End If
                         NumArrayParseNum = NumArrayParseNum - 1
@@ -4250,8 +4267,8 @@ Else
                             A$ = "LDD": B$ = "#$0000": C$ = "Clear D": GoSub AO
                             A$ = "SUBD": B$ = ",S++": C$ = "D is now NEGD, restore the stack": GoSub AO
                         End If
-                        num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-                        If num < 10 Then Num$ = "0" + Num$
+                        Num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+                        If Num < 10 Then Num$ = "0" + Num$
                         A$ = "STD": B$ = "_Var_PF" + Num$: GoSub AO ' Save Temp_Var_NumParseCount
                         If Mid$(Expression$(ExpressionCount), index(ExpressionCount), 2) <> Chr$(&HF5) + ")" Then
                             Print "Error3: Expected closing parenthesis in";: GoTo FoundError
@@ -4272,8 +4289,8 @@ Else
                                 A$ = "LDD": B$ = "#$0000": C$ = "Clear D": GoSub AO
                                 A$ = "SUBD": B$ = ",S++": C$ = "D is now NEGD, restore the stack": GoSub AO
                             End If
-                            num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-                            If num < 10 Then Num$ = "0" + Num$
+                            Num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+                            If Num < 10 Then Num$ = "0" + Num$
                             A$ = "STD": B$ = "_Var_PF" + Num$: GoSub AO ' Save Temp_Var_NumParseCount
                             If Mid$(Expression$(ExpressionCount), index(ExpressionCount), 2) <> Chr$(&HF5) + ")" Then
                                 Print "Error4: Expected closing parenthesis in";: GoTo FoundError
@@ -4522,15 +4539,15 @@ Return
 
 'Convert number in Num to a string without spaces as Num$
 NumAsString:
-If num = 0 Then
+If Num = 0 Then
     Num$ = "0"
 Else
-    If num > 0 Then
+    If Num > 0 Then
         'Postive value remove the first space in the string
-        Num$ = Right$(Str$(num), Len(Str$(num)) - 1)
+        Num$ = Right$(Str$(Num), Len(Str$(Num)) - 1)
     Else
         'Negative value we keep the minus sign
-        Num$ = Str$(num)
+        Num$ = Str$(Num)
     End If
 End If
 Return
@@ -4551,8 +4568,8 @@ Return
 
 ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSBs
 NumToMSBLSBString:
-MSB = Int(num / 256)
-LSB = num - MSB * 256
+MSB = Int(Num / 256)
+LSB = Num - MSB * 256
 MSB$ = Str$(MSB)
 LSB$ = Str$(LSB)
 Return
@@ -4868,9 +4885,9 @@ GoSub GetGenExpression ' Returns with single expression in GenExpression$
 If Left$(GenExpression$, 1) = Chr$(&HF5) Then
     ' Found a special character
     Sp = Asc(Right$(GenExpression$, 1))
+    If Sp = Asc(")") And InBracket = 0 Then x = x - 2: Return ' If last close bracket then point at it again and return
     If Sp = Asc("(") Then InBracket = InBracket + 1
     If Sp = Asc(")") Then InBracket = InBracket - 1
-    If Sp = Asc(")") And InBracket < 1 Then x = x - 2: Return ' If last close bracket then point at it again and return
 End If
 Expression$ = Expression$ + GenExpression$
 GoTo GEB4EndBracket
@@ -5495,8 +5512,8 @@ If v = &HF5 Then v = Array(x): x = x + 1
 A$ = "FDB": B$ = Temp$: C$ = "Location for the " + ONType$ + " " + Temp$: GoSub AO
 If v = &H2C Then GoTo ONLoop1
 ' We have the ON value in D, All we need is the value in B as it can't be larger than a 127
-num = c: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-If num < 10 Then Num$ = "0" + Num$
+Num = c: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+If Num < 10 Then Num$ = "0" + Num$
 Z$ = "!"
 A$ = "CMPD": B$ = "#" + Num$: C$ = "See if the value is larger than the number of entries in the list": GoSub AO
 A$ = "BHI": B$ = DoneOn$: C$ = "If the value is higher then simply skip to the next line": GoSub AO
@@ -5517,8 +5534,8 @@ PrintD$ = "PRINT_D": PrintA$ = "PrintA_On_Screen": PrintDev$ = " on screen" ' Ma
 PrintCC3 = 0
 v = Array(x): x = x + 1
 ShowInputCount = ShowInputCount + 1
-num = ShowInputCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-If num < 10 Then Num$ = "0" + Num$
+Num = ShowInputCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+If Num < 10 Then Num$ = "0" + Num$
 ShowInputText$ = "ShowInputText" + Num$
 Print #1, ShowInputText$; ":"
 If v = &HF5 And Array(x) = &H22 Then ' Printing characters in quotes, PRINT "HELLO"
@@ -5542,8 +5559,8 @@ Do Until Array(x) = &HF5 And (Array(x + 1) = &H0D Or Array(x + 1) = &H3A) ' loop
     End If
     x = x + 1
 Loop
-num = count: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-If num < 10 Then Num$ = "0" + Num$
+Num = count: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+If Num < 10 Then Num$ = "0" + Num$
 A$ = "LDA": B$ = "#" + Num$: C$ = "Save the number of commas needed": GoSub AO
 A$ = "STA": B$ = "CommaCount": C$ = "Save the number of commas to look for": GoSub AO
 x = Start
@@ -5709,9 +5726,9 @@ If v = &HFF Then
     v = Array(x) * 256 + Array(x + 1): x = x + 2
     If v = IF_CMD Then
         'We found an END IF
-        num = ElseStack(IFSP): GoSub NumAsString 'num=IFCount associated with this IFProc
+        Num = ElseStack(IFSP): GoSub NumAsString 'num=IFCount associated with this IFProc
         ElseStack(Temp) = 0 ' flag as used
-        If num < 10 Then Num$ = "0" + Num$
+        If Num < 10 Then Num$ = "0" + Num$
         Z$ = "_IFDone_" + Num$: C$ = "END IF line": GoSub AO
         IFSP = IFSP - 1
         ENDIFCheck = ENDIFCheck - 1 ' we completed this IF
@@ -5721,19 +5738,19 @@ If v = &HFF Then
             ' END SELECT
             If CaseElseFlag = 0 Then
                 CaseCount(SELECTStackPointer) = CaseCount(SELECTStackPointer) + 1
-                num = SELECTSTack(SELECTStackPointer): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-                If num < 10 Then Num$ = "0" + Num$
+                Num = SELECTSTack(SELECTStackPointer): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+                If Num < 10 Then Num$ = "0" + Num$
                 CaseNumber$ = Num$
-                num = CaseCount(SELECTStackPointer) + 1: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-                If num < 10 Then Num$ = "0" + Num$
+                Num = CaseCount(SELECTStackPointer) + 1: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+                If Num < 10 Then Num$ = "0" + Num$
                 NextCaseNumber$ = CaseNumber$ + "_" + Num$
-                num = CaseCount(SELECTStackPointer): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-                If num < 10 Then Num$ = "0" + Num$
+                Num = CaseCount(SELECTStackPointer): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+                If Num < 10 Then Num$ = "0" + Num$
                 CaseNumber$ = CaseNumber$ + "_" + Num$
                 Z$ = "_CaseCheck_" + CaseNumber$: C$ = "No more CASEs": GoSub AO
             End If
-            num = SELECTSTack(SELECTStackPointer): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-            If num < 10 Then Num$ = "0" + Num$
+            Num = SELECTSTack(SELECTStackPointer): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+            If Num < 10 Then Num$ = "0" + Num$
             Z$ = "_EndSelect_" + Num$: C$ = "This is the end of Select " + Num$: GoSub AO
             CaseCount(SELECTStackPointer) = 0 ' make sure the next CASE in a SELECT starts normally
             SELECTStackPointer = SELECTStackPointer - 1
@@ -5777,8 +5794,8 @@ GoSub GetExpressionB4EOLOrCommand 'Handle an expression that ends with a colon o
 ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression value is now in D, x now points after the EOL/Colon/$FF
 ' D now has the value we need to Compare against each time we do a FOR Loop
 ' Self Mod Code where we compare the value of the variable aggainst what is now D
-num = FORCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-If num < 10 Then Num$ = "0" + Num$
+Num = FORCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+If Num < 10 Then Num$ = "0" + Num$
 A$ = "STD": B$ = "FOR_Check_" + Num$ + "+2": C$ = "Save the value to compare with (self mod below)": GoSub AO
 A$ = "ROLA": C$ = "Move sign bit to the carry": GoSub AO
 A$ = "ROL": B$ = ",S": C$ = "Save the End sign bit on the stack": GoSub AO
@@ -5797,8 +5814,8 @@ Else
     ' No STEP command, default to a STEP value of 1
     A$ = "LDD": B$ = "#$0001": C$ = "No STEP for this FOR so set default step value to 1": GoSub AO
 End If
-num = FORCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-If num < 10 Then Num$ = "0" + Num$
+Num = FORCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+If Num < 10 Then Num$ = "0" + Num$
 A$ = "STD": B$ = "FOR_ADD_" + Num$ + "+1": C$ = "Save the value to ADDD for each FOR/NEXT loop (self mod below)": GoSub AO
 A$ = "ROLA": C$ = "Move sign bit to the carry": GoSub AO
 A$ = "LDA": B$ = ",S+": C$ = "Get the sign bits into A and fix the stack": GoSub AO
@@ -5813,8 +5830,8 @@ A$ = "LDB": B$ = "#$2E": C$ = "Default is BGT opcode": GoSub AO
 A$ = "RORA": C$ = "Move step sign into the carry bit": GoSub AO
 A$ = "SBCB": B$ = "#$00": C$ = "B=B- carry bit, if carry is a 1 then opcode will be BLT": GoSub AO
 A$ = "LDA": B$ = "#$10": C$ = "Make the opcode a Long branch": GoSub AO
-num = FORCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-If num < 10 Then Num$ = "0" + Num$
+Num = FORCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+If Num < 10 Then Num$ = "0" + Num$
 Z$ = "@ForSelfMod": GoSub AO
 A$ = "STD": B$ = "FOR_Check_" + Num$ + "+4": C$ = "Save the BRANCH opcode (self mod below)": GoSub AO
 
@@ -5851,8 +5868,8 @@ If v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A) Then
 End If
 If v <> &HF2 Then Print "Error getting numeric variable needed in the NEXT command on";: GoTo FoundError
 If FORStackPointer = 0 Then Print "Error: Next without FOR in line"; linelabel$: System
-num = FORSTack(FORStackPointer): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-If num < 10 Then Num$ = "0" + Num$
+Num = FORSTack(FORStackPointer): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+If Num < 10 Then Num$ = "0" + Num$
 A$ = "BRA": B$ = "ForLoop_" + Num$: C$ = "Goto the FOR loop": GoSub AO
 Z$ = "NEXTDone_" + Num$: C$ = "End of FOR/NEXT loop": GoSub AO
 FORStackPointer = FORStackPointer - 1
@@ -6560,7 +6577,7 @@ If Gmode > 99 Then
     A$ = "LSLA": C$ = "A=A*2": GoSub AO
     A$ = "LSLA": C$ = "A=A*4, D=B * $400 = the screen start location": GoSub AO
     A$ = "STD": B$ = "$FF9D": C$ = "VidStart": GoSub AO
-    A$ = "CLR": B$ = "$FF9F": C$ = "Hor_Offset_Reg, Don't use a Horizontal offset": GoSub AO
+    A$ = "STB": B$ = "$FF9F": C$ = "B=0, Hor_Offset_Reg, Don't use a Horizontal offset": GoSub AO
 Else
     ' We are using a CoCo 1 or CoCo 2 graphics mode
     GScreenStart = Val("&H" + GModeStartAddress$(Gmode)) ' Get screen start location
@@ -6602,7 +6619,7 @@ Return
 DoGCLS:
 If Array(x) = &HF5 And (Array(x + 1) = &H0D Or Array(x + 1) = &H3A) Then
     ' no Value given for the GCLS colour, use the default forground colour
-    A$ = "LDB": B$ = "BAKCOL": C$ = "Make B the current background colour"
+    A$ = "LDB": B$ = "BAKCOL": C$ = "Make B the current background colour": GoSub AO
     GoTo SkipGettingColour ' skip ahead
 End If
 'Get the colour value in D
@@ -7299,8 +7316,8 @@ Return
 
 ' A$=SDC_GETCURDIR
 DoSDC_GETCURDIR:
-num = StrParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-If num < 10 Then Num$ = "0" + Num$
+Num = StrParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+If Num < 10 Then Num$ = "0" + Num$
 A$ = "LDU": B$ = "#_StrVar_PF" + Num$: C$ = "U points at the address to store the dir info" + Num$: GoSub AO
 A$ = "JSR": B$ = "SDCPutByteB1": C$ = "Get Current directory command": GoSub AO
 A$ = "LDX": B$ = "#_StrVar_PF" + Num$ + "+32": C$ = "X points at the buffer start, shift bytes one and set the first byte as the length of 32": GoSub AO
@@ -7320,8 +7337,8 @@ DoSDC_FILEINFO:
 GoSub ParseExpression0FlagErase ' Recursively check the next value
 A$ = "ANDB": B$ = "#$01": C$ = "Make sure the value is either a 0 or a 1": GoSub AO
 A$ = "JSR": B$ = "SDC_FileInfo": C$ = "Get the file info for file #B in _STrVar_PF00": GoSub AO
-num = StrParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-If num < 10 Then Num$ = "0" + Num$
+Num = StrParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+If Num < 10 Then Num$ = "0" + Num$
 A$ = "LDB": B$ = "#32": C$ = "# of bytes to copy": GoSub AO
 A$ = "LDX": B$ = "#_StrVar_IFRight": C$ = "Source file info from the SDC": GoSub AO
 A$ = "LDU": B$ = "#_StrVar_PF" + Num$: C$ = "Destination string variable": GoSub AO
@@ -7568,8 +7585,8 @@ DoWHILE:
 WhileCount = WhileCount + 1
 WhileStackPointer = WhileStackPointer + 1
 WHILEStack(WhileStackPointer) = WhileCount
-num = WhileCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-If num < 10 Then Num$ = "0" + Num$
+Num = WhileCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+If Num < 10 Then Num$ = "0" + Num$
 WhileLoopNum$ = Num$
 Z$ = "WhileLoop_" + WhileLoopNum$: C$ = "Start of WHILE/WEND loop": GoSub AO
 CheckIfTrue$ = ""
@@ -7586,8 +7603,8 @@ A$ = "BEQ": B$ = "Wend_" + WhileLoopNum$: C$ = "If the result is a false then go
 Return
 DoWEND:
 If WhileStackPointer = 0 Then Print "Error: WEND without WHILE on";: GoTo FoundError
-num = WHILEStack(WhileStackPointer): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-If num < 10 Then Num$ = "0" + Num$
+Num = WHILEStack(WhileStackPointer): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+If Num < 10 Then Num$ = "0" + Num$
 A$ = "BRA": B$ = "WhileLoop_" + Num$: C$ = "Goto the start of this WHILE/WEND loop": GoSub AO
 Z$ = "Wend_" + Num$: C$ = "End of WHILE/WEND loop": GoSub AO
 WhileStackPointer = WhileStackPointer - 1
@@ -7598,22 +7615,22 @@ If v <> &HFF Then Print "Don't know what kind of EXIT to do on";: GoTo FoundErro
 v = Array(x) * 256 + Array(x + 1): x = x + 2
 If v = WHILE_CMD Then
     'Do an EXIT WHILE
-    num = WHILEStack(WhileStackPointer): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-    If num < 10 Then Num$ = "0" + Num$
+    Num = WHILEStack(WhileStackPointer): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+    If Num < 10 Then Num$ = "0" + Num$
     A$ = "BRA": B$ = "Wend_" + Num$: C$ = "End of WHILE/WEND loop": GoSub AO
     Return
 End If
 If v = FOR_CMD Then
     'Do an EXIT FOR
-    num = FORSTack(FORStackPointer): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-    If num < 10 Then Num$ = "0" + Num$
+    Num = FORSTack(FORStackPointer): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+    If Num < 10 Then Num$ = "0" + Num$
     A$ = "BRA": B$ = "NEXTDone_" + Num$: C$ = "End of FOR/NEXT loop": GoSub AO
     Return
 End If
 If v = DO_CMD Then
     'Do an EXIT DO
-    num = DOStack(DOStackPointer): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-    If num < 10 Then Num$ = "0" + Num$
+    Num = DOStack(DOStackPointer): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+    If Num < 10 Then Num$ = "0" + Num$
     A$ = "BRA": B$ = "DoneLoop_" + Num$: C$ = "End of DO/Loop": GoSub AO
     Return
 End If
@@ -7622,8 +7639,8 @@ DoDO:
 DOCount = DOCount + 1
 DOStackPointer = DOStackPointer + 1
 DOStack(DOStackPointer) = DOCount
-num = DOCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-If num < 10 Then Num$ = "0" + Num$
+Num = DOCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+If Num < 10 Then Num$ = "0" + Num$
 Z$ = "DOStart_" + Num$: C$ = "Start of WHILE/UNTIL loop": GoSub AO
 v = Array(x): x = x + 1
 If v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A) Then
@@ -7645,8 +7662,8 @@ If v = WHILE_CMD Then
     CheckIfTrue$ = Left$(CheckIfTrue$, Len(CheckIfTrue$) - 1) ' remove the &HF5 on the end
     GoSub GoCheckIfTrue ' This parses CheckIfTrue$ get's it ready to be evaluated in the string NewString$
     GoSub EvaluateNewString ' This Evaluates NewString$ and returns with a LDD with the result, zero is false so it will do an ELSE, if there is one otherwise do what is after the THEN
-    num = DOStack(DOStackPointer): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-    If num < 10 Then Num$ = "0" + Num$
+    Num = DOStack(DOStackPointer): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+    If Num < 10 Then Num$ = "0" + Num$
     A$ = "BEQ": B$ = "DoneLoop_" + Num$: C$ = "If the result is false then exit the DO/Loop": GoSub AO
     Return
 End If
@@ -7662,8 +7679,8 @@ If v = UNTIL_CMD Then
     CheckIfTrue$ = Left$(CheckIfTrue$, Len(CheckIfTrue$) - 1) ' remove the &HF5 on the end
     GoSub GoCheckIfTrue ' This parses CheckIfTrue$ get's it ready to be evaluated in the string NewString$
     GoSub EvaluateNewString ' This Evaluates NewString$ and returns with a LDD with the result, zero is false so it will do an ELSE, if there is one otherwise do what is after the THEN
-    num = DOStack(DOStackPointer): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-    If num < 10 Then Num$ = "0" + Num$
+    Num = DOStack(DOStackPointer): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+    If Num < 10 Then Num$ = "0" + Num$
     A$ = "BNE": B$ = "DoneLoop_" + Num$: C$ = "If the result is a true exit the DO/Loop": GoSub AO
     Return
 End If
@@ -7679,8 +7696,8 @@ If v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A) Then
     v = Array(x): x = x + 1
     ' Just a LOOP command without WHILE or UNTIL
     If DOStackPointer = 0 Then Print "Error: LOOP without DO in line"; linelabel$: System
-    num = DOStack(DOStackPointer): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-    If num < 10 Then Num$ = "0" + Num$
+    Num = DOStack(DOStackPointer): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+    If Num < 10 Then Num$ = "0" + Num$
     A$ = "BRA": B$ = "DOStart_" + Num$: C$ = "Go to the start of the DO loop": GoSub AO
     Z$ = "DoneLoop_" + Num$: C$ = "End of DO Loop": GoSub AO
     DOStackPointer = DOStackPointer - 1
@@ -7701,8 +7718,8 @@ If v = WHILE_CMD Then
     CheckIfTrue$ = Left$(CheckIfTrue$, Len(CheckIfTrue$) - 1) ' remove the &HF5 on the end
     GoSub GoCheckIfTrue ' This parses CheckIfTrue$ get's it ready to be evaluated in the string NewString$
     GoSub EvaluateNewString ' This Evaluates NewString$ and returns with a LDD with the result, zero is false so it will do an ELSE, if there is one otherwise do what is after the THEN
-    num = DOStack(DOStackPointer): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-    If num < 10 Then Num$ = "0" + Num$
+    Num = DOStack(DOStackPointer): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+    If Num < 10 Then Num$ = "0" + Num$
     A$ = "BNE": B$ = "DOStart_" + Num$: C$ = "If the result is a true then goto the start of the DO/Loop again": GoSub AO
     Z$ = "DoneLoop_" + Num$: C$ = "End of DO Loop": GoSub AO
     DOStackPointer = DOStackPointer - 1
@@ -7721,8 +7738,8 @@ If v = UNTIL_CMD Then
     CheckIfTrue$ = Left$(CheckIfTrue$, Len(CheckIfTrue$) - 1) ' remove the &HF5 on the end
     GoSub GoCheckIfTrue ' This parses CheckIfTrue$ get's it ready to be evaluated in the string NewString$
     GoSub EvaluateNewString ' This Evaluates NewString$ and returns with a LDD with the result, zero is false so it will do an ELSE, if there is one otherwise do what is after the THEN
-    num = DOStack(DOStackPointer): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-    If num < 10 Then Num$ = "0" + Num$
+    Num = DOStack(DOStackPointer): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+    If Num < 10 Then Num$ = "0" + Num$
     A$ = "BEQ": B$ = "DOStart_" + Num$: C$ = "If the result is a false then goto the start of the DO/Loop": GoSub AO
     Z$ = "DoneLoop_" + Num$: C$ = "End of DO Loop": GoSub AO
     DOStackPointer = DOStackPointer - 1
@@ -7749,8 +7766,8 @@ MainCase$(SELECTStackPointer) = Expression$ ' MainCase$ is the value that will b
 A$ = "LDD": B$ = "EveryCasePointer": C$ = "Get the Flag pointer in D": GoSub AO
 A$ = "ADDD": B$ = "#2": C$ = "D=D+2, move the pointer to the next flag": GoSub AO
 A$ = "STD": B$ = "EveryCasePointer": C$ = "Save the new pointer in EveryCasePointer": GoSub AO
-num = EvCase(SELECTStackPointer): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-If num < 10 Then Num$ = "0" + Num$
+Num = EvCase(SELECTStackPointer): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+If Num < 10 Then Num$ = "0" + Num$
 A$ = "LDD": B$ = "#" + Num$ + "*$100": C$ = "A = The flag if this is an EveryCase=1 or a CASE=0 and clear B": GoSub AO
 A$ = "STD": B$ = "[EveryCasePointer]": C$ = "Save the value pointer in the EveryCaseStack": GoSub AO
 Return
@@ -7758,8 +7775,8 @@ Return
 DoCASE:
 ' Noraml CASE
 CaseCount(SELECTStackPointer) = CaseCount(SELECTStackPointer) + 1
-num = SELECTSTack(SELECTStackPointer): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-If num < 10 Then Num$ = "0" + Num$
+Num = SELECTSTack(SELECTStackPointer): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+If Num < 10 Then Num$ = "0" + Num$
 If CaseCount(SELECTStackPointer) > 1 Then
     If EvCase(SELECTStackPointer) = 0 Then
         ' Not an EVERYCASE
@@ -7767,11 +7784,11 @@ If CaseCount(SELECTStackPointer) > 1 Then
     End If
 End If
 CaseNumber$ = Num$
-num = CaseCount(SELECTStackPointer) + 1: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-If num < 10 Then Num$ = "0" + Num$
+Num = CaseCount(SELECTStackPointer) + 1: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+If Num < 10 Then Num$ = "0" + Num$
 NextCaseNumber$ = CaseNumber$ + "_" + Num$
-num = CaseCount(SELECTStackPointer): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-If num < 10 Then Num$ = "0" + Num$
+Num = CaseCount(SELECTStackPointer): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+If Num < 10 Then Num$ = "0" + Num$
 CaseNumber$ = CaseNumber$ + "_" + Num$
 Z$ = "_CaseCheck_" + CaseNumber$: C$ = "Start of the next CASE": GoSub AO
 
@@ -7779,8 +7796,8 @@ Z$ = "_CaseCheck_" + CaseNumber$: C$ = "Start of the next CASE": GoSub AO
 If Array(x) = &HFF And Array(x + 1) * 256 + Array(x + 2) = ELSE_CMD Then
     ' CASE ELSE
     CaseElseFlag = 1
-    num = SELECTSTack(SELECTStackPointer): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-    If num < 10 Then Num$ = "0" + Num$
+    Num = SELECTSTack(SELECTStackPointer): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+    If Num < 10 Then Num$ = "0" + Num$
     Z$ = "; CASE ELSE Code for SELECT " + Num$: GoSub AO
     GoSub SkipUntilEOLColon ' Skip until we find an EOL or a Colon and return
     A$ = "LDD": B$ = "[EveryCasePointer]": C$ = "A = flag pointer for everycase": GoSub AO
@@ -8015,8 +8032,8 @@ If ExpressionCount > 0 Then ' Check if we are in the middle of an expression
     ' Get the string value after the first open bracket
     GoSub ParseStringExpression0 ' Recursively get the next string value
     resultP10$(PE10Count) = Parse00_Term$
-    num = StrParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-    If num < 10 Then Num$ = "0" + Num$
+    Num = StrParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+    If Num < 10 Then Num$ = "0" + Num$
     StringPointerTemp$ = "_StrVar_PF" + Num$ 'StringPointerTemp$ = the Temp string pointer to use
     A$ = "CLRA": GoSub AO
     A$ = "LDB": B$ = StringPointerTemp$: C$ = "B = the size of original string": GoSub AO
@@ -8029,8 +8046,8 @@ If ExpressionCount > 0 Then ' Check if we are in the middle of an expression
     ' Get the string value after the first open bracket
     GoSub ParseStringExpression0 ' Recursively get the next string value
     resultP10$(PE10Count) = Parse00_Term$
-    num = StrParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-    If num < 10 Then Num$ = "0" + Num$
+    Num = StrParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+    If Num < 10 Then Num$ = "0" + Num$
     StringPointerTemp$ = "_StrVar_PF" + Num$ 'StringPointerTemp$ = the Temp string pointer to use
     A$ = "LDU": B$ = "#" + StringPointerTemp$: C$ = "U points at the start of the source string": GoSub AO
     A$ = "LDB": B$ = ",U+": C$ = "B = the length of source string, move pointer to the start of the string": GoSub AO
@@ -8094,8 +8111,8 @@ If ExpressionCount > 0 Then ' Check if we are in the middle of an expression
     ' Get the string value after the first open bracket
     GoSub ParseStringExpression0 ' Recursively get the next string value
     resultP10$(PE10Count) = Parse00_Term$
-    num = StrParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-    If num < 10 Then Num$ = "0" + Num$
+    Num = StrParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+    If Num < 10 Then Num$ = "0" + Num$
     StringPointerTemp$ = "_StrVar_PF" + Num$ 'StringPointerTemp$ = the Temp string pointer to use
     A$ = "LDB": B$ = StringPointerTemp$: C$ = "B = the size of original string": GoSub AO
     A$ = "BEQ": B$ = ">": C$ = "If the Length is zero then return a value of zero": GoSub AO
@@ -8366,8 +8383,8 @@ If ExpressionCount > 0 Then ' Check if we are in the middle of an expression
     A$ = "PSHS": B$ = "D": C$ = "Save the Start location to test at on the stack": GoSub AO
     GoSub ParseStringExpression0 ' Recursively get the next string value
     resultP10$(PE10Count) = Parse00_Term$
-    num = StrParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-    If num < 10 Then Num$ = "0" + Num$
+    Num = StrParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+    If Num < 10 Then Num$ = "0" + Num$
     StringPointerTemp$ = "_StrVar_PF" + Num$ 'StringPointerTemp$ = the Temp string pointer to use
     ' Copy _StrVar_PF+ Num$ to _StrVar_PF09, this is what we will use to search through
     A$ = "LDU": B$ = "#" + StringPointerTemp$: C$ = "U points at the start of the source string": GoSub AO
@@ -8386,8 +8403,8 @@ If ExpressionCount > 0 Then ' Check if we are in the middle of an expression
     index(ExpressionCount) = index(ExpressionCount) + 2 ' Consume the comma
     GoSub ParseStringExpression0 ' Recursively get the next string value
     resultP10$(PE10Count) = Parse00_Term$
-    num = StrParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-    If num < 10 Then Num$ = "0" + Num$
+    Num = StrParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+    If Num < 10 Then Num$ = "0" + Num$
     StringPointerTemp$ = "_StrVar_PF" + Num$ 'StringPointerTemp$ = the Temp string pointer to use
     'Search for "_StrVar_PF" + Num$ in   _StrVar_IFRight
     A$ = "LDX": B$ = "#_StrVar_IFRight": C$ = "X points at the length of the base string": GoSub AO
@@ -8524,8 +8541,8 @@ System
 DoSTR:
 GoSub ParseExpression0FlagErase ' Recursively check the next value
 ' At this point D has the value to be converted to a string
-num = StrParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-If num < 10 Then Num$ = "0" + Num$
+Num = StrParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+If Num < 10 Then Num$ = "0" + Num$
 A$ = "LDX": B$ = "#_StrVar_PF" + Num$: C$ = "X points at the string we want to save our converted value of D in _StrVar_PF" + Num$: GoSub AO
 A$ = "JSR": B$ = "D_to_String_at_X": C$ = "Convert value in D to a string where X points": GoSub AO
 Return
@@ -8536,20 +8553,20 @@ System
 
 DoCHR:
 GoSub ParseExpression0FlagErase ' Recursively check the next value
-num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-If num < 10 Then Num$ = "0" + Num$
+Num = NumParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+If Num < 10 Then Num$ = "0" + Num$
 'a$ = "LDB": B$ = "_Var_PF" + Num$ + "+1": c$ = "B = value to change to a string": GoSub AO ' Save Temp_Var_NumParseCount
 Print #1, "; B will have the value to change to a string"
 A$ = "LDA": B$ = "#$01": C$ = "Length of the CHR$ string is one byte": GoSub AO
-num = StrParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-If num < 10 Then Num$ = "0" + Num$
+Num = StrParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+If Num < 10 Then Num$ = "0" + Num$
 A$ = "STD": B$ = "_StrVar_PF" + Num$: C$ = "Save Length of the CHR$ string as one byte and that byte in B in _StrVar_PF" + Num$: GoSub AO
 Return
 DoLEFT:
 ' Get the string value after the first open bracket
 GoSub ParseStringExpression0 ' Recursively get the next string value
-num = StrParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-If num < 10 Then Num$ = "0" + Num$
+Num = StrParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+If Num < 10 Then Num$ = "0" + Num$
 StringPointerTemp$ = "_StrVar_PF" + Num$ 'StringPointerTemp$ = the Temp string pointer to use
 ' Get the numeric value after the comma
 index(ExpressionCount) = index(ExpressionCount) + 2 ' Consume the $F5 & comma
@@ -8575,8 +8592,8 @@ Return
 DoRIGHT:
 ' Get the string value after the first open bracket
 GoSub ParseStringExpression0 ' Recursively get the next string value
-num = StrParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-If num < 10 Then Num$ = "0" + Num$
+Num = StrParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+If Num < 10 Then Num$ = "0" + Num$
 StringPointerTemp$ = "_StrVar_PF" + Num$ 'StringPointerTemp$ = the Temp string pointer to use
 ' Get the numeric value after the comma
 index(ExpressionCount) = index(ExpressionCount) + 2 ' Consume the $F5 & comma
@@ -8612,8 +8629,8 @@ Return
 DoMID:
 ' Get the string value after the first open bracket
 GoSub ParseStringExpression0 ' Recursively get the next string value
-num = StrParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-If num < 10 Then Num$ = "0" + Num$
+Num = StrParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+If Num < 10 Then Num$ = "0" + Num$
 StringPointerTemp$ = "_StrVar_PF" + Num$ 'StringPointerTemp$ = the Temp string pointer to use
 
 ' Get the numeric value after the comma
@@ -8676,8 +8693,8 @@ Return
 
 
 DoINKEY:
-num = StrParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-If num < 10 Then Num$ = "0" + Num$
+Num = StrParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+If Num < 10 Then Num$ = "0" + Num$
 StringPointerTemp$ = "_StrVar_PF" + Num$ 'StringPointerTemp$ = the Temp string pointer to use
 A$ = "LDX": B$ = "#" + StringPointerTemp$: C$ = "X is now pointing at the size of this string": GoSub AO
 A$ = "JSR": B$ = "KEYIN": C$ = "This routine Polls the keyboard to see if a key is pressed, returns with value in A, A=0 if no key is pressed": GoSub AO
@@ -8696,8 +8713,8 @@ If ExpressionCount > 0 Then ' Check if we are in the middle of an expression
     ' Yes we are in an existing expression
     GoSub ParseExpression0FlagErase ' Recursively check the next numeric value  and return it in D
     resultP30(PE30Count) = Parse00_Term ' this will return with the next value
-    num = StrParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-    If num < 10 Then Num$ = "0" + Num$
+    Num = StrParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+    If Num < 10 Then Num$ = "0" + Num$
     A$ = "LDX": B$ = "#_StrVar_PF" + Num$: C$ = "Save Length of the CHR$ string as one byte and that byte in B in _StrVar_PF" + Num$: GoSub AO
     A$ = "CLR": B$ = ",X": C$ = "Must clear first byte at X": GoSub AO
     A$ = "JSR": B$ = "DHex_to_String_at_X": C$ = "Convert D to a hex value in RAM where X is pointing": GoSub AO
@@ -8712,8 +8729,8 @@ A$ = "PSHS": B$ = "D": C$ = "Save the # of times to repeat the string on the sta
 index(ExpressionCount) = index(ExpressionCount) + 2 ' Consume the &HFA & comma
 ' Get the string value after the first open bracket
 GoSub ParseStringExpression0 ' Recursively get the next string value
-num = StrParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-If num < 10 Then Num$ = "0" + Num$
+Num = StrParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+If Num < 10 Then Num$ = "0" + Num$
 StringPointerTemp$ = "_StrVar_PF" + Num$ 'StringPointerTemp$ = the Temp string pointer to use
 A$ = "LDX": B$ = "#" + StringPointerTemp$ + "+1": C$ = "X is now pointing at the start of this string": GoSub AO
 A$ = "LDD": B$ = ",S": C$ = "Get the count # of times to repeat the string on the stack": GoSub AO
@@ -8752,34 +8769,191 @@ Print "Can't do command MKN yet, found on";: GoTo FoundError
 Color 15
 System
 
+DoSLEEP:
+' Wait x number of milliseconds, based on the HSYNC interrupt
+' Get the numeric value before a colon or End of Line in D
+GoSub GetExpressionB4EOL 'Handle an expression that ends with a colon or End of a Line
+ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
+A$ = "CMPD": B$ = "#21": C$ = "Is the value at least 21?": GoSub AO
+A$ = "BLO": B$ = "@Skip": C$ = "If not then skip delay": GoSub AO
+A$ = "PSHS": B$ = "CC": C$ = "Save the CC": GoSub AO
+A$ = "ORCC": B$ = "#$50": C$ = "Disable the interrupts": GoSub AO
+A$ = "LDX": B$ = "#10": C$ = "X = 10": GoSub AO
+A$ = "EXG": B$ = "D,X": C$ = "D now = 10, X is the number given by the user": GoSub AO
+A$ = "JSR": B$ = "DIV16": C$ = "Do 16 bit / 16 bit Division, D = X/D No rounding will occur": GoSub AO
+A$ = "SUBD": B$ = "#1": C$ = "D=D-1, the overhead of the Divide could be around 10 ms, so make up for it": GoSub AO
+A$ = "TFR": B$ = "D,Y": C$ = "Y = user ms Value Divided by 10": GoSub AO
+Z$ = "@Loop1": A$ = "LDB": B$ = "#157": C$ = "157 HSyncs = 10 milliseconds": GoSub AO
+Z$ = "@Loop2": A$ = "LDA": B$ = "$FF00": C$ = "Reset Hsync flag": GoSub AO
+Z$ = "!": A$ = "LDA": B$ = "$FF01": C$ = "See if HSync has occurred yet": GoSub AO
+A$ = "BPL": B$ = "<": C$ = "If not then keep looping, until the Hsync occurs": GoSub AO
+A$ = "DECB": C$ = "Decrement the counter": GoSub AO
+A$ = "BNE": B$ = "@Loop2": C$ = "If not zero then, keep looping": GoSub AO
+A$ = "LEAY": B$ = "-1,Y": C$ = "Y=Y-1": GoSub AO
+A$ = "BNE": B$ = "@Loop1": C$ = "If not zero then, keep looping": GoSub AO
+A$ = "PULS": B$ = "CC": C$ = "Restore the CC": GoSub AO
+Z$ = "@Skip": C$ = "Done": GoSub AO
+Print #1,
+Return
+
+' Command that only supports command "VBL" after it
+DoWAIT:
+v = Array(x): x = x + 1
+If v = &HFF Then
+    ' Getting a command word after the WAIT command
+    v = Array(x) * 256 + Array(x + 1): x = x + 2
+    Select Case v
+        Case VBL_CMD
+            ' Wait for a Vertical blank then update the sprites
+            A$ = "JSR": B$ = "DoWaitVBL": C$ = "Wait for Vertical Blank then update the sprites": GoSub AO
+            Return
+    End Select
+Else
+    Print "Can't find the VBL command after WAIT on";: GoTo FoundError
+End If
 
 ' GModeName$(16) = "FG6R": GModeMaxX$(16) = "255": GModeMaxY$(16) = "191": GModeStartAddress$(16) = "E00": GModeScreenSize$(16) = "1800"
 DoSPRITE:
-' Get the numeric value before a comma
-' Get first number in D
+v = Array(x): x = x + 1
+If v = &HFF Then
+    ' Getting a command word after the SPRITE command
+    v = Array(x) * 256 + Array(x + 1): x = x + 2
+    Select Case v
+        Case ON_CMD ' Enable all sprite handling
+            ' SPRITE ON
+            ' Ignored
+            Return
+        Case OFF_CMD ' Turns off one or all sprites
+            ' SPRITE OFF
+            If Array(x) = &HFF And (Array(x + 1) = &H0D Or Array(x + 1) = &H3A) Then
+                ' no value given after the SPRITE OFF command, turn them all off
+                If CoCo3 = 1 Then
+                    A$ = "LDB": B$ = "#31": C$ = "32 sprites to process": GoSub AO
+                    Z$ = "!": A$ = "PSHS": B$ = "B": C$ = "Save B": GoSub AO
+                    A$ = "LDU": B$ = "#SpriteBOff": C$ = "Address of sprite command to turn off sprite B": GoSub AO
+                    A$ = "JSR": B$ = "PrepSpriteJumpCC3": C$ = "Jump to code to Prep stack for sprite B, then execute Command U": GoSub AO
+                    A$ = "PULS": B$ = "B": C$ = "Restore B": GoSub AO
+                    A$ = "DECB": C$ = "Decrement the sprite number": GoSub AO
+                    A$ = "BPL": B$ = "<": C$ = "Keep looping until we get to -1": GoSub AO
+                Else
+                    A$ = "LDB": B$ = "#31": C$ = "32 sprites to process": GoSub AO
+                    Z$ = "!": A$ = "PSHS": B$ = "B": C$ = "Save B": GoSub AO
+                    A$ = "JSR": B$ = "SpriteBOff": C$ = "Jump to code to turn off sprite B": GoSub AO
+                    A$ = "PULS": B$ = "B": C$ = "Restore B": GoSub AO
+                    A$ = "DECB": C$ = "Decrement the sprite number": GoSub AO
+                    A$ = "BPL": B$ = "<": C$ = "Keep looping until we get to -1": GoSub AO
+                End If
+                Return
+            Else
+                ' Turn off just Sprite # given
+                ' Get the sprite #
+                ' Get the numeric value before a colon or End of Line in D
+                GoSub GetExpressionB4EOL 'Handle an expression that ends with a colon or End of a Line
+                ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
+                If CoCo3 = 1 Then
+                    A$ = "LDU": B$ = "#SpriteBOff": C$ = "Address of sprite command to turn off sprite B": GoSub AO
+                    A$ = "JSR": B$ = "PrepSpriteJumpCC3": C$ = "Jump to code to Prep stack for sprite B, then execute Command U": GoSub AO
+                Else
+                    A$ = "JSR": B$ = "SpriteBOff": C$ = "Jump to code to turn off sprite B": GoSub AO
+                End If
+            End If
+            Return
+        Case LOCATE_CMD
+            ' Change the sprite location on screen "SPRITE LOCATE 0,8,10" - set sprite 0 to screen co-ordinates 8,10
+            ' Get the Sprite #
+            ' Get the numeric value before comma in D
+            GoSub GetExpressionB4Comma: x = x + 2 ' Get the expression before a Comma, & move past it
+            ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
+            A$ = "PSHS": B$ = "B": C$ = "Save the sprite #": GoSub AO
+            ' Get the x co-ordinate
+            ' Get the numeric value before comma in D
+            GoSub GetExpressionB4Comma: x = x + 2 ' Get the expression before a Comma, & move past it
+            ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
+            A$ = "PSHS": B$ = "D": C$ = "Save the x co-ordinate": GoSub AO
+            ' Get the y co-ordinate
+            ' Get the numeric value before a colon or End of Line in D
+            GoSub GetExpressionB4EOL 'Handle an expression that ends with a colon or End of a Line
+            ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
+            A$ = "PSHS": B$ = "B": C$ = "Save the y co-ordinate": GoSub AO
+            A$ = "JSR": B$ = "SpriteLocate": C$ = "Change the screen location of the sprite": GoSub AO
+            A$ = "LEAS": B$ = "4,S": C$ = "Fix the Stack": GoSub AO
+            Return
+        Case SHOW_CMD
+            ' Show the image of the sprite to an anim # frame  ie. SPRITE IMAGE s, f   ' Show sprite s, anim frame f
+            '
+            ' Get the Sprite #
+            ' Get the numeric value before comma in D
+            If CoCo3 = 1 Then
+                A$ = "LEAS": B$ = "-8,S": C$ = "Move the stack so it can hold the data this routine needs": GoSub AO
+            End If
+            GoSub GetExpressionB4Comma: x = x + 2 ' Get the expression before a Comma, & move past it
+            ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
+            A$ = "PSHS": B$ = "B": C$ = "Save the Sprite #": GoSub AO
+            ' Get the frame #
+            ' Get the numeric value before a colon or End of Line in D
+            GoSub GetExpressionB4EOL 'Handle an expression that ends with a colon or End of a Line
+            ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
+            A$ = "PSHS": B$ = "B": C$ = "Save the frame #": GoSub AO
+            A$ = "JSR": B$ = "ShowSpriteFrame": C$ = "Jump to code to change the sprite frame #": GoSub AO
+            If CoCo3 = 1 Then
+                A$ = "LEAS": B$ = "10,S": C$ = "Address of sprite command to turn off sprite B": GoSub AO
+            Else
+                A$ = "LEAS": B$ = "2,S": C$ = "Fix the Stack": GoSub AO
+            End If
+            Return
+        Case BACK_CMD
+            ' Save the background behind the sprite # given
+            ' Get the numeric value before a colon or End of Line in D
+            GoSub GetExpressionB4EOL 'Handle an expression that ends with a colon or End of a Line
+            ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
+            If CoCo3 = 1 Then
+                A$ = "LDU": B$ = "#BackupSpriteB": C$ = "Address of sprite command to Backup Sprite B": GoSub AO
+                A$ = "JSR": B$ = "PrepSpriteJumpCC3": C$ = "Jump to code to Prep stack for sprite B, then execute Command U": GoSub AO
+            Else
+                A$ = "JSR": B$ = "BackupSpriteB": C$ = "Jump to code to Backup Sprite B": GoSub AO
+            End If
+            Return
+        Case ERASE_CMD
+            ' Ersae the sprite # given and restore what was behind it
+            ' Get the numeric value before a colon or End of Line in D
+            GoSub GetExpressionB4EOL 'Handle an expression that ends with a colon or End of a Line
+            ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
+            If CoCo3 = 1 Then
+                A$ = "LDU": B$ = "#EraseSpriteB": C$ = "Address of sprite command to Erase SpriteB and restore it's background": GoSub AO
+                A$ = "JSR": B$ = "PrepSpriteJumpCC3": C$ = "Jump to code to Prep stack for sprite B, then execute Command U": GoSub AO
+            Else
+                A$ = "JSR": B$ = "EraseSpriteB": C$ = "Jump to code to Erase SpriteB and restore it's background": GoSub AO
+            End If
+            Return
+        Case Else
+            Print "Can't handle command after SPRITE on";: GoTo FoundError
+    End Select
+Else
+    ' Not a command fix x
+    x = x - 1
+End If
+
+' Get the Sprite #
+' Get the numeric value before comma in D
 GoSub GetExpressionB4Comma: x = x + 2 ' Get the expression before a Comma, & move past it
 ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
 A$ = "PSHS": B$ = "B": C$ = "Save the sprite #": GoSub AO
-
-' Get the numeric value before a comma
-' Get first number in D
+' Get the x co-ordinate
+' Get the numeric value before comma in D
 GoSub GetExpressionB4Comma: x = x + 2 ' Get the expression before a Comma, & move past it
 ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
-A$ = "PSHS": B$ = "B": C$ = "Save the x co-ordinate": GoSub AO
-
-' Get the numeric value before a comma
-' Get first number in D
+A$ = "PSHS": B$ = "D": C$ = "Save the x co-ordinate": GoSub AO
+' Get the y co-ordinate
+' Get the numeric value before comma in D
 GoSub GetExpressionB4Comma: x = x + 2 ' Get the expression before a Comma, & move past it
 ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
 A$ = "PSHS": B$ = "B": C$ = "Save the y co-ordinate": GoSub AO
-
+' Get the frame #
+' Get the numeric value before a colon or End of Line in D
 GoSub GetExpressionB4EOL 'Handle an expression that ends with a colon or End of a Line
 ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
-
-num = (Val(GModeMaxX$(Gmode)) + 1) / 8: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-A$ = "LDA": B$ = "#" + Num$: C$ = "A = number of bytes per row for GMODE " + Str$(Gmode): GoSub AO
-A$ = "PSHS": B$ = "D": C$ = "Save the draw/erase flag": GoSub AO
-A$ = "JSR": B$ = "SpriteHandler": C$ = "Go handle sprite": GoSub AO
+A$ = "PSHS": B$ = "B": C$ = "Save the frame #": GoSub AO
+A$ = "JSR": B$ = "AddSpriteToProcess": C$ = "Jump to code to add sprite to the sprite cache list": GoSub AO
 A$ = "LEAS": B$ = "5,S": C$ = "Fix the Stack": GoSub AO
 Return
 
@@ -9101,6 +9275,8 @@ Select Case GeneralCommands$(v)
         GoTo DoSET
     Case "SKIPF"
         GoTo DoSKIPF
+    Case "SLEEP"
+        GoTo DoSLEEP
     Case "SOUND"
         GoTo DoSOUND
     Case "SPRITE"
@@ -9129,6 +9305,8 @@ Select Case GeneralCommands$(v)
         GoTo DoUSING
     Case "VERIFY"
         GoTo DoVERIFY
+    Case "WAIT"
+        GoTo DoWAIT
     Case "WEND"
         GoTo DoWEND
     Case "WHILE"
