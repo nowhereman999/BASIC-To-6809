@@ -95,6 +95,7 @@ GMode$(14) = "Full_graphic_3_R" '     Full graphic 3-R      1   1   0   1   1 0 
 GMode$(15) = "Full_graphic_6_C" '     Full graphic 6-C      1   1   1   0   1 1 0   128x192x4 $1800(6144)
 GMode$(16) = "Full_graphic_6_R" '     Full graphic 6-R      1   1   1   1   1 1 0   256x192x2 $1800(6144)
 GMode$(17) = "DMAccess_graphics" '    Direct memory access  X   X   X   X   1 1 1             $1800(6144)
+GMode$(18) = "Full_graphic_6_R" '     Full graphic 6-R      1   1   1   1   1 1 0   256x192x2 $1800(6144)
 
 GModeName$(0) = "IA": GModeMaxX$(0) = "31": GModeMaxY$(0) = "15": GModeStartAddress$(0) = "400": GModeScreenSize$(0) = "200": GModeColours$(0) = "2"
 GModeName$(1) = "EA": GModeMaxX$(1) = "31": GModeMaxY$(1) = "15": GModeStartAddress$(1) = "400": GModeScreenSize$(1) = "200": GModeColours$(1) = "2"
@@ -114,6 +115,7 @@ GModeName$(14) = "FG3R": GModeMaxX$(14) = "127": GModeMaxY$(14) = "191": GModeSt
 GModeName$(15) = "FG6C": GModeMaxX$(15) = "127": GModeMaxY$(15) = "191": GModeStartAddress$(15) = "E00": GModeScreenSize$(15) = "1800": GModeColours$(15) = "4"
 GModeName$(16) = "FG6R": GModeMaxX$(16) = "255": GModeMaxY$(16) = "191": GModeStartAddress$(16) = "E00": GModeScreenSize$(16) = "1800": GModeColours$(16) = "2"
 GModeName$(17) = "DMAGraphic": GModeMaxX$(17) = "255": GModeMaxY$(17) = "191": GModeStartAddress$(17) = "E00": GModeScreenSize$(17) = "1800": GModeColours$(17) = "2"
+GModeName$(18) = "FG6R": GModeMaxX$(18) = "255": GModeMaxY$(18) = "191": GModeStartAddress$(18) = "E00": GModeScreenSize$(18) = "1800": GModeColours$(18) = "2"
 
 ' CoCo 3 Graphic Modes    CoCo 3 Modes Resolution Memory
 GMode$(100) = "Hires_Graphic_100" '   EQU     %00000001    ;  64x192x4,  $0C00 (3200)
@@ -176,6 +178,12 @@ GMode$(156) = "Hires_Graphic_156" '   EQU     %01110100    ;  640x225x2,  $4650 
 GMode$(157) = "Hires_Graphic_157" '   EQU     %00011101    ;  640x192x4,  $7800 (30720)
 GMode$(158) = "Hires_Graphic_158" '   EQU     %00111101    ;  640x200x4,  $7D00 (32000)
 GMode$(159) = "Hires_Graphic_159" '   EQU     %01111101    ;  640x225x4,  $8CA0 (36000)
+GMode$(160) = "Hires_Graphic_160" '   EQU     %00011001    ;  512x192x4,  $6000 (24576)
+GMode$(161) = "Hires_Graphic_161" '   EQU     %00111001    ;  512x200x4,  $6400 (25600)
+GMode$(162) = "Hires_Graphic_162" '   EQU     %01111001    ;  512x225x4,  $7080 (28800)
+GMode$(163) = "Hires_Graphic_163" '   EQU     %00011101    ;  640x192x4,  $7800 (30720)
+GMode$(164) = "Hires_Graphic_164" '   EQU     %00111101    ;  640x200x4,  $7D00 (32000)
+GMode$(165) = "Hires_Graphic_165" '   EQU     %01111101    ;  640x225x4,  $8CA0 (36000)
 
 GModeName$(100) = "HIG100": GModeMaxX$(100) = "63": GModeMaxY$(100) = "191": GModeStartAddress$(100) = "6000": GModeScreenSize$(100) = "0C00": GModeColours$(100) = "4"
 GModeName$(101) = "HIG101": GModeMaxX$(101) = "63": GModeMaxY$(101) = "199": GModeStartAddress$(101) = "6000": GModeScreenSize$(101) = "0C80": GModeColours$(101) = "4"
@@ -237,6 +245,12 @@ GModeName$(156) = "HIG156": GModeMaxX$(156) = "639": GModeMaxY$(156) = "224": GM
 GModeName$(157) = "HIG157": GModeMaxX$(157) = "639": GModeMaxY$(157) = "191": GModeStartAddress$(157) = "6000": GModeScreenSize$(157) = "7800": GModeColours$(157) = "4"
 GModeName$(158) = "HIG158": GModeMaxX$(158) = "639": GModeMaxY$(158) = "199": GModeStartAddress$(158) = "6000": GModeScreenSize$(158) = "7D00": GModeColours$(158) = "4"
 GModeName$(159) = "HIG159": GModeMaxX$(159) = "639": GModeMaxY$(159) = "224": GModeStartAddress$(159) = "6000": GModeScreenSize$(159) = "8CA0": GModeColours$(159) = "4"
+GModeName$(160) = "HIG160": GModeMaxX$(160) = "127": GModeMaxY$(160) = "191": GModeStartAddress$(160) = "6000": GModeScreenSize$(160) = "6000": GModeColours$(160) = "256"
+GModeName$(161) = "HIG161": GModeMaxX$(161) = "127": GModeMaxY$(161) = "199": GModeStartAddress$(161) = "6000": GModeScreenSize$(161) = "6400": GModeColours$(161) = "256"
+GModeName$(162) = "HIG162": GModeMaxX$(162) = "127": GModeMaxY$(162) = "224": GModeStartAddress$(162) = "6000": GModeScreenSize$(162) = "7080": GModeColours$(162) = "256"
+GModeName$(163) = "HIG163": GModeMaxX$(163) = "159": GModeMaxY$(163) = "191": GModeStartAddress$(163) = "6000": GModeScreenSize$(163) = "7800": GModeColours$(163) = "256"
+GModeName$(164) = "HIG164": GModeMaxX$(164) = "159": GModeMaxY$(164) = "199": GModeStartAddress$(164) = "6000": GModeScreenSize$(164) = "7D00": GModeColours$(164) = "256"
+GModeName$(165) = "HIG165": GModeMaxX$(165) = "159": GModeMaxY$(165) = "224": GModeStartAddress$(165) = "6000": GModeScreenSize$(165) = "8CA0": GModeColours$(165) = "256"
 
 ' Handle command line options
 FI = 0
@@ -821,7 +835,7 @@ If ArrayWidth = 8 Then
         ' Yes just a single dimension array
         If Verbose > 3 Then Print "handling a one dimensional array"
         If Verbose > 3 Then Print #1, "; Started handling the array here:"
-        GoSub GetExpressionB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+        GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
         ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression returns with D = the value
         A$ = "LSLB": GoSub AO
         A$ = "ROLA": C$ = "D=D*2, 16 bit integers in the numeric array": GoSub AO
@@ -880,7 +894,7 @@ If ArrayWidth = 8 Then
         A$ = "STD": B$ = ",S": C$ = "Save the result on the stack": GoSub AO
         DoNumArrCloseBracket0:
         ' Add dX
-        GoSub GetExpressionB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+        GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
         ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression returns with D = the value
         A$ = "ADDD": B$ = ",S": C$ = "D=D+ old D": GoSub AO
         A$ = "LEAS": B$ = "6,S": C$ = "Fix the stack": GoSub AO
@@ -895,7 +909,7 @@ Else
         ' Yes just a single dimension array
         If Verbose > 3 Then Print "handling a one dimensional array"
         If Verbose > 3 Then Print #1, "; Started handling the array here:"
-        GoSub GetExpressionB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+        GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
         ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression returns with D = the value
         A$ = "LSLB": GoSub AO
         A$ = "ROLA": C$ = "D=D*2, 16 bit integers in the numeric array": GoSub AO
@@ -967,7 +981,7 @@ Else
         A$ = "STD": B$ = ",S": C$ = "Save the result on the stack": GoSub AO
         DoNumArrCloseBracket016:
         ' Add dX
-        GoSub GetExpressionB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+        GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
         ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression returns with D = the value
         A$ = "ADDD": B$ = ",S": C$ = "D=D+ old D": GoSub AO
         A$ = "LEAS": B$ = "6,S": C$ = "Fix the stack": GoSub AO
@@ -1000,7 +1014,7 @@ If ArrayWidth = 8 Then
         ' Yes just a single dimension array
         If Verbose > 3 Then Print "handling a one dimensional array"
         If Verbose > 3 Then Print #1, "; Started handling the array here:"
-        GoSub GetExpressionB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+        GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
         ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression returns with D = the value
     Else
         ' Handle multi dimensional arrays
@@ -1055,7 +1069,7 @@ If ArrayWidth = 8 Then
         A$ = "STD": B$ = ",S": C$ = "Save the result on the stack": GoSub AO
         DoNumArrCloseBracket1:
         ' Add dX
-        GoSub GetExpressionB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+        GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
         ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression returns with D = the value
         A$ = "ADDD": B$ = ",S": C$ = "D=D+ old D": GoSub AO
         A$ = "LEAS": B$ = "6,S": C$ = "Fix the stack": GoSub AO
@@ -1070,7 +1084,7 @@ Else
         ' Yes just a single dimension array
         If Verbose > 3 Then Print "handling a one dimensional array"
         If Verbose > 3 Then Print #1, "; Started handling the array here:"
-        GoSub GetExpressionB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+        GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
         ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression returns with D = the value
     Else
         ' Handle multi dimensional arrays
@@ -1137,7 +1151,7 @@ Else
         A$ = "STD": B$ = ",S": C$ = "Save the result on the stack": GoSub AO
         DoNumArrCloseBracket116:
         ' Add dX
-        GoSub GetExpressionB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+        GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
         ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression returns with D = the value
         A$ = "ADDD": B$ = ",S": C$ = "D=D+ old D": GoSub AO
         A$ = "LEAS": B$ = "6,S": C$ = "Fix the stack": GoSub AO
@@ -1217,7 +1231,7 @@ If ArrayWidth = 8 Then
         ' Yes just a single dimension array
         If Verbose > 3 Then Print "handling a one dimensional array"
         If Verbose > 3 Then Print #1, "; Started handling the array here:"
-        GoSub GetExpressionB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket
+        GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket
         ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression returns with D = the value
     Else
         ' Handle multi dimensional arrays
@@ -1272,7 +1286,7 @@ If ArrayWidth = 8 Then
         A$ = "STD": B$ = ",S": C$ = "Save the result on the stack": GoSub AO
         DoStrArrCloseBracket0:
         ' Add dX
-        GoSub GetExpressionB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+        GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
         ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression returns with D = the value
         A$ = "ADDD": B$ = ",S": C$ = "D=D+ old D": GoSub AO
         A$ = "LEAS": B$ = "6,S": C$ = "Fix the stack": GoSub AO
@@ -1292,7 +1306,7 @@ Else
         ' Yes just a single dimension array
         If Verbose > 3 Then Print "handling a one dimensional array"
         If Verbose > 3 Then Print #1, "; Started handling the array here:"
-        GoSub GetExpressionB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket
+        GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket
         ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression returns with D = the value
     Else
         ' Handle multi dimensional arrays
@@ -1357,7 +1371,7 @@ Else
         A$ = "STD": B$ = ",S": C$ = "Save the result on the stack": GoSub AO
         DoStrArrCloseBracket016:
         ' Add dX
-        GoSub GetExpressionB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+        GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
         ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression returns with D = the value
         A$ = "ADDD": B$ = ",S": C$ = "D=D+ old D": GoSub AO
         A$ = "LEAS": B$ = "6,S": C$ = "Fix the stack": GoSub AO
@@ -1390,7 +1404,7 @@ If ArrayWidth = 8 Then
         ' Yes just a single dimension array
         If Verbose > 3 Then Print "handling a one dimensional array"
         If Verbose > 3 Then Print #1, "; Started handling the array here:"
-        GoSub GetExpressionB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+        GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
         ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression returns with D = the value
     Else
         ' Handle multi dimensional arrays
@@ -1445,7 +1459,7 @@ If ArrayWidth = 8 Then
         A$ = "STD": B$ = ",S": C$ = "Save the result on the stack": GoSub AO
         DoStrArrCloseBracket1:
         ' Add dX
-        GoSub GetExpressionB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+        GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
         ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression returns with D = the value
         A$ = "ADDD": B$ = ",S": C$ = "D=D+ old D": GoSub AO
         A$ = "LEAS": B$ = "6,S": C$ = "Fix the stack": GoSub AO
@@ -1465,7 +1479,7 @@ Else
         ' Yes just a single dimension array
         If Verbose > 3 Then Print "handling a one dimensional array"
         If Verbose > 3 Then Print #1, "; Started handling the array here:"
-        GoSub GetExpressionB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+        GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
         ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression returns with D = the value
     Else
         ' Handle multi dimensional arrays
@@ -1524,7 +1538,7 @@ Else
         A$ = "STD": B$ = ",S": C$ = "Save the result on the stack": GoSub AO
         DoStrArrCloseBracket116:
         ' Add dX
-        GoSub GetExpressionB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+        GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
         ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression returns with D = the value
         A$ = "ADDD": B$ = ",S": C$ = "D=D+ old D": GoSub AO
         A$ = "LEAS": B$ = "6,S": C$ = "Fix the stack": GoSub AO
@@ -1981,7 +1995,7 @@ Select Case FirstChar
                         v = Array(x + 1) * 256 + Array(x + 2): x = x + 3 ' move past the INT command
                         If v = INT_CMD Then
                             ' Found INT Command, Get the 2nd expression
-                            GoSub GetExpressionB4EndBracket: x = x + 4 ' Get the expression that ends with a close bracket & move past it and the final close bracket
+                            GoSub GetExpressionMidB4EndBracket: x = x + 4 ' Get the expression that ends with a close bracket & move past it and the final close bracket
                             Expression$ = Expression$ + Chr$(&HF5) + ")" 'add the close bracket
                             ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression result with value in D
                             A$ = "LDU": B$ = "#FPStackspace+5": C$ = "Point U at the beginning of the Floating point stack": GoSub AO
@@ -4877,9 +4891,9 @@ Expression$ = Expression$ + GenExpression$
 GoTo GEB4Comma
 
 'Handle an expression that ends with a close bracket
-GetExpressionB4EndBracket:
-Expression$ = ""
+GetExpressionMidB4EndBracket:
 InBracket = 0
+Expression$ = ""
 GEB4EndBracket:
 GoSub GetGenExpression ' Returns with single expression in GenExpression$
 If Left$(GenExpression$, 1) = Chr$(&HF5) Then
@@ -4891,6 +4905,21 @@ If Left$(GenExpression$, 1) = Chr$(&HF5) Then
 End If
 Expression$ = Expression$ + GenExpression$
 GoTo GEB4EndBracket
+
+GetExpressionFullB4EndBracket:
+InBracket = 0
+Expression$ = ""
+GEFullB4EndBracket:
+GoSub GetGenExpression ' Returns with single expression in GenExpression$
+If Left$(GenExpression$, 1) = Chr$(&HF5) Then
+    ' Found a special character
+    Sp = Asc(Right$(GenExpression$, 1))
+    If Sp = Asc("(") Then InBracket = InBracket + 1
+    If Sp = Asc(")") Then InBracket = InBracket - 1
+    If Sp = Asc(")") And InBracket = 0 Then x = x - 2: Return ' If last close bracket then point at it again and return
+End If
+Expression$ = Expression$ + GenExpression$
+GoTo GEFullB4EndBracket
 
 'Handle an expression that ends with a colon or End of a Line or a general command like TO or STEP
 GetExpressionB4EOLOrCommand:
@@ -5126,7 +5155,7 @@ End If
 
 If v = &HF1 Then ' Printing a String Array variable, PRINT A$(6)
     x = x - 1 ' make sure to inlcude the first String Array variable
-    GoSub GetExpressionB4EndBracket: x = x + 2 ' Get an Expression before a close bracket, skip past $F5 and close bracket
+    GoSub GetExpressionFullB4EndBracket: x = x + 2 ' Get an Expression before a close bracket, skip past $F5 and close bracket
     Expression$ = Expression$ + Chr$(&HF5) + Chr$(&H29) 'add the close bracket for parsing
     GoSub ParseStringExpression ' Parse the String Expression, value will end up in _StrVar_PF00
     ' Copy _StrVar_PF00 to string variable
@@ -5283,7 +5312,7 @@ If v = &HF5 Then
             ' Write code to handle this: Print ("hey" + A$ + C$)
         Else
             x = x - 2 ' setup X to be just before the first open bracket
-            GoSub GetExpressionB4EndBracket: x = x + 2 ' get expression before an end bracket, move past it
+            GoSub GetExpressionFullB4EndBracket: x = x + 2 ' get expression before an end bracket, move past it
             Expression$ = Expression$ + Chr$(&HF5) + Chr$(&H29) ' add close bracket
             ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression, value will end up in D
             If PrintCC3 = 1 Then
@@ -5374,7 +5403,7 @@ If v = &HFC Then
 End If
 If v = &HFD Then ' Printing a String Command, PRINT CHR$(67)
     x = x - 1 ' make sure to inlcude the first String command value
-    GoSub GetExpressionB4EndBracket: x = x + 2 ' Get an Expression before a close bracket, skip past $F5 and close bracket
+    GoSub GetExpressionFullB4EndBracket: x = x + 2 ' Get an Expression before a close bracket, skip past $F5 and close bracket
     Expression$ = Expression$ + Chr$(&HF5) + Chr$(&H29) 'add the close bracket for parsing
     GoSub ParseStringExpression ' Parse the String Expression, value will end up in _StrVar_PF00
     ' Copy _StrVar_PF00 to string variable
@@ -5400,7 +5429,7 @@ If v = &HFE Then ' Printing a Numeric Command, PRINT PEEK(10)
     If Array(x) = TAB_CMD Then
         'We just found the TAB() command
         x = x + 2 ' consume the open bracket
-        GoSub GetExpressionB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+        GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
         ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression, value will end up in D
         A$ = "LDA": B$ = "#$20": C$ = "A = SPACE": GoSub AO
         Z$ = "!"
@@ -5912,6 +5941,23 @@ If p > 0 Then
 End If
 Return
 
+' NTSC_FONTCOLOURS RNDZ(255),RNDZ(255)  - Sets the background and forground colour values
+DoNTSCFontColours:
+If Gmode > 159 Then
+    ' Get the numeric value before a comma
+    ' Get first number in D
+    GoSub GetExpressionB4Comma: x = x + 2 ' Get the expression before a Comma, & move past it
+    ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
+    A$ = "STB": B$ = "G_Background": C$ = "Save the background colour for the CoCo 3 NTSC composite font": GoSub AO
+    'x in the array will now be pointing just past the ,
+    GoSub GetExpressionB4EOL ' Get the expression before an End of Line in Expression$
+    ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
+    A$ = "STB": B$ = "G_Foreground": C$ = "Save the foreground colour for the CoCo 3 NTSC composite font": GoSub AO
+    Return
+Else
+    Print "ERROR - Can only use the NTSC_FONTCOLOURS command with GMODE screens that are 160 or higher on";: GoTo FoundError
+End If
+
 ' LOCATE x,y - Sets the cursor at Column x, Row y
 DoLOCATE:
 ' Get the numeric value before a comma
@@ -6162,7 +6208,7 @@ GoSub VerifyY ' Add code to make sure Y value is in bounds of screen size
 A$ = "PSHS": B$ = "B": C$ = "Save the loction of the Y co-ordinate": GoSub AO
 Print #1, ' Need a space for @ in assembly
 ' Get the colour to set on screen
-GoSub GetExpressionB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
 ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
 If Val(GModeColours$(Gmode)) = 16 Then
     ' Handle CoCo 3 with 16 colours, copy colour to the high nibble
@@ -6327,7 +6373,7 @@ Else
     ' Get the numeric value before a Close bracket
     v = Array(x): x = x + 1 ' skip the open bracket
     ' Get first number in D
-    GoSub GetExpressionB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+    GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
     ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
 End If
 A$ = "ANDB": B$ = "#%00000011": C$ = "Make B between zero and 3": GoSub AO
@@ -6436,30 +6482,22 @@ DoGCOPY:
 ' Get first number in D
 GoSub GetExpressionB4Comma: x = x + 2 ' Get the expression before a Comma, & move past it
 ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
-A$ = "TSTB": C$ = "Check if B = 0": GoSub AO
-A$ = "BNE": B$ = ">": C$ = "Skip ahead if not zero": GoSub AO
-A$ = "INCB": C$ = "B = 1": GoSub AO
-Z$ = "!"
 If Gmode = 0 Or Gmode = 1 Or Gmode = 2 Or Gmode = 4 Then
     ' For the Text screen we move past the Disk variable area
-    A$ = "CMPB": B$ = "#$01": C$ = "Check if B is > 1": GoSub AO
-    A$ = "BEQ": B$ = ">": C$ = "Skip ahead if it's 1": GoSub AO
-    A$ = "ADDB": B$ = "#$04": C$ = "Save the Source Graphics Page # on the stack": GoSub AO
+    A$ = "TSTB": C$ = "Check if B = 0": GoSub AO
+    A$ = "BNE": B$ = ">": C$ = "Skip ahead if it's 0": GoSub AO
+    A$ = "ADDB": B$ = "#$04": C$ = "Add 4": GoSub AO
     Z$ = "!"
 End If
 A$ = "PSHS": B$ = "B": C$ = "Save the Source Graphics Page # on the stack": GoSub AO
 'Get Destination page value in D (we only use B)
 GoSub GetExpressionB4EOL 'Handle an expression that ends with a colon or End of a Line
 ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
-A$ = "TSTB": C$ = "Check if B = 0": GoSub AO
-A$ = "BNE": B$ = ">": C$ = "Skip ahead if not zero": GoSub AO
-A$ = "INCB": C$ = "B = 1": GoSub AO
-Z$ = "!"
 If Gmode = 0 Or Gmode = 1 Or Gmode = 2 Or Gmode = 4 Then
     ' For the Text screen we move past the Disk variable area
-    A$ = "CMPB": B$ = "#$01": C$ = "Check if B is > 1": GoSub AO
-    A$ = "BEQ": B$ = ">": C$ = "Skip ahead if it's 1": GoSub AO
-    A$ = "ADDB": B$ = "#$04": C$ = "Save the Source Graphics Page # on the stack": GoSub AO
+    A$ = "TSTB": C$ = "Check if B = 0": GoSub AO
+    A$ = "BNE": B$ = ">": C$ = "Skip ahead if it's 0": GoSub AO
+    A$ = "ADDB": B$ = "#$04": C$ = "Add 4": GoSub AO
     Z$ = "!"
 End If
 A$ = "PSHS": B$ = "B": C$ = "Save the Source Graphics Page # on the stack": GoSub AO
@@ -6551,7 +6589,7 @@ GModePage:
 'Get Page value in D (we only use B)
 GoSub GetExpressionB4EOL 'Handle an expression that ends with a colon or End of a Line
 ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
-A$ = "DECB": C$ = "Page values are zero based": GoSub AO
+'A$ = "DECB": C$ = "Page values are zero based": GoSub AO
 A$ = "STB": B$ = "GModePage": C$ = "Save the screen Page #": GoSub AO
 GModeSkipScreen:
 If Gmode > 99 Then
@@ -6755,7 +6793,7 @@ Else
     A$ = "PSHS": B$ = "B": C$ = "Save the loction of the X co-ordinate": GoSub AO
 End If
 ' Get the y co-ordinate
-GoSub GetExpressionB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
 ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression result with value in D
 GoSub VerifyY ' Add code to make sure Y value is in bounds of screen size
 A$ = "PSHS": B$ = "B": C$ = "Save the y coordinate on the stack": GoSub AO
@@ -6803,7 +6841,7 @@ Else
     A$ = "PSHS": B$ = "B": C$ = "Save the loction of the X co-ordinate": GoSub AO
 End If
 ' Get the y co-ordinate
-GoSub GetExpressionB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
 ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression result with value in D
 GoSub VerifyY ' Add code to make sure Y value is in bounds of screen size
 A$ = "PSHS": B$ = "B": C$ = "Save the y coordinate on the stack": GoSub AO
@@ -6881,7 +6919,7 @@ A$ = "LDB": B$ = "#255": C$ = "Make the max size 255": GoSub AO
 Z$ = "@SaveB0"
 A$ = "PSHS": B$ = "B": C$ = "Save the x coordinate value on the stack": GoSub AO
 ' Get the start y co-ordinate
-GoSub GetExpressionB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
 ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
 
 A$ = "TSTA": C$ = "Check if D is a negative": GoSub AO
@@ -6916,7 +6954,7 @@ A$ = "LDB": B$ = "#255": C$ = "Make the max size 255": GoSub AO
 Z$ = "@SaveB0"
 A$ = "PSHS": B$ = "B": C$ = "Save the x coordinate value on the stack": GoSub AO
 ' Get the destination y co-ordinate
-GoSub GetExpressionB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
 ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
 A$ = "TSTA": C$ = "Check if D is a negative": GoSub AO
 A$ = "BPL": B$ = ">": C$ = "If value is 0 or more then check if we are > 191": GoSub AO
@@ -6960,7 +6998,7 @@ A$ = "LDB": B$ = "#255": C$ = "Make the max size 255": GoSub AO
 Z$ = "@SaveB0"
 A$ = "PSHS": B$ = "B": C$ = "Save the x coordinate value on the stack": GoSub AO
 ' Get the start y co-ordinate
-GoSub GetExpressionB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
 ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
 
 A$ = "TSTA": C$ = "Check if D is a negative": GoSub AO
@@ -6995,7 +7033,7 @@ A$ = "LDB": B$ = "#255": C$ = "Make the max size 255": GoSub AO
 Z$ = "@SaveB0"
 A$ = "PSHS": B$ = "B": C$ = "Save the x coordinate value on the stack": GoSub AO
 ' Get the destination y co-ordinate
-GoSub GetExpressionB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
 ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
 A$ = "TSTA": C$ = "Check if D is a negative": GoSub AO
 A$ = "BPL": B$ = ">": C$ = "If value is 0 or more then check if we are > 191": GoSub AO
@@ -7287,7 +7325,7 @@ Else
     ' Get the numeric value before a Close bracket
     v = Array(x): x = x + 1 ' skip the open bracket
     ' Get first number in D
-    GoSub GetExpressionB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+    GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
     ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
 End If
 A$ = "JSR": B$ = "SDCGetByte": C$ = "Get the next byte in the file B, return with result in B": GoSub AO
@@ -7353,7 +7391,7 @@ Return
 DoSDC_CLOSE:
 If Array(x) <> &HF5 Or Array(x + 1) <> &H28 Then Print "Can't find open bracket for SDCCLOSE command on";: GoTo FoundError
 x = x + 2 'move past the open bracket
-GoSub GetExpressionB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
 ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
 A$ = "JSR": B$ = "SDC_CloseFileB": C$ = "Close file # in B": GoSub AO
 Return
@@ -7385,7 +7423,7 @@ ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression result w
 A$ = "STB": B$ = "2,X": C$ = "Save LBN number on the stack": GoSub AO
 If Array(x - 1) <> &H2C Then Print "fourth comma is missing for SDCSETPOS command on";: GoTo FoundError
 ' Get the byte in the sector
-GoSub GetExpressionB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
 ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
 A$ = "STB": B$ = "4,X": C$ = "Save the byte in the last sector": GoSub AO
 Return
@@ -7414,7 +7452,7 @@ Else
     ' Get the numeric value before a Close bracket
     v = Array(x): x = x + 1 ' skip the open bracket
     ' Get first number in D
-    GoSub GetExpressionB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+    GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
     ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
 End If
 A$ = "STD": B$ = "_Var_" + DefFNVar$: C$ = "Save it in the dummy variable": GoSub AO
@@ -7489,7 +7527,7 @@ OpenLoadm:
 A$ = "JSR": B$ = "FixFileName": C$ = "Format _StrVar_PF00 to proper disk filename format in memory at DNAMBF": GoSub AO
 A$ = "LDU": B$ = "#DNAMBF": C$ = "U points at the filename to open": GoSub AO
 ' Open the the File pointed at by U
-' Enter with U pointing at the properly formatted filename (8 character filename badded with spaces) and a 3 character extension
+' Enter with U pointing at the properly formatted filename (8 character filename padded with spaces) and a 3 character extension
 ' Exits with X pointing at the filename entry in the disk directory
 ' Carry flag will be set if it couldn't find the filename, cleared otherwise
 A$ = "JSR": B$ = "OpenFileU": C$ = "Go open file": GoSub AO
@@ -7930,7 +7968,7 @@ Else
     ' Get the numeric value before a Close bracket
     v = Array(x): x = x + 1 ' skip the open bracket
     ' Get first number in D
-    GoSub GetExpressionB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+    GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
     ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
 End If
 A$ = "CMPD": B$ = "#$0000": C$ = "Test the value of D": GoSub AO
@@ -7953,7 +7991,7 @@ Else
     ' Get the numeric value before a Close bracket
     v = Array(x): x = x + 1 ' skip the open bracket
     ' Get first number in D
-    GoSub GetExpressionB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+    GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
     ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
 End If
 Return ' Return with D = the value in the INT
@@ -7966,7 +8004,7 @@ Else
     ' Get the numeric value before a Close bracket
     v = Array(x): x = x + 1 ' skip the open bracket
     ' Get first number in D
-    GoSub GetExpressionB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+    GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
     ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
 End If
 A$ = "BPL": B$ = ">": C$ = "If positive simply skip over changing D's value": GoSub AO
@@ -8020,7 +8058,7 @@ Else
     ' Get the numeric value before a Close bracket
     v = Array(x): x = x + 1 ' skip the open bracket
     ' Get first number in D
-    GoSub GetExpressionB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+    GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
     ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
 End If
 A$ = "TFR": B$ = "D,X": C$ = "X=D": GoSub AO ' Save Temp_Var_NumParseCount
@@ -8138,7 +8176,7 @@ Else
     ' Get the numeric value before a Close bracket
     v = Array(x): x = x + 1 ' skip the open bracket
     ' Get first number in D
-    GoSub GetExpressionB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+    GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
     ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
 End If
 A$ = "CMPD": B$ = "#0": C$ = "Check if the value with zero": GoSub AO
@@ -8227,7 +8265,7 @@ If ContinueLine = 1 Then
     ' Use the old Y location from the previous LINE command
     A$ = "LDD": B$ = "endY": C$ = "Use the old Y location from the previous LINE command": GoSub AO
 Else
-    GoSub GetExpressionB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+    GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
     ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
 End If
 GoSub VerifyY ' Add code to make sure Y value is in bounds of screen size
@@ -8250,7 +8288,7 @@ Else
     A$ = "PSHS": B$ = "B": C$ = "Save the loction of the X co-ordinate": GoSub AO
 End If
 ' Get the destination y co-ordinate
-GoSub GetExpressionB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
 ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
 GoSub VerifyY ' Add code to make sure Y value is in bounds of screen size
 A$ = "PSHS": B$ = "B": C$ = "Save the y coordinate on the stack": GoSub AO
@@ -8353,7 +8391,7 @@ Else
     ' Get the numeric value before a Close bracket
     v = Array(x): x = x + 1 ' skip the open bracket
     ' Get first number in D
-    GoSub GetExpressionB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+    GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
     ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
 End If
 A$ = "JSR": B$ = "SqRoot16": C$ = "Get the square root of D, return with result in D": GoSub AO
@@ -8521,7 +8559,7 @@ Else
     ' Get the numeric value before a Close bracket
     v = Array(x): x = x + 1 ' skip the open bracket
     ' Get first number in D
-    GoSub GetExpressionB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+    GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
     ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
 End If
 A$ = "TFR": B$ = "D,X": C$ = "X=D": GoSub AO ' Save Temp_Var_NumParseCount
@@ -8959,6 +8997,20 @@ Return
 
 ' Skip over the SPRITE_LOAD command, this is handled in the tokenizer
 DoSPRITE_LOAD:
+If FirstSpriteLoad = 0 And CoCo3 = 1 Then
+    FirstSpriteLoad = 1
+    ' Load the CoCo3 Palette from the CoCo3_Palette.asm file
+    ' Wait for vsync
+    A$ = "LDA": B$ = "$FF02": C$ = "Reset Vsync flag": GoSub AO
+    Z$ = "!": A$ = "LDA": B$ = "$FF03": C$ = "See if Vsync has occurred yet": GoSub AO
+    A$ = "BPL": B$ = "<": C$ = "If not then keep looping, until the Vsync occurs": GoSub AO
+    A$ = "LDU": B$ = "#CoCo3_Palette": C$ = "U points at the start or the users palette info": GoSub AO
+    A$ = "LDX": B$ = "#$FFB0": C$ = "Point at the start of the palette memory": GoSub AO
+    Z$ = "!": A$ = "LDD": B$ = ",U++": C$ = "Get the palette values, move pointer": GoSub AO
+    A$ = "STD": B$ = ",X++": C$ = "Save the palette values in the palette registers, move pointer": GoSub AO
+    A$ = "CMPX": B$ = "#$FFC0": C$ = "See if we've copied them all": GoSub AO
+    A$ = "BNE": B$ = "<": C$ = "Keep looping if not": GoSub AO
+End If
 While Array(x) <> &HF5
     x = x + 1
 Wend
@@ -9203,6 +9255,8 @@ Select Case GeneralCommands$(v)
         GoTo DoNEW
     Case "NEXT"
         GoTo DoNEXT
+    Case "NTSC_FONTCOLOURS"
+        GoTo DoNTSCFontColours
     Case "OFF"
         GoTo DoOFF
     Case "ON"

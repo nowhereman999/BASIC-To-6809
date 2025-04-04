@@ -69,6 +69,7 @@ GMode$(14) = "Full_graphic_3_R" '     Full graphic 3-R      1   1   0   1   1 0 
 GMode$(15) = "Full_graphic_6_C" '     Full graphic 6-C      1   1   1   0   1 1 0   128x192x4 $1800(6144)
 GMode$(16) = "Full_graphic_6_R" '     Full graphic 6-R      1   1   1   1   1 1 0   256x192x2 $1800(6144)
 GMode$(17) = "DMAccess_grpahics" '    Direct memory access  X   X   X   X   1 1 1
+GMode$(16) = "Full_graphic_6_R" '     Full graphic 6-R      1   1   1   1   1 1 0   256x192x2 $1800(6144)
 
 GModeName$(0) = "IA": GModeMaxX$(0) = "31": GModeMaxY$(0) = "15": GModeStartAddress$(0) = "400": GModeScreenSize$(0) = "200": GModeColours$(0) = "2"
 GModeName$(1) = "EA": GModeMaxX$(1) = "31": GModeMaxY$(1) = "15": GModeStartAddress$(1) = "400": GModeScreenSize$(1) = "200": GModeColours$(1) = "2"
@@ -88,6 +89,7 @@ GModeName$(14) = "FG3R": GModeMaxX$(14) = "127": GModeMaxY$(14) = "191": GModeSt
 GModeName$(15) = "FG6C": GModeMaxX$(15) = "127": GModeMaxY$(15) = "191": GModeStartAddress$(15) = "E00": GModeScreenSize$(15) = "1800": GModeColours$(15) = "4"
 GModeName$(16) = "FG6R": GModeMaxX$(16) = "255": GModeMaxY$(16) = "191": GModeStartAddress$(16) = "E00": GModeScreenSize$(16) = "1800": GModeColours$(16) = "2"
 GModeName$(17) = "DMAGraphic": GModeMaxX$(17) = "255": GModeMaxY$(17) = "191": GModeStartAddress$(17) = "E00": GModeScreenSize$(17) = "1800": GModeColours$(17) = "2"
+GModeName$(18) = "FG6R": GModeMaxX$(18) = "255": GModeMaxY$(18) = "191": GModeStartAddress$(18) = "E00": GModeScreenSize$(18) = "1800": GModeColours$(18) = "2"
 
 ' CoCo 3 Graphic Modes    CoCo 3 Modes Resolution Memory
 GMode$(100) = "Hires_Graphic_100" '   EQU     %00000001    ;  64x192x4,  $0C00 (3200)
@@ -150,6 +152,13 @@ GMode$(156) = "Hires_Graphic_156" '   EQU     %01110100    ;  640x225x2,  $4650 
 GMode$(157) = "Hires_Graphic_157" '   EQU     %00011101    ;  640x192x4,  $7800 (30720)
 GMode$(158) = "Hires_Graphic_158" '   EQU     %00111101    ;  640x200x4,  $7D00 (32000)
 GMode$(159) = "Hires_Graphic_159" '   EQU     %01111101    ;  640x225x4,  $8CA0 (36000)
+GMode$(160) = "Hires_Graphic_160" '   EQU     %00011001    ;  512x192x4,  $6000 (24576)
+GMode$(161) = "Hires_Graphic_161" '   EQU     %00111001    ;  512x200x4,  $6400 (25600)
+GMode$(162) = "Hires_Graphic_162" '   EQU     %01111001    ;  512x225x4,  $7080 (28800)
+GMode$(163) = "Hires_Graphic_163" '   EQU     %00011101    ;  640x192x4,  $7800 (30720)
+GMode$(164) = "Hires_Graphic_164" '   EQU     %00111101    ;  640x200x4,  $7D00 (32000)
+GMode$(165) = "Hires_Graphic_165" '   EQU     %01111101    ;  640x225x4,  $8CA0 (36000)
+
 
 GModeName$(100) = "HIG100": GModeMaxX$(100) = "63": GModeMaxY$(100) = "191": GModeStartAddress$(100) = "6000": GModeScreenSize$(100) = "0C00": GModeColours$(100) = "4"
 GModeName$(101) = "HIG101": GModeMaxX$(101) = "63": GModeMaxY$(101) = "199": GModeStartAddress$(101) = "6000": GModeScreenSize$(101) = "0C80": GModeColours$(101) = "4"
@@ -211,6 +220,12 @@ GModeName$(156) = "HIG156": GModeMaxX$(156) = "639": GModeMaxY$(156) = "224": GM
 GModeName$(157) = "HIG157": GModeMaxX$(157) = "639": GModeMaxY$(157) = "191": GModeStartAddress$(157) = "6000": GModeScreenSize$(157) = "7800": GModeColours$(157) = "4"
 GModeName$(158) = "HIG158": GModeMaxX$(158) = "639": GModeMaxY$(158) = "199": GModeStartAddress$(158) = "6000": GModeScreenSize$(158) = "7D00": GModeColours$(158) = "4"
 GModeName$(159) = "HIG159": GModeMaxX$(159) = "639": GModeMaxY$(159) = "224": GModeStartAddress$(159) = "6000": GModeScreenSize$(159) = "8CA0": GModeColours$(159) = "4"
+GModeName$(160) = "HIG160": GModeMaxX$(160) = "127": GModeMaxY$(160) = "191": GModeStartAddress$(160) = "6000": GModeScreenSize$(160) = "6000": GModeColours$(160) = "256"
+GModeName$(161) = "HIG161": GModeMaxX$(161) = "127": GModeMaxY$(161) = "199": GModeStartAddress$(161) = "6000": GModeScreenSize$(161) = "6400": GModeColours$(161) = "256"
+GModeName$(162) = "HIG162": GModeMaxX$(162) = "127": GModeMaxY$(162) = "224": GModeStartAddress$(162) = "6000": GModeScreenSize$(162) = "7080": GModeColours$(162) = "256"
+GModeName$(163) = "HIG163": GModeMaxX$(163) = "159": GModeMaxY$(163) = "191": GModeStartAddress$(163) = "6000": GModeScreenSize$(163) = "7800": GModeColours$(163) = "256"
+GModeName$(164) = "HIG164": GModeMaxX$(164) = "159": GModeMaxY$(164) = "199": GModeStartAddress$(164) = "6000": GModeScreenSize$(164) = "7D00": GModeColours$(164) = "256"
+GModeName$(165) = "HIG165": GModeMaxX$(165) = "159": GModeMaxY$(165) = "224": GModeStartAddress$(165) = "6000": GModeScreenSize$(165) = "8CA0": GModeColours$(165) = "256"
 
 DefLabelCount = 0
 DefVarCount = 0
@@ -601,9 +616,11 @@ While x < length - 1 ' Loop until we've processed the entire BASIC program
             Expression$ = Left$(Expression$, InStr(0, Expression$, "THEN " + Chr$(&HF5) + ":") + 4) + Right$(Expression$, Len(Expression$) - InStr(0, Expression$, "THEN " + Chr$(&HF5) + ":") - 6)
         Wend
     End If
+    '   show$ = Expression$: GoSub show
     GoSub TokenizeExpression ' Go tokenize Expression$
     LabelOnlyLine:
     Tokenized$ = Chr$(Len(CurrentLine$)) + CurrentLine$ + Tokenized$ + Chr$(&HF5) + Chr$(&H0D) ' Line ends with $F50D
+    '  show$ = Tokenized$: GoSub show
     For ii = 1 To Len(Tokenized$)
         INArray(INx) = Asc(Mid$(Tokenized$, ii, 1)): INx = INx + 1
     Next ii
@@ -1226,7 +1243,8 @@ If CoCo3 = 1 And Sprites = 1 Then
     Num = Val(GModeMaxX$(Gmode)): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
     Z$ = "PixelsMaxX       EQU     " + Num$ + "        ; Screen width Max from 0 to this value": GoSub AO
     Num = Val(GModeColours$(Gmode)): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-    Z$ = "NumberOfColours  EQU     " + Num$ + "        ; Number of Colours on this screen": GoSub AO
+    Z$ = "NumberOfColours  EQU     " + Num$ + "         ; Number of Colours on this screen": GoSub AO
+    Z$ = "Artifacting      EQU     0         ; Not using Artifact colours with a CoCo 3 GMODE": GoSub AO
 
     ' add code to save in the correct block for $FFA1 & $FFA2  ($2000 & $4000)
     For I = 0 To 127
@@ -1258,6 +1276,9 @@ DirectPage$ = Hex$(DirectPage)
 
 A$ = "ORG": B$ = "$" + ProgramStart$: C$ = "Program code starts here": GoSub AO
 A$ = "SETDP": B$ = "$" + DirectPage$: C$ = "Direct page is setup here": GoSub AO
+Print #1, "CoCoHardware    RMB     1     ; CoCoHardware Desriptor byte"
+Print #1, "; Bit 0 is the Computer Type, 0 = CoCo 1 or CoCo 2, 1 = CoCo 3"
+Print #1, "; Bit 7 is the CPU type,      0 = 6809, 1 = 6309"
 Print #1, "Seed1           RMB     1     ; Random number seed location"
 Print #1, "Seed2           RMB     1     ; Random number seed location"
 Print #1, "RNDC            RMB     1     ; Used by Random number generator"
@@ -1510,6 +1531,8 @@ For c = 0 To vc - 1
 Next c
 
 If CoCo3 = 1 And Sprites = 1 Then
+    ' include the CoCo3 Palette file:
+    Print #1, T2$; "INCLUDE        ./CoCo3_Palette.asm" ' Add the CoCo3 Palette file that was generated by PNGtoCCSprite program
     For ii = 0 To 171
         If GModeLib(ii) = 1 Then
             v1 = Val("&H" + GModeScreenSize$(Gmode))
@@ -1626,10 +1649,12 @@ For ii = 0 To GeneralCommandsFoundCount - 1
         Temp$ = "DecimalStringToD": GoSub AddIncludeTemp ' Add commands for converting decimal numbers to D
     End If
     If Temp$ = "SDC_PLAY" Or Temp$ = "SDC_PLAYORCL" Or Temp$ = "SDC_PLAYORCR" Or Temp$ = "SDC_PLAYORCS" Then
-        If Temp$ = "SDCPLAY" Then Temp$ = "SDCPlay": GoSub AddIncludeTemp: Temp$ = "Audio_Muxer": GoSub AddIncludeTemp ' Add code for Selecting the audio muxer and to turn it on or off
-        If Temp$ = "SDCPLAYORCL" Then Temp$ = "SDCPlayOrc90Left": GoSub AddIncludeTemp
-        If Temp$ = "SDCPLAYORCR" Then Temp$ = "SDCPlayOrc90Right": GoSub AddIncludeTemp
-        If Temp$ = "SDCPLAYORCS" Then Temp$ = "SDCPlayOrc90Stereo": GoSub AddIncludeTemp
+        If Temp$ = "SDC_PLAY" Then Temp$ = "SDCPlay": GoSub AddIncludeTemp: Temp$ = "Audio_Muxer": GoSub AddIncludeTemp ' Add code for Selecting the audio muxer and to turn it on or off
+        If Temp$ = "SDC_PLAYORCL" Then Temp$ = "SDCPlayOrc90Left": GoSub AddIncludeTemp
+        If Temp$ = "SDC_PLAYORCR" Then Temp$ = "SDCPlayOrc90Right": GoSub AddIncludeTemp
+        If Temp$ = "SDC_PLAYORCS" Then Temp$ = "SDCPlayOrc90Stereo": GoSub AddIncludeTemp
+        Temp$ = "CommSDC": GoSub AddIncludeTemp
+        Temp$ = "SDCFileAccess": GoSub AddIncludeTemp
         Temp$ = "StreamFile_Library": GoSub AddIncludeTemp
         '
     End If
@@ -1703,7 +1728,6 @@ Temp$ = "Mulitply16x16": GoSub AddIncludeTemp
 Temp$ = "Divide16with16": GoSub AddIncludeTemp
 Temp$ = "SquareRoot": GoSub AddIncludeTemp
 
-' GModeName$(15) = "FG6C": GModeMaxX$(15) = "127": GModeMaxY$(15) = "191": GModeStartAddress$(15) = "E00": GModeScreenSize$(15) = "1800": GModeColours$(15) = "4"
 If Sprites = 1 Then
     Print #1, "; Adding the Compiled Sprites and pointers..."
     Select Case Val(GModeColours$(Gmode))
@@ -1724,6 +1748,12 @@ If Sprites = 1 Then
         Z$ = "PixelsMaxX       EQU     " + Num$ + "        ; Screen width Max from 0 to this value": GoSub AO
         Num = Val(GModeColours$(Gmode)): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
         Z$ = "NumberOfColours  EQU     " + Num$ + "        ; Number of Colours on this screen": GoSub AO
+        If Gmode = 18 Then
+            ' We are going to use CoCo 1 & 2 Hi-res artifacting mode
+            Z$ = "Artifacting      EQU     1         ; Using Artifact colours": GoSub AO
+        Else
+            Z$ = "Artifacting      EQU     0         ; Not using Artifact colours": GoSub AO
+        End If
         For I = 0 To 127
             If Sprite$(I) <> "" Then
                 Print #1, T2$; "INCLUDE     ./"; Sprite$(I)
@@ -1793,19 +1823,11 @@ A$ = "ORCC": B$ = "#$50": C$ = "Turn off the interrupts": GoSub AO
 A$ = "LDA": B$ = "#$" + DirectPage$: GoSub AO
 A$ = "TFR": B$ = "A,DP": C$ = "Setup the Direct page to use our variable location": GoSub AO
 If CoCo3 = 1 Then
-    'we are using CoCo 3 commands, So let's put it in CoCo 3 mode and hispeed
+    'we are using CoCo 3 commands, So let's put it in CoCo 3 mode
     Z$ = "* CoCo 3 commands were detected, Enabling CoCo3 mode and Hi Speed": GoSub AO
     A$ = "LDA": B$ = "#%01111100": C$ = "CoCo 3 Mode, MMU Enabled, GIME IRQ Enabled, GIME FIRQ Enabled, Vector RAM at FEXX enabled, Standard SCS Normal, ROM Map 16k Int, 16k Ext": GoSub AO
     A$ = "STA": B$ = "$FF90": C$ = "Make the changes": GoSub AO
-    A$ = "STA": B$ = "$FFD9": C$ = "Double Speed mode": GoSub AO
 End If
-Z$ = "* Enable 6309 native mode if it's present": GoSub AO
-A$ = "CLRA": GoSub AO
-A$ = "TFR": B$ = "A,X": C$ = "6809 - X will now be $FF00, 6309 - X will equal $0000 (in native mode or not, doesn't matter)": GoSub AO
-A$ = "CMPX": B$ = "#$0000": GoSub AO
-A$ = "BNE": B$ = ">": C$ = "If <> 0 then skip forward it's a 6809": GoSub AO
-A$ = "FCB": B$ = "$11,$3D,%00000001": C$ = "otherwise, put 6309 in native mode": GoSub AO
-Z$ = "!": GoSub AO
 
 Z$ = "* Enable 6 Bit DAC output": GoSub AO
 A$ = "LDA": B$ = "$FF23": C$ = "* PIA1_Byte_3_IRQ_Ct_Snd * $FF23 GET PIA": GoSub AO
@@ -1941,10 +1963,20 @@ A$ = "STD": B$ = "Seed1": C$ = "Save TIMER value as the Random number seed value
 ' $FFFE      RESET        $A027            $8C1B
 
 ' Setup IRQ jump address
+
+Print #1, "* Let's detect the CPU type:"
+A$ = "LDX": B$ = "#$8000": C$ = "X = $8000": GoSub AO
+A$ = "TFR": B$ = "X,A": C$ = "If it's 6809 then A will equal $00, if it's a 6309 then A will now equal $80": GoSub AO
+A$ = "TSTA": C$ = "Check A": GoSub AO
+A$ = "BEQ": B$ = ">": C$ = "If A=0 then skip forward it's a 6809": GoSub AO
+A$ = "FCB": B$ = "$11,$3D,%00000001": C$ = "Put the 6309 in native mode.  This is LDMD  #%00000001": GoSub AO
+Z$ = "!": GoSub AO
+
 A$ = "LDX": B$ = "$FFFE": C$ = "Get the RESET location": GoSub AO
 A$ = "CMPX": B$ = "#$8C1B": C$ = "Check if it's a CoCo 3": GoSub AO
 A$ = "BNE": B$ = "SaveCoCo1": C$ = "Setup IRQ, using CoCo 1 IRQ Jump location": GoSub AO
 A$ = "STA": B$ = "$FFD9": C$ = "Put the CoCo 3 in double speed mode": GoSub AO
+A$ = "ORA": B$ = "#%00000001": C$ = "If it's CoCo 3 then we set bit 0 of the CoCoHardware Desriptor byte": GoSub AO
 A$ = "LDX": B$ = "#$FEF7": C$ = "X = Address for the COCO 3 IRQ JMP": GoSub AO
 A$ = "LDY": B$ = "#$FEFD": C$ = "Y = Address for the COCO 3 NMI JMP": GoSub AO
 A$ = "BRA": B$ = ">": C$ = "Skip ahead": GoSub AO
@@ -1952,6 +1984,8 @@ Z$ = "SaveCoCo1": GoSub AO
 A$ = "LDX": B$ = "#$010C": C$ = "X = Address for the COCO 1 IRQ JMP": GoSub AO
 A$ = "LDY": B$ = "#$0109": C$ = "Y = Address for the COCO 1 NMI JMP": GoSub AO
 Z$ = "!"
+A$ = "STA": B$ = "CoCoHardware": C$ = "Save the CoCoHardware Desriptor byte": GoSub AO
+
 If PlayCommand = 1 Then
     A$ = "STX": B$ = "IRQAddress": C$ = "Save the IRQ address for the PLAY command to change/restore": GoSub AO
     A$ = "INC": B$ = "IRQAddress+1": C$ = "Increment the IRQAddress so it points at the actual JMP location": GoSub AO
@@ -1965,19 +1999,19 @@ A$ = "STD": B$ = "1,U": C$ = "Backup the Address of the IRQ": GoSub AO
 ' Use our IRQ address
 A$ = "LDA": B$ = "#$7E": C$ = "JMP instruction": GoSub AO
 A$ = "STA": B$ = ",X": C$ = "A = JMP Instruction": GoSub AO
-A$ = "LDU": B$ = "#BASIC_IRQ": C$ = "U=Address of the our IRQ": GoSub AO
+A$ = "LDU": B$ = "#BASIC_IRQ": C$ = "U=Address of our IRQ": GoSub AO
 A$ = "STU": B$ = "1,X": C$ = "U=Address of the IRQ": GoSub AO
 If Disk = 1 Then
     ' Add our NMI
     A$ = "STA": B$ = ",Y": C$ = "A = JMP Instruction": GoSub AO
-    A$ = "LDU": B$ = "#DNMISV": C$ = "D=Address of the our NMIRQ": GoSub AO
-    A$ = "STU": B$ = "1,Y": C$ = "D=Address of the IRQ": GoSub AO
+    A$ = "LDU": B$ = "#DNMISV": C$ = "U=Address of our NMIRQ": GoSub AO
+    A$ = "STU": B$ = "1,Y": C$ = "Save the Address of the NMIRQ": GoSub AO
 End If
 ' Make FIRQ an RTI
 A$ = "LDA": B$ = "#$3B": C$ = "RTI instruction": GoSub AO
-A$ = "STA": B$ = "$010F": C$ = "Save instruction for the CoCo1": GoSub AO
-A$ = "STA": B$ = "$FEF4": C$ = "Save instruction for the CoCo3": GoSub AO
-If SDCPLAY = 1 Or SDCVersionCheck = 1 Then ' If we are doing any SDC streaming check the version as it must byt V127 or higher
+A$ = "STA": B$ = "$010F": C$ = "Save instruction for the FIRQ CoCo1": GoSub AO
+A$ = "STA": B$ = "$FEF4": C$ = "Save instruction for the FIRQ CoCo3": GoSub AO
+If SDCPLAY = 1 Or SDCVersionCheck = 1 Then ' If we are doing any SDC streaming check the version as it must be V127 or higher
     A$ = "JSR": B$ = "CheckSDCFirmwareVersion": C$ = "Check the version of the SDC controller must be > v126": GoSub AO
 End If
 
@@ -2244,8 +2278,17 @@ While I <= Len(Expression$)
         If InStr(BaseString$, Temp$) = 1 Then
             'Found a Numeric Command
             If I > 1 Then
-                ' Check for a stuff before the start of this command
-                If Mid$(Expression$, I - 1, 1) = " " Or Mid$(Expression$, I - 1, 1) = "(" Or Mid$(Expression$, I - 1, 1) = "=" Then LeftSpace = 1 Else LeftSpace = 0
+                ' Check for stuff before the start of this command
+                If Mid$(Expression$, I - 1, 1) = " " Or Mid$(Expression$, I - 1, 1) = "(" Or Mid$(Expression$, I - 1, 1) = "=" _
+                   Or Mid$(Expression$, I - 1, 1) = "+" _
+                   Or Mid$(Expression$, I - 1, 1) = "-" _
+                   Or Mid$(Expression$, I - 1, 1) = "*" _
+                   Or Mid$(Expression$, I - 1, 1) = "/" _
+                   Or Mid$(Expression$, I - 1, 1) = "\" _
+                   Or Mid$(Expression$, I - 1, 1) = "^" _
+                   Or Mid$(Expression$, I - 1, 1) = "<" _
+                   Or Mid$(Expression$, I - 1, 1) = ">" _
+              Then LeftSpace = 1 Else LeftSpace = 0
             Else
                 LeftSpace = 1
             End If

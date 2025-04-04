@@ -212,8 +212,8 @@ SetSAM  STA     1,X     ; Write to the Set byte
 ;HORBYT		RMB  1		* Number of bytes per horizontal line
 PageSize	RMB  1		* MSB of the Size of the screen page
 GModePage       FCB  0		* Graphics mode page # (zero based, although BASIC uses 1 based)
-;FORCOL		FCB  1		* Foreground color (default to 1)
-;BAKCOL		RMB  1		* Background color
+FORCOL		FCB  1		* Foreground color (default to 1)
+BAKCOL		FCB  0		* Background color
 BEGGRP		RMB  2		* Start address of the screen page
 ;ENDGRP		RMB  2		* End address of the screen page
 CSSVAL		RMB  1		* CSS value
@@ -328,7 +328,7 @@ Hires_Graphic_143    EQU     %00110101    ;  320x200x 4, $3E80 (16000)
 Hires_Graphic_144    EQU     %01110101    ;  320x225x 4, $4650 (18000)	
 Hires_Graphic_145    EQU     %00011110    ;  320x192x16, $7800 (30720)	
 Hires_Graphic_146    EQU     %00111110    ;  320x200x16, $7D00 (32000)	
-Hires_Graphic_147    EQU     %01111110    ; 320x225x16, $8CA0 (36000)	
+Hires_Graphic_147    EQU     %01111110    ;  320x225x16, $8CA0 (36000)	
 Hires_Graphic_148    EQU     %00010000    ;  512x192x 2, $3000 (12288)	
 Hires_Graphic_149    EQU     %00110000    ;  512x200x 2, $3200 (12800)	
 Hires_Graphic_150    EQU     %01110000    ;  512x225x 2, $3840 (14400)	
@@ -341,9 +341,11 @@ Hires_Graphic_156    EQU     %01110100    ;  640x225x 2, $4650 (18000)
 Hires_Graphic_157    EQU     %00011101    ;  640x192x 4, $7800 (30720)	
 Hires_Graphic_158    EQU     %00111101    ;  640x200x 4, $7D00 (32000)	
 Hires_Graphic_159    EQU     %01111101    ;  640x225x 4, $8CA0 (36000)	
-Hires_Graphic_160    EQU     %00011000    ; 1024x192x 2, $6000 (24576)	
-Hires_Graphic_161    EQU     %00111000    ; 1024x200x 2, $6400 (25600)	
-Hires_Graphic_162    EQU     %01111000    ; 1024x225x 2, $7080 (28800)	
-Hires_Graphic_163    EQU     %00011100    ; 1280x192x 2, $7800 (30720)	
-Hires_Graphic_164    EQU     %00111100    ; 1280x200x 2, $7D00 (32000)	
-Hires_Graphic_165    EQU     %01111100    ; 1280x225x 2, $8CA0 (36000)	
+Hires_Graphic_160    EQU     %00011001    ;  512x192x 256, $6000 (24576)	
+Hires_Graphic_161    EQU     %00111001    ;  512x200x 256, $6400 (25600)	
+Hires_Graphic_162    EQU     %01111001    ;  512x225x 256, $7080 (28800)	
+Hires_Graphic_163    EQU     %00011101    ;  640x192x 256, $7800 (30720)	
+Hires_Graphic_164    EQU     %00111101    ;  640x200x 256, $7D00 (32000)	
+Hires_Graphic_165    EQU     %01111101    ;  640x225x 256, $8CA0 (36000)
+
+

@@ -279,10 +279,19 @@ DiskError:
         BRA     *
 
 ; Open the the File pointed at by U
-; Enter with U pointing at the properly formatted filename (8 character filename badded with spaces) and a 3 character extension
+; Enter with U pointing at the properly formatted filename (8 character filename padded with spaces) and a 3 character extension
 ; Exits with X pointing at the filename entry in the disk directory
 ; Carry flag will be set if it couldn't find the filename, cleared otherwise
 OpenFileU:
+* Check and disable any high speed options
+        LDA     CoCoHardware            ; Get the CoCo Hardware info byte
+        BPL     >                       ; If bit 7 is clear then skip forward it's a 6809
+        FCB     $11,$3D,%00000000       ; otherwise, put the 6309 in emulation mode.  This is LDMD  #%00000000
+!       RORA                            ; Move bit 0 to the Carry bit
+        BCC     >                       ; if the Carry bit is clear, then not a CoCo 3, skip ahead
+        STA     $FFD8                   ; Put CoCo 3 in Regular speed mode
+!
+
 ; Track 17, Sector 3 to 11 contain directory entries
         LDD     #17*$100+3              ; A=Track 17, B=Sector 3
         LDX     #DBUF0                   ; X points at the directory buffer
@@ -426,7 +435,7 @@ LoadFirstSector:
 ; Do a LOADM command
 ; File must already be Initialized
 ; *** Enter with: Y pointing at the FATBLx associated with the drive DCDRV
-; * Loads a  Machine Language file from the disk
+; * Loads a Machine Language file from the disk
 ; Adds the 16 bit value stored in _Var_PF10 to the Load Address and the EXEC address
 DiskLOADM:
         LDA     5,Y             ; Get the filetype and ASCII flag
@@ -452,6 +461,15 @@ GetMLBlock:
         BSR     DiskReadWordD   ; Read next two bytes into D
         ADDD    _Var_PF10       ; D = D + LOADM Offset amount    
         STD     EXECAddress     ; Save the EXEC address
+
+* Check and re-enable any high speed options
+        LDA     CoCoHardware            ; Get the CoCo Hardware info byte
+        BPL     >                       ; If bit 7 is clear then skip forward it's a 6809
+        FCB     $11,$3D,%00000001       ; otherwise, put the 6309 in native mode.  This is LDMD  #%00000001
+!       RORA                            ; Move bit 0 to the Carry bit
+        BCC     >                       ; if the Carry bit is clear, then not a CoCo 3, skip ahead
+        STA     $FFD9                   ; Put CoCo 3 in High speed mode
+!
         RTS                     ; File has been LOADMed into memory, Return
 
 DoPREAMBLE:

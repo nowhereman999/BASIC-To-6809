@@ -18,6 +18,14 @@ SDC_DAC         EQU     $FF20   ; $FF20 the built in 6 bit DAC
 ;SDC_DAC         EQU     $FF7B   ; $FF7B is Orchestra 90/CoCo Flash — 8-bit Right channel DAC
 
 SDCPLAY:
+* Check and disable any high speed options
+        LDA     >CoCoHardware           ; Get the CoCo Hardware info byte
+        BPL     >                       ; If bit 7 is clear then skip forward it's a 6809
+        FCB     $11,$3D,%00000000       ; otherwise, put the 6309 in emulation mode.  This is LDMD  #%00000000
+!       RORA                            ; Move bit 0 to the Carry bit
+        BCC     >                       ; if the Carry bit is clear, then not a CoCo 3, skip ahead
+        STA     >$FFD8                 ; Put CoCo 3 in Regular speed mode
+!
         PSHS    CC,DP           ; Save the CC & the DP on the stack
         ORCC    #$50            ; Turn off the interrupts
         STS     PlaySDCStack+2  ; Save the Stack (Self mod)
@@ -354,5 +362,13 @@ SDCAudioPlayDone:
 
 PlaySDCStack:
         LDS     #$FFFF          ; Restore the Stack pointer (self mod)
+* Check and re-enable any high speed options
+        LDA     >CoCoHardware           ; Get the CoCo Hardware info byte
+        BPL     >                       ; If bit 7 is clear then skip forward it's a 6809
+        FCB     $11,$3D,%00000001       ; otherwise, put the 6309 in native mode.  This is LDMD  #%00000001
+!       RORA                            ; Move bit 0 to the Carry bit
+        BCC     >                       ; if the Carry bit is clear, then not a CoCo 3, skip ahead
+        STA     <$D9                    ; Put CoCo 3 in High speed mode
+!
         PULS    CC,DP           ; Restore CC & DP
         BRA     AnalogMuxOff    ; DISABLE ANA MUX AND RETURN

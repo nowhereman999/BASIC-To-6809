@@ -1,5 +1,6 @@
 ; Print Command
 ; Print number in D to the graphics screen
+BytesPerChar    EQU     1
 PRINT_D_Graphics_Screen_HIG149:
         TSTA              ; See if the value is negative or positive
         BPL     >         ; Skip ahead if positive

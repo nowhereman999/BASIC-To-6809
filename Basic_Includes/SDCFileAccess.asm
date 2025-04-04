@@ -129,7 +129,7 @@ SDCGetByte:
         BNE     SDCGetByteB1    ; Get the next byte from file 1
 ; Get the next byte in file 0 and return with it in B
 SDCGetByteB0:
-        LDB     [SDC_BufferPointer0] ; Store the byte in the buffer
+        LDB     [SDC_BufferPointer0] ; Get the byte in the buffer
         INC     SDC_BufferPointer0+1 ; Increment the buffer pointer LSB
         BNE     >                  ; If the buffer pointer is 256 bytes, write the buffer to the SDC
         BSR     SDC_ReadBuffer0    ; Load the buffer from the the SDC

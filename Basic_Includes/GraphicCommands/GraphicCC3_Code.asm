@@ -1,4 +1,5 @@
 CC3ScreenStart  FCB     $00     ; Memory Block where the screen starts
+
 ; Graphics Prep code for the CoCo 3
 DoCC3Graphics:
         PSHS    CC,D            ; Backup the Condition codes & D

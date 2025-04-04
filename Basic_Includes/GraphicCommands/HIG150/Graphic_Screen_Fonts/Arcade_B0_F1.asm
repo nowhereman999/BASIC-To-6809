@@ -6,7 +6,7 @@
 ; Only ASCII codes from $20 to $7F are supported
 FontWidth       EQU     8
 FontHeight      EQU     8
-CharJumpTable_FG1R:
+CharJumpTable_HIG150:
         FDB     Character_Blank         ; $20
         FDB     Character_Exclamation   ; $21 !
         FDB     Character_Quote         ; $22 "
@@ -117,14 +117,14 @@ CharJumpTable_FG1R:
 Character_Blank:
         CLRA
         STA     ,U                     * 0
-        LEAU    BytesPerRow_FG1R*4,U
-        STA     -BytesPerRow_FG1R*3,U  * 1
-        STA     -BytesPerRow_FG1R*2,U  * 2
-        STA     -BytesPerRow_FG1R,U    * 3
+        LEAU    BytesPerRow_HIG150*4,U
+        STA     -BytesPerRow_HIG150*3,U  * 1
+        STA     -BytesPerRow_HIG150*2,U  * 2
+        STA     -BytesPerRow_HIG150,U    * 3
         STA     ,U                     * 4
-        STA     BytesPerRow_FG1R,U     * 5
-        STA     BytesPerRow_FG1R*2,U   * 6
-        STA     BytesPerRow_FG1R*3,U   * 7
+        STA     BytesPerRow_HIG150,U     * 5
+        STA     BytesPerRow_HIG150*2,U   * 6
+        STA     BytesPerRow_HIG150*3,U   * 7
         RTS
 ; **************************************
 ;  !
@@ -139,19 +139,19 @@ Character_Blank:
 Character_Exclamation:
         CLRA
         STA     ,U                     * 0
-        LEAU    BytesPerRow_FG1R*4,U
-        STA     BytesPerRow_FG1R*2,U   * 6
+        LEAU    BytesPerRow_HIG150*4,U
+        STA     BytesPerRow_HIG150*2,U   * 6
         LDA     #%00001110
-        STA     -BytesPerRow_FG1R*3,U  * 1
-        STA     -BytesPerRow_FG1R*2,U  * 2
+        STA     -BytesPerRow_HIG150*3,U  * 1
+        STA     -BytesPerRow_HIG150*2,U  * 2
         LDA     #%00011100
-        STA     -BytesPerRow_FG1R,U    * 3
+        STA     -BytesPerRow_HIG150,U    * 3
         LDA     #%00011000
         STA     ,U                     * 4
         LDA     #%00010000
-        STA     BytesPerRow_FG1R,U     * 5
+        STA     BytesPerRow_HIG150,U     * 5
         LDA     #%00100000
-        STA     BytesPerRow_FG1R*3,U   * 7
+        STA     BytesPerRow_HIG150*3,U   * 7
         RTS
 ; **************************************
 ;  "
@@ -166,15 +166,15 @@ Character_Exclamation:
 Character_Quote:
         CLRA
         STA     ,U                     * 0
-        LEAU    BytesPerRow_FG1R*4,U
-        STA     BytesPerRow_FG1R,U     * 5
-        STA     BytesPerRow_FG1R*2,U   * 6
-        STA     BytesPerRow_FG1R*3,U   * 7
+        LEAU    BytesPerRow_HIG150*4,U
+        STA     BytesPerRow_HIG150,U     * 5
+        STA     BytesPerRow_HIG150*2,U   * 6
+        STA     BytesPerRow_HIG150*3,U   * 7
         LDA     #%00110110
-        STA     -BytesPerRow_FG1R*3,U  * 1
-        STA     -BytesPerRow_FG1R*2,U  * 2
+        STA     -BytesPerRow_HIG150*3,U  * 1
+        STA     -BytesPerRow_HIG150*2,U  * 2
         LDA     #%00010010
-        STA     -BytesPerRow_FG1R,U    * 3
+        STA     -BytesPerRow_HIG150,U    * 3
         LDA     #%00100100
         STA     ,U                     * 4
         RTS
@@ -190,17 +190,17 @@ Character_Quote:
 ;7 00010000
 Character_Asterisk:
         CLR     ,U                     * 0
-        LEAU    BytesPerRow_FG1R*4,U
+        LEAU    BytesPerRow_HIG150*4,U
         LDA     #%00010000
-        STA     -BytesPerRow_FG1R*3,U  * 1
+        STA     -BytesPerRow_HIG150*3,U  * 1
         STA     ,U                     * 4
-        STA     BytesPerRow_FG1R*3,U   * 7
+        STA     BytesPerRow_HIG150*3,U   * 7
         LDA     #%01010100
-        STA     -BytesPerRow_FG1R*2,U  * 2
-        STA     BytesPerRow_FG1R*2,U   * 6
+        STA     -BytesPerRow_HIG150*2,U  * 2
+        STA     BytesPerRow_HIG150*2,U   * 6
         LDA     #%00111000
-        STA     -BytesPerRow_FG1R,U    * 3
-        STA     BytesPerRow_FG1R,U     * 5
+        STA     -BytesPerRow_HIG150,U    * 3
+        STA     BytesPerRow_HIG150,U     * 5
         RTS
 ; **************************************
 ;  Hyphen
@@ -215,13 +215,13 @@ Character_Asterisk:
 Character_Hyphen:
         CLRA
         STA     ,U                     * 0
-        LEAU    BytesPerRow_FG1R*4,U
-        STA     -BytesPerRow_FG1R*3,U  * 1
-        STA     -BytesPerRow_FG1R*2,U  * 2
-        STA     -BytesPerRow_FG1R,U    * 3
-        STA     BytesPerRow_FG1R,U     * 5
-        STA     BytesPerRow_FG1R*2,U   * 6
-        STA     BytesPerRow_FG1R*3,U   * 7
+        LEAU    BytesPerRow_HIG150*4,U
+        STA     -BytesPerRow_HIG150*3,U  * 1
+        STA     -BytesPerRow_HIG150*2,U  * 2
+        STA     -BytesPerRow_HIG150,U    * 3
+        STA     BytesPerRow_HIG150,U     * 5
+        STA     BytesPerRow_HIG150*2,U   * 6
+        STA     BytesPerRow_HIG150*3,U   * 7
         LDA     #%00111100
         STA     ,U                     * 4
         RTS
@@ -238,21 +238,21 @@ Character_Hyphen:
 Character_Slash:
         CLRA
         STA     ,U                     * 0
-        LEAU    BytesPerRow_FG1R*4,U
+        LEAU    BytesPerRow_HIG150*4,U
         LDA     #%00000001
-        STA     -BytesPerRow_FG1R*3,U  * 1
+        STA     -BytesPerRow_HIG150*3,U  * 1
         LDA     #%00000010
-        STA     -BytesPerRow_FG1R*2,U  * 2
+        STA     -BytesPerRow_HIG150*2,U  * 2
         LDA     #%00000100
-        STA     -BytesPerRow_FG1R,U    * 3
+        STA     -BytesPerRow_HIG150,U    * 3
         LDA     #%00001000
         STA     ,U                     * 4
         LDA     #%00010000
-        STA     BytesPerRow_FG1R,U     * 5
+        STA     BytesPerRow_HIG150,U     * 5
         LDA     #%00100000
-        STA     BytesPerRow_FG1R*2,U   * 6
+        STA     BytesPerRow_HIG150*2,U   * 6
         LDA     #%01000000
-        STA     BytesPerRow_FG1R*3,U   * 7
+        STA     BytesPerRow_HIG150*3,U   * 7
         RTS
 ; **************************************
 ;  0
@@ -266,19 +266,19 @@ Character_Slash:
 ;7 00011100
 Character_0:
         CLR     ,U                     * 0
-        LEAU    BytesPerRow_FG1R*4,U
+        LEAU    BytesPerRow_HIG150*4,U
         LDA     #%00011100
-        STA     -BytesPerRow_FG1R*3,U  * 1
+        STA     -BytesPerRow_HIG150*3,U  * 1
         LDA     #%00100110
-        STA     -BytesPerRow_FG1R*2,U  * 2
+        STA     -BytesPerRow_HIG150*2,U  * 2
         LDA     #%01100011
-        STA     -BytesPerRow_FG1R,U    * 3
+        STA     -BytesPerRow_HIG150,U    * 3
         STA     ,U                     * 4
-        STA     BytesPerRow_FG1R,U     * 5
+        STA     BytesPerRow_HIG150,U     * 5
         LDA     #%00110010
-        STA     BytesPerRow_FG1R*2,U   * 6
+        STA     BytesPerRow_HIG150*2,U   * 6
         LDA     #%00011100
-        STA     BytesPerRow_FG1R*3,U   * 7
+        STA     BytesPerRow_HIG150*3,U   * 7
         RTS
 ; **************************************
 ;  1
@@ -292,17 +292,17 @@ Character_0:
 ;7 00111111
 Character_1:
         CLR     ,U                     * 0
-        LEAU    BytesPerRow_FG1R*4,U
+        LEAU    BytesPerRow_HIG150*4,U
         LDA     #%00001100
-        STA     -BytesPerRow_FG1R*3,U  * 1
-        STA     -BytesPerRow_FG1R,U    * 3
+        STA     -BytesPerRow_HIG150*3,U  * 1
+        STA     -BytesPerRow_HIG150,U    * 3
         STA     ,U                     * 4
-        STA     BytesPerRow_FG1R,U     * 5
-        STA     BytesPerRow_FG1R*2,U   * 6
+        STA     BytesPerRow_HIG150,U     * 5
+        STA     BytesPerRow_HIG150*2,U   * 6
         LDA     #%00011100
-        STA     -BytesPerRow_FG1R*2,U  * 2
+        STA     -BytesPerRow_HIG150*2,U  * 2
         LDA     #%00111111
-        STA     BytesPerRow_FG1R*3,U   * 7
+        STA     BytesPerRow_HIG150*3,U   * 7
         RTS
 ; **************************************
 ;  2
@@ -316,21 +316,21 @@ Character_1:
 ;7 01111111
 Character_2:
         CLR     ,U                     * 0
-        LEAU    BytesPerRow_FG1R*4,U
+        LEAU    BytesPerRow_HIG150*4,U
         LDA     #%00111110
-        STA     -BytesPerRow_FG1R*3,U  * 1
+        STA     -BytesPerRow_HIG150*3,U  * 1
         LDA     #%01100011
-        STA     -BytesPerRow_FG1R*2,U  * 2
+        STA     -BytesPerRow_HIG150*2,U  * 2
         LDA     #%00000111
-        STA     -BytesPerRow_FG1R,U    * 3
+        STA     -BytesPerRow_HIG150,U    * 3
         LDA     #%00011110
         STA     ,U                     * 4
         LDA     #%00111100
-        STA     BytesPerRow_FG1R,U     * 5
+        STA     BytesPerRow_HIG150,U     * 5
         LDA     #%01110000
-        STA     BytesPerRow_FG1R*2,U   * 6
+        STA     BytesPerRow_HIG150*2,U   * 6
         LDA     #%01111111
-        STA     BytesPerRow_FG1R*3,U   * 7
+        STA     BytesPerRow_HIG150*3,U   * 7
         RTS
 ; **************************************
 ;  3
@@ -344,21 +344,21 @@ Character_2:
 ;7 00111110
 Character_3:
         CLR     ,U                     * 0
-        LEAU    BytesPerRow_FG1R*4,U
+        LEAU    BytesPerRow_HIG150*4,U
         LDA     #%00111111
-        STA     -BytesPerRow_FG1R*3,U  * 1
+        STA     -BytesPerRow_HIG150*3,U  * 1
         LDA     #%00000110
-        STA     -BytesPerRow_FG1R*2,U  * 2
+        STA     -BytesPerRow_HIG150*2,U  * 2
         LDA     #%00001100
-        STA     -BytesPerRow_FG1R,U    * 3
+        STA     -BytesPerRow_HIG150,U    * 3
         LDA     #%00011110
         STA     ,U                     * 4
         LDA     #%00000011
-        STA     BytesPerRow_FG1R,U     * 5
+        STA     BytesPerRow_HIG150,U     * 5
         LDA     #%01100011
-        STA     BytesPerRow_FG1R*2,U   * 6
+        STA     BytesPerRow_HIG150*2,U   * 6
         LDA     #%00111110
-        STA     BytesPerRow_FG1R*3,U   * 7
+        STA     BytesPerRow_HIG150*3,U   * 7
         RTS
 ; **************************************
 ;  4
@@ -372,20 +372,20 @@ Character_3:
 ;7 00000110
 Character_4:
         CLR     ,U                     * 0
-        LEAU    BytesPerRow_FG1R*4,U
+        LEAU    BytesPerRow_HIG150*4,U
         LDA     #%00001110
-        STA     -BytesPerRow_FG1R*3,U  * 1
+        STA     -BytesPerRow_HIG150*3,U  * 1
         LDA     #%00011110
-        STA     -BytesPerRow_FG1R*2,U  * 2
+        STA     -BytesPerRow_HIG150*2,U  * 2
         LDA     #%00110110
-        STA     -BytesPerRow_FG1R,U    * 3
+        STA     -BytesPerRow_HIG150,U    * 3
         LDA     #%01100110
         STA     ,U                     * 4
         LDA     #%01111111
-        STA     BytesPerRow_FG1R,U     * 5
+        STA     BytesPerRow_HIG150,U     * 5
         LDA     #%00000110
-        STA     BytesPerRow_FG1R*2,U   * 6
-        STA     BytesPerRow_FG1R*3,U   * 7
+        STA     BytesPerRow_HIG150*2,U   * 6
+        STA     BytesPerRow_HIG150*3,U   * 7
         RTS
 ; **************************************
 ;  5
@@ -399,20 +399,20 @@ Character_4:
 ;7 00111110
 Character_5:
         CLR     ,U                     * 0
-        LEAU    BytesPerRow_FG1R*4,U
+        LEAU    BytesPerRow_HIG150*4,U
         LDA     #%01111110
-        STA     -BytesPerRow_FG1R*3,U  * 1
+        STA     -BytesPerRow_HIG150*3,U  * 1
         LDA     #%01100000
-        STA     -BytesPerRow_FG1R*2,U  * 2
+        STA     -BytesPerRow_HIG150*2,U  * 2
         LDA     #%01111110
-        STA     -BytesPerRow_FG1R,U    * 3
+        STA     -BytesPerRow_HIG150,U    * 3
         LDA     #%00000011
         STA     ,U                     * 4
-        STA     BytesPerRow_FG1R,U     * 5
+        STA     BytesPerRow_HIG150,U     * 5
         LDA     #%01100011
-        STA     BytesPerRow_FG1R*2,U   * 6
+        STA     BytesPerRow_HIG150*2,U   * 6
         LDA     #%00111110
-        STA     BytesPerRow_FG1R*3,U   * 7
+        STA     BytesPerRow_HIG150*3,U   * 7
         RTS
 ; **************************************
 ;  6
@@ -426,20 +426,20 @@ Character_5:
 ;7 00111110
 Character_6:
         CLR     ,U                     * 0
-        LEAU    BytesPerRow_FG1R*4,U
+        LEAU    BytesPerRow_HIG150*4,U
         LDA     #%00011110
-        STA     -BytesPerRow_FG1R*3,U  * 1
+        STA     -BytesPerRow_HIG150*3,U  * 1
         LDA     #%00110000
-        STA     -BytesPerRow_FG1R*2,U  * 2
+        STA     -BytesPerRow_HIG150*2,U  * 2
         LDA     #%01100000
-        STA     -BytesPerRow_FG1R,U    * 3
+        STA     -BytesPerRow_HIG150,U    * 3
         LDA     #%01111110
         STA     ,U                     * 4
         LDA     #%01100011
-        STA     BytesPerRow_FG1R,U     * 5
-        STA     BytesPerRow_FG1R*2,U   * 6
+        STA     BytesPerRow_HIG150,U     * 5
+        STA     BytesPerRow_HIG150*2,U   * 6
         LDA     #%00111110
-        STA     BytesPerRow_FG1R*3,U   * 7
+        STA     BytesPerRow_HIG150*3,U   * 7
         RTS
 ; **************************************
 ;  7
@@ -453,19 +453,19 @@ Character_6:
 ;7 00011000
 Character_7:
         CLR     ,U                     * 0
-        LEAU    BytesPerRow_FG1R*4,U
+        LEAU    BytesPerRow_HIG150*4,U
         LDA     #%01111111
-        STA     -BytesPerRow_FG1R*3,U  * 1
+        STA     -BytesPerRow_HIG150*3,U  * 1
         LDA     #%01100011
-        STA     -BytesPerRow_FG1R*2,U  * 2
+        STA     -BytesPerRow_HIG150*2,U  * 2
         LDA     #%00000110
-        STA     -BytesPerRow_FG1R,U    * 3
+        STA     -BytesPerRow_HIG150,U    * 3
         LDA     #%00001100
         STA     ,U                     * 4
         LDA     #%00011000
-        STA     BytesPerRow_FG1R,U     * 5
-        STA     BytesPerRow_FG1R*2,U   * 6
-        STA     BytesPerRow_FG1R*3,U   * 7
+        STA     BytesPerRow_HIG150,U     * 5
+        STA     BytesPerRow_HIG150*2,U   * 6
+        STA     BytesPerRow_HIG150*3,U   * 7
         RTS
 ; **************************************
 ;  8
@@ -479,20 +479,20 @@ Character_7:
 ;7 00111110
 Character_8:
         CLR     ,U                     * 0
-        LEAU    BytesPerRow_FG1R*4,U
+        LEAU    BytesPerRow_HIG150*4,U
         LDA     #%00111100
-        STA     -BytesPerRow_FG1R*3,U  * 1
+        STA     -BytesPerRow_HIG150*3,U  * 1
         STA     ,U                     * 4
         LDA     #%01100010
-        STA     -BytesPerRow_FG1R*2,U  * 2
+        STA     -BytesPerRow_HIG150*2,U  * 2
         LDA     #%01110010
-        STA     -BytesPerRow_FG1R,U    * 3
+        STA     -BytesPerRow_HIG150,U    * 3
         LDA     #%01001111
-        STA     BytesPerRow_FG1R,U     * 5
+        STA     BytesPerRow_HIG150,U     * 5
         LDA     #%01000011
-        STA     BytesPerRow_FG1R*2,U   * 6
+        STA     BytesPerRow_HIG150*2,U   * 6
         LDA     #%00111110
-        STA     BytesPerRow_FG1R*3,U   * 7
+        STA     BytesPerRow_HIG150*3,U   * 7
         RTS
 ; **************************************
 ;  9
@@ -506,20 +506,20 @@ Character_8:
 ;7 00111100
 Character_9:
         CLR     ,U                     * 0
-        LEAU    BytesPerRow_FG1R*4,U
+        LEAU    BytesPerRow_HIG150*4,U
         LDA     #%00111110
-        STA     -BytesPerRow_FG1R*3,U  * 1
+        STA     -BytesPerRow_HIG150*3,U  * 1
         LDA     #%01100011
-        STA     -BytesPerRow_FG1R*2,U  * 2
-        STA     -BytesPerRow_FG1R,U    * 3
+        STA     -BytesPerRow_HIG150*2,U  * 2
+        STA     -BytesPerRow_HIG150,U    * 3
         LDA     #%00111111
         STA     ,U                     * 4
         LDA     #%00000011
-        STA     BytesPerRow_FG1R,U     * 5
+        STA     BytesPerRow_HIG150,U     * 5
         LDA     #%00000110
-        STA     BytesPerRow_FG1R*2,U   * 6
+        STA     BytesPerRow_HIG150*2,U   * 6
         LDA     #%00111100
-        STA     BytesPerRow_FG1R*3,U   * 7
+        STA     BytesPerRow_HIG150*3,U   * 7
         RTS
 ; **************************************
 ;  :
@@ -534,15 +534,15 @@ Character_9:
 Character_Colon:
         CLRA
         STA     ,U                     * 0
-        LEAU    BytesPerRow_FG1R*4,U
-        STA     -BytesPerRow_FG1R*3,U  * 1
+        LEAU    BytesPerRow_HIG150*4,U
+        STA     -BytesPerRow_HIG150*3,U  * 1
         STA     ,U                     * 4
-        STA     BytesPerRow_FG1R*3,U   * 7
+        STA     BytesPerRow_HIG150*3,U   * 7
         LDA     #%00011000
-        STA     -BytesPerRow_FG1R*2,U  * 2
-        STA     -BytesPerRow_FG1R,U    * 3
-        STA     BytesPerRow_FG1R,U     * 5
-        STA     BytesPerRow_FG1R*2,U   * 6
+        STA     -BytesPerRow_HIG150*2,U  * 2
+        STA     -BytesPerRow_HIG150,U    * 3
+        STA     BytesPerRow_HIG150,U     * 5
+        STA     BytesPerRow_HIG150*2,U   * 6
         RTS
 ; **************************************
 ;  <
@@ -556,16 +556,16 @@ Character_Colon:
 ;7 00001000
 Character_Less:
         CLR     ,U                     * 0
-        LEAU    BytesPerRow_FG1R*4,U
+        LEAU    BytesPerRow_HIG150*4,U
         LDA     #%00001000
-        STA     -BytesPerRow_FG1R*3,U  * 1
-        STA     BytesPerRow_FG1R*3,U   * 7
+        STA     -BytesPerRow_HIG150*3,U  * 1
+        STA     BytesPerRow_HIG150*3,U   * 7
         LDA     #%00010000
-        STA     -BytesPerRow_FG1R*2,U  * 2
-        STA     BytesPerRow_FG1R*2,U   * 6
+        STA     -BytesPerRow_HIG150*2,U  * 2
+        STA     BytesPerRow_HIG150*2,U   * 6
         LDA     #%00100000
-        STA     -BytesPerRow_FG1R,U    * 3
-        STA     BytesPerRow_FG1R,U     * 5
+        STA     -BytesPerRow_HIG150,U    * 3
+        STA     BytesPerRow_HIG150,U     * 5
         LDA     #%01000000
         STA     ,U                     * 4
         RTS
@@ -582,15 +582,15 @@ Character_Less:
 Character_Equal:
         CLRA
         STA     ,U                     * 0
-        LEAU    BytesPerRow_FG1R*4,U
-        STA     -BytesPerRow_FG1R*3,U  * 1
-        STA     -BytesPerRow_FG1R*2,U  * 2
+        LEAU    BytesPerRow_HIG150*4,U
+        STA     -BytesPerRow_HIG150*3,U  * 1
+        STA     -BytesPerRow_HIG150*2,U  * 2
         STA     ,U                     * 4
-        STA     BytesPerRow_FG1R*2,U   * 6
-        STA     BytesPerRow_FG1R*3,U   * 7
+        STA     BytesPerRow_HIG150*2,U   * 6
+        STA     BytesPerRow_HIG150*3,U   * 7
         LDA     #%01111100
-        STA     -BytesPerRow_FG1R,U    * 3
-        STA     BytesPerRow_FG1R,U     * 5
+        STA     -BytesPerRow_HIG150,U    * 3
+        STA     BytesPerRow_HIG150,U     * 5
         RTS
 ; **************************************
 ;  >
@@ -604,16 +604,16 @@ Character_Equal:
 ;7 00100000
 Character_Great:
         CLR     ,U                     * 0
-        LEAU    BytesPerRow_FG1R*4,U
+        LEAU    BytesPerRow_HIG150*4,U
         LDA     #%00100000
-        STA     -BytesPerRow_FG1R*3,U  * 1
-        STA     BytesPerRow_FG1R*3,U   * 7
+        STA     -BytesPerRow_HIG150*3,U  * 1
+        STA     BytesPerRow_HIG150*3,U   * 7
         LDA     #%00010000
-        STA     -BytesPerRow_FG1R*2,U  * 2
-        STA     BytesPerRow_FG1R*2,U   * 6
+        STA     -BytesPerRow_HIG150*2,U  * 2
+        STA     BytesPerRow_HIG150*2,U   * 6
         LDA     #%00001000
-        STA     -BytesPerRow_FG1R,U    * 3
-        STA     BytesPerRow_FG1R,U     * 5
+        STA     -BytesPerRow_HIG150,U    * 3
+        STA     BytesPerRow_HIG150,U     * 5
         LDA     #%00000100
         STA     ,U                     * 4
         RTS
@@ -629,18 +629,18 @@ Character_Great:
 ;7 01100011
 Character_A:
         CLR     ,U                     * 0
-        LEAU    BytesPerRow_FG1R*4,U
+        LEAU    BytesPerRow_HIG150*4,U
         LDA     #%00011100
-        STA     -BytesPerRow_FG1R*3,U  * 1
+        STA     -BytesPerRow_HIG150*3,U  * 1
         LDA     #%00110110
-        STA     -BytesPerRow_FG1R*2,U  * 2
+        STA     -BytesPerRow_HIG150*2,U  * 2
         LDA     #%01100011
-        STA     -BytesPerRow_FG1R,U    * 3
+        STA     -BytesPerRow_HIG150,U    * 3
         STA     ,U                     * 4
-        STA     BytesPerRow_FG1R*2,U   * 6
-        STA     BytesPerRow_FG1R*3,U   * 7
+        STA     BytesPerRow_HIG150*2,U   * 6
+        STA     BytesPerRow_HIG150*3,U   * 7
         LDA     #%01111111
-        STA     BytesPerRow_FG1R,U     * 5
+        STA     BytesPerRow_HIG150,U     * 5
         RTS
 ; **************************************
 ;  B
@@ -654,16 +654,16 @@ Character_A:
 ;7 01111110
 Character_B:
         CLR     ,U                     * 0
-        LEAU    BytesPerRow_FG1R*4,U
+        LEAU    BytesPerRow_HIG150*4,U
         LDA     #%01111110
-        STA     -BytesPerRow_FG1R*3,U  * 1
+        STA     -BytesPerRow_HIG150*3,U  * 1
         STA     ,U                     * 4
-        STA     BytesPerRow_FG1R*3,U   * 7
+        STA     BytesPerRow_HIG150*3,U   * 7
         LDA     #%01100011
-        STA     -BytesPerRow_FG1R*2,U  * 2
-        STA     -BytesPerRow_FG1R,U    * 3
-        STA     BytesPerRow_FG1R,U     * 5
-        STA     BytesPerRow_FG1R*2,U   * 6
+        STA     -BytesPerRow_HIG150*2,U  * 2
+        STA     -BytesPerRow_HIG150,U    * 3
+        STA     BytesPerRow_HIG150,U     * 5
+        STA     BytesPerRow_HIG150*2,U   * 6
         RTS
 ; **************************************
 ;  C
@@ -677,17 +677,17 @@ Character_B:
 ;7 00011110
 Character_C:
         CLR     ,U                     * 0
-        LEAU    BytesPerRow_FG1R*4,U
+        LEAU    BytesPerRow_HIG150*4,U
         LDA     #%00011110
-        STA     -BytesPerRow_FG1R*3,U  * 1
-        STA     BytesPerRow_FG1R*3,U   * 7
+        STA     -BytesPerRow_HIG150*3,U  * 1
+        STA     BytesPerRow_HIG150*3,U   * 7
         LDA     #%00110011
-        STA     -BytesPerRow_FG1R*2,U  * 2
-        STA     BytesPerRow_FG1R*2,U   * 6
+        STA     -BytesPerRow_HIG150*2,U  * 2
+        STA     BytesPerRow_HIG150*2,U   * 6
         LDA     #%01100000
-        STA     -BytesPerRow_FG1R,U    * 3
+        STA     -BytesPerRow_HIG150,U    * 3
         STA     ,U                     * 4
-        STA     BytesPerRow_FG1R,U     * 5
+        STA     BytesPerRow_HIG150,U     * 5
         RTS
 ; **************************************
 ;  D
@@ -701,17 +701,17 @@ Character_C:
 ;7 01111100
 Character_D:
         CLR     ,U  * 0   
-        LEAU    BytesPerRow_FG1R*4,U
+        LEAU    BytesPerRow_HIG150*4,U
         LDA     #%01111100
-        STA     -BytesPerRow_FG1R*3,U  * 1
-        STA     BytesPerRow_FG1R*3,U   * 7
+        STA     -BytesPerRow_HIG150*3,U  * 1
+        STA     BytesPerRow_HIG150*3,U   * 7
         LDA     #%01100110
-        STA     -BytesPerRow_FG1R*2,U  * 2
-        STA     BytesPerRow_FG1R*2,U   * 6
+        STA     -BytesPerRow_HIG150*2,U  * 2
+        STA     BytesPerRow_HIG150*2,U   * 6
         LDA     #%01100011
-        STA     -BytesPerRow_FG1R,U    * 3
+        STA     -BytesPerRow_HIG150,U    * 3
         STA     ,U                     * 4
-        STA     BytesPerRow_FG1R,U     * 5
+        STA     BytesPerRow_HIG150,U     * 5
         RTS
 ; **************************************
 ;  E
@@ -725,15 +725,15 @@ Character_D:
 ;7 00111111
 Character_E:
         CLR     ,U  * 0   
-        LEAU    BytesPerRow_FG1R*4,U
+        LEAU    BytesPerRow_HIG150*4,U
         LDA     #%00111111
-        STA     -BytesPerRow_FG1R*3,U  * 1
-        STA     BytesPerRow_FG1R*3,U   * 7
+        STA     -BytesPerRow_HIG150*3,U  * 1
+        STA     BytesPerRow_HIG150*3,U   * 7
         LDA     #%00110000
-        STA     -BytesPerRow_FG1R*2,U  * 2
-        STA     -BytesPerRow_FG1R,U    * 3
-        STA     BytesPerRow_FG1R,U     * 5
-        STA     BytesPerRow_FG1R*2,U   * 6
+        STA     -BytesPerRow_HIG150*2,U  * 2
+        STA     -BytesPerRow_HIG150,U    * 3
+        STA     BytesPerRow_HIG150,U     * 5
+        STA     BytesPerRow_HIG150*2,U   * 6
         LDA     #%00111110
         STA     ,U                     * 4
         RTS
@@ -749,15 +749,15 @@ Character_E:
 ;7 01100000
 Character_F:
         CLR     ,U  * 0   
-        LEAU    BytesPerRow_FG1R*4,U
+        LEAU    BytesPerRow_HIG150*4,U
         LDA     #%01111111
-        STA     -BytesPerRow_FG1R*3,U  * 1
+        STA     -BytesPerRow_HIG150*3,U  * 1
         LDA     #%01100000
-        STA     -BytesPerRow_FG1R*2,U  * 2
-        STA     -BytesPerRow_FG1R,U    * 3
-        STA     BytesPerRow_FG1R,U     * 5
-        STA     BytesPerRow_FG1R*2,U   * 6
-        STA     BytesPerRow_FG1R*3,U   * 7
+        STA     -BytesPerRow_HIG150*2,U  * 2
+        STA     -BytesPerRow_HIG150,U    * 3
+        STA     BytesPerRow_HIG150,U     * 5
+        STA     BytesPerRow_HIG150*2,U   * 6
+        STA     BytesPerRow_HIG150*3,U   * 7
         LDA     #%01111110
         STA     ,U                     * 4
         RTS
@@ -773,20 +773,20 @@ Character_F:
 ;7 00011111
 Character_G:
         CLR     ,U  * 0   
-        LEAU    BytesPerRow_FG1R*4,U
+        LEAU    BytesPerRow_HIG150*4,U
         LDA     #%00011111
-        STA     -BytesPerRow_FG1R*3,U  * 1
-        STA     BytesPerRow_FG1R*3,U   * 7
+        STA     -BytesPerRow_HIG150*3,U  * 1
+        STA     BytesPerRow_HIG150*3,U   * 7
         LDA     #%00110000
-        STA     -BytesPerRow_FG1R*2,U  * 2
+        STA     -BytesPerRow_HIG150*2,U  * 2
         LDA     #%01100000
-        STA     -BytesPerRow_FG1R,U    * 3
+        STA     -BytesPerRow_HIG150,U    * 3
         LDA     #%01100111
         STA     ,U                     * 4
         LDA     #%01100011
-        STA     BytesPerRow_FG1R,U     * 5
+        STA     BytesPerRow_HIG150,U     * 5
         LDA     #%00110011
-        STA     BytesPerRow_FG1R*2,U   * 6
+        STA     BytesPerRow_HIG150*2,U   * 6
         RTS
 ; **************************************
 ;  H
@@ -800,14 +800,14 @@ Character_G:
 ;7 01100011
 Character_H:
         CLR     ,U                     * 0
-        LEAU    BytesPerRow_FG1R*4,U
+        LEAU    BytesPerRow_HIG150*4,U
         LDA     #%01100011
-        STA     -BytesPerRow_FG1R*3,U  * 1
-        STA     -BytesPerRow_FG1R*2,U  * 2
-        STA     -BytesPerRow_FG1R,U    * 3
-        STA     BytesPerRow_FG1R,U     * 5
-        STA     BytesPerRow_FG1R*2,U   * 6
-        STA     BytesPerRow_FG1R*3,U   * 7
+        STA     -BytesPerRow_HIG150*3,U  * 1
+        STA     -BytesPerRow_HIG150*2,U  * 2
+        STA     -BytesPerRow_HIG150,U    * 3
+        STA     BytesPerRow_HIG150,U     * 5
+        STA     BytesPerRow_HIG150*2,U   * 6
+        STA     BytesPerRow_HIG150*3,U   * 7
         LDA     #%01111111
         STA     ,U                     * 4
         RTS
@@ -823,16 +823,16 @@ Character_H:
 ;7 00111111
 Character_I:
         CLR     ,U                     * 0
-        LEAU    BytesPerRow_FG1R*4,U
+        LEAU    BytesPerRow_HIG150*4,U
         LDA     #%00111111
-        STA     -BytesPerRow_FG1R*3,U  * 1
-        STA     BytesPerRow_FG1R*3,U   * 7
+        STA     -BytesPerRow_HIG150*3,U  * 1
+        STA     BytesPerRow_HIG150*3,U   * 7
         LDA     #%00001100
-        STA     -BytesPerRow_FG1R*2,U  * 2
-        STA     -BytesPerRow_FG1R,U    * 3
+        STA     -BytesPerRow_HIG150*2,U  * 2
+        STA     -BytesPerRow_HIG150,U    * 3
         STA     ,U                     * 4
-        STA     BytesPerRow_FG1R,U     * 5
-        STA     BytesPerRow_FG1R*2,U   * 6
+        STA     BytesPerRow_HIG150,U     * 5
+        STA     BytesPerRow_HIG150*2,U   * 6
         RTS
 ; **************************************
 ;  J
@@ -846,17 +846,17 @@ Character_I:
 ;7 00111110
 Character_J:
         CLR     ,U                     * 0
-        LEAU    BytesPerRow_FG1R*4,U
+        LEAU    BytesPerRow_HIG150*4,U
         LDA     #%00000011
-        STA     -BytesPerRow_FG1R*3,U  * 1
-        STA     -BytesPerRow_FG1R*2,U  * 2
-        STA     -BytesPerRow_FG1R,U    * 3
+        STA     -BytesPerRow_HIG150*3,U  * 1
+        STA     -BytesPerRow_HIG150*2,U  * 2
+        STA     -BytesPerRow_HIG150,U    * 3
         STA     ,U                     * 4
-        STA     BytesPerRow_FG1R,U     * 5
+        STA     BytesPerRow_HIG150,U     * 5
         LDA     #%01100011
-        STA     BytesPerRow_FG1R*2,U   * 6
+        STA     BytesPerRow_HIG150*2,U   * 6
         LDA     #%00111110
-        STA     BytesPerRow_FG1R*3,U   * 7
+        STA     BytesPerRow_HIG150*3,U   * 7
         RTS
 ; **************************************
 ;  K
@@ -870,21 +870,21 @@ Character_J:
 ;7 01100111
 Character_K:
         CLR     ,U                     * 0
-        LEAU    BytesPerRow_FG1R*4,U
+        LEAU    BytesPerRow_HIG150*4,U
         LDA     #%01100011
-        STA     -BytesPerRow_FG1R*3,U  * 1
+        STA     -BytesPerRow_HIG150*3,U  * 1
         LDA     #%01100110
-        STA     -BytesPerRow_FG1R*2,U  * 2
+        STA     -BytesPerRow_HIG150*2,U  * 2
         LDA     #%01101100
-        STA     -BytesPerRow_FG1R,U    * 3
+        STA     -BytesPerRow_HIG150,U    * 3
         LDA     #%01111000
         STA     ,U                     * 4
         LDA     #%01111100
-        STA     BytesPerRow_FG1R,U     * 5
+        STA     BytesPerRow_HIG150,U     * 5
         LDA     #%01101110
-        STA     BytesPerRow_FG1R*2,U   * 6
+        STA     BytesPerRow_HIG150*2,U   * 6
         LDA     #%01100111
-        STA     BytesPerRow_FG1R*3,U   * 7
+        STA     BytesPerRow_HIG150*3,U   * 7
         RTS
 ; **************************************
 ;  L
@@ -898,16 +898,16 @@ Character_K:
 ;7 00111111
 Character_L:
         CLR     ,U                     * 0
-        LEAU    BytesPerRow_FG1R*4,U
+        LEAU    BytesPerRow_HIG150*4,U
         LDA     #%00110000
-        STA     -BytesPerRow_FG1R*3,U  * 1
-        STA     -BytesPerRow_FG1R*2,U  * 2
-        STA     -BytesPerRow_FG1R,U    * 3
+        STA     -BytesPerRow_HIG150*3,U  * 1
+        STA     -BytesPerRow_HIG150*2,U  * 2
+        STA     -BytesPerRow_HIG150,U    * 3
         STA     ,U                     * 4
-        STA     BytesPerRow_FG1R,U     * 5
-        STA     BytesPerRow_FG1R*2,U   * 6
+        STA     BytesPerRow_HIG150,U     * 5
+        STA     BytesPerRow_HIG150*2,U   * 6
         LDA     #%00111111
-        STA     BytesPerRow_FG1R*3,U   * 7
+        STA     BytesPerRow_HIG150*3,U   * 7
         RTS
 ; **************************************
 ;  M
@@ -921,18 +921,18 @@ Character_L:
 ;7 01100011
 Character_M:
         CLR     ,U                     * 0
-        LEAU    BytesPerRow_FG1R*4,U
+        LEAU    BytesPerRow_HIG150*4,U
         LDA     #%01100011
-        STA     -BytesPerRow_FG1R*3,U  * 1
-        STA     BytesPerRow_FG1R*2,U   * 6
-        STA     BytesPerRow_FG1R*3,U   * 7
+        STA     -BytesPerRow_HIG150*3,U  * 1
+        STA     BytesPerRow_HIG150*2,U   * 6
+        STA     BytesPerRow_HIG150*3,U   * 7
         LDA     #%01110111
-        STA     -BytesPerRow_FG1R*2,U  * 2
+        STA     -BytesPerRow_HIG150*2,U  * 2
         LDA     #%01111111
-        STA     -BytesPerRow_FG1R,U    * 3
+        STA     -BytesPerRow_HIG150,U    * 3
         STA     ,U                     * 4
         LDA     #%01101011
-        STA     BytesPerRow_FG1R,U     * 5
+        STA     BytesPerRow_HIG150,U     * 5
         RTS
 ; **************************************
 ;  N
@@ -946,20 +946,20 @@ Character_M:
 ;7 01100011
 Character_N:
         CLR     ,U                     * 0
-        LEAU    BytesPerRow_FG1R*4,U
+        LEAU    BytesPerRow_HIG150*4,U
         LDA     #%01100011
-        STA     -BytesPerRow_FG1R*3,U  * 1
-        STA     BytesPerRow_FG1R*3,U   * 7
+        STA     -BytesPerRow_HIG150*3,U  * 1
+        STA     BytesPerRow_HIG150*3,U   * 7
         LDA     #%01110011
-        STA     -BytesPerRow_FG1R*2,U  * 2
+        STA     -BytesPerRow_HIG150*2,U  * 2
         LDA     #%01111011
-        STA     -BytesPerRow_FG1R,U    * 3
+        STA     -BytesPerRow_HIG150,U    * 3
         LDA     #%01111111
         STA     ,U                     * 4
         LDA     #%01101111
-        STA     BytesPerRow_FG1R,U     * 5
+        STA     BytesPerRow_HIG150,U     * 5
         LDA     #%01100111
-        STA     BytesPerRow_FG1R*2,U   * 6
+        STA     BytesPerRow_HIG150*2,U   * 6
         RTS
 ; **************************************
 ;  O
@@ -973,16 +973,16 @@ Character_N:
 ;7 00111110
 Character_O:
         CLR     ,U                     * 0
-        LEAU    BytesPerRow_FG1R*4,U
+        LEAU    BytesPerRow_HIG150*4,U
         LDA     #%00111110
-        STA     -BytesPerRow_FG1R*3,U  * 1
-        STA     BytesPerRow_FG1R*3,U   * 7
+        STA     -BytesPerRow_HIG150*3,U  * 1
+        STA     BytesPerRow_HIG150*3,U   * 7
         LDA     #%01100011
-        STA     -BytesPerRow_FG1R*2,U  * 2
-        STA     -BytesPerRow_FG1R,U    * 3
+        STA     -BytesPerRow_HIG150*2,U  * 2
+        STA     -BytesPerRow_HIG150,U    * 3
         STA     ,U                     * 4
-        STA     BytesPerRow_FG1R,U     * 5
-        STA     BytesPerRow_FG1R*2,U   * 6
+        STA     BytesPerRow_HIG150,U     * 5
+        STA     BytesPerRow_HIG150*2,U   * 6
         RTS
 ; **************************************
 ;  P
@@ -996,17 +996,17 @@ Character_O:
 ;7 01100000
 Character_P:
         CLR     ,U                     * 0
-        LEAU    BytesPerRow_FG1R*4,U
+        LEAU    BytesPerRow_HIG150*4,U
         LDA     #%01111110
-        STA     -BytesPerRow_FG1R*3,U  * 1
-        STA     BytesPerRow_FG1R,U     * 5
+        STA     -BytesPerRow_HIG150*3,U  * 1
+        STA     BytesPerRow_HIG150,U     * 5
         LDA     #%01100011
-        STA     -BytesPerRow_FG1R*2,U  * 2
-        STA     -BytesPerRow_FG1R,U    * 3
+        STA     -BytesPerRow_HIG150*2,U  * 2
+        STA     -BytesPerRow_HIG150,U    * 3
         STA     ,U                     * 4
         LDA     #%01100000
-        STA     BytesPerRow_FG1R*2,U   * 6
-        STA     BytesPerRow_FG1R*3,U   * 7
+        STA     BytesPerRow_HIG150*2,U   * 6
+        STA     BytesPerRow_HIG150*3,U   * 7
         RTS
 ; **************************************
 ;  Q
@@ -1020,19 +1020,19 @@ Character_P:
 ;7 00111101
 Character_Q:
         CLR     ,U                     * 0
-        LEAU    BytesPerRow_FG1R*4,U
+        LEAU    BytesPerRow_HIG150*4,U
         LDA     #%00111110
-        STA     -BytesPerRow_FG1R*3,U  * 1
+        STA     -BytesPerRow_HIG150*3,U  * 1
         LDA     #%01100011
-        STA     -BytesPerRow_FG1R*2,U  * 2
-        STA     -BytesPerRow_FG1R,U    * 3
+        STA     -BytesPerRow_HIG150*2,U  * 2
+        STA     -BytesPerRow_HIG150,U    * 3
         STA     ,U                     * 4
         LDA     #%01101111
-        STA     BytesPerRow_FG1R,U     * 5
+        STA     BytesPerRow_HIG150,U     * 5
         LDA     #%01100110
-        STA     BytesPerRow_FG1R*2,U   * 6
+        STA     BytesPerRow_HIG150*2,U   * 6
         LDA     #%00111101
-        STA     BytesPerRow_FG1R*3,U   * 7
+        STA     BytesPerRow_HIG150*3,U   * 7
         RTS
 ; **************************************
 ;  R
@@ -1046,20 +1046,20 @@ Character_Q:
 ;7 01100111
 Character_R:
         CLR     ,U                     * 0
-        LEAU    BytesPerRow_FG1R*4,U
+        LEAU    BytesPerRow_HIG150*4,U
         LDA     #%01111110
-        STA     -BytesPerRow_FG1R*3,U  * 1
+        STA     -BytesPerRow_HIG150*3,U  * 1
         LDA     #%01100011
-        STA     -BytesPerRow_FG1R*2,U  * 2
-        STA     -BytesPerRow_FG1R,U    * 3
+        STA     -BytesPerRow_HIG150*2,U  * 2
+        STA     -BytesPerRow_HIG150,U    * 3
         LDA     #%01100111
         STA     ,U                     * 4
         LDA     #%01111100
-        STA     BytesPerRow_FG1R,U     * 5
+        STA     BytesPerRow_HIG150,U     * 5
         LDA     #%01101110
-        STA     BytesPerRow_FG1R*2,U   * 6
+        STA     BytesPerRow_HIG150*2,U   * 6
         LDA     #%01100111
-        STA     BytesPerRow_FG1R*3,U   * 7
+        STA     BytesPerRow_HIG150*3,U   * 7
         RTS
 ; **************************************
 ;  S
@@ -1073,20 +1073,20 @@ Character_R:
 ;7 00111110
 Character_S:
         CLR     ,U                     * 0
-        LEAU    BytesPerRow_FG1R*4,U
+        LEAU    BytesPerRow_HIG150*4,U
         LDA     #%00111100
-        STA     -BytesPerRow_FG1R*3,U  * 1
+        STA     -BytesPerRow_HIG150*3,U  * 1
         LDA     #%01100110
-        STA     -BytesPerRow_FG1R*2,U  * 2
+        STA     -BytesPerRow_HIG150*2,U  * 2
         LDA     #%01100000
-        STA     -BytesPerRow_FG1R,U    * 3
+        STA     -BytesPerRow_HIG150,U    * 3
         LDA     #%00111110
         STA     ,U                     * 4
-        STA     BytesPerRow_FG1R*3,U   * 7
+        STA     BytesPerRow_HIG150*3,U   * 7
         LDA     #%00000011
-        STA     BytesPerRow_FG1R,U     * 5
+        STA     BytesPerRow_HIG150,U     * 5
         LDA     #%01100011
-        STA     BytesPerRow_FG1R*2,U   * 6
+        STA     BytesPerRow_HIG150*2,U   * 6
         RTS
 ; **************************************
 ;  T
@@ -1100,16 +1100,16 @@ Character_S:
 ;7 00001100
 Character_T:
         CLR     ,U                     * 0
-        LEAU    BytesPerRow_FG1R*4,U
+        LEAU    BytesPerRow_HIG150*4,U
         LDA     #%00111111
-        STA     -BytesPerRow_FG1R*3,U  * 1
+        STA     -BytesPerRow_HIG150*3,U  * 1
         LDA     #%00001100
-        STA     -BytesPerRow_FG1R*2,U  * 2
-        STA     -BytesPerRow_FG1R,U    * 3
+        STA     -BytesPerRow_HIG150*2,U  * 2
+        STA     -BytesPerRow_HIG150,U    * 3
         STA     ,U                     * 4
-        STA     BytesPerRow_FG1R,U     * 5
-        STA     BytesPerRow_FG1R*2,U   * 6
-        STA     BytesPerRow_FG1R*3,U   * 7
+        STA     BytesPerRow_HIG150,U     * 5
+        STA     BytesPerRow_HIG150*2,U   * 6
+        STA     BytesPerRow_HIG150*3,U   * 7
         RTS
 ; **************************************
 ;  U
@@ -1123,16 +1123,16 @@ Character_T:
 ;7 00111110
 Character_U:
         CLR     ,U                     * 0
-        LEAU    BytesPerRow_FG1R*4,U
+        LEAU    BytesPerRow_HIG150*4,U
         LDA     #%01100011
-        STA     -BytesPerRow_FG1R*3,U  * 1
-        STA     -BytesPerRow_FG1R*2,U  * 2
-        STA     -BytesPerRow_FG1R,U    * 3
+        STA     -BytesPerRow_HIG150*3,U  * 1
+        STA     -BytesPerRow_HIG150*2,U  * 2
+        STA     -BytesPerRow_HIG150,U    * 3
         STA     ,U                     * 4
-        STA     BytesPerRow_FG1R,U     * 5
-        STA     BytesPerRow_FG1R*2,U   * 6
+        STA     BytesPerRow_HIG150,U     * 5
+        STA     BytesPerRow_HIG150*2,U   * 6
         LDA     #%00111110
-        STA     BytesPerRow_FG1R*3,U   * 7
+        STA     BytesPerRow_HIG150*3,U   * 7
         RTS
 ; **************************************
 ;  V
@@ -1146,19 +1146,19 @@ Character_U:
 ;7 00001000
 Character_V:
         CLR     ,U                     * 0
-        LEAU    BytesPerRow_FG1R*4,U
+        LEAU    BytesPerRow_HIG150*4,U
         LDA     #%01100011
-        STA     -BytesPerRow_FG1R*3,U  * 1
-        STA     -BytesPerRow_FG1R*2,U  * 2
-        STA     -BytesPerRow_FG1R,U    * 3
+        STA     -BytesPerRow_HIG150*3,U  * 1
+        STA     -BytesPerRow_HIG150*2,U  * 2
+        STA     -BytesPerRow_HIG150,U    * 3
         LDA     #%01110111
         STA     ,U                     * 4
         LDA     #%00111110
-        STA     BytesPerRow_FG1R,U     * 5
+        STA     BytesPerRow_HIG150,U     * 5
         LDA     #%00011100
-        STA     BytesPerRow_FG1R*2,U   * 6
+        STA     BytesPerRow_HIG150*2,U   * 6
         LDA     #%00001000
-        STA     BytesPerRow_FG1R*3,U   * 7
+        STA     BytesPerRow_HIG150*3,U   * 7
         RTS
 ; **************************************
 ;  W
@@ -1172,18 +1172,18 @@ Character_V:
 ;7 01100011
 Character_W:
         CLR     ,U                     * 0
-        LEAU    BytesPerRow_FG1R*4,U
+        LEAU    BytesPerRow_HIG150*4,U
         LDA     #%01100011
-        STA     -BytesPerRow_FG1R*3,U  * 1
-        STA     -BytesPerRow_FG1R*2,U  * 2
-        STA     -BytesPerRow_FG1R,U    * 3
+        STA     -BytesPerRow_HIG150*3,U  * 1
+        STA     -BytesPerRow_HIG150*2,U  * 2
+        STA     -BytesPerRow_HIG150,U    * 3
         LDA     #%01111111
         STA     ,U                     * 4
-        STA     BytesPerRow_FG1R,U     * 5
+        STA     BytesPerRow_HIG150,U     * 5
         LDA     #%01110111
-        STA     BytesPerRow_FG1R*2,U   * 6
+        STA     BytesPerRow_HIG150*2,U   * 6
         LDA     #%01100011
-        STA     BytesPerRow_FG1R*3,U   * 7
+        STA     BytesPerRow_HIG150*3,U   * 7
         RTS
 ; **************************************
 ;  X
@@ -1197,16 +1197,16 @@ Character_W:
 ;7 01100011
 Character_X:
         CLR     ,U                     * 0
-        LEAU    BytesPerRow_FG1R*4,U
+        LEAU    BytesPerRow_HIG150*4,U
         LDA     #%01100011
-        STA     -BytesPerRow_FG1R*3,U  * 1
-        STA     BytesPerRow_FG1R*3,U   * 7
+        STA     -BytesPerRow_HIG150*3,U  * 1
+        STA     BytesPerRow_HIG150*3,U   * 7
         LDA     #%01110111
-        STA     -BytesPerRow_FG1R*2,U  * 2
-        STA     BytesPerRow_FG1R*2,U   * 6
+        STA     -BytesPerRow_HIG150*2,U  * 2
+        STA     BytesPerRow_HIG150*2,U   * 6
         LDA     #%00111110
-        STA     -BytesPerRow_FG1R,U    * 3
-        STA     BytesPerRow_FG1R,U     * 5
+        STA     -BytesPerRow_HIG150,U    * 3
+        STA     BytesPerRow_HIG150,U     * 5
         LDA     #%00011100
         STA     ,U                     * 4
         RTS
@@ -1222,17 +1222,17 @@ Character_X:
 ;7 00001100
 Character_Y:
         CLR     ,U                     * 0
-        LEAU    BytesPerRow_FG1R*4,U
+        LEAU    BytesPerRow_HIG150*4,U
         LDA     #%00110011
-        STA     -BytesPerRow_FG1R*3,U  * 1
-        STA     -BytesPerRow_FG1R*2,U  * 2
-        STA     -BytesPerRow_FG1R,U    * 3
+        STA     -BytesPerRow_HIG150*3,U  * 1
+        STA     -BytesPerRow_HIG150*2,U  * 2
+        STA     -BytesPerRow_HIG150,U    * 3
         LDA     #%00011110
         STA     ,U                     * 4
         LDA     #%00001100
-        STA     BytesPerRow_FG1R,U     * 5
-        STA     BytesPerRow_FG1R*2,U   * 6
-        STA     BytesPerRow_FG1R*3,U   * 7
+        STA     BytesPerRow_HIG150,U     * 5
+        STA     BytesPerRow_HIG150*2,U   * 6
+        STA     BytesPerRow_HIG150*3,U   * 7
         RTS
 ; **************************************
 ;  Z
@@ -1246,18 +1246,18 @@ Character_Y:
 ;7 01111111
 Character_Z:
         CLR     ,U                     * 0
-        LEAU    BytesPerRow_FG1R*4,U
+        LEAU    BytesPerRow_HIG150*4,U
         LDA     #%01111111
-        STA     -BytesPerRow_FG1R*3,U  * 1
-        STA     BytesPerRow_FG1R*3,U   * 7
+        STA     -BytesPerRow_HIG150*3,U  * 1
+        STA     BytesPerRow_HIG150*3,U   * 7
         LDA     #%00000111
-        STA     -BytesPerRow_FG1R*2,U  * 2
+        STA     -BytesPerRow_HIG150*2,U  * 2
         LDA     #%00001110
-        STA     -BytesPerRow_FG1R,U    * 3
+        STA     -BytesPerRow_HIG150,U    * 3
         LDA     #%00011100
         STA     ,U                     * 4
         LDA     #%00111000
-        STA     BytesPerRow_FG1R,U     * 5
+        STA     BytesPerRow_HIG150,U     * 5
         LDA     #%01110000
-        STA     BytesPerRow_FG1R*2,U   * 6
+        STA     BytesPerRow_HIG150*2,U   * 6
         RTS

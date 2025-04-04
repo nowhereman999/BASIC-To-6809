@@ -98,7 +98,7 @@ AtoGraphics_Screen_HIG142:
         BNE   >
         CMPX  BEGGRP    ; Start of the screen?
         BEQ   @DoneGraphicText   ; Retore the registers and return
-                LDA   #$20      ; Draw a Blank
+        LDA   #$20      ; Draw a Blank
         LEAX  -BytesPerChar,X ; Back up the position
         BSR   @GraphicTextDrawAatX  ; Go Draw character A on screen at X
         BRA   @GraphicsTextUpdateCursor  ; Update Cursor and exit

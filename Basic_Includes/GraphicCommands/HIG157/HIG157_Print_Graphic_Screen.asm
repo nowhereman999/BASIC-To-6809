@@ -113,19 +113,11 @@ AtoGraphics_Screen_HIG157:
 !       CMPA  #$0D      ; Enter Key?
         BNE   @GraphicsTextNotEnter
         LDX   GraphicCURPOS
-        LDD   GraphicCURPOS ; Load cursor address
-        SUBD  BEGGRP        ; Compute offset from start of screen
-; Compute Row using repeated subtraction
-!       CMPD  #BytesPerRow_HIG157          ; Is D less than BytesPerRow_HIG157?
-        BLO   >             ; If yes, we're done
-        SUBD  #BytesPerRow_HIG157          ; Subtract one full row
-        BRA   <             ; Repeat until D < BytesPerRow_HIG157
-; B now contains the column number
-!       SUBB   #BytesPerRow_HIG157      ; B = B - ByttesPerRow_HIG157
         LDA   #$20      ; Blank
 !       BSR   @GraphicTextDrawAatX  ; Go Draw character A on screen at X
         LEAX  BytesPerChar,X       ; Move to the next position
-        INCB
+        TFR   X,B       ; B = X (LSB)
+        BITB  #BytesPerRow_HIG157-1      ; Is it the start of a new row?
         BNE   <         ; if not keep printing a blank
         LEAX  (FontHeight-1)*BytesPerRow_HIG157,X    ; Point at the start of the next row
         LEAU  (FontHeight-1)*BytesPerRow_HIG157,U    ; U = screen End
@@ -138,14 +130,18 @@ AtoGraphics_Screen_HIG157:
 @GraphicsTextNotEnter:
         BSR   @GraphicTextDrawAatX  ; Go Draw character A on screen at X
         LEAX  BytesPerChar,X       ; Move to the next position
+        TFR   X,D       ; D = X
+        BITB  #BytesPerRow_HIG157-1  ; Is it the start of a new row?
+        BNE   @GraphicsTextUpdateCursor ; No, update the cursor and exit
+        LEAX  (FontHeight-1)*BytesPerRow_HIG157,X    ; Point at the start of the next row
 @GraphicsTextUpdateCursor:
         STX   GraphicCURPOS     ; Update the cursor
 @DoneGraphicText:
         PULS    D,X,Y,U,PC    ; Restore regsiters and return
 * Draw character A on the graphics screen at position X
 @GraphicTextDrawAatX:
-        PSHS    D,X             ; Save the registers
-        LDU     2,S             ; Get the screen address in U
+        PSHS    A,X             ; Save the registers
+        LDU     1,S             ; Get the screen address in U
         LDB     ,S              ; Get the character in B
         SUBB    #32             ; Subtract 32 to get the offset in the font
         BPL     >               ; Skip ahead if good
@@ -157,4 +153,4 @@ AtoGraphics_Screen_HIG157:
         ABX                     ; Add the offset to the jump table      
         ABX                     ; Add the offset to the jump table X now = X + B * 2
         JSR     [,X]            ; Jump to the routine to draw the character
-        PULS    D,X,PC          ; Restore registers and return
+        PULS    A,X,PC          ; Restore registers and return

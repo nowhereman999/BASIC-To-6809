@@ -4,6 +4,26 @@ A BASIC compiler for the TRS-80 Color Computer
 For more info check out the blog post here:
 https://wordpress.com/post/nowhereman999.wordpress.com/5054
 
+V 4.29
+- Added support for the NTSC composite video out modes (256 colours) for the CoCo3, these are new GMODE values from 160 to 165 - See
+  the updated manual for more info
+  - Added new command NTSC_FONTCOLOURS b,f to set the background and foreground colours of the fonts used with the new NTSC composite output GMODEs
+
+V 4.28
+- Fixed a bug where the tokenizer couldn't handle a number then an operator then a numeric command like 120+RNDZ(20)
+
+V 4.27
+- Added some CoCo hardware detection code, to detect if the CoCo is running on a CoCo 1 & 2 or a CoCo 3 and also
+  detect if there is a 6309 or a 6809 installed.  With this info the LOADM command and all the SDC_PLAY commands will now go to
+  normal speed while using those commands and go back to high speed/native mode (if it can) afterwards.
+  
+V 4.26
+- Fixed LOADM command not working if your CoCo has a 6309 as it would mess with the timing and LOADM would fail, now it goes back to
+  Emulation mode so the timings are the same as the 6809 while loading.  After loading it will put the 6309 back into native mode.
+
+V 4.25
+- Fixed a bug with with using numeric commands like RNDZ(x) before an close bracket of a graphics command like SET(x,y,RNDZ(3))
+
 V 4.24
 - Fixed a bug in the compiler when it was assigning the value of an equation to a variable.  If the equation didn't have a
   variable and it was doing AND, OR, XOR or MOD it was not setting the variable properly.  It also wasn't handling HEX values
