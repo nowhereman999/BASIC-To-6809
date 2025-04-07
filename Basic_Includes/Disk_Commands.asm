@@ -390,7 +390,7 @@ GetNextGranule:
         LDA     ,Y              ; A = current granule # for the file
         LEAU    6,Y             ; U points at the granule table Image Start        
         LDB     A,U             ; B = granule table entry for the current granule
-        BITB    #%11000000      ; Is this flagged as the last granule?
+        BITB    #%10000000      ; Is this flagged as the last granule?
         BEQ     NotLastGranule  ; Skip ahead if the granule is not the last granule associated with the file
 ; If we get here then the granule is the last granule associated with the file
         ANDB    #%00111111      ; Clear the last granule flags, B now is the last sector number
@@ -406,7 +406,7 @@ GetNextGranule:
         LDA     #1              ; Starting Sector of the granule if Carry is clear
 !       STA     DSEC            ; Save the starting sector
         ADDA    ,S+             ; A = A + last sector number, fix the stack
-        STB     GranuleEnd+1    ; Save the compare value for the last sector of this granule (self mod)
+        STA     GranuleEnd+1    ; Save the compare value for the last sector of this granule (self mod)
         BRA     LoadFirstSector ; Go read the first sector of the granule
 ; Normal Granule (not the last granule)
 NotLastGranule
@@ -523,10 +523,10 @@ GetSector:
 ; X = Buffer start location in RAM to save to the disks sector
 ; No registers are changed on exit
 WriteSectorDFromX:
-        PSHS    A           ; Save A
+        PSHS    A           ; Save the Track
         LDA     #$03        ; A equals the Disk Write opcode
         STA     DCOPC       ; Save the operation code
-        PULS    A           ; Restore A
+        PULS    A           ; Restore the Track
         BRA     UpdateDiskLocation  ; Go save Track, Sector and Buffer pointer and return
 
 ; Read 256 byte sector into X
@@ -536,10 +536,10 @@ WriteSectorDFromX:
 ; X = Buffer start location in RAM to save the disks sector data
 ; No registers are changed on exit
 ReadSectorDtoX:
-        PSHS    A           ; Save A
+        PSHS    A           ; Save the Teack
         LDA     #$02        ; A equals the Disk Read opcode
         STA     DCOPC       ; Save the operation code
-        PULS    A           ; Restore A
+        PULS    A           ; Restore  the Track
 UpdateDiskLocation:
         STD     DCTRK       ; Save Track pointer & DSEC = Save Sector pointer
         STX     DCBPT       ; Save the buffer pointer

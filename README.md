@@ -4,6 +4,9 @@ A BASIC compiler for the TRS-80 Color Computer
 For more info check out the blog post here:
 https://wordpress.com/post/nowhereman999.wordpress.com/5054
 
+V 4.30
+- Fixed a copule bugs with the LOADM command (wasn't finding the last granule properly if the file used granules beyond $40)
+
 V 4.29
 - Added support for the NTSC composite video out modes (256 colours) for the CoCo3, these are new GMODE values from 160 to 165 - See
   the updated manual for more info
