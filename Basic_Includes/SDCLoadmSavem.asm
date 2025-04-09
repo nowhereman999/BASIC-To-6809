@@ -10,7 +10,7 @@
 ; 3, 4        Load address            EXEC address
 
 SDCLoadM0:
-        CLRA
+        CLRA                    ; Read mode
         JSR     SDCOpenFile     ; Open the file, A = File read mode (0) or write mode (1), B = File number (0 or 1)
 SDC_GetMLBlock0:
         BSR     SDCGetByteB0    ; Get the next byte in file 0 and return with it in B
@@ -33,8 +33,8 @@ SDC_DoPREAMBLE0:
         BSR     SDC_GetWordD0    ; Read next two bytes into D
         ADDD    _Var_PF10       ; D = D + LOADM Offset amount    
         TFR     D,U             ; U = Load address
-!       BSR     SDCGetByteB0   ; Get a byte from the file in A
-        STA     ,U+             ; Save the byte to memory
+!       BSR     SDCGetByteB0   ; Get a byte from the file in B
+        STB     ,U+             ; Save the byte to memory
         LEAX    -1,X            ; Decrement the counter
         BNE     <               ; Keep looping until we've copied all the bytes
         BRA     SDC_GetMLBlock0 ; Go read the next block
@@ -42,11 +42,11 @@ SDC_DoPREAMBLE0:
 ; Read next two bytes from the open file into D
 SDC_GetWordD0:
         BSR     SDCGetByteB0    ; Get the next byte in file 0 and return with it in B
-        TFR     B,A             ; Save MSB of the EXEC address in A
+        TFR     B,A             ; Move B to MSB of D
         BRA     SDCGetByteB0    ; Get the next byte in file 0 in B and return, D now has the WORD from the file
 
 SDCLoadM1:
-        CLRA
+        CLRA                    ; Read mode
         JSR     SDCOpenFile     ; Open the file, A = File read mode (0) or write mode (1), B = File number (0 or 1)
 SDC_GetMLBlock1:
         BSR     SDCGetByteB1    ; Get the next byte in file 1 and return with it in B
@@ -70,7 +70,7 @@ SDC_DoPREAMBLE1:
         BSR     SDC_GetWordD1   ; Read next two bytes into D
         ADDD    _Var_PF10       ; D = D + LOADM Offset amount    
         TFR     D,U             ; U = Load address
-!       BSR     SDCGetByteB1    ; Get a byte from the file in A
+!       BSR     SDCGetByteB1    ; Get a byte from the file in B
         STB     ,U+             ; Save the byte to memory
         LEAX    -1,X            ; Decrement the counter
         BNE     <               ; Keep looping until we've copied all the bytes
@@ -79,7 +79,7 @@ SDC_DoPREAMBLE1:
 ; Read next two bytes from the open file into D
 SDC_GetWordD1:
         BSR     SDCGetByteB1    ; Get the next byte in file 1 and return with it in B
-        TFR     B,A             ; Save MSB of the EXEC address in A
+        TFR     B,A             ; Move B to MSB of D
         BRA     SDCGetByteB1    ; Get the next byte in file 1 in B and return, D now has the WORD from the file
 
 ; SDC still busy - too long to respond

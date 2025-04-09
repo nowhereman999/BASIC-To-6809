@@ -13,15 +13,16 @@ SDC_WriteMode0  RMB     1       ; 0 = read mode, 1 = write mode
 SDC_WriteMode1  RMB     1       ; 0 = read mode, 1 = write mode
 
 ; We are setting up for writing to the CoCoSDC
-; Put "n:" at the start of the filename this sets the CoCoSDC to write/read a file
+; Put "m:" at the start of the filename this sets the CoCoSDC to write/read a file
 ; If writing, it will create a new file (not a disk image file)
 ; If reading, it will get the file ready to be read with Logical block reads (not as a disk image file)
 ; A = File read mode (0) or write mode (1)
 ; B = File number (0 or 1)
+
 SDCOpenFile:
         PSHS    D               ; Save A & B
         LDX     #SDC_WriteMode0 ; Get the address of the write mode flags
-        STA     B,X             ; Set the write mode flags
+        STA     B,X             ; Set the Read/write mode flags
         LDA     #'m'            ; m is for reading from a file
         TST     ,S              ; Test if A is zero (read mode)
         BEQ     >               ; If A is zero, skip forward
@@ -44,7 +45,6 @@ SDCOpenFile:
         STB     SDC_LBN1
         STX     SDC_LBN1+1      ; Clear the LBN for file 1
 SDCSetFilenameOpen:
-;        LDU     #_StrVar_PF01+1 ; Get the new filename location that now starts with "n:"
         JSR     CommSDC         ; Send the command to the SDC
         BCS     SDCError        ; SDC Error, go show the error and halt program
         LDA     ,S              ; See if the user wants to Read or Write this file (A=0 for Read, A=1 for Write)
@@ -152,7 +152,7 @@ SDC_ReadBuffer0:
 
 ; Get the next byte in file 1 and return with it in B
 SDCGetByteB1:
-        LDB     [SDC_BufferPointer1] ; Store the byte in the buffer
+        LDB     [SDC_BufferPointer1] ; Load byte from the buffer
         INC     SDC_BufferPointer1+1 ; Increment the buffer pointer LSB
         BNE     >                  ; If the buffer pointer is 256 bytes, write the buffer to the SDC
         BSR     SDC_ReadBuffer1    ; Load the buffer from the the SDC
