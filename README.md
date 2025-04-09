@@ -6,6 +6,7 @@ https://wordpress.com/post/nowhereman999.wordpress.com/5054
 
 V 4.31
 - Fixed a bug in the SDC_LOADM command that wasn't loading from drive # 0 properly
+- NTSC compiste 256 colour first GMODE command will automatically set the palette to the proper values for this mode
 
 V 4.30
 - Fixed a couple bugs with the LOADM command (wasn't finding the last granule properly if the file used granules beyond $40)
