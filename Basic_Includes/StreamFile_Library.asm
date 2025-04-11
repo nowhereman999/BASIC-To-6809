@@ -40,6 +40,7 @@ param_register_3          EQU     $FF4B
 *       JSR     OpenSDC_File_X_At_Start     * Open a file on the SDC for streaming, 512 bytes at a time
 *
 *
+SDC_DriveNumber FCB     $01     ; The drive number used to access the CoCo SDC, either 0 or 1 (default to 1)
 OpenSDC_File_X_At_Start:
         PSHS    A,U                 * Save the registers
         CLRA                        * Set High LSN byte value to zero
@@ -62,7 +63,8 @@ OpenSDC_File_X_At_AU:
 * Mount a file
 * Mounting a file auto ejects any previous file that was mounted
 * If you want to eject a file manually you can do so by using 'm:' by itself for the name
-        LDA     #$E0                * Mount Image in drive 0, use $E1 for drive 1
+        LDA     SDC_DriveNumber         ; Get the drive number
+        ADDA    #$E0                * Mount Image in drive 0, use $E1 for drive 1
         STA     $FF48               * Send to the command register
         JSR     POLLREADY           * Delay 20 microseconds and wait for the SDC to signify the ready signal is on
         BSR     SendDataBlock       * Write filename to SDC
@@ -80,7 +82,8 @@ OpenSDC_File_X_At_AU:
 
 * Send the Read Logical Sector $90 is a 512 byte sector read
 * Can use $91 for virtual drive 1 if you used $E1 when mounting the file above
-        LDA     #$90                * STREAM FROM SDC USING 6809 STYLE TRANSFER (DRIVE 0)
+        LDA     SDC_DriveNumber         ; Get the drive number
+        ADDA    #$90                * STREAM FROM SDC USING 6809 STYLE TRANSFER ($90 = DRIVE 0 or $91 = Drive 1)
         STA     $FF48               * SEND TO COMMAND REGISTER ($FF48)
                                     * FILE SECTOR READ READY
                                     * DATA PORT AT $FF4A, 512 BYTE SECTORS
@@ -94,8 +97,6 @@ OpenSDC_File_X_At_AU:
 * However, using 6809 style transfer, it is able to pretty much keep up with the CPU.
 * There is also a small wait you need built into the polling routines in order to give the MCU
 * time to reset/set the bit (20 microseconds or so is sufficient).
-
-
 Close_SD_File:
         CLR     $FF40               * Put Controller back into Emulation Mode
         RTS                         * Done, Return

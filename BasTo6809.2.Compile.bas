@@ -7097,35 +7097,70 @@ GoSub GetExpressionB4EOL ' Get the expression before an End of Line in Expressio
 GoSub ParseStringExpression ' Parse the String Expression, value will end up in _StrVar_PF00
 A$ = "JSR": B$ = "Play": C$ = "Play command, will play the commands in the string _StrVar_PF00": GoSub AO
 Return
+
+
+
+
+
+
+
+
 DoSDC_PLAY:
 ' Copy filename to a tempstring
-GoSub GetExpressionB4EOL ' Get the expression before an End of Line in Expression$
+GoSub GetExpressionB4CommaEOL 'Handle an expression that ends with a comma or EOL, skip brackets
 GoSub ParseStringExpression ' Parse the String Expression, value will end up in _StrVar_PF00
-' Check the filename to make sure it's OK
+If Array(x) <> &HF5 Or Array(x + 1) <> &H2C Then Print "Can't find a comma after the filename for the SDC_PLAY command on";: GoTo FoundError
+x = x + 2 ' consume the ,
+GoSub GetExpressionB4CommaEOL 'Handle an expression that ends with a comma or EOL, skip brackets
+ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression end up in D
+A$ = "STB": B$ = "SDC_DriveNumber": C$ = "Save the disk #": GoSub AO
 A$ = "JSR": B$ = "SDCPLAY": C$ = "Play audio sample where the filename is in _StrVar_PF00": GoSub AO
 Return
 DoSDC_PLAYORCL:
 ' Copy filename to a tempstring
-GoSub GetExpressionB4EOL ' Get the expression before an End of Line in Expression$
+GoSub GetExpressionB4CommaEOL 'Handle an expression that ends with a comma or EOL, skip brackets
 GoSub ParseStringExpression ' Parse the String Expression, value will end up in _StrVar_PF00
-' Check the filename to make sure it's OK
+If Array(x) <> &HF5 Or Array(x + 1) <> &H2C Then Print "Can't find a comma after the filename for the SDC_PLAYORCL command on";: GoTo FoundError
+x = x + 2 ' consume the ,
+GoSub GetExpressionB4CommaEOL 'Handle an expression that ends with a comma or EOL, skip brackets
+ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression end up in D
+A$ = "STB": B$ = "SDC_DriveNumber": C$ = "Save the disk #": GoSub AO
 A$ = "JSR": B$ = "SDCPLAYOrcL": C$ = "Play audio sample where the filename is in _StrVar_PF00 on Orc 90/CoCo Flash Left Speaker output": GoSub AO
 Return
 DoSDC_PLAYORCR:
 ' Copy filename to a tempstring
-GoSub GetExpressionB4EOL ' Get the expression before an End of Line in Expression$
+GoSub GetExpressionB4CommaEOL 'Handle an expression that ends with a comma or EOL, skip brackets
 GoSub ParseStringExpression ' Parse the String Expression, value will end up in _StrVar_PF00
-' Check the filename to make sure it's OK
+If Array(x) <> &HF5 Or Array(x + 1) <> &H2C Then Print "Can't find a comma after the filename for the SDC_PLAYORCR command on";: GoTo FoundError
+x = x + 2 ' consume the ,
+GoSub GetExpressionB4CommaEOL 'Handle an expression that ends with a comma or EOL, skip brackets
+ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression end up in D
+A$ = "STB": B$ = "SDC_DriveNumber": C$ = "Save the disk #": GoSub AO
 A$ = "JSR": B$ = "SDCPLAYOrcR": C$ = "Play audio sample where the filename is in _StrVar_PF00 on Orc 90/CoCo Flash Right Speaker output": GoSub AO
 Return
 DoSDC_PLAYORCS:
 ' Copy filename to a tempstring
-GoSub GetExpressionB4EOL ' Get the expression before an End of Line in Expression$
+GoSub GetExpressionB4CommaEOL 'Handle an expression that ends with a comma or EOL, skip brackets
 GoSub ParseStringExpression ' Parse the String Expression, value will end up in _StrVar_PF00
-' Check the filename to make sure it's OK
+If Array(x) <> &HF5 Or Array(x + 1) <> &H2C Then Print "Can't find a comma after the filename for the SDC_PLAYORCS command on";: GoTo FoundError
+x = x + 2 ' consume the ,
+GoSub GetExpressionB4CommaEOL 'Handle an expression that ends with a comma or EOL, skip brackets
+ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression end up in D
+A$ = "STB": B$ = "SDC_DriveNumber": C$ = "Save the disk #": GoSub AO
 A$ = "JSR": B$ = "SDCPLAYOrcS": C$ = "Play audio sample where the filename is in _StrVar_PF00 on Orc 90/CoCo Flash in Stereo": GoSub AO
 Return
 
+' SDC_BIGLOADM a file directly off the CoCoSDC - SDC_BIGLOADM"FILENAME.BIN",#
+DoSDC_BIGLOADM:
+GoSub GetExpressionB4CommaEOL 'Handle an expression that ends with a comma or EOL, skip brackets
+GoSub ParseStringExpression ' Parse the String Expression, value will end up in _StrVar_PF00
+If Array(x) <> &HF5 Or Array(x + 1) <> &H2C Then Print "Can't find a comma after the filename for the SDC_BIGLOADM command on";: GoTo FoundError
+x = x + 2 ' consume the ,
+GoSub GetExpressionB4CommaEOL 'Handle an expression that ends with a comma or EOL, skip brackets
+ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression end up in D
+A$ = "STB": B$ = "SDC_DriveNumber": C$ = "Save the disk #": GoSub AO
+A$ = "JSR": B$ = "SDCBigLoadM": C$ = "Do a Special Big LOADM file off the SDC": GoSub AO
+Return
 
 ' SDC_LOADM a file directly off the CoCoSDC - SDC_LOADM"FILENAME.BIN",#[,Offset]
 DoSDC_LOADM:
@@ -9290,6 +9325,8 @@ Select Case GeneralCommands$(v)
         GoTo DoSDC_PLAYORCS
     Case "SDC_OPEN"
         GoTo DoSDC_OPEN
+    Case "SDC_BIGLOADM"
+        GoTo DoSDC_BIGLOADM
     Case "SDC_LOADM"
         GoTo DoSDC_LOADM
     Case "SDC_SAVEM"

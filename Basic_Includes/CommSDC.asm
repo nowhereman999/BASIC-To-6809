@@ -36,10 +36,10 @@ FAILED         equ       %10000000          set on command failure
 
 * Mode and Command Values
 CMDMODE        equ       $43                control latch value to enable command mode
-CMDREAD        equ       $80                read logical sector
-CMDWRITE       equ       $A0                write logical sector
-CMDEX          equ       $C0                extended command
-CMDEXD         equ       $E0                extended command with data block
+;CMDREAD        equ       $80                read logical sector
+;CMDWRITE       equ       $A0                write logical sector
+;CMDEX          equ       $C0                extended command
+;CMDEXD         equ       $E0                extended command with data block
 
 CommSDC        pshs      u,y,x,a,cc         preserve resgisters
                lsr       ,s                 shift carry flag out of saved CC

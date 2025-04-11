@@ -1,4 +1,9 @@
-V$ = "4.31"
+V$ = "4.32"
+'       - Added new command SDC_BIGLOADM, for fast loading the CoCo 3 memory banks, useful for loading game backgrounds or
+'         Other large amounts for data
+'       - Added support for Drive number 0 or 1 for the SDC_Play commands
+
+' V 4.31
 '       - Fixed a bug in the SDC_LOADM command that wasn't loading from drive # 0 properly
 
 ' V4.30

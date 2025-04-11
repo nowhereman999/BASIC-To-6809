@@ -1649,14 +1649,16 @@ For ii = 0 To GeneralCommandsFoundCount - 1
         Temp$ = "DecimalStringToD": GoSub AddIncludeTemp ' Add commands for converting decimal numbers to D
     End If
     If Temp$ = "SDC_PLAY" Or Temp$ = "SDC_PLAYORCL" Or Temp$ = "SDC_PLAYORCR" Or Temp$ = "SDC_PLAYORCS" Then
-        If Temp$ = "SDC_PLAY" Then Temp$ = "SDCPlay": GoSub AddIncludeTemp: Temp$ = "Audio_Muxer": GoSub AddIncludeTemp ' Add code for Selecting the audio muxer and to turn it on or off
+        If Temp$ = "SDC_PLAY" Then
+            Temp$ = "SDCPlay": GoSub AddIncludeTemp
+            Temp$ = "Audio_Muxer": GoSub AddIncludeTemp ' Add code for Selecting the audio muxer and to turn it on or off
+        End If
         If Temp$ = "SDC_PLAYORCL" Then Temp$ = "SDCPlayOrc90Left": GoSub AddIncludeTemp
         If Temp$ = "SDC_PLAYORCR" Then Temp$ = "SDCPlayOrc90Right": GoSub AddIncludeTemp
         If Temp$ = "SDC_PLAYORCS" Then Temp$ = "SDCPlayOrc90Stereo": GoSub AddIncludeTemp
         Temp$ = "CommSDC": GoSub AddIncludeTemp
         Temp$ = "SDCFileAccess": GoSub AddIncludeTemp
         Temp$ = "StreamFile_Library": GoSub AddIncludeTemp
-        '
     End If
     If Temp$ = "SDC_GETBYTE0" Or Temp$ = "SDC_GETBYTE1" Or Temp$ = "SDC_PUTBYTE0" Or Temp$ = "SDC_PUTBYTE1" Or Temp$ = "SDC_DIRPAGE" Or Temp$ = "SDC_SETPOS" Or Temp$ = "SDC_CLOSE" Or Temp$ = "SDC_OPEN" Then
         Temp$ = "CommSDC": GoSub AddIncludeTemp
@@ -1668,6 +1670,14 @@ For ii = 0 To GeneralCommandsFoundCount - 1
         Temp$ = "SDCFileAccess": GoSub AddIncludeTemp
         Temp$ = "SDCLoadmSavem": GoSub AddIncludeTemp
     End If
+    If Temp$ = "SDC_BIGLOADM" Then
+        Temp$ = "CommSDC": GoSub AddIncludeTemp
+        Temp$ = "StreamFile_Library": GoSub AddIncludeTemp
+        Temp$ = "SDCBigLoadm": GoSub AddIncludeTemp
+    End If
+
+
+
     If Temp$ = "SOUND" Then
         Temp$ = "Sound": GoSub AddIncludeTemp ' Add code for the sound command
         Temp$ = "Audio_Muxer": GoSub AddIncludeTemp 'SOUND routine also requires the Muxer to be turned on

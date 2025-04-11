@@ -4,9 +4,13 @@ A BASIC compiler for the TRS-80 Color Computer
 For more info check out the blog post here:
 https://wordpress.com/post/nowhereman999.wordpress.com/5054
 
+V 4.32
+- Added new command SDC_BIGLOADM, for fast loading the CoCo 3 memory banks, useful for loading game backgrounds or
+  Other large amounts for data
+- Added support for Drive number 0 or 1 for the SDC_Play commands
+
 V 4.31
-- Fixed a bug in the SDC_LOADM command that wasn't loading from drive # 0 properly
-- NTSC compiste 256 colour first GMODE command will automatically set the palette to the proper values for this mode
+- Fixed a bug in the SDC_LOADM command that wasn't loading from drive # 0 properly    
 
 V 4.30
 - Fixed a couple bugs with the LOADM command (wasn't finding the last granule properly if the file used granules beyond $40)
