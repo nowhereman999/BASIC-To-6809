@@ -1,6 +1,10 @@
 # BASIC-To-6809
 A BASIC compiler for the TRS-80 Color Computer
 
+Binaries for M1 Macs are available in the binaries folder.
+Binaries for Windows and Linux are available here:
+https://github.com/pwillard/basto6809Manual
+
 For more info check out the blog post here:
 https://wordpress.com/post/nowhereman999.wordpress.com/5054
 
