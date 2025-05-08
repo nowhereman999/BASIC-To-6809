@@ -8,6 +8,17 @@ https://github.com/pwillard/basto6809Manual
 For more info check out the blog post here:
 https://wordpress.com/post/nowhereman999.wordpress.com/5054
 
+V 5.00
+- Added the command SLEEP x which allows the program to stop execution for x number of milliseconds
+- Added the command WAIT VBL (Vertical Blank) which Pauses execution until the next screen refresh (VSync)
+- Now supports GMODE 18 which is CoCo 1 & 2 Hi-RES mode that will use artifacting sprites
+- Fixed a bug in the SDC_LOADM command that wasn't loading from drive # 0 properly
+- NTSC compiste 256 colour first GMODE command will automatically set the palette to the proper values for this mode
+
+V 4.33
+- If your CoCo 3 can support 2.8 Mhz high speed the compiled code now runs at triple speed (2.8 Mhz)
+  for most operations (not disk, etc.)
+
 V 4.32
 - Added new command SDC_BIGLOADM, for fast loading the CoCo 3 memory banks, useful for loading game backgrounds or
   Other large amounts for data
