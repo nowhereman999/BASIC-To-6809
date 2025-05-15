@@ -1,0 +1,64 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:42:10}}
+{{DISPLAYTITLE: _MOUSEHIDDEN}}
+The '''_MOUSEHIDDEN''' function returns a boolean value according to the current mouse cursor state (hidden or visible).
+
+
+{{PageSyntax}}
+: {{Parameter|result%}} = [[_MOUSEHIDDEN]]
+
+
+{{PageParameters}}
+* {{Parameter|result%}} a boolean value reflecting the current mouse cursor state:
+** is true (-1), if the mouse cursor is currently hidden
+** is false (0), if the mouse cursor is currently visible
+
+
+{{PageDescription}}
+* This function is especially useful for library code, which needs to determine the current state of the mouse cursor, which can be changed using the [[_MOUSEHIDE]] and [[_MOUSESHOW]] statements.
+* At program start the mouse cursor is visible (default), hence this function would return false (0) until the state is changed.
+
+
+{{PageAvailability}}
+<!-- QB64 = a version or none, QBPE = a version or all, Platforms = yes or no -->
+<gallery widths="48px" heights="48px" mode="nolines">
+File:Qb64.png|'''none'''
+File:Qbpe.png|'''v4.0.0'''
+File:Apix.png
+File:Win.png|'''yes'''
+File:Lnx.png|'''yes'''
+File:Osx.png|'''yes'''
+</gallery>
+<!-- additional availability notes go below here -->
+
+
+{{PageExamples}}
+;Example 1: Showing the different results of this function.
+{{CodeStart}}
+{{Cl|PRINT}} {{Text|<nowiki>"Move the mouse over the program window too see the changes."</nowiki>|#FFB100}}: {{Cl|PRINT}}
+
+{{Text|<nowiki>'at program start the mouse cursor is visible</nowiki>|#919191}}
+{{Cl|IF}} {{Cl|_MOUSEHIDDEN}} {{Cl|THEN}} {{Cl|PRINT}} {{Text|<nowiki>"Mouse cursor hidden"</nowiki>|#FFB100}} {{Cl|ELSE}} {{Cl|PRINT}} {{Text|<nowiki>"Mouse cursor visible"</nowiki>|#FFB100}}
+{{Cl|PRINT}} {{Text|<nowiki>"press any key..."</nowiki>|#FFB100}}: {{Cl|SLEEP}}: {{Cl|PRINT}}
+
+{{Text|<nowiki>'now hide the mouse cursor</nowiki>|#919191}}
+{{Cl|_MOUSEHIDE}}
+{{Cl|IF}} {{Cl|_MOUSEHIDDEN}} {{Cl|THEN}} {{Cl|PRINT}} {{Text|<nowiki>"Mouse cursor hidden"</nowiki>|#FFB100}} {{Cl|ELSE}} {{Cl|PRINT}} {{Text|<nowiki>"Mouse cursor visible"</nowiki>|#FFB100}}
+{{Cl|PRINT}} {{Text|<nowiki>"press any key..."</nowiki>|#FFB100}}: {{Cl|SLEEP}}: {{Cl|PRINT}}
+
+{{Text|<nowiki>'and now show it again</nowiki>|#919191}}
+{{Cl|_MOUSESHOW}}
+{{Cl|IF}} {{Cl|_MOUSEHIDDEN}} {{Cl|THEN}} {{Cl|PRINT}} {{Text|<nowiki>"Mouse cursor hidden"</nowiki>|#FFB100}} {{Cl|ELSE}} {{Cl|PRINT}} {{Text|<nowiki>"Mouse cursor visible"</nowiki>|#FFB100}}
+{{Cl|PRINT}} {{Text|<nowiki>"press any key..."</nowiki>|#FFB100}}
+
+{{Cl|END}}
+{{CodeEnd}}
+{{Small|Example by RhoSigma}}
+
+
+{{PageSeeAlso}}
+* [https://qb64phoenix.com/forum/showthread.php?tid=3377 Featured in our "Keyword of the Day" series]
+* [[_MOUSEHIDE]], [[_MOUSESHOW]]
+
+
+{{PageNavigation}}

@@ -1,0 +1,48 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:43:10}}
+{{DISPLAYTITLE:_STARTDIR$}}
+The [[_STARTDIR$]] function returns the path a user called a QB64 program from as a string value without a trailing path separator (see also '''Availabitlity''' below).
+
+
+{{PageSyntax}}
+: {{Parameter|callPath$}} = [[_STARTDIR$]]
+
+
+{{PageDescription}}
+* Returns a [[STRING]] representing the user's program calling path.
+
+
+{{PageAvailability}}
+<!-- QB64 = a version or none, QBPE = a version or all, Platforms = yes or no -->
+<gallery widths="48px" heights="48px" mode="nolines">
+File:Qb64.png|'''v1.0'''
+File:Qbpe.png|'''all'''
+File:Apix.png
+File:Win.png|'''yes'''
+File:Lnx.png|'''yes'''
+File:Osx.png|'''yes'''
+</gallery>
+<!-- additional availability notes go below here -->
+* Since '''QB64-PE v4.1.0''' the path is always returned '''with''' a trailing path separator, hence you don't need to add it yourself anymore. The change was implemented to be in line with [[_DIR$]] and [[_FULLPATH$]].
+** Old code, which is adding a separator, still works as all supported platforms were tested and proved they doesn't care about multiple consecutive path separators.
+
+
+{{PageExamples}}
+''Example:'' Showcasing QB64 path functions:
+{{CodeStart}}
+{{Cl|$CONSOLE}}:ONLY
+{{Cl|_DEST}} {{Cl|_CONSOLE}}
+{{Cl|SHELL}} "cd"
+{{Cl|PRINT}} {{Cl|_CWD$}}
+{{Cl|PRINT}} {{Cl|_STARTDIR$}}
+{{Cl|SYSTEM}}
+{{CodeEnd}}
+{{Small|Code by Galleon}}
+
+
+{{PageSeeAlso}}
+* [[_CWD$]]
+* [[SHELL]]
+
+
+{{PageNavigation}}

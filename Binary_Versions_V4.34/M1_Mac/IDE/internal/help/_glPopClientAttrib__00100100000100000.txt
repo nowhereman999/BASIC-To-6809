@@ -1,0 +1,24 @@
+{{QBDLDATE:01-28-2023}}
+{{QBDLTIME:11:51:20}}
+{{DISPLAYTITLE:_glPopClientAttrib}}
+The '''_glPushClientAttrib''' and '''_glPopClientAttrib''' statements save and restore groups of client-state variables on the client-attribute stack.
+
+
+{{PageSyntax}}
+: [[_glPopClientAttrib]]
+
+
+{{PageDescription}}
+* OpenGL's documentation is available in several places, so we won't reproduce it here for another time.
+* The full description for this command can be found at [https://learn.microsoft.com/en-us/windows/win32/opengl/glpopclientattrib Microsoft Docs] and is also valid for QB64 usage.
+
+
+{{PageSeeAlso}}
+* [[_GL|SUB _GL]]
+* [[_glColorPointer]], [[_glDisableClientState]], [[_glEdgeFlagPointer]], [[_glEnableClientState]]
+* [https://learn.microsoft.com/en-us/windows/win32/opengl/glgetbooleanv--glgetdoublev--glgetfloatv--glgetintegerv _glGet], [[_glGetError]], [[_glIndexPointer]], [[_glNormalPointer]]
+* [[_glNewList]], [https://learn.microsoft.com/en-us/windows/win32/opengl/glpixelstore-functions _glPixelStore], [[_glPushAttrib]], [[_glTexCoordPointer]]
+* [[_glVertexPointer]]
+
+
+{{PageNavigation}}

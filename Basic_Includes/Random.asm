@@ -1,4 +1,4 @@
-; Getting a Random # in B where B is a number from 2 to 255 and return with value in D
+; Getting a Random # in B where B is a number from 1 to 255 and return with value in D
 Random:
         INC     RNDX
         LDA     Seed1

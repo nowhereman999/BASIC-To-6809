@@ -1,0 +1,57 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:43:16}}
+{{DISPLAYTITLE:_UFONTHEIGHT}}
+The '''_UFONTHEIGHT''' function returns the global glyph height (incl. ascender/descender) of a font loaded by [[_LOADFONT]].
+
+
+{{PageSyntax}}
+: {{Parameter|pixelHeight&}} = [[_UFONTHEIGHT]][({{Parameter|fontHandle&}})]
+
+
+{{PageParameters}}
+* {{Parameter|fontHandle&}} is an optional font handle.
+
+
+{{PageDescription}}
+* Returns the height of the last font used if a handle is not designated.
+* If no font is set, it returns the current screen mode's text block height.
+* This is different from [[_FONTHEIGHT]] as it may return larger values when using scalable fonts.
+
+
+{{PageAvailability}}
+<!-- QB64 = a version or none, QBPE = a version or all, Platforms = yes or no -->
+<gallery widths="48px" heights="48px" mode="nolines">
+File:Qb64.png|'''none'''
+File:Qbpe.png|'''v3.7.0'''
+File:Apix.png
+File:Win.png|'''yes'''
+File:Lnx.png|'''yes'''
+File:Osx.png|'''yes'''
+</gallery>
+<!-- additional availability notes go below here -->
+
+
+{{PageExamples}}
+;Example:Show the difference of '''_UFONTHEIGHT''' vs. [[_FONTHEIGHT]].
+{{CodeStart}}
+{{Cl|DIM}} fh {{Cl|AS}} {{Cl|LONG}}: fh = {{Cl|_LOADFONT}}({{Text|<nowiki>"LHANDW.TTF"</nowiki>|#FFB100}}, {{Text|23|#F580B1}})
+
+{{Cl|PRINT}} {{Text|<nowiki>"_FONTHEIGHT ="</nowiki>|#FFB100}}; {{Cl|_FONTHEIGHT}}(fh)
+{{Cl|PRINT}} {{Text|<nowiki>"_UFONTHEIGHT ="</nowiki>|#FFB100}}; {{Cl|_UFONTHEIGHT}}(fh)
+{{CodeEnd}}
+{{OutputStartBG0}}
+{{Ot|<nowiki>_FONTHEIGHT = 23</nowiki>|#a9a9a9}}
+{{Ot|<nowiki>_UFONTHEIGHT = 32</nowiki>|#a9a9a9}}
+{{OutputEnd}}
+
+
+{{PageSeeAlso}}
+* [https://qb64phoenix.com/forum/showthread.php?tid=2810 Featured in our "Keyword of the Day" series]
+* [[_UPRINTWIDTH]], [[_ULINESPACING]], [[_UPRINTSTRING]], [[_UCHARPOS]]
+* [[_FONTWIDTH]], [[_FONTHEIGHT]], [[_FONT]]
+* [[_PRINTWIDTH]], [[_PRINTSTRING]]
+* [[SCREEN]], [[_LOADFONT]]
+* [[Text Using Graphics]]
+
+
+{{PageNavigation}}

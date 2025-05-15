@@ -1,0 +1,45 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:42:06}}
+{{DISPLAYTITLE:_MESSAGEBOX}}
+The '''_MESSAGEBOX''' statement displays a message dialog box, which presents a message to the user.
+
+
+{{PageSyntax}}
+: '''_MESSAGEBOX''' [{{Parameter|title$}}][, {{Parameter|message$}}][, {{Parameter|iconType$}}]
+
+
+{{PageParameters}}
+* {{Parameter|title$}} is the dialog box title
+* {{Parameter|message$}} is the dialog box message
+* {{Parameter|iconType$}} is the icon type that is displayed inside the dialog box (this can be '''"info"''', '''"warning"''', or '''"error"''')
+
+
+{{PageDescription}}
+* All parameters are optional
+* Not using any parameters will show a blank dialog box with an OK button
+* The dialog box automatically becomes a modal window if the application window is visible
+
+
+{{PageAvailability}}
+* '''QB64-PE v3.4.0 and up'''
+
+
+{{PageExamples}}
+; Example : Hello, world with common dialogs
+{{CodeStart}}
+username$ = {{Cl|_INPUTBOX$}}("Hello App", "Enter your name:", "anonymous")
+{{Cl|IF}} username$ <> "" {{Cl|THEN}} {{Cl|_MESSAGEBOX}} "Hello App", "Hello " + username$, "info"
+{{CodeEnd}}
+
+
+{{PageSeeAlso}}
+* [[_NOTIFYPOPUP]]
+* [[_MESSAGEBOX (function)]]
+* [[_INPUTBOX$]]
+* [[_SELECTFOLDERDIALOG$]]
+* [[_COLORCHOOSERDIALOG]]
+* [[_OPENFILEDIALOG$]]
+* [[_SAVEFILEDIALOG$]]
+
+
+{{PageNavigation}}

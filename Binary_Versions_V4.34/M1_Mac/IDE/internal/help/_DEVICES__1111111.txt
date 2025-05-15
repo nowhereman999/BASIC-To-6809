@@ -1,0 +1,48 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:41:08}}
+{{DISPLAYTITLE:_DEVICES}}
+The '''_DEVICES''' function returns the number of input devices on your computer including keyboard, mouse and game devices.
+
+
+{{PageSyntax}}
+: {{Parameter|device_count%}} = [[_DEVICES]]
+
+
+{{PageDescription}}
+* Returns the number of devices that can be listed separately with the [[_DEVICE$]] function by the device number.
+* Devices include keyboard, mouse, joysticks, game pads and multiple stick game controllers.
+; Note: This function must be read before trying to use the [[_DEVICE$]], [[_DEVICEINPUT]] or any of the '''_LASTxxx''' control functions.
+
+
+{{PageExamples}}
+: Checking for the system's input devices.
+{{CodeStart}}
+devices% = {{Cl|_DEVICES}} {{Text|<nowiki>'MUST be read in order for other 2 device functions to work!</nowiki>|#919191}}
+{{Cl|PRINT}} {{Text|<nowiki>"Number of input devices found ="</nowiki>|#FFB100}}; devices%
+{{Cl|FOR}} i% = {{Text|1|#F580B1}} {{Cl|TO}} devices%
+    {{Cl|PRINT}} {{Cl|_DEVICE$}}(i%)
+    {{Cl|PRINT}} {{Text|<nowiki>"Buttons:"</nowiki>|#FFB100}}; {{Cl|_LASTBUTTON}}(i%)
+{{Cl|NEXT}} i%
+{{Cl|END}}
+{{CodeEnd}}
+{{OutputStart}}Number of input devices found = 2
+[KEYBOARD][BUTTON]
+Buttons: 512
+[MOUSE][BUTTON][AXIS][WHEEL]
+Buttons: 3
+{{OutputEnd}}
+; Note: The [[STRIG]] and [[STICK]] commands won't read from the keyboard or mouse device the above example lists.
+
+
+{{PageSeeAlso}}
+* [[_DEVICE$]], [[_DEVICEINPUT]]
+* [[_LASTBUTTON]], [[_LASTAXIS]], [[_LASTWHEEL]]
+* [[_BUTTON]], [[_BUTTONCHANGE]]
+* [[_AXIS]], [[_WHEEL]]
+* [[_MOUSEINPUT]], [[_MOUSEX]], [[_MOUSEBUTTON]]
+* [[STRIG]], [[STICK]]
+* [[ON STRIG(n)]], [[STRIG(n)]]
+* [[Controller Devices]]
+
+
+{{PageNavigation}}

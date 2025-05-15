@@ -36,9 +36,14 @@ Dim NumericCommandsFoundCount As Integer
 Dim StringCommandsFound$(2000)
 Dim StringCommandsFoundCount As Integer
 Dim Sprite$(255)
+Dim SpriteHeight(255)
 Dim SpriteNumberOfFrames(255)
-Dim Sprite8KBlocks(255)
 Dim SpriteLivesAt(255)
+Dim Sample$(255)
+Dim SampleStart(255)
+Dim SampleStartBlock(255)
+Dim SampleNumberOfBLKs(255)
+Dim SampleLength(255)
 
 Dim IncludeList$(10000)
 
@@ -299,7 +304,10 @@ Check$ = "GMODE": GoSub FindGenCommandNumber ' Gets the General Command number o
 C_GMODE = ii
 Check$ = "SPRITE_LOAD": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
 C_SPRITE_LOAD = ii
-
+Check$ = "SAMPLE_LOAD": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+C_SAMPLE_LOAD = ii
+Check$ = "PLAYFIELD": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+C_PLAYFIELD = ii
 ' Handle command line options
 FI = 0
 count = _CommandCount
@@ -417,14 +425,14 @@ While x < length - 1 ' Loop until we've processed the entire BASIC program
                 'Could be a label or a general command with a colon after it
                 ' Check for a General command
                 Found = 0
-                For c = 1 To GeneralCommandsCount
-                    Temp$ = UCase$(GeneralCommands$(c))
+                For C = 1 To GeneralCommandsCount
+                    Temp$ = UCase$(GeneralCommands$(C))
                     Check$ = UCase$(Check$)
                     If Temp$ = Check$ Then
                         'Found a General Command
                         Found = 1: Exit For
                     End If
-                Next c
+                Next C
                 If Found = 0 Then
                     ' It is a label
                     LineCount = LineCount + 1
@@ -545,14 +553,14 @@ While x < length - 1 ' Loop until we've processed the entire BASIC program
                 'Could be a label or a general command with a colon after it
                 ' Check for a General command
                 Found = 0
-                For c = 1 To GeneralCommandsCount
-                    Temp$ = UCase$(GeneralCommands$(c))
+                For C = 1 To GeneralCommandsCount
+                    Temp$ = UCase$(GeneralCommands$(C))
                     Check$ = UCase$(Check$)
                     If Temp$ = Check$ Then
                         'Found a General Command
                         Found = 1
                     End If
-                Next c
+                Next C
                 If Found = 0 Then
                     ' It is a label
                     LineCountB = LineCountB + 1
@@ -667,16 +675,16 @@ End If
 ' Copy array to output file first byte of the array is 0
 ' Example: array(0),array(1),array(2),...,array(length)
 filesize = INx - 1
-c = 0
+C = 0
 For OP = 0 To filesize
-    Array(c) = INArray(OP): c = c + 1
+    Array(C) = INArray(OP): C = C + 1
 Next OP
 
 
 ReDim LastOutArray(filesize) As _Unsigned _Byte
-c = 0
+C = 0
 For OP = 0 To filesize
-    LastOutArray(c) = Array(OP): c = c + 1
+    LastOutArray(C) = Array(OP): C = C + 1
 Next OP
 If _FileExists("BasicTokenizedB4Pass2.bin") Then Kill "BasicTokenizedB4Pass2.bin"
 If Verbose > 0 Then Print "Writing to file "; "BasicTokenizedB4Pass2.bin"
@@ -686,17 +694,17 @@ Close #1
 
 ' Re-format IF statements that are only one line and don't end with an ENDIF just an EOL to end with and ENDIF (so all IF's can be handled the same)
 If Verbose > 0 Then Print "Doing Pass 2 - Changing single line IF commands to IF/THEN/ELSE/END IF, multiple lines"
-c = 0
+C = 0
 x = 0
 While x <= filesize
     V = Array(x): x = x + 1 ' get a byte
-    INArray(c) = V: c = c + 1 'write byte to ouput array
+    INArray(C) = V: C = C + 1 'write byte to ouput array
     If V = &HFF And Array(x) * 256 + Array(x + 1) = C_IF Then
         'It is an IF command
         V = Array(x): x = x + 1 ' get the command to do
-        INArray(c) = V: c = c + 1 ' write byte to ouput array
+        INArray(C) = V: C = C + 1 ' write byte to ouput array
         V = Array(x): x = x + 1 ' get the command to do
-        INArray(c) = V: c = c + 1 ' write byte to ouput array
+        INArray(C) = V: C = C + 1 ' write byte to ouput array
         'Make sure it wasn't part of an END IF
         'END IF = FF xx xx FF xx xx F5 0D
         If x > 6 Then
@@ -710,12 +718,12 @@ While x <= filesize
         ' Find the THEN command for this IF
         Do Until V = &HFF And (Array(x) * 256 + Array(x + 1) = C_THEN Or Array(x) * 256 + Array(x + 1) = C_GOTO) ' If we come across a GOTO instead of a THEN, make it a THEN
             V = Array(x): x = x + 1 ' get a byte
-            INArray(c) = V: c = c + 1 ' write byte to ouput array
+            INArray(C) = V: C = C + 1 ' write byte to ouput array
         Loop 'loop until we find a THEN or GOTO command
         ' Just in case we found a GOTO instead of a THEN, change it to a THEN
         ' Make it a THEN even if it was a GOTO
         Num = C_THEN: GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSB
-        INArray(c) = MSB: c = c + 1: INArray(c) = LSB: c = c + 1 ' write command to ouput array
+        INArray(C) = MSB: C = C + 1: INArray(C) = LSB: C = C + 1 ' write command to ouput array
         x = x + 2 ' skip forward past command number
         ' Print "Checking for stuff after the THEN"
         V = Array(x) ' get a byte
@@ -727,8 +735,8 @@ While x <= filesize
         End If
         If V = (&HF5 And Array(x) = &H0D) Or (V = &HFF And Array(x) * 256 + Array(x + 1) = C_REM) Or (V = &HFF And Array(x) * 256 + Array(x + 1) = C_REMApostrophe) Then ' After THEN do we have an EOL, or REMarks?
             ' if so this is already an IF/THEN/ELSE/ELSEIF/ENDIF so don't need to change it to be a multi line IF
-            INArray(c) = V: c = c + 1 ' write byte to ouput array
-            If V = &HF5 And Array(x) = &H0D Then INArray(c) = &H0D: c = c + 1: x = x + 1
+            INArray(C) = V: C = C + 1 ' write byte to ouput array
+            If V = &HF5 And Array(x) = &H0D Then INArray(C) = &H0D: C = C + 1: x = x + 1
         Else
             ' Print "not a multi line IF"
             ' This is a one line IF/THEN/ELSE command that ends with a $F5 $0D
@@ -736,55 +744,55 @@ While x <= filesize
             ' We've copied everything upto and including the THEN
             ' Make the byte after the THEN an EOL
             IfCounter = 1
-            INArray(c) = &HF5: c = c + 1 ' Add EOL
-            INArray(c) = &H0D: c = c + 1 ' Add EOL
-            INArray(c) = 0: c = c + 1 ' start of next line - line label length of zero
+            INArray(C) = &HF5: C = C + 1 ' Add EOL
+            INArray(C) = &H0D: C = C + 1 ' Add EOL
+            INArray(C) = 0: C = C + 1 ' start of next line - line label length of zero
             'Check for a number could be IF THEN 50
             FoundLineNumber:
             If V >= Asc("0") And V <= Asc("9") Then
                 ' Found a line number, change it to a new line with GOTO linenumber
-                INArray(c) = &HFF: c = c + 1 ' General command
+                INArray(C) = &HFF: C = C + 1 ' General command
                 Num = C_GOTO: GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSB
-                INArray(c) = MSB: c = c + 1: INArray(c) = LSB: c = c + 1 ' write command to ouput array
+                INArray(C) = MSB: C = C + 1: INArray(C) = LSB: C = C + 1 ' write command to ouput array
                 While V >= Asc("0") And V <= Asc("9")
-                    INArray(c) = V: c = c + 1 ' write line number
+                    INArray(C) = V: C = C + 1 ' write line number
                     V = Array(x): x = x + 1 ' copy the line number
                 Wend
                 x = x - 1
                 While Array(x) = &HF5 And Array(x + 1) = &H3A: V = Array(x): x = x + 2: Wend ' consume any colons
                 V = Array(x): x = x + 1
-                If V = &HF5 And Array(x) = &H0D Then INArray(c) = &HF5: c = c + 1: GoTo FixedGoto ' The &H0D will be added below
+                If V = &HF5 And Array(x) = &H0D Then INArray(C) = &HF5: C = C + 1: GoTo FixedGoto ' The &H0D will be added below
             End If
             ' Not a line number after the THEN
             x = x - 1
             Do Until V = &HF5 And Array(x) = &H0D
                 V = Array(x): x = x + 1 ' get a byte
-                INArray(c) = V: c = c + 1 ' write byte to ouput array
+                INArray(C) = V: C = C + 1 ' write byte to ouput array
                 If V = &HFF Then
                     If Array(x) * 256 + Array(x + 1) = C_IF Then
                         ' Found an IF
                         IfCounter = IfCounter + 1
-                        c = c - 1 ' Don't keep the &HFF it just wrote
-                        INArray(c) = &HF5: c = c + 1 ' add EOL instead of the IF Command
-                        INArray(c) = &H0D: c = c + 1 ' add EOL
-                        INArray(c) = &H00: c = c + 1 ' line label length of zero
-                        INArray(c) = &HFF: c = c + 1 ' Add the command Token
+                        C = C - 1 ' Don't keep the &HFF it just wrote
+                        INArray(C) = &HF5: C = C + 1 ' add EOL instead of the IF Command
+                        INArray(C) = &H0D: C = C + 1 ' add EOL
+                        INArray(C) = &H00: C = C + 1 ' line label length of zero
+                        INArray(C) = &HFF: C = C + 1 ' Add the command Token
                         V = Array(x): x = x + 1 ' Get the IF Command #MSB
-                        INArray(c) = V: c = c + 1 ' Write the IF Command #MSB
+                        INArray(C) = V: C = C + 1 ' Write the IF Command #MSB
                         V = Array(x): x = x + 1 ' Get the IF Command #LSB
-                        INArray(c) = V: c = c + 1 ' Write the IF Command #LSB
+                        INArray(C) = V: C = C + 1 ' Write the IF Command #LSB
                     End If
                     If Array(x) * 256 + Array(x + 1) = C_THEN Or Array(x) * 256 + Array(x + 1) = C_ELSE Then
                         ' Found THEN or ELSE
-                        c = c - 1 ' Don't keep the &HFF it just wrote
-                        INArray(c) = &HF5: c = c + 1 ' add EOL
-                        INArray(c) = &H0D: c = c + 1 ' add EOL
-                        INArray(c) = 0: c = c + 1 ' line label length
-                        INArray(c) = &HFF: c = c + 1 ' write &HFF command byte to ouput array
+                        C = C - 1 ' Don't keep the &HFF it just wrote
+                        INArray(C) = &HF5: C = C + 1 ' add EOL
+                        INArray(C) = &H0D: C = C + 1 ' add EOL
+                        INArray(C) = 0: C = C + 1 ' line label length
+                        INArray(C) = &HFF: C = C + 1 ' write &HFF command byte to ouput array
                         V = Array(x): x = x + 1 ' get the THEN or ELSE command # MSB
-                        INArray(c) = V: c = c + 1 ' write byte to ouput array
+                        INArray(C) = V: C = C + 1 ' write byte to ouput array
                         V = Array(x): x = x + 1 ' get the THEN or ELSE command # LSB
-                        INArray(c) = V: c = c + 1 ' write byte to ouput array
+                        INArray(C) = V: C = C + 1 ' write byte to ouput array
                         V = Array(x): x = x + 1 ' get the next byte
                         If V = &HF5 And Array(x) = &H3A Then
                             ' We have a colon
@@ -794,26 +802,26 @@ While x <= filesize
                         End If
                         If V >= Asc("0") And V <= Asc("9") Then GoTo FoundLineNumber
                         x = x - 1
-                        INArray(c) = &HF5: c = c + 1 ' Add EOL
-                        INArray(c) = &H0D: c = c + 1 ' Add EOL
-                        INArray(c) = 0: c = c + 1 ' line label length of zero
+                        INArray(C) = &HF5: C = C + 1 ' Add EOL
+                        INArray(C) = &H0D: C = C + 1 ' Add EOL
+                        INArray(C) = 0: C = C + 1 ' line label length of zero
                     End If
                 End If
             Loop
             FixedGoto:
             V = Array(x): x = x + 1 ' get a byte the $0D
-            INArray(c) = V: c = c + 1 ' write byte to ouput array
+            INArray(C) = V: C = C + 1 ' write byte to ouput array
             For I = 1 To IfCounter
                 'END IF = FF xx xx FF xx xx F5 0D
-                INArray(c) = 0: c = c + 1 ' line label length of zero
-                INArray(c) = &HFF: c = c + 1
+                INArray(C) = 0: C = C + 1 ' line label length of zero
+                INArray(C) = &HFF: C = C + 1
                 Num = C_END: GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSB
-                INArray(c) = MSB: c = c + 1: INArray(c) = LSB: c = c + 1 ' write command to ouput array
-                INArray(c) = &HFF: c = c + 1
+                INArray(C) = MSB: C = C + 1: INArray(C) = LSB: C = C + 1 ' write command to ouput array
+                INArray(C) = &HFF: C = C + 1
                 Num = C_IF: GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSB
-                INArray(c) = MSB: c = c + 1: INArray(c) = LSB: c = c + 1 ' write command to ouput array
-                INArray(c) = &HF5: c = c + 1 ' Add EOL
-                INArray(c) = &H0D: c = c + 1 ' EOL
+                INArray(C) = MSB: C = C + 1: INArray(C) = LSB: C = C + 1 ' write command to ouput array
+                INArray(C) = &HF5: C = C + 1 ' Add EOL
+                INArray(C) = &H0D: C = C + 1 ' EOL
             Next I
         End If
     End If
@@ -872,16 +880,16 @@ While OP <= filesize
 Wend
 
 ' Copy array INArray() to Array()
-filesize = c - 1
-c = 0
+filesize = C - 1
+C = 0
 For OP = 0 To filesize
-    Array(c) = INArray(OP): c = c + 1
+    Array(C) = INArray(OP): C = C + 1
 Next OP
 
 ReDim LastOutArray(filesize) As _Unsigned _Byte
-c = 0
+C = 0
 For OP = 0 To filesize
-    LastOutArray(c) = Array(OP): c = c + 1
+    LastOutArray(C) = Array(OP): C = C + 1
 Next OP
 If _FileExists("BasicTokenizedB4Pass3.bin") Then Kill "BasicTokenizedB4Pass3.bin"
 If Verbose > 0 Then Print "Writing to file "; "BasicTokenizedB4Pass3.bin"
@@ -893,69 +901,69 @@ Close #1
 'If BASICMode = 1 Then GoTo SkipCheckingForElseIF ' CoCo BASIC won't have ELSEIF
 
 ' Change any ElseIf to ELSE/IF
-c = 0
+C = 0
 x = 0
 AddENDIF = 0
 ElseIfCheckPartOfENDIF:
 While x <= filesize
     V = Array(x): x = x + 1 ' get a byte
-    INArray(c) = V: c = c + 1 'write byte to ouput array
+    INArray(C) = V: C = C + 1 'write byte to ouput array
     If V > &HEF Then
         'We have a Token
         Select Case V
             Case &HF0, &HF1: ' Found a Numeric or String array
                 V = Array(x): x = x + 1 ' get a byte
-                INArray(c) = V: c = c + 1 'write byte to ouput array
+                INArray(C) = V: C = C + 1 'write byte to ouput array
                 V = Array(x): x = x + 1 ' get a byte
-                INArray(c) = V: c = c + 1 'write byte to ouput array
+                INArray(C) = V: C = C + 1 'write byte to ouput array
                 V = Array(x): x = x + 1 ' get a byte
-                INArray(c) = V: c = c + 1 'write byte to ouput array
+                INArray(C) = V: C = C + 1 'write byte to ouput array
             Case &HF2, &HF3, &HF4: ' Found a numeric or string or Floating point variable
                 V = Array(x): x = x + 1 ' get a byte
-                INArray(c) = V: c = c + 1 'write byte to ouput array
+                INArray(C) = V: C = C + 1 'write byte to ouput array
                 V = Array(x): x = x + 1 ' get a byte
-                INArray(c) = V: c = c + 1 'write byte to ouput array
+                INArray(C) = V: C = C + 1 'write byte to ouput array
             Case &HF5 ' Found a special character
                 V = Array(x): x = x + 1 ' get a byte
-                INArray(c) = V: c = c + 1 'write byte to ouput array
+                INArray(C) = V: C = C + 1 'write byte to ouput array
             Case &HFB: ' Found a DEF FN Function
                 V = Array(x): x = x + 1 ' get a byte
-                INArray(c) = V: c = c + 1 'write byte to ouput array
+                INArray(C) = V: C = C + 1 'write byte to ouput array
                 V = Array(x): x = x + 1 ' get a byte
-                INArray(c) = V: c = c + 1 'write byte to ouput array
+                INArray(C) = V: C = C + 1 'write byte to ouput array
             Case &HFC: ' Found an Operator
                 V = Array(x): x = x + 1 ' get a byte
-                INArray(c) = V: c = c + 1 'write byte to ouput array
+                INArray(C) = V: C = C + 1 'write byte to ouput array
             Case &HFD, &HFE: 'Found String or Numeric command
                 V = Array(x): x = x + 1 ' get a byte
-                INArray(c) = V: c = c + 1 'write byte to ouput array
+                INArray(C) = V: C = C + 1 'write byte to ouput array
                 V = Array(x): x = x + 1 ' get a byte
-                INArray(c) = V: c = c + 1 'write byte to ouput array
+                INArray(C) = V: C = C + 1 'write byte to ouput array
             Case &HFF: ' Found a General command
                 Temp1 = Array(x): x = x + 1 ' get a byte
-                INArray(c) = Temp1: c = c + 1 'write byte to ouput array
+                INArray(C) = Temp1: C = C + 1 'write byte to ouput array
                 Temp2 = Array(x): x = x + 1 ' get a byte
-                INArray(c) = Temp2: c = c + 1 'write byte to ouput array
+                INArray(C) = Temp2: C = C + 1 'write byte to ouput array
                 V = Temp1 * 256 + Temp2
                 If V = C_ELSE Then
                     ' Found an Else, check for IF
                     If Array(x) = &HFF And Array(x + 1) * 256 + Array(x + 2) = C_IF Then
                         ' We found an ELSE IF
                         ' Change ELSEIF to ELSE - EOL
-                        INArray(c) = &HF5: c = c + 1: INArray(c) = &H0D: c = c + 1 ' EOL
-                        INArray(c) = 0: c = c + 1 ' line label length of zero
+                        INArray(C) = &HF5: C = C + 1: INArray(C) = &H0D: C = C + 1 ' EOL
+                        INArray(C) = 0: C = C + 1 ' line label length of zero
                     End If
                 End If
         End Select
     End If
 Wend
 
-filesize = c - 1
+filesize = C - 1
 ReDim LastOutArray(filesize) As _Unsigned _Byte
-c = 0
+C = 0
 For OP = 0 To filesize
-    Array(c) = INArray(OP)
-    LastOutArray(c) = INArray(OP): c = c + 1
+    Array(C) = INArray(OP)
+    LastOutArray(C) = INArray(OP): C = C + 1
 Next OP
 If _FileExists("BasicTokenized.bin") Then Kill "BasicTokenized.bin"
 If Verbose > 0 Then Print "Writing to file "; "BasicTokenized.bin"
@@ -979,6 +987,7 @@ Wend
 If Verbose > 0 Then Print "Doing Pass 4 - Finding special cases that will need other files to be included..."
 x = 0
 Gmode = -1 ' Flag no GMODE command found
+ScollBackground = -1 ' Flag no Scrollable background found
 While x < filesize
     V = Array(x): x = x + 1 ' get the command to do
     If V = &HFF Then ' Found a command
@@ -1004,6 +1013,19 @@ While x < filesize
                     Gmode = Val(Temp$)
                     x = Tempx 'Set things back to normal
                 End If
+            Case C_PLAYFIELD
+                'Found a PLAYFIELD command, signify we will be scrolling the background and setup variables
+                ScollBackground = 1 ' Using scrolling
+                Tempx = x
+                ' get the Playfield option
+                N$ = ""
+                While Array(x) < &HF0
+                    N$ = N$ + Chr$(Array(x)): x = x + 1
+                Wend
+                ' Got the Playfield needed
+                Playfield = Val(N$)
+                If Playfield < 1 Or Playfield > 5 Then Print "Error: PLAYFIELD command, Must be an acutal number (not a variable) and can only handle values from 1 to 5";: GoTo FoundError
+                x = Tempx 'Set things back to normal
             Case C_SPRITE_LOAD
                 ' Found a Sprite Load command
                 ' Get the address and name of the sprite to load
@@ -1018,7 +1040,7 @@ While x < filesize
                     Wend
                     If Array(x) <> &HF5 And Array(x + 1) <> &H22 Then
                         ' Couldn't find an end quote for the compiled sprite name
-                        Print "Error1: Couldn't find an end quote for the compiled sprite name";: GoTo FoundError
+                        Print "Error: SPRITE_LOAD Couldn't find an end quote for the compiled sprite name";: GoTo FoundError
                     End If
                     x = x + 2 ' move past the close quote
                     ' Check for a comma
@@ -1032,8 +1054,26 @@ While x < filesize
                         Wend
                         ' Got the number of the sprite
                         n = Val(N$)
-                        If n > 127 Then Print "Error1: Can't use sprite number"; n; " please use a smaller sprite number";: GoTo FoundError
+                        If n > 31 Then Print "Error: SPRITE_LOAD Can't use sprite number"; n; " must be 31 or lower";: GoTo FoundError
                         Sprite$(n) = Temp$
+                        ' Find the sprite's height, needed for when to draw it on screen
+                        Open "./" + Temp$ For Append As #1
+                        If LOF(1) < 1 Then
+                            Print "Error: SPRITE_LOAD file: "; Temp$; " doesn't exit.": System
+                        End If
+                        Close #1
+                        Open "./" + Temp$ For Input As #1
+                        While EOF(1) = 0
+                            Line Input #1, i$
+                            If InStr(i$, "; Height is: ") = 1 Then
+                                hend = InStr(i$, " Rows")
+                                h$ = Mid$(i$, 14, hend - 14)
+                                h = Val(h$)
+                                SpriteHeight(n) = h
+                                Exit While
+                            End If
+                        Wend
+                        Close #1
                         ' Check for a comma
                         If Array(x) = &HF5 And Array(x + 1) = &H2C Then
                             ' Found a comma
@@ -1051,10 +1091,54 @@ While x < filesize
                             SpriteNumberOfFrames(n) = 0
                         End If
                     Else
-                        Print "Error1: Can't find a comma with the sprite number";: GoTo FoundError
+                        Print "Error: SPRITE_LOAD Can't find a comma with the sprite number";: GoTo FoundError
                     End If
                 Else
-                    Print "Error1: Can't find an open quote for the compiled sprite name";: GoTo FoundError
+                    Print "Error: SPRITE_LOAD Can't find an open quote for the compiled sprite name";: GoTo FoundError
+                End If
+            Case C_SAMPLE_LOAD
+                ' Found a Sample Load command
+                ' Get the address and name of the sample to load
+                If Array(x) = &HF5 And Array(x + 1) = &H22 Then
+                    ' Found an open quote
+                    x = x + 2 ' move past the open quote
+                    Temp$ = ""
+                    While Array(x) < &HF0
+                        ' Get the path and filename of the sample
+                        Temp$ = Temp$ + Chr$(Array(x))
+                        x = x + 1
+                    Wend
+                    If Array(x) <> &HF5 And Array(x + 1) <> &H22 Then
+                        ' Couldn't find an end quote for the sample name
+                        Print "Error: SAMPLE_LOAD Couldn't find an end quote for the audio sample name";: GoTo FoundError
+                    End If
+                    x = x + 2 ' move past the close quote
+                    ' Check for a comma
+                    If Array(x) = &HF5 And Array(x + 1) = &H2C Then
+                        ' Found a comma
+                        x = x + 2
+                        ' get the sample number
+                        N$ = ""
+                        While Array(x) < &HF0
+                            N$ = N$ + Chr$(Array(x)): x = x + 1
+                        Wend
+                        ' Got the number of the sample
+                        n = Val(N$)
+                        If n > 31 Then Print "Error: SAMPLE_LOAD Can't use sample number"; n; " must be 31 or lower";: GoTo FoundError
+                        Sample$(n) = Temp$
+                        ' Find the sample's height, needed for when to draw it on screen
+                        Open "./" + Temp$ For Append As #1
+                        If LOF(1) < 1 Then
+                            Print "Error: SAMPLE_LOAD file: "; Temp$; " doesn't exit.": System
+                        End If
+                        SampleLength(n) = LOF(1)
+                        SampleStart(n) = &H7FFF - LOF(1) + 1
+                        Close #1
+                    Else
+                        Print "Error: SAMPLE_LOAD Can't find a comma with the sample number";: GoTo FoundError
+                    End If
+                Else
+                    Print "Error: SAMPLE_LOAD Can't find an open quote for the compiled sample name";: GoTo FoundError
                 End If
         End Select
     End If
@@ -1126,25 +1210,41 @@ Next ii
 
 ' Sprite setup stuff
 Sprites = 0
-For I = 0 To 127
+For I = 0 To 31
     If Sprite$(I) <> "" Then Sprites = 1
 Next I
 
 Open "SpritesUsed.txt" For Output As #1
 Print #1, CoCo3
 Print #1, Sprites
-For I = 0 To 127
+For I = 0 To 31
     Print #1, Sprite$(I)
-    Print #1, SpriteNumberOfFrames(I)
-    Sprite8KBlocks(I) = 0
-    If Sprite$(I) <> "" Then
-        Open Sprite$(I) For Input As #2
-        Input #2, i$
-        Input #2, i$
-        Sprite8KBlocks(I) = Val(Right$(i$, 1))
-        Close #2
+    Print #1, SpriteNumberOfFrames(I) ' Record the sprite height
+    Print #1, SpriteHeight(I) ' Record the sprite height
+Next I
+Close #1
+
+' Audio Sample setup stuff
+Samples = 0
+For I = 0 To 31
+    If Sample$(I) <> "" Then Samples = 1
+Next I
+
+Open "SamplesUsed.txt" For Output As #1
+Print #1, CoCo3
+Print #1, Samples
+Sample8KBlock = 0 ' First 8 k block to be used for audio samples
+For I = 0 To 31
+    If Sample$(I) <> "" Then
+        SampleNumberOfBLKs(I) = Int(SampleLength(I) / &H2000) + 1
+        SampleStartBlock(I) = Sample8KBlock
+        Sample8KBlock = Sample8KBlock + SampleNumberOfBLKs(I)
     End If
-    Print #1, Sprite8KBlocks(I)
+    Print #1, Sample$(I)
+    Print #1, SampleStart(I)
+    Print #1, SampleStartBlock(I)
+    Print #1, SampleNumberOfBLKs(I)
+    Print #1, SampleLength(I)
 Next I
 Close #1
 
@@ -1189,7 +1289,7 @@ For ii = 0 To 171
         End If
     End If
 Next ii
-'If we are doing CoCo3 sprites load them first
+' If we are doing CoCo3 sprites load them first
 ' Add blocks needed per grapics screen if we are using a coco 3
 If CoCo3 = 1 And Sprites = 1 Then
     For ii = 0 To 171
@@ -1206,28 +1306,6 @@ If CoCo3 = 1 And Sprites = 1 Then
             End If
         End If
     Next ii
-    For ii = 0 To 171
-        If GModeLib(ii) = 1 Then
-            CC3SpriteBlockTotal = CC3SpritesStartAt ' Need to calculate where these need to really start (after the last GMODE screen reserved)
-            For c = 0 To 127
-                If Sprite8KBlocks(c) > 0 Then
-                    Select Case CC3SpriteBlockTotal
-                        Case Is < &H37
-                            SpriteLivesAt(c) = CC3SpriteBlockTotal
-                        Case &H37
-                            If Sprite8KBlocks(c) = 1 Then
-                                SpriteLivesAt(c) = CC3SpriteBlockTotal
-                            Else
-                                SpriteLivesAt(c) = CC3SpriteBlockTotal + 9 ' Skip the blocks where normal CC3 code lives ($38-$3F)
-                            End If
-                        Case Else
-                            SpriteLivesAt(c) = CC3SpriteBlockTotal + 8 ' Skip the blocks where normal CC3 code lives ($38-$3F)
-                    End Select
-                    CC3SpriteBlockTotal = CC3SpriteBlockTotal + Sprite8KBlocks(c)
-                End If
-            Next c
-        End If
-    Next ii
     Select Case Val(GModeColours$(Gmode))
         Case 2
             ColourDiv = 8
@@ -1237,35 +1315,109 @@ If CoCo3 = 1 And Sprites = 1 Then
             ColourDiv = 2
     End Select
     Num = (Val(GModeMaxX$(Gmode)) + 1) / ColourDiv: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-    Z$ = "GmodeBytesPerRow EQU     " + Num$ + "        ; # of bytes per graphics row, used by the sprite rendering code": GoSub AO
+    Z$ = "GmodeBytesPerRow EQU     " + Num$ + "    ; # of bytes per graphics row, used by the sprite rendering code": GoSub AO
     Num = Val("&H" + GModeScreenSize$(Gmode)): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-    Z$ = "ScreenSize       EQU     " + Num$ + "        ; Size of a graphics screen": GoSub AO
+    Z$ = "ScreenSize      EQU     " + Num$ + "   ; Size of a graphics screen": GoSub AO
     Num = Val(GModeMaxX$(Gmode)): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-    Z$ = "PixelsMaxX       EQU     " + Num$ + "        ; Screen width Max from 0 to this value": GoSub AO
+    Z$ = "PixelsMaxX      EQU     " + Num$ + "     ; Screen width Max from 0 to this value": GoSub AO
     Num = Val(GModeColours$(Gmode)): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-    Z$ = "NumberOfColours  EQU     " + Num$ + "         ; Number of Colours on this screen": GoSub AO
-    Z$ = "Artifacting      EQU     0         ; Not using Artifact colours with a CoCo 3 GMODE": GoSub AO
+    Z$ = "NumberOfColours EQU     " + Num$ + "      ; Number of Colours on this screen": GoSub AO
+    Z$ = "Artifacting     EQU     0       ; Not using Artifact colours with a CoCo 3 GMODE": GoSub AO
 
-    ' add code to save in the correct block for $FFA1 & $FFA2  ($2000 & $4000)
-    For I = 0 To 127
+    ' add code to save in the correct block for $FFA1 & $FFA2...  ($2000 & $4000)
+    SpritePointer = -1
+    I = 0
+    While I <= 31
         If Sprite$(I) <> "" Then
-            Print #1, "; Loading Sprites into RAM"
-            ' Get the location after the last GMODE screen will be used
-            A$ = "ORG": B$ = "$FFA1": C$ = "Address to control $2000 block": GoSub AO
-            Num = SpriteLivesAt(I): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-            A$ = "FCB": B$ = Num$: C$ = "Block to use for this compiled sprite code": GoSub AO
-            If Sprite8KBlocks(I) = 2 Then
-                Num = SpriteLivesAt(I) + 1: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-                A$ = "FCB": B$ = Num$: C$ = "16k Sprite code": GoSub AO
-            End If
-            A$ = "ORG": B$ = "$2000": C$ = "Add the sprite at $2000": GoSub AO
-            Print #1, T2$; "INCLUDE     ./"; Sprite$(I)
+            SpritePointer = I
+            Exit While
         End If
-    Next I
+        I = I + 1
+    Wend
+    If SpritePointer <> -1 Then
+        Print #1, "; Loading Sprites into RAM"
+        ' We have at least one sprite to handle
+        Num = SpritePointer: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+        Num$ = Right$("00" + Num$, 2)
+        SpritePointerBlk$ = "Sprite" + Num$ + "Blk"
+        Z$ = SpritePointerBlk$ + "     EQU     $40   ; First block used for sprites (CoCo 3 needs to have 2 Megs for sprites)": GoSub AO
+        FirstBlk$ = SpritePointerBlk$
+        For I = 0 To 31
+            If Sprite$(I) <> "" Then
+                ' Get the location after the last GMODE screen will be used
+                A$ = "ORG": B$ = "$FFA1": C$ = "Address to control $2000 block": GoSub AO
+                A$ = "FCB": B$ = FirstBlk$: C$ = "Block to use for this compiled sprite code, $2000-$3FFF": GoSub AO
+                A$ = "FCB": B$ = FirstBlk$ + "+1": C$ = "Block to use for this compiled sprite code, $4000-$5FFF": GoSub AO
+                A$ = "FCB": B$ = FirstBlk$ + "+2": C$ = "Block to use for this compiled sprite code, $6000-$7FFF": GoSub AO
+                A$ = "FCB": B$ = FirstBlk$ + "+3": C$ = "Block to use for this compiled sprite code, $8000-$9FFF": GoSub AO
+                A$ = "FCB": B$ = FirstBlk$ + "+4": C$ = "Block to use for this compiled sprite code, $A000-$BFFF": GoSub AO
+                A$ = "FCB": B$ = FirstBlk$ + "+5": C$ = "Block to use for this compiled sprite code, $C000-$DFFF": GoSub AO
+                A$ = "FCB": B$ = FirstBlk$ + "+6": C$ = "Block to use for this compiled sprite code, $E000-$FDFF": GoSub AO
+                A$ = "ORG": B$ = "$2000": C$ = "Add the sprite at $2000": GoSub AO
+                Print #1, T2$; "INCLUDE     ./"; Sprite$(I)
+                SpriteEnd$ = "Sprite" + Num$ + "End"
+                Z$ = SpriteEnd$ + "     EQU       *": GoSub AO
+                ' Get next sprite #
+                I2 = I + 1
+                While I2 <= 31
+                    If Sprite$(I2) <> "" Then
+                        Exit While
+                    End If
+                    I2 = I2 + 1
+                Wend
+                If I2 <> 32 Then
+                    'Not done yet, I2 has the next sprite
+                    Num = I2: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+                    Num$ = Right$("00" + Num$, 2)
+                    NextBlk$ = "Sprite" + Num$ + "Blk"
+                    Z$ = NextBlk$ + "     EQU     " + FirstBlk$ + "+((" + SpriteEnd$ + "-$2000)/$2000)+1": GoSub AO
+                    FirstBlk$ = NextBlk$
+                End If
+            End If
+        Next I
+    End If
+End If
+If CoCo3 = 1 And Samples = 1 Then
+    ' add code to save in the correct block for $FFA1 & $FFA2...  ($2000 & $4000)
+    SamplePointer = -1
+    I = 0
+    While I <= 31
+        If Sample$(I) <> "" Then
+            SamplePointer = I
+            Exit While
+        End If
+        I = I + 1
+    Wend
+    If SamplePointer <> -1 Then
+        ' We have at least one sample to handle
+        Print #1, "; Loading Audio Samples into RAM"
+        For I = 0 To 31
+            If Sample$(I) <> "" Then
+                Num = I: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+                Num$ = Right$("00" + Num$, 2)
+                SamplePointerBlk$ = "Sample" + Num$ + "Blk"
+                Num = SampleStartBlock(I): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+                Z$ = SamplePointerBlk$ + "     EQU     $" + Hex$(Val(Num$)) + "  ; First block used for Sample" + Str$(I): GoSub AO
+                A$ = "ORG": B$ = "$FFA1": C$ = "Address to control $0000 block": GoSub AO
+                padding = 3 - SampleNumberOfBLKs(I)
+                For BLK = SampleStartBlock(I) + SampleNumberOfBLKs(I) - 1 - padding To SampleStartBlock(I) + SampleNumberOfBLKs(I) - 1
+                    V = BLK: If V < 0 Then V = 0
+                    A$ = "FCB": B$ = "$" + Right$("00" + Hex$(V), 2): C$ = "Block to use for audio sample " + Sample$(I): GoSub AO
+                Next BLK
+                Num = SampleStart(I): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+                A$ = "ORG": B$ = "$" + Hex$(Val(Num$)): C$ = "Sample starting at $" + Hex$(Val(Num$)): GoSub AO
+                Print #1, T2$; "INCLUDEBIN  ./"; Sample$(I)
+            End If
+        Next I
+    End If
+End If
+If CoCo3 = 1 And (SpritePointer <> -1 Or SamplePointer <> -1) Then
     A$ = "ORG": B$ = "$FFA1": C$ = "Address to control $2000 block": GoSub AO
     A$ = "FDB": B$ = "$393A": C$ = "Blocks are back to normal": GoSub AO
+    A$ = "FDB": B$ = "$3B3C": C$ = "Blocks are back to normal": GoSub AO
+    A$ = "FDB": B$ = "$3D3E": C$ = "Blocks are back to normal": GoSub AO
+    A$ = "FCB": B$ = "$3F": C$ = "Blocks are back to normal": GoSub AO
 End If
-
 If CoCo3 = 1 Then
     ProgramStart$ = "E00" ' Force the CoCo 3 to start at $E00
 End If
@@ -1321,62 +1473,200 @@ Print #1, "SoundTone       RMB     1     ; SOUND Tone value"
 Print #1, "SoundDuration   RMB     2     ; SOUND Command duration value"
 Print #1, "CASFLG          RMB     1     ; Case flag for keyboard output $FF=UPPER (normal), 0=LOWER"
 Print #1, "OriginalIRQ     RMB     3     ; We save the original branch and location of the IRQ here, restored before we exit"
-
 Print #1, "EndClearHere:" ' This is the end address of variables that will all be cleared to zero when the program starts
-
-If Disk = 0 Then
-    ' Sound and Timer 60 Hz IRQ
-    Z$ = "; Sound and Timer 60hz IRQ ": GoSub AO
-    Z$ = "BASIC_IRQ:": GoSub AO
-    A$ = "LDA": B$ = "$FF03": C$ = "CHECK FOR 60HZ INTERRUPT": GoSub AO
-    A$ = "BPL": B$ = "Not60Hz": C$ = "RETURN IF 63.5 MICROSECOND INTERRUPT": GoSub AO
-    A$ = "LDA": B$ = "$FF02": C$ = "RESET PIA0, PORT B INTERRUPT FLAG": GoSub AO
-    A$ = "LDX": B$ = "SoundDuration": C$ = "Get the new Sound duration value": GoSub AO
-    A$ = "BEQ": B$ = ">": C$ = "RETURN IF TIMER = 0": GoSub AO
-    A$ = "LEAX": B$ = "-1,X": C$ = "DECREMENT TIMER IF NOT = 0": GoSub AO
-    A$ = "STX": B$ = "SoundDuration": C$ = "Save the new Sound duration value": GoSub AO
-    Z$ = "!"
-    A$ = "INC": B$ = "_Var_Timer+1": C$ = "Increment the LSB of the Timer Value": GoSub AO
-    A$ = "BNE": B$ = "Not60Hz": C$ = "Skip ahead if not zero": GoSub AO
-    A$ = "INC": B$ = "_Var_Timer": C$ = "Increment the MSB of the Timer Value": GoSub AO
-    Z$ = "Not60Hz"
-    A$ = "RTI": B$ = "": C$ = "RETURN FROM INTERRUPT": GoSub AO
+Num = Playfield: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+Z$ = "PLAYFIELD   EQU     " + Num$: GoSub AO
+If ScollBackground = 1 Then
+    ' Add Scrolling Background code
+    Temp$ = "GraphicCommands/CoCo3_ScrollingBackground": GoSub AddIncludeTemp
+    If Playfield = 1 Then
+        ' Calculating which row the sprite will be should be normal
+        Z$ = "Scrolling   EQU     0": GoSub AO
+        Z$ = "VideoRamBlock           FCB     %00000010       ; Set default to 1 Meg to 1.5 Meg location": GoSub AO
+    Else
+        ' Calculating which row the sprite will be needs to account for a 256 byte (512 pixel screen)
+        Z$ = "Scrolling   EQU     1": GoSub AO
+        Z$ = "VideoRamBlock           FCB     %00000010       ; Set default to 1 Meg to 1.5 Meg location": GoSub AO
+    End If
 Else
-    ' DISK controller Interrupts
-    '; NMI SERVICE
-    Z$ = "DNMISV:"
-    A$ = "LDA": B$ = "NMIFLG": C$ = "GET NMI FLAG": GoSub AO
-    A$ = "BEQ": B$ = "LD8AE": C$ = "RETURN IF NOT ACTIVE": GoSub AO
-    A$ = "LDX": B$ = "DNMIVC": C$ = "GET NEW RETURN VECTOR": GoSub AO
-    A$ = "STX": B$ = "10,S": C$ = "STORE AT STACKED PC SLOT ON STACK": GoSub AO
-    A$ = "CLR": B$ = "NMIFLG": C$ = "RESET NMI FLAG": GoSub AO
-    Z$ = "LD8AE"
-    A$ = "RTI": B$ = "": C$ = "RETURN FROM INTERRUPT": GoSub AO
-    '; Disk IRQ SERVICE and Sound and Timer 60 Hz IRQ
-    Z$ = "BASIC_IRQ:"
-    A$ = "LDA": B$ = "$FF03": C$ = "63.5 MICRO SECOND OR 60 HZ INTERRUPT?": GoSub AO
-    A$ = "BPL": B$ = "LD8AE": C$ = "RETURN IF 63.5 MICROSECOND": GoSub AO
-    A$ = "LDA": B$ = "$FF02": C$ = "RESET 60 HZ PIA INTERRUPT FLAG": GoSub AO
-    A$ = "LDA": B$ = "RDYTMR": C$ = "GET TIMER": GoSub AO
-    A$ = "BEQ": B$ = "LD8CD": C$ = "BRANCH IF NOT ACTIVE": GoSub AO
-    A$ = "DECA": C$ = "DECREMENT THE TIMER": GoSub AO
-    A$ = "STA": B$ = "RDYTMR": C$ = "SAVE IT": GoSub AO
-    A$ = "BNE": B$ = "LD8CD": C$ = "BRANCH IF NOT TIME TO TURN OFF DISK MOTORS": GoSub AO
-    A$ = "LDA": B$ = "DRGRAM": C$ = "GET DSKREG IMAGE": GoSub AO
-    A$ = "ANDA": B$ = "#$B0": C$ = "TURN ALL MOTORS AND DRIVE SELECTS OFF": GoSub AO
-    A$ = "STA": B$ = "DRGRAM": C$ = "PUT IT BACK IN RAM IMAGE": GoSub AO
-    A$ = "STA": B$ = "DSKREG": C$ = "SEND TO CONTROL REGISTER (MOTORS OFF)": GoSub AO
-    Z$ = "LD8CD"
-    A$ = "LDX": B$ = "SoundDuration": C$ = "Get the new Sound duration value": GoSub AO
-    A$ = "BEQ": B$ = ">": C$ = "RETURN IF TIMER = 0": GoSub AO
-    A$ = "LEAX": B$ = "-1,X": C$ = "DECREMENT TIMER IF NOT = 0": GoSub AO
-    A$ = "STX": B$ = "SoundDuration": C$ = "Save the new Sound duration value": GoSub AO
-    Z$ = "!"
-    A$ = "INC": B$ = "_Var_Timer+1": C$ = "Increment the LSB of the Timer Value": GoSub AO
-    A$ = "BNE": B$ = "Not60Hz": C$ = "Skip ahead if not zero": GoSub AO
-    A$ = "INC": B$ = "_Var_Timer": C$ = "Increment the MSB of the Timer Value": GoSub AO
-    Z$ = "Not60Hz"
-    A$ = "RTI": B$ = "": C$ = "RETURN FROM INTERRUPT": GoSub AO
+    Z$ = "Scrolling   EQU     0": GoSub AO
+    Z$ = "VideoRamBlock           FCB     %00000000       ; Set default to 0 Meg to 0.5 Meg location": GoSub AO
+End If
+Z$ = "VerticalPosition        FDB     $0000           ; Offset": GoSub AO
+Z$ = "HorizontalPosition      FCB     %00000000       ; Bit 7 set = Horizontal scrolling enabled": GoSub AO
+If CoCo3 = 1 Then
+    Print #1, T2$; "INCLUDE        ./Basic_Includes/CoCo3_Equates.asm" ' Include the CoCo 3 Equates
+    If Disk = 1 Then
+        ' DISK controller Interrupts
+        '; NMI SERVICE
+        Z$ = "DNMISV:"
+        A$ = "LDA": B$ = "NMIFLG": C$ = "GET NMI FLAG": GoSub AO
+        A$ = "BEQ": B$ = "LD8AE": C$ = "RETURN IF NOT ACTIVE": GoSub AO
+        A$ = "LDX": B$ = "DNMIVC": C$ = "GET NEW RETURN VECTOR": GoSub AO
+        A$ = "STX": B$ = "10,S": C$ = "STORE AT STACKED PC SLOT ON STACK": GoSub AO
+        A$ = "CLR": B$ = "NMIFLG": C$ = "RESET NMI FLAG": GoSub AO
+        Z$ = "LD8AE"
+        A$ = "RTI": B$ = "": C$ = "RETURN FROM INTERRUPT": GoSub AO
+        If Sprites = 0 And Samples = 0 Then
+            ' Just add disk IRQ service, no special FIRQ or IRQ
+            '; Disk IRQ SERVICE and Sound and Timer 60 Hz IRQ
+            Z$ = "BASIC_IRQ:": GoSub AO
+            A$ = "LDA": B$ = "$FF03": C$ = "63.5 MICRO SECOND OR 60 HZ INTERRUPT?": GoSub AO
+            A$ = "BPL": B$ = "LD8AE": C$ = "RETURN IF 63.5 MICROSECOND": GoSub AO
+            A$ = "LDA": B$ = "$FF02": C$ = "RESET 60 HZ PIA INTERRUPT FLAG": GoSub AO
+            A$ = "LDA": B$ = "RDYTMR": C$ = "GET TIMER": GoSub AO
+            A$ = "BEQ": B$ = "LD8CD": C$ = "BRANCH IF NOT ACTIVE": GoSub AO
+            A$ = "DECA": C$ = "DECREMENT THE TIMER": GoSub AO
+            A$ = "STA": B$ = "RDYTMR": C$ = "SAVE IT": GoSub AO
+            A$ = "BNE": B$ = "LD8CD": C$ = "BRANCH IF NOT TIME TO TURN OFF DISK MOTORS": GoSub AO
+            A$ = "LDA": B$ = "DRGRAM": C$ = "GET DSKREG IMAGE": GoSub AO
+            A$ = "ANDA": B$ = "#$B0": C$ = "TURN ALL MOTORS AND DRIVE SELECTS OFF": GoSub AO
+            A$ = "STA": B$ = "DRGRAM": C$ = "PUT IT BACK IN RAM IMAGE": GoSub AO
+            A$ = "STA": B$ = "DSKREG": C$ = "SEND TO CONTROL REGISTER (MOTORS OFF)": GoSub AO
+            Z$ = "LD8CD"
+            A$ = "LDX": B$ = "SoundDuration": C$ = "Get the new Sound duration value": GoSub AO
+            A$ = "BEQ": B$ = ">": C$ = "RETURN IF TIMER = 0": GoSub AO
+            A$ = "LEAX": B$ = "-1,X": C$ = "DECREMENT TIMER IF NOT = 0": GoSub AO
+            A$ = "STX": B$ = "SoundDuration": C$ = "Save the new Sound duration value": GoSub AO
+            Z$ = "!"
+            A$ = "INC": B$ = "_Var_Timer+1": C$ = "Increment the LSB of the Timer Value": GoSub AO
+            A$ = "BNE": B$ = "Not60Hz": C$ = "Skip ahead if not zero": GoSub AO
+            A$ = "INC": B$ = "_Var_Timer": C$ = "Increment the MSB of the Timer Value": GoSub AO
+            Z$ = "Not60Hz"
+            A$ = "RTI": B$ = "": C$ = "RETURN FROM INTERRUPT": GoSub AO
+        Else
+            If Sprites = 1 Then
+                ' include the cc3 sprite drawing code here:
+                ' Include the delay values for the scanline is on screen
+                If Val(GModeMaxY$(Gmode)) = 191 Then
+                    Print #1, T2$; "INCLUDE        ./Basic_Includes/CoCo3_FIRQ_Delay_192_Rows.asm"
+                End If
+                If Val(GModeMaxY$(Gmode)) = 199 Then
+                    Print #1, T2$; "INCLUDE        ./Basic_Includes/CoCo3_FIRQ_Delay_200_Rows.asm"
+                End If
+                If Val(GModeMaxY$(Gmode)) = 224 Then
+                    Print #1, T2$; "INCLUDE        ./Basic_Includes/CoCo3_FIRQ_Delay_225_Rows.asm"
+                End If
+                Z$ = "**************** VSyncIRQ *************************": GoSub AO
+                Z$ = "BASIC_IRQ:": GoSub AO
+                A$ = "LDA": B$ = "GIME_InterruptReqEnable_FF92": C$ = "Re enable the VSYNC IRQ": GoSub AO
+                Print #1, T2$; "INCLUDE        ./Basic_Includes/CoCo3_IRQ_WithDisk.asm"
+                Print #1, T2$; "INCLUDE        ./Basic_Includes/CoCo3_IRQandFIRQ_Sprites.asm" ' Sprites also includes FIRQ Sample playback handling
+                Print #1, T2$; "INCLUDE        ./Basic_Includes/GraphicCommands/CoCo3_SpriteHandler.asm" 'Add the sprite handling code
+            Else
+                If Samples = 1 Then
+                    ' include the cc3 sprite drawing code here:
+                    Z$ = "**************** VSyncIRQ *************************": GoSub AO
+                    Z$ = "BASIC_IRQ:": GoSub AO
+                    A$ = "LDA": B$ = "GIME_InterruptReqEnable_FF92": C$ = "Re enable the VSYNC IRQ": GoSub AO
+                    Print #1, T2$; "INCLUDE        ./Basic_Includes/CoCo3_IRQ_WithDisk.asm"
+                    Print #1, T2$; "INCLUDE        ./Basic_Includes/CoCo3_IRQandFIRQ_SamplesOnly.asm" ' Sprites also includes FIRQ Sample playback handling
+                End If
+            End If
+        End If
+    Else
+        ' No Disk
+        If Sprites = 0 And Samples = 0 Then
+            ' Keep the IRQ and FIRQ simple and as fast as possible
+            ' Sound and Timer 60 Hz IRQ
+            Z$ = "; Sound and Timer 60hz IRQ ": GoSub AO
+            Z$ = "BASIC_IRQ:": GoSub AO
+            A$ = "LDA": B$ = "$FF03": C$ = "CHECK FOR 60HZ INTERRUPT": GoSub AO
+            A$ = "BPL": B$ = "Not60Hz": C$ = "RETURN IF 63.5 MICROSECOND INTERRUPT": GoSub AO
+            A$ = "LDA": B$ = "$FF02": C$ = "RESET PIA0, PORT B INTERRUPT FLAG": GoSub AO
+            A$ = "LDX": B$ = "SoundDuration": C$ = "Get the new Sound duration value": GoSub AO
+            A$ = "BEQ": B$ = ">": C$ = "RETURN IF TIMER = 0": GoSub AO
+            A$ = "LEAX": B$ = "-1,X": C$ = "DECREMENT TIMER IF NOT = 0": GoSub AO
+            A$ = "STX": B$ = "SoundDuration": C$ = "Save the new Sound duration value": GoSub AO
+            Z$ = "!"
+            A$ = "INC": B$ = "_Var_Timer+1": C$ = "Increment the LSB of the Timer Value": GoSub AO
+            A$ = "BNE": B$ = "Not60Hz": C$ = "Skip ahead if not zero": GoSub AO
+            A$ = "INC": B$ = "_Var_Timer": C$ = "Increment the MSB of the Timer Value": GoSub AO
+            Z$ = "Not60Hz"
+            A$ = "RTI": B$ = "": C$ = "RETURN FROM INTERRUPT": GoSub AO
+        Else
+            If Sprites = 1 Then
+                ' include the cc3 sprite drawing code here:
+                ' Include the delay values for the scanline is on screen
+                If Val(GModeMaxY$(Gmode)) = 191 Then
+                    Print #1, T2$; "INCLUDE        ./Basic_Includes/CoCo3_FIRQ_Delay_192_Rows.asm"
+                End If
+                If Val(GModeMaxY$(Gmode)) = 199 Then
+                    Print #1, T2$; "INCLUDE        ./Basic_Includes/CoCo3_FIRQ_Delay_200_Rows.asm"
+                End If
+                If Val(GModeMaxY$(Gmode)) = 224 Then
+                    Print #1, T2$; "INCLUDE        ./Basic_Includes/CoCo3_FIRQ_Delay_225_Rows.asm"
+                End If
+                Z$ = "**************** VSyncIRQ *************************": GoSub AO
+                Z$ = "BASIC_IRQ:": GoSub AO
+                Print #1, T2$; "INCLUDE        ./Basic_Includes/CoCo3_IRQandFIRQ_Sprites.asm" ' Sprites also includes FIRQ Sample playback handling
+                Print #1, T2$; "INCLUDE        ./Basic_Includes/GraphicCommands/CoCo3_SpriteHandler.asm" 'Add the sprite handling code
+            Else
+                If Samples = 1 Then
+                    Z$ = "**************** VSyncIRQ *************************": GoSub AO
+                    Z$ = "BASIC_IRQ:": GoSub AO
+                    A$ = "LDA": B$ = "GIME_InterruptReqEnable_FF92": C$ = "Re enable the VSYNC IRQ": GoSub AO
+                    Print #1, T2$; "INCLUDE        ./Basic_Includes/CoCo3_IRQandFIRQ_SamplesOnly.asm" ' Sprites also includes FIRQ Sample playback handling
+                End If
+            End If
+        End If
+    End If
+Else
+    ' Coco 1 or 2
+    If Disk = 0 Then
+        ' Sound and Timer 60 Hz IRQ
+        Z$ = "; Sound and Timer 60hz IRQ ": GoSub AO
+        Z$ = "BASIC_IRQ:": GoSub AO
+        A$ = "LDA": B$ = "$FF03": C$ = "CHECK FOR 60HZ INTERRUPT": GoSub AO
+        A$ = "BPL": B$ = "Not60Hz": C$ = "RETURN IF 63.5 MICROSECOND INTERRUPT": GoSub AO
+        A$ = "LDA": B$ = "$FF02": C$ = "RESET PIA0, PORT B INTERRUPT FLAG": GoSub AO
+        A$ = "LDX": B$ = "SoundDuration": C$ = "Get the new Sound duration value": GoSub AO
+        A$ = "BEQ": B$ = ">": C$ = "RETURN IF TIMER = 0": GoSub AO
+        A$ = "LEAX": B$ = "-1,X": C$ = "DECREMENT TIMER IF NOT = 0": GoSub AO
+        A$ = "STX": B$ = "SoundDuration": C$ = "Save the new Sound duration value": GoSub AO
+        Z$ = "!"
+        A$ = "INC": B$ = "_Var_Timer+1": C$ = "Increment the LSB of the Timer Value": GoSub AO
+        A$ = "BNE": B$ = "Not60Hz": C$ = "Skip ahead if not zero": GoSub AO
+        A$ = "INC": B$ = "_Var_Timer": C$ = "Increment the MSB of the Timer Value": GoSub AO
+        Z$ = "Not60Hz"
+        A$ = "RTI": B$ = "": C$ = "RETURN FROM INTERRUPT": GoSub AO
+    Else
+        ' DISK controller Interrupts
+        '; NMI SERVICE
+        Z$ = "DNMISV:"
+        A$ = "LDA": B$ = "NMIFLG": C$ = "GET NMI FLAG": GoSub AO
+        A$ = "BEQ": B$ = "LD8AE": C$ = "RETURN IF NOT ACTIVE": GoSub AO
+        A$ = "LDX": B$ = "DNMIVC": C$ = "GET NEW RETURN VECTOR": GoSub AO
+        A$ = "STX": B$ = "10,S": C$ = "STORE AT STACKED PC SLOT ON STACK": GoSub AO
+        A$ = "CLR": B$ = "NMIFLG": C$ = "RESET NMI FLAG": GoSub AO
+        Z$ = "LD8AE"
+        A$ = "RTI": B$ = "": C$ = "RETURN FROM INTERRUPT": GoSub AO
+        '; Disk IRQ SERVICE and Sound and Timer 60 Hz IRQ
+        Z$ = "BASIC_IRQ:"
+        A$ = "LDA": B$ = "$FF03": C$ = "63.5 MICRO SECOND OR 60 HZ INTERRUPT?": GoSub AO
+        A$ = "BPL": B$ = "LD8AE": C$ = "RETURN IF 63.5 MICROSECOND": GoSub AO
+        A$ = "LDA": B$ = "$FF02": C$ = "RESET 60 HZ PIA INTERRUPT FLAG": GoSub AO
+        A$ = "LDA": B$ = "RDYTMR": C$ = "GET TIMER": GoSub AO
+        A$ = "BEQ": B$ = "LD8CD": C$ = "BRANCH IF NOT ACTIVE": GoSub AO
+        A$ = "DECA": C$ = "DECREMENT THE TIMER": GoSub AO
+        A$ = "STA": B$ = "RDYTMR": C$ = "SAVE IT": GoSub AO
+        A$ = "BNE": B$ = "LD8CD": C$ = "BRANCH IF NOT TIME TO TURN OFF DISK MOTORS": GoSub AO
+        A$ = "LDA": B$ = "DRGRAM": C$ = "GET DSKREG IMAGE": GoSub AO
+        A$ = "ANDA": B$ = "#$B0": C$ = "TURN ALL MOTORS AND DRIVE SELECTS OFF": GoSub AO
+        A$ = "STA": B$ = "DRGRAM": C$ = "PUT IT BACK IN RAM IMAGE": GoSub AO
+        A$ = "STA": B$ = "DSKREG": C$ = "SEND TO CONTROL REGISTER (MOTORS OFF)": GoSub AO
+        Z$ = "LD8CD"
+        A$ = "LDX": B$ = "SoundDuration": C$ = "Get the new Sound duration value": GoSub AO
+        A$ = "BEQ": B$ = ">": C$ = "RETURN IF TIMER = 0": GoSub AO
+        A$ = "LEAX": B$ = "-1,X": C$ = "DECREMENT TIMER IF NOT = 0": GoSub AO
+        A$ = "STX": B$ = "SoundDuration": C$ = "Save the new Sound duration value": GoSub AO
+        Z$ = "!"
+        A$ = "INC": B$ = "_Var_Timer+1": C$ = "Increment the LSB of the Timer Value": GoSub AO
+        A$ = "BNE": B$ = "Not60Hz": C$ = "Skip ahead if not zero": GoSub AO
+        A$ = "INC": B$ = "_Var_Timer": C$ = "Increment the MSB of the Timer Value": GoSub AO
+        Z$ = "Not60Hz"
+        A$ = "RTI": B$ = "": C$ = "RETURN FROM INTERRUPT": GoSub AO
+    End If
 End If
 If PlayCommand = 1 Then
     ' Include special PLAY IRQ to jump to while playing notes
@@ -1398,7 +1688,8 @@ If PlayCommand = 1 Then
     A$ = "CLR": B$ = "PLYTMR+1": C$ = "RESET LSB OF PLAY TIMER": GoSub AO
     Z$ = "PlayIRQExit:": GoSub AO
     A$ = "PULS": B$ = "A": C$ = "GET THE CONDITION CODE REG": GoSub AO
-    A$ = "LDS": B$ = "7,S": C$ = "LOAD THE STACK POINTER WITH THE CONTENTS OF THE U REGISTER": GoSub AO
+    Z$ = "PlayStackPointer:": GoSub AO
+    A$ = "LDS": B$ = "#$FFFF": C$ = "LOAD THE STACK POINTER WITH THE CONTENTS OF THE U REGISTER": GoSub AO
     Print #1, "; WHICH WAS STACKED WHEN THE INTERRUPT WAS HONORED."
     A$ = "ANDA": B$ = "#$7F": C$ = "CLEAR E FLAG - MAKE COMPUTER THINK THIS WAS AN FIRQ": GoSub AO
     A$ = "PSHS": B$ = "A": C$ = "Save Condition Code": GoSub AO
@@ -1409,14 +1700,7 @@ If PlayCommand = 1 Then
     Z$ = "Not60HzPlay"
     A$ = "RTI": B$ = "": C$ = "RETURN FROM INTERRUPT": GoSub AO
 End If
-If CoCo3 = 1 And Sprites = 1 Then
-    ' include the cc3 sprite drawing code here:
-    Print #1, T2$; "INCLUDE        ./Basic_Includes/GraphicCommands/SpriteHandlerCC3.asm" ' Add the sprite drawing code near the start of the program othrewise if we have too many string variables the
-    ' sprite code could end up past $1FFF which would be bad!!!
-End If
-
 Print #1, "ClearHere2nd:" ' This is the start address of variables that will all be cleared to zero when the program starts
-
 ' Add temp string space
 For Num = 0 To 1
     GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
@@ -1519,16 +1803,16 @@ For ii = 0 To StringCommandsFoundCount - 1
     Print #1, "; " + StringCommandsFound$(ii)
 Next ii
 
-For c = 0 To vc - 1
-    If Right$(var$(c), 3) <> "Str" Then Print #1, "_Var_"; var$(c); T1$; "FDB "; T1$; "$0000"
-Next c
+For C = 0 To vc - 1
+    If Right$(var$(C), 3) <> "Str" Then Print #1, "_Var_"; var$(C); T1$; "FDB "; T1$; "$0000"
+Next C
 
-For c = 0 To vc - 1
-    If Right$(var$(c), 3) = "Str" Then
-        Print #1, "_StrVar_"; var$(c); T1$; "FCB "; T1$; "$00     ; String Variable "; var$(c); " length (0 to 255) initialized to 0"
-        A$ = "RMB": B$ = "255": C$ = "255 bytes available for string variable " + var$(c): GoSub AO
+For C = 0 To vc - 1
+    If Right$(var$(C), 3) = "Str" Then
+        Print #1, "_StrVar_"; var$(C); T1$; "FCB "; T1$; "$00     ; String Variable "; var$(C); " length (0 to 255) initialized to 0"
+        A$ = "RMB": B$ = "255": C$ = "255 bytes available for string variable " + var$(C): GoSub AO
     End If
-Next c
+Next C
 
 If CoCo3 = 1 And Sprites = 1 Then
     ' include the CoCo3 Palette file:
@@ -1543,13 +1827,36 @@ If CoCo3 = 1 And Sprites = 1 Then
         End If
     Next ii
     Print #1, "CC3SpritesStartBLKTable:"
-    For c = 0 To 127
-        If Sprite8KBlocks(c) > 0 Then
-            Num = SpriteLivesAt(c): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+    For C = 0 To 31
+        If Sprite$(C) <> "" Then
+            Num = C: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+            Num$ = Right$("00" + Num$, 2)
+            SpritePointerBlk$ = "Sprite" + Num$ + "Blk"
+            Num = SpriteLivesAt(C): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
             If Num$ = "" Then Num$ = "00"
-            A$ = "FCB": B$ = "$" + Num$: C$ = "8k block # where Sprite #" + Str$(c) + " begins": GoSub AO
+            A$ = "FCB": B$ = SpritePointerBlk$: C$ = "8k block # where Sprite #" + Str$(C) + " begins": GoSub AO
+        Else
+            A$ = "FCB": B$ = "$00": C$ = "No sprite, this will be ignored": GoSub AO
         End If
-    Next c
+    Next C
+End If
+If CoCo3 = 1 And Samples = 1 Then
+    Print #1, "CC3SamplesStartBLKTable:"
+    For I = 0 To 31
+        If Sample$(I) <> "" Then
+            Num = SampleNumberOfBLKs(I) - 3 + SampleStartBlock(I)
+            BlockZero$ = Right$(Hex$(Num), 2)
+            If Len(BlockZero$) < 2 Then BlockZero$ = Right$("00" + BlockZero$, 2)
+            Num = SampleNumberOfBLKs(I) - 3 + SampleStartBlock(I) + 1
+            BlockOne$ = Right$(Hex$(Num), 2)
+            If Len(BlockOne$) < 2 Then BlockOne$ = Right$("00" + BlockOne$, 2)
+            A$ = "FDB": B$ = "$" + BlockZero$ + BlockOne$: C$ = "First & second of 4, 8k blocks with the audio sample data": GoSub AO
+            Num = SampleStart(I): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+            A$ = "FDB": B$ = "$" + Hex$(Val(Num$)): C$ = "Sample Start address": GoSub AO
+        Else
+            A$ = "FQB": B$ = "$00": C$ = "No Sample, this will be ignored": GoSub AO
+        End If
+    Next I
 End If
 
 If Verbose > 0 Then Print "Adding the required Libraries..."
@@ -1560,7 +1867,7 @@ For ii = 0 To 171
     If GModeLib(ii) = 1 Then
         Temp$ = "GraphicCommands/GraphicVariables": GoSub AddIncludeTemp ' Add code for graphics variables
         If ii > 99 Then
-            Temp$ = "GraphicCommands/GraphicCC3_Code": GoSub AddIncludeTemp ' Add code for CoCo3 graphics handling
+            Temp$ = "GraphicCommands/CoCo3_Graphic_CodeJump": GoSub AddIncludeTemp ' Add code for CoCo3 graphics handling
         Else
             ' CoCo 1 & 2 graphics mode, Check if ProgramStart should be changed
             If GModePageLib(ii) <> 0 Then
@@ -1648,6 +1955,9 @@ For ii = 0 To GeneralCommandsFoundCount - 1
         Temp$ = "Audio_Muxer": GoSub AddIncludeTemp 'SOUND routine also requires the Muxer to be turned on
         Temp$ = "DecimalStringToD": GoSub AddIncludeTemp ' Add commands for converting decimal numbers to D
     End If
+    If Temp$ = "SCREEN" Then
+        Temp$ = "GraphicCommands/GraphicVariables": GoSub AddIncludeTemp ' Add code for graphics variables
+    End If
     If Temp$ = "SDC_PLAY" Or Temp$ = "SDC_PLAYORCL" Or Temp$ = "SDC_PLAYORCR" Or Temp$ = "SDC_PLAYORCS" Then
         If Temp$ = "SDC_PLAY" Then
             Temp$ = "SDCPlay": GoSub AddIncludeTemp
@@ -1675,8 +1985,6 @@ For ii = 0 To GeneralCommandsFoundCount - 1
         Temp$ = "StreamFile_Library": GoSub AddIncludeTemp
         Temp$ = "SDCBigLoadm": GoSub AddIncludeTemp
     End If
-
-
 
     If Temp$ = "SOUND" Then
         Temp$ = "Sound": GoSub AddIncludeTemp ' Add code for the sound command
@@ -1764,31 +2072,31 @@ If Sprites = 1 Then
         Else
             Z$ = "Artifacting      EQU     0         ; Not using Artifact colours": GoSub AO
         End If
-        For I = 0 To 127
+        For I = 0 To 31
             If Sprite$(I) <> "" Then
                 Print #1, T2$; "INCLUDE     ./"; Sprite$(I)
             End If
         Next I
         Temp$ = "GraphicCommands/SpriteHandler": GoSub AddIncludeTemp
     End If
-    Z$ = "SpriteDrawTable:": GoSub AO
-    For I = 0 To 127
-        If Sprite$(I) <> "" Then
-            ' Find the last backslash
-            p = _InStrRev(Sprite$(I), "/")
-            If p = 0 Then p = _InStrRev(Sprite$(I), "\")
-            ' Extract the filename
-            If p > 0 Then
-                SpriteName$ = Mid$(Sprite$(I), p + 1)
-            Else
-                SpriteName$ = Sprite$(I) ' No backslash found, assume it's just a filename
-            End If
-            SpriteName$ = Left$(SpriteName$, Len(SpriteName$) - 4) ' remove the .asm
-            A$ = "FDB": B$ = SpriteName$ + "_Draw": C$ = "Points to the Sprite Drawing Table (in the compiled sprite.asm file)": GoSub AO
-        End If
-    Next I
+    '    Z$ = "SpriteDrawTable:": GoSub AO
+    '    For I = 0 To 31
+    '        If Sprite$(I) <> "" Then
+    '            ' Find the last backslash
+    '            p = _InStrRev(Sprite$(I), "/")
+    '            If p = 0 Then p = _InStrRev(Sprite$(I), "\")
+    '            ' Extract the filename
+    '            If p > 0 Then
+    '                SpriteName$ = Mid$(Sprite$(I), p + 1)
+    '            Else
+    '                SpriteName$ = Sprite$(I) ' No backslash found, assume it's just a filename
+    '            End If
+    '            SpriteName$ = Left$(SpriteName$, Len(SpriteName$) - 4) ' remove the .asm
+    '            A$ = "FDB": B$ = SpriteName$ + "_Draw": C$ = "Points to the Sprite Drawing Table (in the compiled sprite.asm file)": GoSub AO
+    '        End If
+    '    Next I
     Z$ = "SpriteBackupTable:": GoSub AO
-    For I = 0 To 127
+    For I = 0 To 31
         If Sprite$(I) <> "" Then
             ' Find the last backslash
             p = _InStrRev(Sprite$(I), "/")
@@ -1801,10 +2109,12 @@ If Sprites = 1 Then
             End If
             SpriteName$ = Left$(SpriteName$, Len(SpriteName$) - 4) ' remove the .asm
             A$ = "FDB": B$ = "Backup_" + SpriteName$: C$ = "Address of the Make Backup code": GoSub AO
+        Else
+            A$ = "FDB": B$ = "$0000": C$ = "No Sprite for this slot": GoSub AO
         End If
     Next I
     Z$ = "SpriteRestoreTable:": GoSub AO ' For VSYNC 0
-    For I = 0 To 127
+    For I = 0 To 31
         If Sprite$(I) <> "" Then
             ' Find the last backslash
             p = _InStrRev(Sprite$(I), "/")
@@ -1816,8 +2126,11 @@ If Sprites = 1 Then
                 SpriteName$ = Sprite$(I) ' No backslash found, assume it's just a filename
             End If
             SpriteName$ = Left$(SpriteName$, Len(SpriteName$) - 4) ' remove the .asm
-            A$ = "FDB": B$ = "Restore_" + SpriteName$ + "_0": C$ = "Address of the restore code": GoSub AO
-            A$ = "FDB": B$ = "Restore_" + SpriteName$ + "_1": C$ = "Address of the restore code": GoSub AO
+            A$ = "FDB": B$ = "Restore_" + SpriteName$ + "_0": C$ = "Address of the restore code Buffer 0": GoSub AO
+            A$ = "FDB": B$ = "Restore_" + SpriteName$ + "_1": C$ = "Address of the restore code Buffer 1": GoSub AO
+        Else
+            A$ = "FDB": B$ = "$0000": C$ = "No Sprite for this slot 0": GoSub AO
+            A$ = "FDB": B$ = "$0000": C$ = "No Sprite for this slot 1": GoSub AO
         End If
     Next I
 End If
@@ -1833,6 +2146,8 @@ A$ = "ORCC": B$ = "#$50": C$ = "Turn off the interrupts": GoSub AO
 A$ = "LDA": B$ = "#$" + DirectPage$: GoSub AO
 A$ = "TFR": B$ = "A,DP": C$ = "Setup the Direct page to use our variable location": GoSub AO
 If CoCo3 = 1 Then
+    A$ = "LDA": B$ = "#$38": C$ = "Normal First Bank": GoSub AO
+    A$ = "STA": B$ = "$FFA8": C$ = "Make first block in 2nd bank the same as the first bank, this is where the IRQs are": GoSub AO
     'we are using CoCo 3 commands, So let's put it in CoCo 3 mode
     Z$ = "* CoCo 3 commands were detected, Enabling CoCo3 mode and Hi Speed": GoSub AO
     A$ = "LDA": B$ = "#%01111100": C$ = "CoCo 3 Mode, MMU Enabled, GIME IRQ Enabled, GIME FIRQ Enabled, Vector RAM at FEXX enabled, Standard SCS Normal, ROM Map 16k Int, 16k Ext": GoSub AO
@@ -1855,6 +2170,7 @@ If PrintGraphicsText = 1 Then
     A$ = "LDD": B$ = "#$0E00": C$ = "Set D to the top left of the screen": GoSub AO
     A$ = "STD": B$ = "GraphicCURPOS": C$ = "Set the graphics cursor to the top left corner": GoSub AO
 End If
+
 If PlayCommand = 1 Then
     ' Initialize the PLAY command variables
     A$ = "LDD": B$ = "#$BA42": C$ = "MID HIGH VALUE + MID LOW VALUE": GoSub AO
@@ -1963,6 +2279,10 @@ A$ = "LDD": B$ = ">$0112": C$ = "Get the Extended BASIC's TIMER value": GoSub AO
 A$ = "STD": B$ = "_Var_Timer": C$ = "Use Basic's Timer as a starting point for the TIMER value, just in case someone uses it for Randomness": GoSub AO
 A$ = "STD": B$ = "Seed1": C$ = "Save TIMER value as the Random number seed value": GoSub AO
 
+If SDCPLAY = 1 Or SDCVersionCheck = 1 Then ' If we are doing any SDC streaming check the version as it must be V127 or higher
+    A$ = "JSR": B$ = "CheckSDCFirmwareVersion": C$ = "Check the version of the SDC controller must be > v126": GoSub AO
+End If
+
 ' Address    Interrupt    CoCo 2 Vector    CoCo 3 Vector
 ' $FFF2      SWI3         $100             $FEEE
 ' $FFF4      SWI2         $103             $FEF1
@@ -1982,10 +2302,13 @@ A$ = "BEQ": B$ = ">": C$ = "If A=0 then skip forward it's a 6809": GoSub AO
 A$ = "FCB": B$ = "$11,$3D,%00000001": C$ = "Put the 6309 in native mode.  This is LDMD  #%00000001": GoSub AO
 Z$ = "!": GoSub AO
 
+Print #1, "* Let's detect the CoCo version:"
 A$ = "LDX": B$ = "$FFFE": C$ = "Get the RESET location": GoSub AO
 A$ = "CMPX": B$ = "#$8C1B": C$ = "Check if it's a CoCo 3": GoSub AO
 A$ = "BNE": B$ = "SaveCoCo1": C$ = "Setup IRQ, using CoCo 1 IRQ Jump location": GoSub AO
-A$ = "STA": B$ = "$FFD9": C$ = "Put the CoCo 3 in double speed mode": GoSub AO
+A$ = "LDB": B$ = "#$5A": C$ = "If possible use 2.86 Mhz": GoSub AO
+A$ = "STB": B$ = "$FFD9": C$ = "Put the CoCo 3 in double speed mode": GoSub AO
+A$ = "STB": B$ = "$FFD9": C$ = "Try and put the CoCo 3 in triple speed mode (GIME-X or GIME-Z)": GoSub AO
 A$ = "ORA": B$ = "#%00000001": C$ = "If it's CoCo 3 then we set bit 0 of the CoCoHardware Desriptor byte": GoSub AO
 A$ = "LDX": B$ = "#$FEF7": C$ = "X = Address for the COCO 3 IRQ JMP": GoSub AO
 A$ = "LDY": B$ = "#$FEFD": C$ = "Y = Address for the COCO 3 NMI JMP": GoSub AO
@@ -1997,8 +2320,8 @@ Z$ = "!"
 A$ = "STA": B$ = "CoCoHardware": C$ = "Save the CoCoHardware Desriptor byte": GoSub AO
 
 If PlayCommand = 1 Then
-    A$ = "STX": B$ = "IRQAddress": C$ = "Save the IRQ address for the PLAY command to change/restore": GoSub AO
-    A$ = "INC": B$ = "IRQAddress+1": C$ = "Increment the IRQAddress so it points at the actual JMP location": GoSub AO
+    A$ = "LEAU": B$ = "1,X": C$ = "U=X+1": GoSub AO
+    A$ = "STU": B$ = "IRQAddress": C$ = "Save the IRQ address for the PLAY command to change/restore, points at the actual JMP location": GoSub AO
 End If
 ' Save the original IRQ jump address so we can restore it once done
 A$ = "LDU": B$ = "#OriginalIRQ": C$ = "U=Address of the IRQ": GoSub AO
@@ -2006,29 +2329,47 @@ A$ = "LDA": B$ = ",X": C$ = "A = Branch Instruction": GoSub AO
 A$ = "STA": B$ = ",U": C$ = "Save Branch Instruction": GoSub AO
 A$ = "LDD": B$ = "1,X": C$ = "D = Address": GoSub AO
 A$ = "STD": B$ = "1,U": C$ = "Backup the Address of the IRQ": GoSub AO
-' Use our IRQ address
+
 A$ = "LDA": B$ = "#$7E": C$ = "JMP instruction": GoSub AO
-A$ = "STA": B$ = ",X": C$ = "A = JMP Instruction": GoSub AO
-A$ = "LDU": B$ = "#BASIC_IRQ": C$ = "U=Address of our IRQ": GoSub AO
-A$ = "STU": B$ = "1,X": C$ = "U=Address of the IRQ": GoSub AO
 If Disk = 1 Then
     ' Add our NMI
     A$ = "STA": B$ = ",Y": C$ = "A = JMP Instruction": GoSub AO
     A$ = "LDU": B$ = "#DNMISV": C$ = "U=Address of our NMIRQ": GoSub AO
     A$ = "STU": B$ = "1,Y": C$ = "Save the Address of the NMIRQ": GoSub AO
 End If
-' Make FIRQ an RTI
-A$ = "LDA": B$ = "#$3B": C$ = "RTI instruction": GoSub AO
-A$ = "STA": B$ = "$010F": C$ = "Save instruction for the FIRQ CoCo1": GoSub AO
-A$ = "STA": B$ = "$FEF4": C$ = "Save instruction for the FIRQ CoCo3": GoSub AO
-If SDCPLAY = 1 Or SDCVersionCheck = 1 Then ' If we are doing any SDC streaming check the version as it must be V127 or higher
-    A$ = "JSR": B$ = "CheckSDCFirmwareVersion": C$ = "Check the version of the SDC controller must be > v126": GoSub AO
+' Setup Sprite blocks
+If CoCo3 = 1 And Sprites = 1 Then
+    Z$ = "* Setup which blocks the sprites are located at in RAM": GoSub AO
+    For I = 0 To 31
+        If Sprite$(I) <> "" Then
+            ' This is a sprite
+            Num = SpriteHeight(I): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+            Num$ = Right$("00" + Num$, 2)
+            A$ = "LDA": B$ = "#" + Num$: C$ = "Get the sprite height for sprite #" + Str$(I): GoSub AO
+            Num = I * 8 + 6: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+            A$ = "STA": B$ = "SpriteTable+" + Num$: C$ = "Save the height of ths sprite": GoSub AO
+        End If
+    Next I
 End If
 
 ' Start the IRQ
-Z$ = "* This is where we enable the IRQ": GoSub AO
-A$ = "ANDCC": B$ = "#%11101111": C$ = "= %11101111 this will Enable the IRQ to start": GoSub AO
-
+If CoCo3 = 1 Then
+    If Sprites = 1 Or Samples = 1 Then
+        Print #1, T2$; "INCLUDE        ./Basic_Includes/CoCo3_FIRQ_Setup.asm"
+    End If
+    Z$ = "* This is where we enable the FIRQ & IRQ": GoSub AO
+    A$ = "ANDCC": B$ = "#%10101111": C$ = "= %10101111 this will Enable the FIRQ & IRQ to start": GoSub AO
+Else
+    ' Use our IRQ address
+    A$ = "STA": B$ = ",X": C$ = "A = JMP Instruction": GoSub AO
+    A$ = "LDU": B$ = "#BASIC_IRQ": C$ = "U=Address of our IRQ": GoSub AO
+    A$ = "STU": B$ = "1,X": C$ = "U=Address of the IRQ": GoSub AO
+    ' Make FIRQ an RTI
+    A$ = "LDA": B$ = "#$3B": C$ = "RTI instruction": GoSub AO
+    A$ = "STA": B$ = "$010F": C$ = "Save instruction for the FIRQ CoCo1": GoSub AO
+    Z$ = "* This is where we enable the IRQ": GoSub AO
+    A$ = "ANDCC": B$ = "#%11101111": C$ = "= %11101111 this will Enable the IRQ to start": GoSub AO
+End If
 Z$ = "; *** User's Program code starts here ***": GoSub AO
 System 1 ' End with flag of 1 = All went OK
 
@@ -2070,8 +2411,8 @@ While I <= Len(Expression$)
         GoTo GetNextToken ' go handle stuff in quotes
     End If
     ' Check for a General command
-    For c = 1 To GeneralCommandsCount
-        Temp$ = UCase$(GeneralCommands$(c))
+    For C = 1 To GeneralCommandsCount
+        Temp$ = UCase$(GeneralCommands$(C))
         BaseString$ = UCase$(Right$(Expression$, Len(Expression$) - I + 1))
         If Temp$ = "TIMER" Then Temp$ = "Ignore" ' Don't change TIMER commands to commands here, as they need to be left as variable names, they get fixed as TIMER= afterwards
         If InStr(BaseString$, Temp$) = 1 Then
@@ -2215,10 +2556,10 @@ While I <= Len(Expression$)
                     End If
                 End If
                 GoSub AddToGeneralCommandList ' Add General Command Temp$ to the general command list
-                Num = c: GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSB
+                Num = C: GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSB
                 Tokenized$ = Tokenized$ + Chr$(&HFF) + Chr$(MSB) + Chr$(LSB) 'Token &HFF is for General Commands
                 ' Check for a REM or '
-                If c = C_REM Or c = C_REMApostrophe Then
+                If C = C_REM Or C = C_REMApostrophe Then
                     'We found a REM or ' - copy the rest of this line
                     I = I + Len(Temp$) ' move pointer forward
                     While I <= Len(Expression$)
@@ -2231,7 +2572,7 @@ While I <= Len(Expression$)
                 ' Find the DATA Token
                 Check$ = "DATA": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
                 ' Check for a DATA
-                If c = ii Then
+                If C = ii Then
                     'We found a DATA command - copy the rest of this line
                     I = I + Len(Temp$) ' move pointer forward past "DATA" command
                     While I <= Len(Expression$) And i$ <> Chr$(&HF5)
@@ -2259,7 +2600,7 @@ While I <= Len(Expression$)
                 ' Find the DEF Token
                 Check$ = "DEF": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
                 ' Check for a DEF
-                If c = ii Then
+                If C = ii Then
                     'We found a DEF command, we need to handle the FNx()=...  part
                     I = I + Len(Temp$) + 3 ' move pointer forward so it now points at the FN label
                     Temp$ = ""
@@ -2280,10 +2621,10 @@ While I <= Len(Expression$)
                 GoTo TokenAdded0
             End If
         End If
-    Next c
+    Next C
     ' Check for a Numeric command
-    For c = 1 To NumericCommandsCount
-        Temp$ = UCase$(NumericCommands$(c))
+    For C = 1 To NumericCommandsCount
+        Temp$ = UCase$(NumericCommands$(C))
         BaseString$ = UCase$(Right$(Expression$, Len(Expression$) - I + 1))
         If InStr(BaseString$, Temp$) = 1 Then
             'Found a Numeric Command
@@ -2331,34 +2672,34 @@ While I <= Len(Expression$)
             End If
             If LeftSpace = 1 And RightSpace = 1 Then
                 GoSub AddToNumericCommandList
-                Num = c: GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSB
+                Num = C: GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSB
                 Tokenized$ = Tokenized$ + Chr$(&HFE) + Chr$(MSB) + Chr$(LSB) 'Token $FE is for Numeric Commands
                 I = I + Len(Temp$) ' move pointer forward
                 GoTo TokenAdded0
             End If
         End If
-    Next c
+    Next C
     ' Check for a String command
-    For c = 1 To StringCommandsCount
-        Temp$ = UCase$(StringCommands$(c))
+    For C = 1 To StringCommandsCount
+        Temp$ = UCase$(StringCommands$(C))
         BaseString$ = UCase$(Right$(Expression$, Len(Expression$) - I + 1))
         If InStr(BaseString$, Temp$) = 1 Then
             'Found a String Command
             GoSub AddToStringCommandList
-            Num = c: GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSB
+            Num = C: GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSB
             Tokenized$ = Tokenized$ + Chr$(&HFD) + Chr$(MSB) + Chr$(LSB) 'Token $FD is for String Commands
             I = I + Len(Temp$) ' move pointer forward
             GoTo TokenAdded0
         End If
-    Next c
+    Next C
     ' Check for an Operator command
-    For c = 1 To OperatorCommandsCount
-        Temp$ = UCase$(OperatorCommands$(c))
+    For C = 1 To OperatorCommandsCount
+        Temp$ = UCase$(OperatorCommands$(C))
         BaseString$ = UCase$(Right$(Expression$, Len(Expression$) - I + 1))
         If InStr(BaseString$, Temp$) = 1 Then
             'Found an Operator Command
-            If c > &H29 Then
-                Tokenized$ = Tokenized$ + Chr$(&HFC) + Chr$(c) 'Token &HFC is for Operator Commands
+            If C > &H29 Then
+                Tokenized$ = Tokenized$ + Chr$(&HFC) + Chr$(C) 'Token &HFC is for Operator Commands
                 I = I + Len(Temp$) ' move pointer forward
                 GoTo TokenAdded0
             Else
@@ -2376,13 +2717,13 @@ While I <= Len(Expression$)
                     RightSpace = 1
                 End If
                 If LeftSpace = 1 And RightSpace = 1 Then
-                    Tokenized$ = Tokenized$ + Chr$(&HFC) + Chr$(c) 'Token &HFC is for Operator Commands
+                    Tokenized$ = Tokenized$ + Chr$(&HFC) + Chr$(C) 'Token &HFC is for Operator Commands
                     I = I + Len(Temp$) ' move pointer forward
                     GoTo TokenAdded0
                 End If
             End If
         End If
-    Next c
+    Next C
     AddTokenAsIs0:
     Tokenized$ = Tokenized$ + i$
     I = I + 1
@@ -2820,12 +3161,13 @@ While I <= Len(Expression$)
             ' Might be the start of an array variable
             ' Test for $ or a letter before the "("
             Check$ = UCase$(Mid$(Expression$, ii - 1, 1))
-            If Check$ = "$" Then ' Is it a string array?
-                'We found a string array to tokenize
-                Start = ii - 1 ' start points at the character before the "("
+            If Check$ = "$" Then
+                ' It's a string array
+                ' We found a string array to tokenize
+                Start = ii - 2 ' start points at the character before the "$("
                 While Start >= CheckStart
                     Check$ = Mid$(Expression$, Start, 1)
-                        If (Asc(Check$) >= Asc("A") And Asc(Check$) <= Asc("Z")) Or (Asc(Check$) >= Asc("0") And Asc(Check$) <= Asc("9")) Or _
+              If (Asc(Check$) >= Asc("A") And Asc(Check$) <= Asc("Z")) Or (Asc(Check$) >= Asc("0") And Asc(Check$) <= Asc("9")) Or _
                            (Asc(Check$) >= Asc("a") And Asc(Check$) <= Asc("z")) Then
                         ' It is a letter or number?
                         Start = Start - 1
@@ -2834,11 +3176,14 @@ While I <= Len(Expression$)
                     End If
                 Wend
                 LabelStart = Start + 1
+                LabelEnd = ii - 2
                 If LabelStart <> CheckStart Then GoTo CopyOtherBytes 'We missed some bytes before this array, go deal with them first
-                Temp$ = Mid$(Expression$, LabelStart, ii - LabelStart - 1) '-1 as we don't want the $
+
+                Temp$ = Mid$(Expression$, LabelStart, LabelEnd - LabelStart + 1) ' Temp$=the actual label
                 'Count the dimensions in the array
                 BracketStart = ii
                 Start = ii + 1 ' Start after the open bracket
+
                 Dimensions = 1: Bracket = 1
                 While Bracket > 0
                     If Start > Len(Expression$) Then Print "Need a close bracket on";: GoTo FoundError

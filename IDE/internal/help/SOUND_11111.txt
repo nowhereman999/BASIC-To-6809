@@ -1,0 +1,295 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:45:15}}
+'''SOUND''' produces a sound from the speaker, builds a queue of sounds, and plays a queue of sounds.
+
+
+{{PageSyntax}}
+: [[SOUND]] {{Parameter|frequency!}}, {{Parameter|duration!}}[, {{Parameter|volume!}}][, {{Parameter|panPosition!}}][, {{Parameter|waveform&}}][, {{Parameter|waveformParameters!}}][, {{Parameter|voice&}}]]
+
+: [[SOUND|SOUND WAIT]]
+
+: [[SOUND|SOUND RESUME]]
+
+
+{{PageDescription}}
+* {{Parameter|frequency!}} is any literal or variable value from 37 to 32767, but 0 is allowed for delays.
+** Just like QuickBASIC 4.5 frequencies on or above 20000 Hz produce silence.
+* {{Parameter|duration!}} is any literal or variable number of [[TIMER (function)|TIMER]] ticks with a duration of 1/18th second (18 = 1 second).
+** A duration of 0 does not produce any sound. However, it can be used to set voice/waveform parameters.
+* Optional parameter {{Parameter|volume!}} should be between 0.0 (muted) to 1.0 (full volume).
+* Optional parameter {{Parameter|panPosition!}} should be between -1.0 (hard left) to 1.0 (hard right). 0.0 being center.
+** By default {{Parameter|panPosition!}} is set to 0.0 for all voices.
+* Optional parameter {{Parameter|waveform&}} can be one of the following:
+** '''1''' for square waveform (default)
+** '''2''' for sawtooth waveform
+** '''3''' for triangle waveform
+** '''4''' for sine waveform
+** '''5''' for white noise
+** '''6''' for pink noise
+** '''7''' for Brownian noise
+** '''8''' for LFSR-based noise
+** '''9''' for pulse waveform
+** '''10''' for a waveform defined by the [[_WAVE]] statement
+* Optional parameter {{Parameter|waveformParameters!}} can set waveform characteristics based on the current {{Parameter|waveform&}}.
+** {{Parameter|waveformParameters!}} sets the seed when {{Parameter|waveform&}} is '''5''', '''6''', or '''7'''.
+** {{Parameter|waveformParameters!}} sets the LFSR clock rate when {{Parameter|waveform&}} is '''8'''.
+** {{Parameter|waveformParameters!}} sets the duty cycle (0.0 to 1.0) when {{Parameter|waveform&}} is '''9'''.
+* Optional parameter {{Parameter|voice&}} can be a numeric expression ranging from 0 to 3. It specifies the voice channel that will be used to play the sound.
+** Multi-voice support was inspired by Amiga Basic and Advanced BASIC (for the IBM PCjr and Tandy 1000).
+* '''SOUND WAIT''' causes all subsequent '''SOUND''' statements to be queued.
+* '''SOUND RESUME''' causes all queued '''SOUND''' statements to be processed and sent to the audio device.
+** The latter two commands can be used to synchronize all voices (see the example for [[_WAVE]]).
+* [[PLAY]] can be used for musical sounds.
+; Note: The last volume, pan position, waveform, and voice settings will apply to subsequent calls to '''SOUND''' (when used without the optional parameters) and [[PLAY]]. These settings are maintained per voice.
+
+=== Errors ===
+* Low {{Parameter|frequency!}} values between 0 and 37 will create an [[ERROR Codes|Illegal Function call error]].
+* Out of range values for {{Parameter|volume!}}, {{Parameter|panPosition!}} and {{Parameter|waveform&}} will create an [[ERROR Codes|Illegal Function call error]].
+* All audio-related statements and functions work even if the program is not in focus. However, this may not always be the case depending on the operating system and environment.
+* '''SOUND''' may have clicks or pauses between the sounds generated.
+; Note: '''SOUND''' 0, 0 will not stop previous QB64 sounds like it did in QBasic!
+
+----
+
+
+{{FixedStart}}
+        '''                     The Seven Music Octaves '''
+
+        ''' Note     Frequency      Note     Frequency      Note      Frequency'''
+       '''1'''* D#1 ...... 39           G3 ....... 196          A#5 ...... 932
+          E1 ....... 41           G#3 ...... 208          B5 ....... 988
+          F1 ....... 44           A3 ....... 220       '''6'''* C6 ....... 1047
+          F#1 ...... 46           A#3 ...... 233          C#6 ...... 1109
+          G1 ....... 49           B3 ....... 247          D6 ....... 1175
+          G#1 ...... 51        '''4'''* C4 ....... 262          D#6 ...... 1245
+          A1 ....... 55           C#4 ...... 277          E6 ....... 1318
+          A#1 ...... 58           D4 ....... 294          F6 ....... 1397
+          B1 ....... 62           D#4 ...... 311          F#6 ...... 1480
+       '''2'''* C2 ....... 65           E4 ....... 330          G6 ....... 1568
+          C#2 ...... 69           F4 ....... 349          G# ....... 1661
+          D2 ....... 73           F#4 ...... 370          A6 ....... 1760
+          D#2 ...... 78           G4 ....... 392          A#6 ...... 1865
+          E2 ....... 82           G#4 ...... 415          B6 ....... 1976
+          F2 ....... 87           A4 ....... 440       '''7'''* C7 ....... 2093
+          F#2 ...... 92           A# ....... 466          C#7 ...... 2217
+          G2 ....... 98           B4 ....... 494          D7 ....... 2349
+          G#2 ...... 104       '''5'''* C5 ....... 523          D#7 ...... 2489
+          A2 ....... 110          C#5 ...... 554          E7 ....... 2637
+          A#2 ...... 117          D5 ....... 587          F7 ....... 2794
+          B2 ....... 123          D#5 ...... 622          F#7 ...... 2960
+       '''3'''* C3 ....... 131          E5 ....... 659          G7 ....... 3136
+          C#3 ...... 139          F5 ....... 698          G#7 ...... 3322
+          D3 ....... 147          F#5 ...... 740          A7 ....... 3520
+          D#3 ...... 156          G5 ....... 784          A#7 ...... 3729
+          E3 ....... 165          G#5 ...... 831          B7 ....... 3951
+          F3 ....... 175          A5 ....... 880       '''8'''* C8 ....... 4186
+          F#3 ...... 185
+                                 '''# denotes sharp'''
+{{FixedEnd}}
+
+
+{{PageAvailability}}
+<!-- QB64 = a version or none, QBPE = a version or all, Platforms = yes or no -->
+<gallery widths="48px" heights="48px" mode="nolines">
+File:Qb64.png|'''v0.610'''
+File:Qbpe.png|'''all'''
+File:Apix.png
+File:Win.png|'''yes'''
+File:Lnx.png|'''yes'''
+File:Osx.png|'''yes'''
+</gallery>
+<!-- additional availability notes go below here -->
+* Support for {{Parameter|volume!}}, {{Parameter|panPosition!}}, and {{Parameter|waveform&}} was added in '''QB64-PE v3.8.0'''.
+* The following features have been added in '''QB64-PE v4.0.0''':
+** Support for {{Parameter|waveformParameters!}}, and {{Parameter|voice&}} (Multi-voice support).
+** Support for pink noise, Brownian noise, LFSR-based noise, pulse waveform, and user-defined [[_WAVE]] waveforms.
+** Ability to synchronize all voices using '''SOUND WAIT''' and '''SOUND RESUME'''.
+
+
+{{PageExamples}}
+;Example 1:Playing the seven octaves based on the base note DATA * 2 ^ (octave - 1).
+{{CodeStart}}
+notes$ = {{Text|<nowiki>"C C#D D#E F F#G G#A A#B "</nowiki>|#FFB100}}
+{{Cl|COLOR}} {{Text|9|#F580B1}}: {{Cl|LOCATE}} {{Text|5|#F580B1}}, {{Text|20|#F580B1}}: {{Cl|PRINT}} {{Text|<nowiki>"Select an octave (1 - 7) to play (8 quits):"</nowiki>|#FFB100}}
+{{Cl|DO}}
+    {{Cl|DO}}: octa$ = {{Cl|INKEY$}}
+        {{Cl|IF}} octa$ <> {{Text|<nowiki>""</nowiki>|#FFB100}} {{Cl|THEN}}
+            {{Cl|IF}} {{Cl|ASC (function)|ASC}}(octa$) > {{Text|48|#F580B1}} {{Cl|AND (boolean)|AND}} {{Cl|ASC (function)|ASC}}(octa$) < {{Text|58|#F580B1}} {{Cl|THEN}} octave% = {{Cl|VAL}}(octa$): {{Cl|EXIT DO}}
+        {{Cl|END IF}}
+    {{Cl|DO...LOOP|LOOP UNTIL}} octave% > {{Text|7|#F580B1}}
+    {{Cl|IF}} octave% > {{Text|0|#F580B1}} {{Cl|AND (boolean)|AND}} octave% < {{Text|8|#F580B1}} {{Cl|THEN}}
+        {{Cl|LOCATE}} {{Text|15|#F580B1}}, {{Text|6|#F580B1}}: {{Cl|PRINT}} {{Cl|SPACE$}}({{Text|70|#F580B1}})
+        {{Cl|LOCATE}} {{Text|16|#F580B1}}, {{Text|6|#F580B1}}: {{Cl|PRINT}} {{Cl|SPACE$}}({{Text|70|#F580B1}})
+        {{Cl|COLOR}} {{Text|14|#F580B1}}: {{Cl|LOCATE}} {{Text|15|#F580B1}}, {{Text|6|#F580B1}}: {{Cl|PRINT}} {{Text|<nowiki>"Octave"</nowiki>|#FFB100}}; octave%; {{Text|<nowiki>":"</nowiki>|#FFB100}};
+        {{Cl|RESTORE}} Octaves
+        {{Cl|FOR}} i = {{Text|1|#F580B1}} {{Cl|TO}} {{Text|12|#F580B1}}
+            {{Cl|READ}} note!
+            snd% = {{Cl|CINT}}(note! * ({{Text|2|#F580B1}} ^ (octave% - {{Text|1|#F580B1}}))) {{Text|<nowiki>'calculate note frequency</nowiki>|#919191}}
+            {{Cl|COLOR}} {{Text|14|#F580B1}}: {{Cl|PRINT}} {{Cl|STR$}}(snd%);
+            c0l = {{Cl|POS}}({{Text|0|#F580B1}})
+            {{Cl|COLOR}} {{Text|11|#F580B1}}: {{Cl|LOCATE}} {{Text|16|#F580B1}}, c0l - {{Text|2|#F580B1}}: {{Cl|PRINT}} {{Cl|MID$ (function)|MID$}}(notes$, {{Text|1|#F580B1}} + ({{Text|2|#F580B1}} * (i - {{Text|1|#F580B1}})), {{Text|2|#F580B1}})
+            {{Cl|LOCATE}} {{Text|15|#F580B1}}, c0l
+            {{Cl|IF}} snd% > {{Text|36|#F580B1}} {{Cl|THEN}} {{Cl|SOUND}} snd%, {{Text|12|#F580B1}} {{Text|<nowiki>'error if sound value is < 36</nowiki>|#919191}}
+            {{Cl|_DELAY}} {{Text|.8|#F580B1}}
+        {{Cl|NEXT}}
+    {{Cl|END IF}}
+{{Cl|DO...LOOP|LOOP UNTIL}} octave% > {{Text|7|#F580B1}}
+{{Cl|END}}
+
+Octaves:
+{{Cl|DATA}} {{Text|32.7|#F580B1}},{{Text|34.65|#F580B1}},{{Text|36.71|#F580B1}},{{Text|38.9|#F580B1}},{{Text|41.2|#F580B1}},{{Text|43.65|#F580B1}},{{Text|46.25|#F580B1}},{{Text|49|#F580B1}},{{Text|51.91|#F580B1}},{{Text|55|#F580B1}},{{Text|58.27|#F580B1}},{{Text|61.74|#F580B1}}
+{{CodeEnd}}
+{{Small|Code adapted by Ted Weissgerber}}
+
+----
+
+;Example 2:Playing a song called "Bonnie" with '''SOUND''' frequencies.
+{{CodeStart}}
+{{Cl|SCREEN}} {{Text|13|#F580B1}}
+{{Cl|_FULLSCREEN}}
+{{Cl|OUT}} {{Text|&H3C8|#F580B1}}, {{Text|0|#F580B1}}: {{Cl|OUT}} {{Text|&H3C9|#F580B1}}, {{Text|0|#F580B1}}: {{Cl|OUT}} {{Text|&H3C9|#F580B1}}, {{Text|0|#F580B1}}: {{Cl|OUT}} {{Text|&H3C9|#F580B1}}, {{Text|20|#F580B1}}
+{{Cl|COLOR}} {{Text|1|#F580B1}}
+{{Cl|FOR}} i% = {{Text|1|#F580B1}} {{Cl|TO}} {{Text|21|#F580B1}}
+    {{Cl|LOCATE}} {{Text|2|#F580B1}} + i%, {{Text|2|#F580B1}}: {{Cl|PRINT}} {{Cl|CHR$}}({{Text|178|#F580B1}})
+    {{Cl|LOCATE}} {{Text|2|#F580B1}} + i%, {{Text|39|#F580B1}}: {{Cl|PRINT}} {{Cl|CHR$}}({{Text|178|#F580B1}})
+{{Cl|NEXT}} i%
+{{Cl|FOR}} i% = {{Text|2|#F580B1}} {{Cl|TO}} {{Text|39|#F580B1}}
+    {{Cl|LOCATE}} {{Text|2|#F580B1}}, i%: {{Cl|PRINT}} {{Cl|CHR$}}({{Text|223|#F580B1}})
+    {{Cl|LOCATE}} {{Text|23|#F580B1}}, i%: {{Cl|PRINT}} {{Cl|CHR$}}({{Text|220|#F580B1}})
+{{Cl|NEXT}} i%
+{{Cl|COLOR}} {{Text|9|#F580B1}}
+{{Cl|LOCATE}} {{Text|3|#F580B1}}, {{Text|16|#F580B1}}: {{Cl|PRINT}} {{Cl|CHR$}}({{Text|34|#F580B1}}); {{Text|<nowiki>"MY BONNIE"</nowiki>|#FFB100}}; {{Cl|CHR$}}({{Text|34|#F580B1}})
+{{Cl|SLEEP}} {{Text|3|#F580B1}}
+{{Cl|FOR}} i% = {{Text|1|#F580B1}} {{Cl|TO}} {{Text|34|#F580B1}}
+    {{Cl|SELECT CASE}} i%
+        {{Cl|CASE}} {{Text|1|#F580B1}}: {{Cl|LOCATE}} {{Text|5|#F580B1}}, {{Text|5|#F580B1}}
+        {{Cl|CASE}} {{Text|10|#F580B1}}: {{Cl|LOCATE}} {{Text|10|#F580B1}}, {{Text|5|#F580B1}}
+        {{Cl|CASE}} {{Text|18|#F580B1}}: {{Cl|LOCATE}} {{Text|15|#F580B1}}, {{Text|5|#F580B1}}
+        {{Cl|CASE}} {{Text|27|#F580B1}}: {{Cl|LOCATE}} {{Text|20|#F580B1}}, {{Text|5|#F580B1}}
+    {{Cl|END SELECT}}
+    {{Cl|READ}} note%, duration%, word$
+    {{Cl|SOUND}} note%, duration%: {{Cl|PRINT}} word$;
+{{Cl|NEXT}} i%
+{{Cl|SLEEP}} {{Text|2|#F580B1}}
+{{Cl|LOCATE}} {{Text|23|#F580B1}}, {{Text|16|#F580B1}}: {{Cl|PRINT}} {{Text|<nowiki>"Thank You!"</nowiki>|#FFB100}}
+{{Cl|SLEEP}} {{Text|4|#F580B1}}
+{{Cl|SYSTEM}}
+
+{{Cl|DATA}} {{Text|392|#F580B1}},{{Text|8|#F580B1}},{{Text|<nowiki>"My "</nowiki>|#FFB100}},{{Text|659|#F580B1}},{{Text|8|#F580B1}},{{Text|<nowiki>"Bon-"</nowiki>|#FFB100}},{{Text|587|#F580B1}},{{Text|8|#F580B1}},{{Text|<nowiki>"nie "</nowiki>|#FFB100}},{{Text|523|#F580B1}},{{Text|8|#F580B1}},{{Text|<nowiki>"lies "</nowiki>|#FFB100}},{{Text|587|#F580B1}},{{Text|8|#F580B1}},{{Text|<nowiki>"O-"</nowiki>|#FFB100}},{{Text|523|#F580B1}},{{Text|8|#F580B1}},{{Text|<nowiki>"Ver "</nowiki>|#FFB100}},{{Text|440|#F580B1}},{{Text|8|#F580B1}},{{Text|<nowiki>"the "</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|392|#F580B1}},{{Text|8|#F580B1}},{{Text|<nowiki>"O-"</nowiki>|#FFB100}},{{Text|330|#F580B1}},{{Text|32|#F580B1}},{{Text|<nowiki>"cean "</nowiki>|#FFB100}},{{Text|392|#F580B1}},{{Text|8|#F580B1}},{{Text|<nowiki>"My "</nowiki>|#FFB100}},{{Text|659|#F580B1}},{{Text|8|#F580B1}},{{Text|<nowiki>"Bon-"</nowiki>|#FFB100}},{{Text|587|#F580B1}},{{Text|8|#F580B1}},{{Text|<nowiki>"nie "</nowiki>|#FFB100}},{{Text|523|#F580B1}},{{Text|8|#F580B1}},{{Text|<nowiki>"lies "</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|523|#F580B1}},{{Text|8|#F580B1}},{{Text|<nowiki>"O-"</nowiki>|#FFB100}},{{Text|494|#F580B1}},{{Text|8|#F580B1}},{{Text|<nowiki>"ver "</nowiki>|#FFB100}},{{Text|523|#F580B1}},{{Text|8|#F580B1}},{{Text|<nowiki>"the "</nowiki>|#FFB100}},{{Text|587|#F580B1}},{{Text|40|#F580B1}},{{Text|<nowiki>"sea "</nowiki>|#FFB100}},{{Text|392|#F580B1}},{{Text|8|#F580B1}},{{Text|<nowiki>"My "</nowiki>|#FFB100}},{{Text|659|#F580B1}},{{Text|8|#F580B1}},{{Text|<nowiki>"Bon-"</nowiki>|#FFB100}},{{Text|587|#F580B1}},{{Text|8|#F580B1}},{{Text|<nowiki>"nie"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|523|#F580B1}},{{Text|8|#F580B1}},{{Text|<nowiki>" lies "</nowiki>|#FFB100}},{{Text|587|#F580B1}},{{Text|8|#F580B1}},{{Text|<nowiki>"O-"</nowiki>|#FFB100}},{{Text|523|#F580B1}},{{Text|8|#F580B1}},{{Text|<nowiki>"ver "</nowiki>|#FFB100}},{{Text|440|#F580B1}},{{Text|8|#F580B1}},{{Text|<nowiki>"the "</nowiki>|#FFB100}},{{Text|392|#F580B1}},{{Text|8|#F580B1}},{{Text|<nowiki>"O-"</nowiki>|#FFB100}},{{Text|330|#F580B1}},{{Text|32|#F580B1}},{{Text|<nowiki>"cean "</nowiki>|#FFB100}},{{Text|392|#F580B1}},{{Text|8|#F580B1}},{{Text|<nowiki>"Oh "</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|440|#F580B1}},{{Text|8|#F580B1}},{{Text|<nowiki>"bring "</nowiki>|#FFB100}},{{Text|587|#F580B1}},{{Text|8|#F580B1}},{{Text|<nowiki>"back "</nowiki>|#FFB100}},{{Text|523|#F580B1}},{{Text|8|#F580B1}},{{Text|<nowiki>"my "</nowiki>|#FFB100}},{{Text|494|#F580B1}},{{Text|8|#F580B1}},{{Text|<nowiki>"Bon-"</nowiki>|#FFB100}},{{Text|440|#F580B1}},{{Text|8|#F580B1}},{{Text|<nowiki>"nie "</nowiki>|#FFB100}},{{Text|494|#F580B1}},{{Text|8|#F580B1}},{{Text|<nowiki>"to "</nowiki>|#FFB100}},{{Text|523|#F580B1}},{{Text|32|#F580B1}},{{Text|<nowiki>"me..!"</nowiki>|#FFB100}}
+{{CodeEnd}}
+{{Small|Code adapted by Ted Weissgerber}}
+
+----
+
+;Example 3:Playing sound effects using the new QB64-PE '''SOUND''' extensions.
+{{CodeStart}}
+{{Cl|OPTION}} {{Cl|_EXPLICIT}}
+
+{{Cl|DIM}} Q {{Cl|AS}} {{Cl|STRING}}
+
+{{Text|<nowiki>' Sound effects menu</nowiki>|#919191}}
+{{Cl|DO}}
+    {{Cl|CLS}}
+    {{Cl|PRINT}} {{Text|<nowiki>"Sound effects"</nowiki>|#FFB100}}: {{Cl|PRINT}}
+    {{Cl|COLOR}} {{Text|14|#F580B1}}, {{Text|0|#F580B1}}: {{Cl|PRINT}} {{Text|<nowiki>"  B"</nowiki>|#FFB100}};: {{Cl|COLOR}} {{Text|7|#F580B1}}, {{Text|0|#F580B1}}: {{Cl|PRINT}} {{Text|<nowiki>"ouncing"</nowiki>|#FFB100}}
+    {{Cl|COLOR}} {{Text|14|#F580B1}}, {{Text|0|#F580B1}}: {{Cl|PRINT}} {{Text|<nowiki>"  F"</nowiki>|#FFB100}};: {{Cl|COLOR}} {{Text|7|#F580B1}}, {{Text|0|#F580B1}}: {{Cl|PRINT}} {{Text|<nowiki>"alling"</nowiki>|#FFB100}}
+    {{Cl|COLOR}} {{Text|14|#F580B1}}, {{Text|0|#F580B1}}: {{Cl|PRINT}} {{Text|<nowiki>"  K"</nowiki>|#FFB100}};: {{Cl|COLOR}} {{Text|7|#F580B1}}, {{Text|0|#F580B1}}: {{Cl|PRINT}} {{Text|<nowiki>"laxon"</nowiki>|#FFB100}}
+    {{Cl|COLOR}} {{Text|14|#F580B1}}, {{Text|0|#F580B1}}: {{Cl|PRINT}} {{Text|<nowiki>"  S"</nowiki>|#FFB100}};: {{Cl|COLOR}} {{Text|7|#F580B1}}, {{Text|0|#F580B1}}: {{Cl|PRINT}} {{Text|<nowiki>"iren"</nowiki>|#FFB100}}
+    {{Cl|COLOR}} {{Text|14|#F580B1}}, {{Text|0|#F580B1}}: {{Cl|PRINT}} {{Text|<nowiki>"  Q"</nowiki>|#FFB100}};: {{Cl|COLOR}} {{Text|7|#F580B1}}, {{Text|0|#F580B1}}: {{Cl|PRINT}} {{Text|<nowiki>"uit"</nowiki>|#FFB100}}
+    {{Cl|PRINT}}: {{Cl|PRINT}} {{Text|<nowiki>"Select: "</nowiki>|#FFB100}};
+
+    {{Text|<nowiki>' Get valid key</nowiki>|#919191}}
+    {{Cl|DO}}
+        Q = {{Cl|UCASE$}}({{Cl|INPUT$}}({{Text|1|#F580B1}}))
+    {{Cl|DO...LOOP|LOOP WHILE}} {{Cl|INSTR}}({{Text|<nowiki>"BFKSQ"</nowiki>|#FFB100}}, Q) = {{Text|0|#F580B1}}
+
+    {{Text|<nowiki>' Take action based on key</nowiki>|#919191}}
+    {{Cl|CLS}}
+    {{Cl|SELECT CASE}} Q
+        {{Cl|CASE IS}} = {{Text|<nowiki>"B"</nowiki>|#FFB100}}
+            {{Cl|PRINT}} {{Text|<nowiki>"Bouncing . . . "</nowiki>|#FFB100}}
+            {{Text|Bounce|#55FF55}} {{Text|32767|#F580B1}}, {{Text|246|#F580B1}} {{Text|<nowiki>' the 32767 will make the PSG generate silence (exactly like QB45 does)</nowiki>|#919191}}
+        {{Cl|CASE IS}} = {{Text|<nowiki>"F"</nowiki>|#FFB100}}
+            {{Cl|PRINT}} {{Text|<nowiki>"Falling . . . "</nowiki>|#FFB100}}
+            {{Text|Fall|#55FF55}} {{Text|2000|#F580B1}}, {{Text|550|#F580B1}}, {{Text|500|#F580B1}}
+        {{Cl|CASE IS}} = {{Text|<nowiki>"S"</nowiki>|#FFB100}}
+            {{Cl|PRINT}} {{Text|<nowiki>"Wailing . . ."</nowiki>|#FFB100}}
+            {{Cl|PRINT}} {{Text|<nowiki>" . . . press any key to end."</nowiki>|#FFB100}}
+            {{Text|Siren|#55FF55}} {{Text|780|#F580B1}}, {{Text|650|#F580B1}}
+        {{Cl|CASE IS}} = {{Text|<nowiki>"K"</nowiki>|#FFB100}}
+            {{Cl|PRINT}} {{Text|<nowiki>"Oscillating . . ."</nowiki>|#FFB100}}
+            {{Cl|PRINT}} {{Text|<nowiki>" . . . press any key to end."</nowiki>|#FFB100}}
+            {{Text|Klaxon|#55FF55}} {{Text|987|#F580B1}}, {{Text|329|#F580B1}}
+        {{Cl|CASE ELSE}}
+    {{Cl|END SELECT}}
+{{Cl|DO...LOOP|LOOP UNTIL}} Q = {{Text|<nowiki>"Q"</nowiki>|#FFB100}}
+{{Cl|END}}
+
+{{Text|<nowiki>' Loop two sounds down at decreasing time intervals</nowiki>|#919191}}
+{{Cl|SUB}} {{Text|Bounce|#55FF55}} (Hi {{Cl|AS}} {{Cl|LONG}}, Low {{Cl|AS}} {{Cl|LONG}})
+    {{Cl|DIM}} count {{Cl|AS}} {{Cl|LONG}}
+
+    {{Cl|PLAY}} {{Text|<nowiki>"Q0"</nowiki>|#FFB100}} {{Text|<nowiki>' turn off volume ramping</nowiki>|#919191}}
+
+    {{Cl|FOR}} count = {{Text|60|#F580B1}} {{Cl|TO}} {{Text|1|#F580B1}} {{Cl|STEP}} {{Text|-2|#F580B1}}
+        {{Cl|SOUND}} Low - count / {{Text|2|#F580B1}}, count / {{Text|20|#F580B1}}, {{Text|1.0!|#F580B1}}, {{Text|0.0!|#F580B1}}, {{Text|1|#F580B1}}
+        {{Cl|SOUND}} Hi, count / {{Text|15|#F580B1}}
+    {{Cl|NEXT}}
+{{Cl|END SUB}}
+
+{{Text|<nowiki>' Loop down from a high sound to a low sound</nowiki>|#919191}}
+{{Cl|SUB}} {{Text|Fall|#55FF55}} (Hi {{Cl|AS}} {{Cl|LONG}}, Low {{Cl|AS}} {{Cl|LONG}}, Del {{Cl|AS}} {{Cl|LONG}})
+    {{Cl|DIM}} vol {{Cl|AS}} {{Cl|SINGLE}}
+    {{Cl|DIM}} count {{Cl|AS}} {{Cl|LONG}}
+
+    {{Cl|PLAY}} {{Text|<nowiki>"Q3"</nowiki>|#FFB100}} {{Text|<nowiki>' enable 3ms volume ramping</nowiki>|#919191}}
+
+    {{Cl|FOR}} count = Hi {{Cl|TO}} Low {{Cl|STEP}} {{Text|-10|#F580B1}}
+        vol = {{Text|1.0!|#F580B1}} - vol
+        {{Cl|SOUND}} count, Del / count, vol, {{Text|0.0!|#F580B1}}, {{Text|3|#F580B1}} {{Text|<nowiki>' triangle wave</nowiki>|#919191}}
+    {{Cl|NEXT}}
+{{Cl|END SUB}}
+
+{{Text|<nowiki>' Alternate two sounds until a key is pressed</nowiki>|#919191}}
+{{Cl|SUB}} {{Text|Klaxon|#55FF55}} (Hi {{Cl|AS}} {{Cl|LONG}}, Low {{Cl|AS}} {{Cl|LONG}})
+    {{Cl|PLAY}} {{Text|<nowiki>"Q5"</nowiki>|#FFB100}} {{Text|<nowiki>' enable 5ms volume ramping</nowiki>|#919191}}
+
+    {{Cl|DO...LOOP|DO WHILE}} {{Cl|INKEY$}} = {{Text|<nowiki>""</nowiki>|#FFB100}}
+        {{Cl|SOUND}} Hi, {{Text|5!|#F580B1}}, {{Text|1.0!|#F580B1}}, {{Text|-1.0!|#F580B1}}, {{Text|4|#F580B1}}
+        {{Cl|SOUND}} Low, {{Text|5!|#F580B1}}, {{Text|1.0!|#F580B1}}, {{Text|1.0!|#F580B1}}, {{Text|4|#F580B1}}
+    {{Cl|LOOP}}
+{{Cl|END SUB}}
+
+{{Text|<nowiki>' Loop a sound from low to high to low</nowiki>|#919191}}
+{{Cl|SUB}} {{Text|Siren|#55FF55}} (Hi {{Cl|AS}} {{Cl|LONG}}, Range {{Cl|AS}} {{Cl|LONG}})
+    {{Cl|DIM}} count {{Cl|AS}} {{Cl|LONG}}, pan {{Cl|AS}} {{Cl|SINGLE}}
+    {{Cl|DIM}} dir {{Cl|AS}} {{Cl|SINGLE}}: dir = {{Text|0.01!|#F580B1}}
+
+    {{Cl|PLAY}} {{Text|<nowiki>"Q0"</nowiki>|#FFB100}} {{Text|<nowiki>' disable volume ramping</nowiki>|#919191}}
+
+    {{Cl|DO...LOOP|DO WHILE}} {{Cl|INKEY$}} = {{Text|<nowiki>""</nowiki>|#FFB100}}
+        {{Cl|FOR}} count = Range {{Cl|TO}} -Range {{Cl|STEP}} {{Text|-4|#F580B1}}
+            pan = pan + dir
+            {{Cl|IF}} pan <= {{Text|-1.0!|#F580B1}} {{Cl|THEN}} dir = {{Text|0.01!|#F580B1}}: pan = {{Text|-1.0!|#F580B1}}
+            {{Cl|IF}} pan >= {{Text|1.0!|#F580B1}} {{Cl|THEN}} dir = {{Text|-0.01!|#F580B1}}: pan = {{Text|1.0!|#F580B1}}
+
+            {{Cl|SOUND}} Hi - {{Cl|ABS}}(count), {{Text|0.3!|#F580B1}}, {{Text|1.0!|#F580B1}}, pan, {{Text|4|#F580B1}} {{Text|<nowiki>' sine wave</nowiki>|#919191}}
+
+            count = count - {{Text|2|#F580B1}} / Range
+        {{Cl|NEXT}}
+    {{Cl|LOOP}}
+{{Cl|END SUB}}
+{{CodeEnd}}
+{{Small|Code by Samuel Gomes (a740g).}}
+
+
+{{PageSeeAlso}}
+* [[PLAY]], [[BEEP]], [[_WAVE]]
+* [[_SNDOPEN]], [[_SNDRAW]]
+
+
+{{PageNavigation}}

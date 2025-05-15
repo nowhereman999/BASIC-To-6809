@@ -1,0 +1,79 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:41:41}}
+{{DISPLAYTITLE:_INPUTBOX$}}
+The '''_INPUTBOX$''' function displays a prompt in a dialog box, waits for the user to input text or click a button, and returns a string containing the contents of the text box.
+
+
+{{PageSyntax}}
+: {{Parameter|result$}} = [[_INPUTBOX$]]([{{Parameter|title$}}][, {{Parameter|message$}}][, {{Parameter|defaultInput$}}])
+
+
+{{PageParameters}}
+* {{Parameter|title$}} is an optional dialog box title.
+* {{Parameter|message$}} is an optional message or prompt that will be displayed in the dialog box.
+* {{Parameter|defaultInput$}} is an optional string that is displayed in the text box as the default response if no other input is provided.
+
+
+{{PageDescription}}
+* Use {{Parameter|message$}} to specify instructions to the user.
+* All parameters are optional, hence omitting {{Parameter|defaultInput$}} will display a empty text box.
+** However, if {{Parameter|defaultInput$}} is provided, but is an empty string ('''""'''), then a password box is shown, and the text input will be masked.
+* The {{Parameter|result$}} may be an empty string ('''""'''), if the user simply cancelled the dialog.
+* The dialog box automatically becomes a modal window, if the application window is visible.
+
+
+{{PageAvailability}}
+<!-- QB64 = a version or none, QBPE = a version or all, Platforms = yes or no -->
+<gallery widths="48px" heights="48px" mode="nolines">
+File:Qb64.png|'''none'''
+File:Qbpe.png|'''v3.4.0'''
+File:Apix.png
+File:Win.png|'''yes'''
+File:Lnx.png|'''yes'''
+File:Osx.png|'''yes'''
+</gallery>
+<!-- additional availability notes go below here -->
+
+
+{{PageExamples}}
+; Example 1: Hello world, with common dialogs.
+{{CodeStart}}
+username$ = {{Cl|_INPUTBOX$}}({{Text|<nowiki>"Hello App"</nowiki>|#FFB100}}, {{Text|<nowiki>"Enter your name:"</nowiki>|#FFB100}}, {{Text|<nowiki>"anonymous"</nowiki>|#FFB100}})
+
+{{Cl|_MESSAGEBOX}} {{Text|<nowiki>"Hello App"</nowiki>|#FFB100}}, {{Text|<nowiki>"Hello "</nowiki>|#FFB100}} + username$, {{Text|<nowiki>"info"</nowiki>|#FFB100}}
+{{CodeEnd}}
+
+----
+
+; Example 2: Checking whether the user cancelled the input dialog.
+{{CodeStart}}
+age$ = {{Cl|_TRIM$}}({{Cl|_INPUTBOX$}}(, {{Text|<nowiki>"Enter your age:"</nowiki>|#FFB100}}))
+
+{{Cl|IF}} {{Cl|LEN}}(age$) = {{Text|0|#F580B1}} {{Cl|THEN}}
+    {{Cl|_MESSAGEBOX}} , {{Text|<nowiki>"Cancelled."</nowiki>|#FFB100}}
+{{Cl|ELSE}}
+    {{Cl|_MESSAGEBOX}} , {{Text|<nowiki>"Age = "</nowiki>|#FFB100}} + age$
+{{Cl|END IF}}
+{{CodeEnd}}
+
+----
+
+; Example 3: Getting passwords.
+{{CodeStart}}
+password$ = {{Cl|_INPUTBOX$}}({{Text|<nowiki>"Login"</nowiki>|#FFB100}}, {{Text|<nowiki>"Enter password:"</nowiki>|#FFB100}}, {{Text|<nowiki>""</nowiki>|#FFB100}})
+
+{{Cl|IF}} {{Cl|LEN}}(password$) = {{Text|0|#F580B1}} {{Cl|THEN}}
+    {{Cl|_MESSAGEBOX}} , {{Text|<nowiki>"Cancelled."</nowiki>|#FFB100}}
+{{Cl|ELSE}}
+    {{Cl|_MESSAGEBOX}} , {{Text|<nowiki>"You entered = "</nowiki>|#FFB100}} + password$
+{{Cl|END IF}}
+{{CodeEnd}}
+
+
+{{PageSeeAlso}}
+* [[_MESSAGEBOX]], [[_MESSAGEBOX (function)]]
+* [[_NOTIFYPOPUP]], [[_COLORCHOOSERDIALOG]]
+* [[_SELECTFOLDERDIALOG$]], [[_OPENFILEDIALOG$]], [[_SAVEFILEDIALOG$]]
+
+
+{{PageNavigation}}

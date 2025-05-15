@@ -1,0 +1,51 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:42:43}}
+{{DISPLAYTITLE:_SAVEFILEDIALOG$}}
+The '''_SAVEFILEDIALOG$''' function displays a standard dialog box that prompts the user to save a file. The returned string is an empty string ('''""''') if the user cancelled.
+
+
+{{PageSyntax}}
+:{{Parameter|result$}} = [[_SAVEFILEDIALOG$]]([{{Parameter|title$}}][, {{Parameter|defaultPathAndFile$}}][, {{parameter|filterPatterns$}}][, {{Parameter|singleFilterDescription$}}])
+
+
+{{PageParameters}}
+* {{Parameter|title$}} is the dialog box title
+* {{Parameter|defaultPathAndFile$}} is the default path that will be used by the dialog box if not changed by the user
+* {{parameter|filterPatterns$}} are the file filters separated using '''"|"''' (e.g., "*.png|*.jpg|*.gif")
+* {{Parameter|singleFilterDescription$}} is the single filter description (e.g., "Image files")
+
+
+{{PageDescription}}
+* All parameters accept an empty string ('''""''') in which case system defaults are used
+* If {{Parameter|singleFilterDescription$}} is an empty string ('''""'''), then {{parameter|filterPatterns$}} will be shown in it's place
+* The dialog box automatically becomes a modal window if the application window is visible
+
+
+{{PageAvailability}}
+* '''QB64-PE v3.4.0 and up'''
+
+
+{{PageExamples}}
+; Example : Simple save file dialog example
+{{CodeStart}}
+{{Cl|IF}} {{Cl|NOT}} filesaved& {{Cl|THEN}}
+    textfile$ = {{Cl|_SAVEFILEDIALOG$}}("Save File", "", "*.txt|*.doc", "Text files")
+    {{Cl|IF}} textfile$ <> "" {{Cl|THEN}}
+        filesaved& = -1
+        {{Cl|_MESSAGEBOX}} "Information", "File will be saved to " + textfile$
+    {{Cl|END IF}}
+{{Cl|END IF}}
+{{CodeEnd}}
+
+
+{{PageSeeAlso}}
+* [[_NOTIFYPOPUP]]
+* [[_MESSAGEBOX]]
+* [[_MESSAGEBOX (function)]]
+* [[_INPUTBOX$]]
+* [[_SELECTFOLDERDIALOG$]]
+* [[_COLORCHOOSERDIALOG]]
+* [[_OPENFILEDIALOG$]]
+
+
+{{PageNavigation}}

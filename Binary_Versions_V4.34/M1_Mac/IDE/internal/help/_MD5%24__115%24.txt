@@ -1,0 +1,72 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:41:56}}
+{{DISPLAYTITLE: _MD5$}}
+The '''_MD5$''' function returns the [[Wikipedia:MD5|MD5]] hash value of any arbitrary string.
+
+
+{{PageSyntax}}
+: {{Parameter|md5hash$}} = [[_MD5$]]({{Parameter|dataString$}})
+
+
+{{PageParameters}}
+* {{Parameter|md5hash$}} is the hash value returned as hexadecimal [[STRING]], if the given {{Parameter|dataString$}} was empty the unusual but absolutely correct hash value is:
+** D41D8CD98F00B204E9800998ECF8427E
+* {{Parameter|dataString$}} is any literal or variable [[STRING]] to build the hash value from.
+
+
+{{PageDescription}}
+* MD5 can be used as a checksum to verify data integrity against unintentional corruption.
+* Historically it was widely used as a cryptographic hash function, however it has been found to suffer from extensive vulnerabilities.
+* It remains suitable for other non-cryptographic purposes and may be preferred due to lower computational requirements than more recent Secure Hash Algorithms.
+;Attention when comparing hashes
+:* MD5 hashes may contain the hexadecimal letters A-F and implementations may differ using either lower or upper case letters.
+:* If you compare hashes from external sources, which were not generated with our '''_MD5$''' function, then make sure to use either [[LCASE$]] or [[UCASE$]] on all hashes to avoid mismatches due to case differences.
+:* Our function will always return upper case.
+
+
+{{PageAvailability}}
+<!-- QB64 = a version or none, QBPE = a version or all, Platforms = yes or no -->
+<gallery widths="48px" heights="48px" mode="nolines">
+File:Qb64.png|'''none'''
+File:Qbpe.png|'''v3.12.0'''
+File:Apix.png
+File:Win.png|'''yes'''
+File:Lnx.png|'''yes'''
+File:Osx.png|'''yes'''
+</gallery>
+<!-- additional availability notes go below here -->
+
+
+{{PageExamples}}
+;Example: Showing how the MD5 hash value can detect differences in two strings.
+{{CodeStart}}
+{{Text|<nowiki>'this is the correct text</nowiki>|#919191}}
+t$ = {{Text|<nowiki>"QB64 Phoenix Edition"</nowiki>|#FFB100}}
+{{Cl|PRINT}} {{Text|<nowiki>"Correct Text: "</nowiki>|#FFB100}}; t$
+{{Cl|PRINT}} {{Text|<nowiki>"    MD5 hash: "</nowiki>|#FFB100}}; {{Cl|_MD5$}}(t$)
+{{Cl|PRINT}}
+{{Text|<nowiki>'this text differs in just 1 bit from the above, by changing 4 to 5</nowiki>|#919191}}
+{{Text|<nowiki>'ASC("4") = 52 = &B00110100</nowiki>|#919191}}
+{{Text|<nowiki>'ASC("5") = 53 = &B00110101</nowiki>|#919191}}
+t$ = {{Text|<nowiki>"QB65 Phoenix Edition"</nowiki>|#FFB100}}
+{{Cl|PRINT}} {{Text|<nowiki>"Mangled Text: "</nowiki>|#FFB100}}; t$
+{{Cl|PRINT}} {{Text|<nowiki>"    MD5 hash: "</nowiki>|#FFB100}}; {{Cl|_MD5$}}(t$)
+{{Cl|END}}
+{{CodeEnd}}
+{{Small|Example by RhoSigma}}
+{{OutputStart}}
+Correct Text: QB64 Phoenix Edition
+    MD5 hash: E512ECA19E9487D7C2F564E848314238
+
+Mangled Text: QB65 Phoenix Edition
+    MD5 hash: 3EF03E7B0DB46F7D1FA6B9626563C10B
+{{OutputEnd}}
+
+
+{{PageSeeAlso}}
+* [https://qb64phoenix.com/forum/showthread.php?tid=2681 Featured in our "Keyword of the Day" series]
+* [[_DEFLATE$]], [[_INFLATE$]]
+* [[_ADLER32]], [[_CRC32]]
+
+
+{{PageNavigation}}

@@ -1,0 +1,46 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:43:28}}
+The '''ASC''' statement allows a program to change a character at any position of a [[STRING]] variable.
+
+
+{{PageSyntax}}
+: [[ASC]]({{Parameter|stringExpression$}}[, {{Parameter|position%}}]) = {{Parameter|code%}}
+
+
+{{PageDescription}}
+* '''Note:''' The statement variant of '''ASC''' is not available in QBasic/QuickBASIC, but in '''QB64 only'''.
+* The {{Parameter|stringExpression$}} variable's value must have been previously defined and cannot be an empty string ("").
+* {{Parameter|position%}} is optional. If no position is used, the leftmost character at position 1 is assumed.
+* {{Parameter|position%}} cannot be zero or greater than the string's length or an [[ERROR Codes|Illegal function call]] error will occur.
+* The [[ASCII]] replacement {{Parameter|code%}} value can be any [[INTEGER]] value from 0 to 255.
+
+
+{{PageExamples}}
+;Example:Demonstrates how to change existing text characters one letter at a time.
+{{CodeStart}}
+a$ = "YZC"
+{{Cl|ASC}}(a$) = 65                 ' CHR$(65) = "A"
+{{Cl|ASC}}(a$, 2) = 66              ' CHR$(66) = "B"
+{{Cl|PRINT}} a$
+
+{{Cl|ASC}}(a$, 2) = 32              ' CHR$(32) = " "
+{{Cl|PRINT}} a$
+
+{{Cl|ASC}}(a$, 2) = {{Cl|ASC (function)|ASC}}("S")        ' get code value from ASC function
+{{Cl|PRINT}} a$
+{{CodeEnd}}
+{{OutputStart}}
+ABC
+A C
+ASC
+{{OutputEnd}}
+
+
+{{PageSeeAlso}}
+* [https://qb64phoenix.com/forum/showthread.php?tid=1149 Featured in our "Keyword of the Day" series]
+* [[ASC (function)]]
+* [[MID$]], [[MID$ (function)]]
+* [[INKEY$]], [[ASCII]]
+
+
+{{PageNavigation}}

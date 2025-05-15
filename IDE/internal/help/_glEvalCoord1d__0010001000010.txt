@@ -1,0 +1,30 @@
+{{QBDLDATE:01-28-2023}}
+{{QBDLTIME:11:49:43}}
+{{DISPLAYTITLE:_glEvalCoord1d}}
+The '''_glEvalCoord1d''' statement evaluates enabled one-dimensional maps.
+
+
+{{PageSyntax}}
+: [[_glEvalCoord1d]] GLdouble {{Parameter|u}}
+
+
+{{PageParameters}}
+* OpenGL is using its own set of variable types to describe its command parameters.
+* Use the following table to find the respective QB64 [[Variable Types]].
+{{OpenGLTypesPlugin}}
+
+
+{{PageDescription}}
+* OpenGL's documentation is available in several places, so we won't reproduce it here for another time.
+* The full description for this command can be found at [https://learn.microsoft.com/en-us/windows/win32/opengl/glevalcoord1d Microsoft Docs] and is also valid for QB64 usage.
+
+
+{{PageSeeAlso}}
+* [[_GL|SUB _GL]]
+* [[_glBegin]], [https://learn.microsoft.com/en-us/windows/win32/opengl/glcolor-functions _glColor], [[_glDisable]], [[_glEnable]]
+* [[_glEnd]], [https://learn.microsoft.com/en-us/windows/win32/opengl/glevalmesh-functions _glEvalMesh], [https://learn.microsoft.com/en-us/windows/win32/opengl/glevalpoint _glEvalPoint], [https://learn.microsoft.com/en-us/windows/win32/opengl/glgetmap _glGetMap]
+* [https://learn.microsoft.com/en-us/windows/win32/opengl/glindex-functions _glIndex], [[_glIsEnabled]], [https://learn.microsoft.com/en-us/windows/win32/opengl/glmap1 _glMap1], [https://learn.microsoft.com/en-us/windows/win32/opengl/glmap2 _glMap2]
+* [https://learn.microsoft.com/en-us/windows/win32/opengl/glmapgrid-functions _glMapGrid], [https://learn.microsoft.com/en-us/windows/win32/opengl/glnormal-functions _glNormal], [https://learn.microsoft.com/en-us/windows/win32/opengl/gltexcoord-functions _glTexCoord], [https://learn.microsoft.com/en-us/windows/win32/opengl/glvertex-functions _glVertex]
+
+
+{{PageNavigation}}

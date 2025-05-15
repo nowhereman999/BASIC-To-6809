@@ -1,0 +1,27 @@
+{{QBDLDATE:01-28-2023}}
+{{QBDLTIME:11:51:09}}
+{{DISPLAYTITLE:_gluPerspective}}
+The '''_gluPerspective''' statement sets up a perspective projection matrix.
+
+
+{{PageSyntax}}
+: [[_gluPerspective]] GLdouble {{Parameter|fovy}}, GLdouble {{Parameter|aspect}}, GLdouble {{Parameter|zNear}}, GLdouble {{Parameter|zFar}}
+
+
+{{PageParameters}}
+* OpenGL is using its own set of variable types to describe its command parameters.
+* Use the following table to find the respective QB64 [[Variable Types]].
+{{OpenGLTypesPlugin}}
+
+
+{{PageDescription}}
+* OpenGL's documentation is available in several places, so we won't reproduce it here for another time.
+* The full description for this command can be found at [https://learn.microsoft.com/en-us/windows/win32/opengl/gluperspective Microsoft Docs] and is also valid for QB64 usage.
+
+
+{{PageSeeAlso}}
+* [[_GL|SUB _GL]]
+* [[_glFrustum]], [[_glLoadIdentity]], [https://learn.microsoft.com/en-us/windows/win32/opengl/glmultmatrix _glMultMatrix], [https://learn.microsoft.com/en-us/windows/win32/opengl/gluortho2d _gluOrtho2D]
+
+
+{{PageNavigation}}

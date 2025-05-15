@@ -1,4 +1,20 @@
-V$ = "4.32"
+V$ = "4.34"
+'       - Can now handle 10000 IF/THEN/ELSE commands per program, was previously set at 100
+'       - Fixed a bug detecting string array variables
+'       - Made STRING$ function now handle ascii codes instead of only string values for the 2nd value in the command
+'       - Fixed a bug with MID$
+'       - can now handle 1000 deep expression comparisons, was limited to 10 previously
+'       - Fixed a bug with IF/THEN/ELSE where compiler could re-use the same labels
+'       - Fixed a bug with numeric arrays with one element (wasn't pointing at the correct RAM location)
+'       - Fixed a bug with the SDC_GETCURDIR$ command
+'       - Fixed a bug with the PLAY command (IRQ was returning to the wrong location)
+'       - PLAY command now automatically plays at normal speed then automatically speeds up the CoCo after playing
+
+' V 4.33
+'       - If your CoCo 3 can support 2.8 Mhz high speed the compiled code now runs at triple speed (2.8 Mhz)
+'         for most operations (not disk, etc.)
+
+' V 4.32
 '       - Added new command SDC_BIGLOADM, for fast loading the CoCo 3 memory banks, useful for loading game backgrounds or
 '         Other large amounts for data
 '       - Added support for Drive number 0 or 1 for the SDC_Play commands
@@ -280,7 +296,7 @@ If count = 0 Then
     Print "Where: program.bas is the basic program you want to convert to assembly language"
     Print "       outputs program.asm which is ready to be used with LWASM to convert it to a machine language program for the CoCo"
     Print "       It will autodetect a coco program or ASCII file but just in case the detection is not working you can manually"
-    Print "       set the input type wit the -coco or -ascii options"
+    Print "       set the input type with the -coco or -ascii options"
     Print "       -coco     - A regular tokenized Color Computer BASIC program"
     Print "       -ascii    - A plain text BASIC program in regular ASCII, from a text editor or a program like QB64"
     Print "       -sxxx     - Sets the max length to reserve for strings in an array (default and max is 255 bytes)"

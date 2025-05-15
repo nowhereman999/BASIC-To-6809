@@ -4,8 +4,8 @@ KEYBUF       EQU    $0152          KEYBOARD MEMORY BUFFER
 
 * INKEY$
 *
-* THIS ROUTINE GETS A KEYSTROKE FROM THE KEYBOARD IF A KEY
-* IS DOWN. IT RETURNS ZERO IF THERE WAS NO KEY DOWN.
+* THIS ROUTINE GETS A KEYSTROKE FROM THE KEYBOARD
+* returns with value in A, A=0 if no key is pressed
 *
 KEYIN        PSHS   B,X            SAVE REGISTERS
              BSR    LA1C8          GET KEYSTROKE
@@ -85,12 +85,12 @@ LA22D        LDA    #$7F           COLUMN STROBE
 
 *** READ THE KEYBOARD
 LA238        LDA    PIA0           READ PIA0, PORT A TO SEE IF KEY IS DOWN
-**                                A BIT WILL BE ZERO IF ONE IS
+**                                 A BIT WILL BE ZERO IF ONE IS
              ORA    #$80           MASK OFF THE JOYSTICK COMPARATOR INPUT
              TST    PIA0+2         ARE WE STROBING COLUMN 7?
              BMI    LA244          NO
              ORA    #$C0           YES, FORCE ROW 6 TO BE HIGH -THIS WILL
-**                                CAUSE THE SHIFT KEY TO BE IGNORED
+**                                 CAUSE THE SHIFT KEY TO BE IGNORED
 LA244        RTS                   RETURN
 
 LA245        LDB    #51            CODE FOR 'AT SIGN'
@@ -121,7 +121,8 @@ LA26A        LDB    B,X            GET ASCII CODE FROM CONTROL TABLE
 
 *
 *
-* CONTROL TABLE    UNSHIFTED, SHIFTED VALUES
+* CONTROL TABLE   
+*     UNSHIFTED, SHIFTED VALUES
 CONTAB  FCB $5E,$5F   UP ARROW
         FCB $0A,$5B   DOWN ARROW
         FCB $08,$15   RIGHT ARROW

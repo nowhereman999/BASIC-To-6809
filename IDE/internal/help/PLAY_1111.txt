@@ -1,0 +1,559 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:44:51}}
+'''PLAY''' is a statement that plays a tune defined by Music Macro Language (MML) [[STRING]]s.
+
+
+{{PageSyntax}}
+: '''PLAY''' {{Parameter|mmlString1$}}[, {{Parameter|mmlString2$}}][, {{Parameter|mmlString3$}}][, {{Parameter|mmlString4$}}]
+
+
+{{PageParameters}}
+* The {{Parameter|mmlString1$}}, {{Parameter|mmlString2$}}, {{Parameter|mmlString3$}}, {{Parameter|mmlString4$}} can be any literal or variable [[STRING]] consisting of the following commands:
+** Command string values are not case-sensitive and white spaces and ''';''' are ignored. Use upper or lower case as desired.
+:*'''O''' n - Sets the current octave (from 0 to 6). Example: '''{{Text|PLAY "O3"|green}}'''
+:*'''<''' - Down one octave (cannot be below zero). Example: '''{{Text|PLAY "<<"|green}}''' 'goes down two octaves.
+:*'''>''' - Up one octave (cannot be above 6). Example: '''{{Text|PLAY ">>"|green}}''' ' goes up two octaves.
+:*'''A''', '''B''', '''C''', '''D''', '''E''', '''F''' or '''G''' are the notes in the current octave. The following suffixes can be used:
+::*'''+''' or '''#''' for a sharp note. Example: '''{{Text|PLAY "C#"|green}}'''
+::*'''-''' for a flat note. Example: '''{{Text|PLAY "C-"|green}}'''
+:*'''N''' n - Plays a note n by number(n can be between 0 to 84 in the 7 octaves, where 0 is a rest). Example: '''{{Text|PLAY "N42"|green}}'''
+:*'''L''' n - Sets length of a note (n can be 1 to 64 where 1 is a whole note and 4 is a quarter of a note etc.). Example: '''{{Text|PLAY "L4"|green}}'''
+::*'''MS''' - Each note plays 3/4 of length set by L (staccato)
+::*'''MN''' - Each note plays 7/8 of length set by L (normal)
+::*'''ML''' - Each note plays a full-length set by L (legato)
+::*'''R'''/'''P''' n - Specifies a rest/pause (1 - 64). P1 is a whole-note pause, P2 is a half-note pause, etc.  (The pause is 1/n note in length.) Example: '''{{Text|PLAY "P32"|green}}'''
+::*'''T''' n - Tempo sets the number of L4 quarter notes per minute (n can be 32 to 255 where 120 is the default). Example: '''{{Text|PLAY "T180"|green}}'''
+:::*''' .  '''  - period after a note plays 1½ times the note length determined by L * T.
+:::*'''.. '''  - two periods plays 1-3/4 times the note length determined by L * T.
+:*''',  '''  - '''commas in QB64''' stop play advancement to allow more than one note to be played simultaneously. Example: '''{{Text|PLAY "C,E,G,"|green}}'''
+:*'''V''' n - Voice volume in '''QB64 only''' can be any volume from 0 (none) to 100 (full).  The default level is 50 when '''n''' is not specified.
+:*'''V-'''/'''V+''' - Decrement / Increment the voice volume in '''QB64-PE only'''.
+:*'''MF''' - Play music in the foreground (each note must be completed before another can start).
+:*'''MB''' - Play music in the background while program code execution continues (QB64 has no note buffer limits).
+:*'''X''' '''+''' [[VARPTR$]](string-expression) - executes a command string variable. '''It must be used with variables!'''.
+:*'''W'''/'''@''' n - Select waveform in '''QB64-PE only''' can be ('''1''' for square (default), '''2''' for sawtooth, '''3''' for triangle, '''4''' for sine, '''5''' for white noise, '''6''' for pink noise, '''7''' for Brownian noise, '''8''' for LFSR noise, '''9''' for pulse or '''10''' for a waveform defined by the [[_WAVE]] statement.
+:*'''/''' n - Attack duration in '''QB64-PE only''' can be a percentage of note duration from 0 to 100.
+:*'''\''' n - Decay duration in '''QB64-PE only''' can be a percentage of note duration from 0 to 100.
+:*'''^''' n - Sustain volume in '''QB64-PE only''' can be a percentage of the voice volume ('''V''') from 0 to 100.
+:*'''_''' n - Release duration in '''QB64-PE only''' can be a percentage of note duration from 0 to 100.
+:*'''Q''' n - Simple volume ramp in '''QB64-PE only''' can be a percentage of note duration from 0 to 100. This sets sustain ('''^''') to 100, attack ('''/''') to n, and release ('''_''') to n.
+:*'''Y''' n - Parameters for the current waveform in '''QB64-PE only''' can be 0 to 100 for pulse waveform, clock rate for LFSR noise, or seed for other noise waveforms.
+:*'''S''' n - Pan position in '''QB64-PE only''' can be 0 (left-most) to 100 (right-most).
+:*'''S-'''/'''S+''' - Moves the pan position left / right in '''QB64-PE only'''.
+:*Numeric values "n" listed above can also be fetched from numeric variables using '''"="''' + [[VARPTR$]](numeric_variable).
+
+
+{{PageAvailability}}
+<!-- QB64 = a version or none, QBPE = a version or all, Platforms = yes or no -->
+<gallery widths="48px" heights="48px" mode="nolines">
+File:Qb64.png|'''v0.610'''
+File:Qbpe.png|'''all'''
+File:Apix.png
+File:Win.png|'''yes'''
+File:Lnx.png|'''yes'''
+File:Osx.png|'''yes'''
+</gallery>
+<!-- additional availability notes go below here -->
+* The following features have been added in '''QB64-PE v3.8.0''':
+** Complete support for '''X''' '''+''' [[VARPTR$]](string-expression).
+** Support for '''@''' and '''Q''' commands.
+* The following features have been added in '''QB64-PE v4.0.0''':
+** Support for multi-voice MML playback. Advanced BASIC (for the IBM PCjr and Tandy 1000) multi-voice MML can now play in QB64-PE.
+** Support for '''W''', '''/''', '''\''', '''^''', '''_''', '''Y''', '''S''', '''S-''', '''S+''', '''R''', '''V-''', and '''V+''' commands.
+** Support for 6, 7, 8, 9, and 10 (user-defined [[_WAVE]]) waveforms.
+
+
+{{PageExamples}}
+;Example 1:Plays a sound with the volume and note varying from 0 to 50. The maximum note can only be 84.
+{{CodeStart}}
+{{Cl|PLAY}} {{Text|<nowiki>"q0w3mll64"</nowiki>|#FFB100}}
+{{Cl|DO}}
+    {{Cl|FOR}} x = {{Text|1|#F580B1}} {{Cl|TO}} {{Text|50|#F580B1}}
+        a$ = a$ + {{Text|<nowiki>"v"</nowiki>|#FFB100}} + {{Cl|LTRIM$}}({{Cl|STR$}}(x)) + {{Text|<nowiki>"n"</nowiki>|#FFB100}} + {{Cl|LTRIM$}}({{Cl|STR$}}(x))
+    {{Cl|NEXT}}
+    {{Cl|FOR}} x = {{Text|50|#F580B1}} {{Cl|TO}} {{Text|1|#F580B1}} {{Cl|STEP}} {{Text|-1|#F580B1}}
+        a$ = a$ + {{Text|<nowiki>"v"</nowiki>|#FFB100}} + {{Cl|LTRIM$}}({{Cl|STR$}}(x)) + {{Text|<nowiki>"n"</nowiki>|#FFB100}} + {{Cl|LTRIM$}}({{Cl|STR$}}(x))
+    {{Cl|NEXT}}
+    {{Cl|PLAY}} a$
+    a$ = {{Text|<nowiki>""</nowiki>|#FFB100}}
+{{Cl|DO...LOOP|LOOP UNTIL}} {{Cl|INKEY$}} <> {{Text|<nowiki>""</nowiki>|#FFB100}}
+{{Cl|PLAY}} {{Text|<nowiki>"v10l1c,l4egl2o5c,o4l4eg"</nowiki>|#FFB100}}
+{{CodeEnd}}
+{{Small|Code by Galleon}}
+
+----
+
+;Example 2:Plays "Frosty the snowman". The lyric printing is not delayed by PLAY in QB64.
+{{CodeStart}}
+{{Cl|CLS}}: {{Cl|PRINT}} {{Text|<nowiki>"Frosty the Snow Man"</nowiki>|#FFB100}}
+{{Cl|FOR}} X = {{Text|1|#F580B1}} {{Cl|TO}} {{Text|2|#F580B1}}
+    {{Cl|PRINT}}
+    {{Cl|IF}} X = {{Text|1|#F580B1}} {{Cl|THEN}} {{Cl|PRINT}} {{Text|<nowiki>"Fros-ty the Snow man was a jolly happy soul,"</nowiki>|#FFB100}}
+    {{Cl|IF}} X = {{Text|2|#F580B1}} {{Cl|THEN}} {{Cl|PRINT}} {{Text|<nowiki>"Fros-ty the Snow man knew the sun was hot that day"</nowiki>|#FFB100}}
+    {{Cl|PLAY}} {{Text|<nowiki>"w3q1t140o2p4g2e4.f8g4o3c2o2b8o3c8d4c4o2b4a8g2."</nowiki>|#FFB100}} {{Text|<nowiki>'MB removed to print song one line at a time</nowiki>|#919191}}
+    {{Cl|IF}} X = {{Text|1|#F580B1}} {{Cl|THEN}} {{Cl|PRINT}} {{Text|<nowiki>"with a corn cob pipe and a button nose and two eyes made out of coal."</nowiki>|#FFB100}}
+    {{Cl|IF}} X = {{Text|2|#F580B1}} {{Cl|THEN}} {{Cl|PRINT}} {{Text|<nowiki>"so he said Let's run and we'll have some fun now before I melt away."</nowiki>|#FFB100}}
+    {{Cl|PLAY}} {{Text|<nowiki>"o2b8o3c8d4c4o2b4a8a8g8o3c4o2e8e4g8a8g4f4e4f4g2."</nowiki>|#FFB100}}
+    {{Cl|IF}} X = {{Text|1|#F580B1}} {{Cl|THEN}} {{Cl|PRINT}} {{Text|<nowiki>"Fros-ty the Snow Man is a fair-y tale, they say,"</nowiki>|#FFB100}}
+    {{Cl|IF}} X = {{Text|2|#F580B1}} {{Cl|THEN}} {{Cl|PRINT}} {{Text|<nowiki>"Down to the vil-lage, with a broom-stick in his hand,"</nowiki>|#FFB100}}
+    {{Cl|PLAY}} {{Text|<nowiki>"g2e4.f8g4o3c2o2b8o3c8d4c4o2b4a8g2."</nowiki>|#FFB100}}
+    {{Cl|IF}} X = {{Text|1|#F580B1}} {{Cl|THEN}} {{Cl|PRINT}} {{Text|<nowiki>"He was made of snow but the chil-dren knew how he come to life one day."</nowiki>|#FFB100}}
+    {{Cl|IF}} X = {{Text|2|#F580B1}} {{Cl|THEN}} {{Cl|PRINT}} {{Text|<nowiki>"run-ning here and there all a-round the square, say-in' catch me if you can."</nowiki>|#FFB100}}
+    {{Cl|PLAY}} {{Text|<nowiki>"o2b8o3c8d4c4o2b4a8a8g8o3c4o2e8e4g8a8g4f4e4d4c2."</nowiki>|#FFB100}}
+    {{Cl|IF}} X = {{Text|1|#F580B1}} {{Cl|THEN}} {{Cl|PRINT}} {{Text|<nowiki>"There must have been some magic in that old silk hat they found."</nowiki>|#FFB100}}
+    {{Cl|IF}} X = {{Text|2|#F580B1}} {{Cl|THEN}} {{Cl|PRINT}} {{Text|<nowiki>"He led them down the streets of town right to the traffic cop."</nowiki>|#FFB100}}
+    {{Cl|PLAY}} {{Text|<nowiki>"c4a4a4o3c4c4o2b4a4g4e4f4a4g4f4e2."</nowiki>|#FFB100}}
+    {{Cl|IF}} X = {{Text|1|#F580B1}} {{Cl|THEN}} {{Cl|PRINT}} {{Text|<nowiki>"For when they placed it on his head he be-gan to dance a round."</nowiki>|#FFB100}}
+    {{Cl|IF}} X = {{Text|2|#F580B1}} {{Cl|THEN}} {{Cl|PRINT}} {{Text|<nowiki>"And he on-ly paused a moment when he heard him hol-ler Stop!"</nowiki>|#FFB100}}
+    {{Cl|PLAY}} {{Text|<nowiki>"e8e8d4d4g4g4b4b4o3d4d8o2b8o3d4c4o2b4a4g4p4"</nowiki>|#FFB100}}
+    {{Cl|IF}} X = {{Text|1|#F580B1}} {{Cl|THEN}} {{Cl|PRINT}} {{Text|<nowiki>"Oh, Fros-ty the Snow Man was a-live as he could be,"</nowiki>|#FFB100}}
+    {{Cl|IF}} X = {{Text|2|#F580B1}} {{Cl|THEN}} {{Cl|PRINT}} {{Text|<nowiki>"For, Fros-ty the Snow Man had to hur-ry on his way"</nowiki>|#FFB100}}
+    {{Cl|PLAY}} {{Text|<nowiki>"g2g2e4.f8g4o3c2o2b8o3c8d4c4o2b4a8g8g2."</nowiki>|#FFB100}}
+    {{Cl|IF}} X = {{Text|1|#F580B1}} {{Cl|THEN}} {{Cl|PRINT}} {{Text|<nowiki>"and the chil-dren say he could laugh and play just the same as you and me."</nowiki>|#FFB100}}
+    {{Cl|IF}} X = {{Text|2|#F580B1}} {{Cl|THEN}} {{Cl|PRINT}} {{Text|<nowiki>"but he waved good-bye say-in' Don't you cry, I'll be back a-gain some day."</nowiki>|#FFB100}}
+    {{Cl|PLAY}} {{Text|<nowiki>"o2b8o3c8d4c4o2b4a8a8g8o3c4o2e8e4g8a8g4f4e4d4c2.p4"</nowiki>|#FFB100}}
+{{Cl|NEXT}} X
+{{Cl|PRINT}}: {{Cl|PRINT}} {{Text|<nowiki>"Thump-et-y thump thump, thump-et-y thump thump, look at Fros-ty go."</nowiki>|#FFB100}}
+{{Cl|PLAY}} {{Text|<nowiki>"t180g8g8g4g4g4a8g8g4g4g4a4g4e4g4d1"</nowiki>|#FFB100}}
+{{Cl|PRINT}} {{Text|<nowiki>"Thump-et-y thump thump, thump-et-y thump thump, ov-er the hills of snow."</nowiki>|#FFB100}}
+{{Cl|PLAY}} {{Text|<nowiki>"t180g8g8g4g4g4a8g8g4g4g4g8g8g4a4b4o3c2c4p1"</nowiki>|#FFB100}}
+{{Cl|END}}
+{{CodeEnd}}
+{{Small|Code by Greg Rismoen}}
+
+----
+
+;Example 3: Clicking on the grid enables various notes to be played simultaneously.
+{{CodeStart}}
+{{Cl|DIM}} {{Cl|SHARED}} grid({{Text|16|#F580B1}}, {{Text|16|#F580B1}}), grid2({{Text|16|#F580B1}}, {{Text|16|#F580B1}}), cur
+{{Cl|CONST}} maxx = {{Text|512|#F580B1}}
+{{Cl|CONST}} maxy = {{Text|512|#F580B1}}
+{{Cl|SCREEN}} {{Cl|_NEWIMAGE}}(maxx, maxy, {{Text|32|#F580B1}})
+{{Cl|_TITLE}} {{Text|<nowiki>"MusicGrid"</nowiki>|#FFB100}}
+{{Text|cleargrid|#55FF55}}
+{{Cl|DO}}
+    {{Cl|IF}} {{Cl|TIMER (function)|TIMER}} - t# > {{Text|1|#F580B1}} / {{Text|8|#F580B1}} {{Cl|THEN}} cur = (cur + {{Text|1|#F580B1}}) {{Cl|AND}} {{Text|15|#F580B1}}: t# = {{Cl|TIMER (function)|TIMER}}
+    {{Cl|IF}} cur <> oldcur {{Cl|THEN}}
+        {{Text|figuregrid|#55FF55}}
+        {{Text|drawgrid|#55FF55}}
+        {{Text|playgrid|#55FF55}}
+        oldcur = cur
+    {{Cl|END IF}}
+    {{Text|domousestuff|#55FF55}}
+    in$ = {{Cl|INKEY$}}
+    {{Cl|IF}} in$ = {{Text|<nowiki>"C"</nowiki>|#FFB100}} {{Cl|OR (boolean)|OR}} in$ = {{Text|<nowiki>"c"</nowiki>|#FFB100}} {{Cl|THEN}} {{Text|cleargrid|#55FF55}}
+{{Cl|DO...LOOP|LOOP UNTIL}} in$ = {{Cl|CHR$}}({{Text|27|#F580B1}})
+
+{{Cl|SUB}} {{Text|drawgrid|#55FF55}}
+    scale! = maxx / {{Text|16|#F580B1}}
+    scale2 = maxx \ {{Text|16|#F580B1}} - {{Text|2|#F580B1}}
+    {{Cl|FOR}} y = {{Text|0|#F580B1}} {{Cl|TO}} {{Text|15|#F580B1}}
+        y1 = y * scale!
+        {{Cl|FOR}} x = {{Text|0|#F580B1}} {{Cl|TO}} {{Text|15|#F580B1}}
+            x1 = x * scale!
+            c& = {{Cl|_RGB32}}(grid2(x, y) * {{Text|64|#F580B1}} + {{Text|64|#F580B1}}, {{Text|0|#F580B1}}, {{Text|0|#F580B1}})
+            {{Cl|LINE}} (x1, y1)-(x1 + scale2, y1 + scale2), c&, BF
+        {{Cl|NEXT}} x
+    {{Cl|NEXT}} y
+{{Cl|END SUB}}
+
+{{Cl|SUB}} {{Text|figuregrid|#55FF55}}
+    {{Cl|FOR}} y = {{Text|0|#F580B1}} {{Cl|TO}} {{Text|15|#F580B1}}
+        {{Cl|FOR}} x = {{Text|0|#F580B1}} {{Cl|TO}} {{Text|15|#F580B1}}
+            grid2(x, y) = grid(x, y)
+        {{Cl|NEXT}} x
+    {{Cl|NEXT}} y
+    {{Cl|FOR}} y = {{Text|1|#F580B1}} {{Cl|TO}} {{Text|14|#F580B1}}
+        {{Cl|FOR}} x = {{Text|1|#F580B1}} {{Cl|TO}} {{Text|14|#F580B1}}
+            {{Cl|IF}} grid(x, y) = {{Text|1|#F580B1}} {{Cl|AND (boolean)|AND}} cur = x {{Cl|THEN}}
+                grid2(x, y) = {{Text|2|#F580B1}}
+                {{Cl|IF}} grid(x - {{Text|1|#F580B1}}, y) = {{Text|0|#F580B1}} {{Cl|THEN}} grid2(x - {{Text|1|#F580B1}}, y) = {{Text|1|#F580B1}}
+                {{Cl|IF}} grid(x + {{Text|1|#F580B1}}, y) = {{Text|0|#F580B1}} {{Cl|THEN}} grid2(x + {{Text|1|#F580B1}}, y) = {{Text|1|#F580B1}}
+                {{Cl|IF}} grid(x, y - {{Text|1|#F580B1}}) = {{Text|0|#F580B1}} {{Cl|THEN}} grid2(x, y - {{Text|1|#F580B1}}) = {{Text|1|#F580B1}}
+                {{Cl|IF}} grid(x, y + {{Text|1|#F580B1}}) = {{Text|0|#F580B1}} {{Cl|THEN}} grid2(x, y + {{Text|1|#F580B1}}) = {{Text|1|#F580B1}}
+            {{Cl|END IF}}
+        {{Cl|NEXT}} x
+    {{Cl|NEXT}} y
+{{Cl|END SUB}}
+
+{{Cl|SUB}} {{Text|domousestuff|#55FF55}}
+    {{Cl|DO...LOOP|DO WHILE}} {{Cl|_MOUSEINPUT}}
+        {{Cl|IF}} {{Cl|_MOUSEBUTTON}}({{Text|1|#F580B1}}) {{Cl|THEN}}
+            x = {{Cl|_MOUSEX}} \ (maxx \ {{Text|16|#F580B1}})
+            y = {{Cl|_MOUSEY}} \ (maxy \ {{Text|16|#F580B1}})
+            grid(x, y) = {{Text|1|#F580B1}} - grid(x, y)
+        {{Cl|END IF}}
+    {{Cl|LOOP}}
+{{Cl|END SUB}}
+
+{{Cl|SUB}} {{Text|playgrid|#55FF55}}
+    n$ = {{Text|<nowiki>"W3Q1L16 "</nowiki>|#FFB100}}
+    {{Text|<nowiki>'scale$ = "O1CO1DO1EO1FO1GO1AO1BO2CO2DO2EO2FO2GO2AO2BO3CO3D"</nowiki>|#919191}}
+    scale$ = {{Text|<nowiki>"o1fo1go1ao2co2do2fo2go2ao3co3do3fo3go3ao4co4do4fo"</nowiki>|#FFB100}}
+    {{Cl|FOR}} y = {{Text|15|#F580B1}} {{Cl|TO}} {{Text|0|#F580B1}} {{Cl|STEP}} {{Text|-1|#F580B1}}
+        {{Cl|IF}} grid(cur, y) = {{Text|1|#F580B1}} {{Cl|THEN}}
+            note$ = {{Cl|MID$ (function)|MID$}}(scale$, {{Text|1|#F580B1}} + ({{Text|15|#F580B1}} - y) * {{Text|3|#F580B1}}, {{Text|3|#F580B1}})
+            n$ = n$ + note$ + {{Text|<nowiki>","</nowiki>|#FFB100}} {{Text|<nowiki>'comma plays 2 or more column notes simultaneously</nowiki>|#919191}}
+        {{Cl|END IF}}
+    {{Cl|NEXT}} y
+    n$ = {{Cl|LEFT$}}(n$, {{Cl|LEN}}(n$) - {{Text|1|#F580B1}})
+    {{Cl|PLAY}} n$
+{{Cl|END SUB}}
+
+{{Cl|SUB}} {{Text|cleargrid|#55FF55}}
+    {{Cl|FOR}} y = {{Text|0|#F580B1}} {{Cl|TO}} {{Text|15|#F580B1}}
+        {{Cl|FOR}} x = {{Text|0|#F580B1}} {{Cl|TO}} {{Text|15|#F580B1}}
+            grid(x, y) = {{Text|0|#F580B1}}
+        {{Cl|NEXT}} x
+    {{Cl|NEXT}} y
+{{Cl|END SUB}}
+{{CodeEnd}}
+{{Small|Code by JP}}
+
+----
+
+;Example 4:Play strings starting with MB allow program code to run while music plays in the background.
+{{CodeStart}}
+{{Text|<nowiki>' 2012, 2013 mennonite</nowiki>|#919191}}
+{{Text|<nowiki>' license: creative commons cc0 1.0 universal</nowiki>|#919191}}
+{{Text|<nowiki>' (public domain) http://creativecommons.org/publicdomain/zero/1.0/</nowiki>|#919191}}
+
+{{Cl|SCREEN}} {{Text|12|#F580B1}} {{Text|<nowiki>' the following works in other screen modes, too</nowiki>|#919191}}
+{{Cl|RANDOMIZE}} {{Cl|TIMER (function)|TIMER}}
+
+{{Cl|PLAY}} {{Text|<nowiki>"mbw3q1o2 l4cf.l8el4fag.l8fl4gl8agl4f.l8fl4a>cl2dl4dl4c.<l8al4afg.l8fl4gl8agl4f.l8dl4dcl2f>l4dc.<l8al4afg.l8fl4g>dc.<l8al4a>cl2dl4dc.<l8al4afg.l8fl4gl8agl4f.l8dl4dcl1f"</nowiki>|#FFB100}}
+
+{{Cl|DIM}} ccs({{Text|1|#F580B1}} {{Cl|TO}} {{Text|9|#F580B1}}, {{Text|1|#F580B1}} {{Cl|TO}} {{Text|2|#F580B1}})
+ccs({{Text|1|#F580B1}}, {{Text|1|#F580B1}}) = {{Text|415|#F580B1}}: ccs({{Text|1|#F580B1}}, {{Text|2|#F580B1}}) = {{Text|289|#F580B1}}
+ccs({{Text|2|#F580B1}}, {{Text|1|#F580B1}}) = {{Text|185|#F580B1}}: ccs({{Text|2|#F580B1}}, {{Text|2|#F580B1}}) = {{Text|128|#F580B1}}
+ccs({{Text|3|#F580B1}}, {{Text|1|#F580B1}}) = {{Text|108|#F580B1}}: ccs({{Text|3|#F580B1}}, {{Text|2|#F580B1}}) = {{Text|75|#F580B1}}
+ccs({{Text|4|#F580B1}}, {{Text|1|#F580B1}}) = {{Text|70|#F580B1}}: ccs({{Text|4|#F580B1}}, {{Text|2|#F580B1}}) = {{Text|48|#F580B1}}
+ccs({{Text|5|#F580B1}}, {{Text|1|#F580B1}}) = {{Text|48|#F580B1}}: ccs({{Text|5|#F580B1}}, {{Text|2|#F580B1}}) = {{Text|32|#F580B1}}
+ccs({{Text|6|#F580B1}}, {{Text|1|#F580B1}}) = {{Text|32|#F580B1}}: ccs({{Text|6|#F580B1}}, {{Text|2|#F580B1}}) = {{Text|20|#F580B1}}
+ccs({{Text|7|#F580B1}}, {{Text|1|#F580B1}}) = {{Text|20|#F580B1}}: ccs({{Text|7|#F580B1}}, {{Text|2|#F580B1}}) = {{Text|12|#F580B1}}
+ccs({{Text|8|#F580B1}}, {{Text|1|#F580B1}}) = {{Text|10|#F580B1}}: ccs({{Text|8|#F580B1}}, {{Text|2|#F580B1}}) = {{Text|6|#F580B1}}
+ccs({{Text|9|#F580B1}}, {{Text|1|#F580B1}}) = {{Text|2|#F580B1}}: ccs({{Text|9|#F580B1}}, {{Text|2|#F580B1}}) = {{Text|2|#F580B1}}
+
+{{Cl|FOR}} extra = {{Text|1|#F580B1}} {{Cl|TO}} {{Text|23|#F580B1}}
+    {{Cl|FOR}} p = {{Text|1|#F580B1}} {{Cl|TO}} {{Text|9|#F580B1}}
+        {{Text|gcolor|#55FF55}} {{Cl|INT}}({{Cl|RND}} * {{Text|9|#F580B1}} + {{Text|14|#F580B1}} - {{Text|9|#F580B1}})
+        {{Cl|_DELAY}} {{Text|.04|#F580B1}}
+        {{Cl|CLS}}
+        {{Text|gscale|#55FF55}} p
+        row = ccs(p, {{Text|1|#F580B1}})
+        cl = ccs(p, {{Text|2|#F580B1}})
+        {{Text|glocate|#55FF55}} row, cl
+        {{Text|gprint|#55FF55}} {{Text|<nowiki>"000000000000000000000000000000000000000000000000000000000000000000000"</nowiki>|#FFB100}}
+        {{Text|glocate|#55FF55}} row + {{Text|1|#F580B1}}, cl
+        {{Text|gprint|#55FF55}} {{Text|<nowiki>"0x00x0xxxx0xxxx0xxxx0x0x000x00x0xxxx0x000x000x0x0xxxx0xxxx0xxxx000x00"</nowiki>|#FFB100}}
+        {{Text|glocate|#55FF55}} row + {{Text|2|#F580B1}}, cl
+        {{Text|gprint|#55FF55}} {{Text|<nowiki>"0x00x0x00x0x00x0x00x0x0x000xx0x0x0000x000x000x0x0x0000x00x0x00x000x00"</nowiki>|#FFB100}}
+        {{Text|glocate|#55FF55}} row + {{Text|3|#F580B1}}, cl
+        {{Text|gprint|#55FF55}} {{Text|<nowiki>"0xxxx0xxxx0xxxx0xxxx0x0x000x0xx0xxx00x0x0x000x0x0xxx00xxxx0xxxx000x00"</nowiki>|#FFB100}}
+        {{Text|glocate|#55FF55}} row + {{Text|4|#F580B1}}, cl
+        {{Text|gprint|#55FF55}} {{Text|<nowiki>"0x00x0x00x0x0000x00000x0000x00x0x0000x0x0x0000x00x0000x00x0x0x0000000"</nowiki>|#FFB100}}
+        {{Text|glocate|#55FF55}} row + {{Text|5|#F580B1}}, cl
+        {{Text|gprint|#55FF55}} {{Text|<nowiki>"0x00x0x00x0x0000x00000x0000x00x0xxxx0xx0xx0000x00xxxx0x00x0x00x000x00"</nowiki>|#FFB100}}
+        {{Text|glocate|#55FF55}} row + {{Text|6|#F580B1}}, cl
+        {{Text|gprint|#55FF55}} {{Text|<nowiki>"000000000000000000000000000000000000000000000000000000000000000000000"</nowiki>|#FFB100}}
+    {{Cl|NEXT}} p
+    {{Cl|SLEEP}} {{Text|1|#F580B1}}
+    {{Cl|IF}} {{Cl|INKEY$}} = {{Cl|CHR$}}({{Text|27|#F580B1}}) {{Cl|THEN}} {{Cl|EXIT FOR}}
+{{Cl|NEXT}} extra
+
+{{Cl|END}}
+
+{{Cl|SUB}} {{Text|gscale|#55FF55}} (s):
+    {{Cl|SHARED}} gscalep
+    gscalep = {{Cl|INT}}(s)
+{{Cl|END SUB}}
+
+{{Cl|SUB}} {{Text|gcolor|#55FF55}} (c):
+    {{Cl|SHARED}} gcolorp
+    gcolorp = c
+{{Cl|END SUB}}
+
+{{Cl|SUB}} {{Text|gbackcolor|#55FF55}} (c):
+    {{Cl|SHARED}} gbackcolorp
+    gbackcolorp = c
+{{Cl|END SUB}}
+
+{{Cl|SUB}} {{Text|glocate|#55FF55}} (row, column):
+    {{Cl|SHARED}} gposxp
+    {{Cl|SHARED}} gposyp
+    gposyp = row
+    gposxp = column
+{{Cl|END SUB}}
+
+{{Cl|SUB}} {{Text|gprint|#55FF55}} (p$):
+    {{Cl|SHARED}} gscalep
+    {{Cl|SHARED}} gposxp, gposyp
+    {{Cl|SHARED}} gcolorp, gbackcolorp
+    {{Text|<nowiki>' # means "use the foreground color here."</nowiki>|#919191}}
+    {{Text|<nowiki>' . means "use the background color here."</nowiki>|#919191}}
+    {{Text|<nowiki>' _ means "transparent - don't draw this block at all" (you can layer!)</nowiki>|#919191}}
+    {{Text|<nowiki>' 0,1,2,3,4,5,6,7,8,9,a,b,c,d,e,f means "do color attribute 0 to 15."</nowiki>|#919191}}
+    {{Text|<nowiki>' any letter after f: "use the foreground color here."</nowiki>|#919191}}
+    {{Cl|IF}} gscalep < {{Text|1|#F580B1}} {{Cl|THEN}} gscalep = {{Text|1|#F580B1}}
+    pcolorp = gcolorp
+    {{Cl|FOR}} p = {{Text|1|#F580B1}} {{Cl|TO}} {{Cl|LEN}}(p$):
+        {{Cl|SELECT CASE}} {{Cl|LCASE$}}({{Cl|MID$ (function)|MID$}}(p$, p, {{Text|1|#F580B1}}))
+            {{Cl|CASE}} {{Text|<nowiki>"#"</nowiki>|#FFB100}}, {{Text|<nowiki>"g"</nowiki>|#FFB100}}, {{Text|<nowiki>"h"</nowiki>|#FFB100}}, {{Text|<nowiki>"i"</nowiki>|#FFB100}}, {{Text|<nowiki>"j"</nowiki>|#FFB100}}, {{Text|<nowiki>"k"</nowiki>|#FFB100}}, {{Text|<nowiki>"l"</nowiki>|#FFB100}}, {{Text|<nowiki>"m"</nowiki>|#FFB100}}, {{Text|<nowiki>"n"</nowiki>|#FFB100}}, {{Text|<nowiki>"o"</nowiki>|#FFB100}}, {{Text|<nowiki>"p"</nowiki>|#FFB100}}, {{Text|<nowiki>"q"</nowiki>|#FFB100}}, {{Text|<nowiki>"r"</nowiki>|#FFB100}}, {{Text|<nowiki>"s"</nowiki>|#FFB100}}, {{Text|<nowiki>"t"</nowiki>|#FFB100}}, {{Text|<nowiki>"u"</nowiki>|#FFB100}}, {{Text|<nowiki>"v"</nowiki>|#FFB100}}, {{Text|<nowiki>"w"</nowiki>|#FFB100}}, {{Text|<nowiki>"x"</nowiki>|#FFB100}}, {{Text|<nowiki>"y"</nowiki>|#FFB100}}, {{Text|<nowiki>"z"</nowiki>|#FFB100}}
+                pcolorp = gcolorp
+            {{Cl|CASE}} {{Text|<nowiki>"."</nowiki>|#FFB100}}
+                pcolorp = gbackcolorp
+            {{Cl|CASE}} {{Text|<nowiki>"_"</nowiki>|#FFB100}}
+                pcolorp = {{Text|-1|#F580B1}}
+            {{Cl|CASE}} {{Text|<nowiki>"0"</nowiki>|#FFB100}}, {{Text|<nowiki>"1"</nowiki>|#FFB100}}, {{Text|<nowiki>"2"</nowiki>|#FFB100}}, {{Text|<nowiki>"3"</nowiki>|#FFB100}}, {{Text|<nowiki>"4"</nowiki>|#FFB100}}, {{Text|<nowiki>"5"</nowiki>|#FFB100}}, {{Text|<nowiki>"6"</nowiki>|#FFB100}}, {{Text|<nowiki>"7"</nowiki>|#FFB100}}, {{Text|<nowiki>"8"</nowiki>|#FFB100}}, {{Text|<nowiki>"9"</nowiki>|#FFB100}}, {{Text|<nowiki>"a"</nowiki>|#FFB100}}, {{Text|<nowiki>"b"</nowiki>|#FFB100}}, {{Text|<nowiki>"c"</nowiki>|#FFB100}}, {{Text|<nowiki>"d"</nowiki>|#FFB100}}, {{Text|<nowiki>"e"</nowiki>|#FFB100}}, {{Text|<nowiki>"f"</nowiki>|#FFB100}}
+                pcolorp = {{Cl|INSTR}}({{Text|<nowiki>"0123456789abcdef"</nowiki>|#FFB100}}, {{Cl|LCASE$}}({{Cl|MID$ (function)|MID$}}(p$, p, {{Text|1|#F580B1}}))) - {{Text|1|#F580B1}}
+        {{Cl|END SELECT}}
+        {{Cl|IF}} {{Cl|NOT}} pcolorp = {{Text|-1|#F580B1}} {{Cl|THEN}}
+            {{Cl|IF}} gscalep > {{Text|1|#F580B1}} {{Cl|THEN}}
+                {{Cl|LINE}} ((gposxp - {{Text|1|#F580B1}}) * gscalep, (gposyp - {{Text|1|#F580B1}}) * gscalep)-{{Cl|STEP}}(gscalep - {{Text|1|#F580B1}}, gscalep - {{Text|1|#F580B1}}), pcolorp, BF
+            {{Cl|ELSE}}:
+                {{Cl|PSET}} (gposxp, gposyp), pcolorp
+            {{Cl|END IF}}
+        {{Cl|END IF}}
+        {{Text|glocate|#55FF55}} gposyp, gposxp + {{Text|1|#F580B1}}
+    {{Cl|NEXT}} p
+    gposxp = {{Text|1|#F580B1}}
+    {{Text|glocate|#55FF55}} gposyp + {{Text|1|#F580B1}}, {{Text|1|#F580B1}} {{Text|<nowiki>'gposyp = gposyp + 1</nowiki>|#919191}}
+{{Cl|END SUB}}
+{{CodeEnd}}
+{{Small|Code by Mennonite}}
+
+----
+
+;Example 5:This example uses [[PRINT]] to good effect as string spacing is ignored by '''PLAY'''.
+{{CodeStart}}
+{{Cl|WIDTH}} {{Text|59|#F580B1}}, {{Text|28|#F580B1}}
+{{Cl|PRINT}}
+x$ = x$ + {{Text|<nowiki>"   o3    l4         t         0120c    ml<f1   ,a      1,  "</nowiki>|#FFB100}}
+x$ = x$ + {{Text|<nowiki>"   >c    1,        mnf        .e  8f   am  l<   e1    ,g   "</nowiki>|#FFB100}}
+x$ = x$ + {{Text|<nowiki>"   1,    >c       1, mn       g.   f8  ga   8g   8m  l<    "</nowiki>|#FFB100}}
+x$ = x$ + {{Text|<nowiki>"   f2.,a2.,      >c   2.      ,m  nf   .f  8a     ml<f     "</nowiki>|#FFB100}}
+x$ = x$ + {{Text|<nowiki>"   ,a,>c,mn     >cd2.,<f2     .,d2     .,<b        -2      "</nowiki>|#FFB100}}
+x$ = x$ + {{Text|<nowiki>"   .m    lb    -,>d,f,mn>d    ml       <c          1,      "</nowiki>|#FFB100}}
+x$ = x$ + {{Text|<nowiki>"   <a    1,   f1         ,m   n>       >c          .<      "</nowiki>|#FFB100}}
+x$ = x$ + {{Text|<nowiki>"   a8    af  ml           c1  ,<       e1          ,g      "</nowiki>|#FFB100}}
+x$ = x$ + {{Text|<nowiki>"                                                           "</nowiki>|#FFB100}}
+x$ = x$ + {{Text|<nowiki>"      1,m      n>  g.f8ga8g8m  l<                   f1     "</nowiki>|#FFB100}}
+x$ = x$ + {{Text|<nowiki>"      ,d1,     <b  -1           ,m                 n>      "</nowiki>|#FFB100}}
+x$ = x$ + {{Text|<nowiki>"      >f .d    8d  c<            f2               .,       "</nowiki>|#FFB100}}
+x$ = x$ + {{Text|<nowiki>"      a2  .,   c2  .,>f2.         ml      <      b-        "</nowiki>|#FFB100}}
+x$ = x$ + {{Text|<nowiki>"      ,>   d,  f,  mn>dml          <c    1,<    a1         "</nowiki>|#FFB100}}
+x$ = x$ + {{Text|<nowiki>"      ,f    1, mn  >>               c.  <a 8a  fm          "</nowiki>|#FFB100}}
+x$ = x$ + {{Text|<nowiki>"      lc     2.,<  e2                .,g2   .,mn           "</nowiki>|#FFB100}}
+x$ = x$ + {{Text|<nowiki>"      >g      .f8  gml<b-,>d,         f,     mn            "</nowiki>|#FFB100}}
+x$ = x$ + {{Text|<nowiki>"                                                           "</nowiki>|#FFB100}}
+x$ = x$ + {{Text|<nowiki>">d      ml  <<f2.,a2.,         >         c2.,m       n>  c."</nowiki>|#FFB100}}
+x$ = x$ + {{Text|<nowiki>" <a    8a   ml                <e,        g,  >c      ,m  n>"</nowiki>|#FFB100}}
+x$ = x$ + {{Text|<nowiki>"  cm  l<    <b               -2 .,       >d   2.     ,f  2."</nowiki>|#FFB100}}
+x$ = x$ + {{Text|<nowiki>"   ,mn>     d2.ml<          <b   -,      >d  ,f      ,m  n>"</nowiki>|#FFB100}}
+x$ = x$ + {{Text|<nowiki>"    dm      l<<f1,         a1,>c1,mn     >c.<a       8a  fm"</nowiki>|#FFB100}}
+x$ = x$ + {{Text|<nowiki>"    lc      1,            <e1,g1,mn>g    .f  8g      a8  g8"</nowiki>|#FFB100}}
+x$ = x$ + {{Text|<nowiki>"    ml      <<           b-         1,   >d   1,           "</nowiki>|#FFB100}}
+x$ = x$ + {{Text|<nowiki>"    f1      ,mn>f.d8dc  l1           ml  f,    c,    <a  ,f"</nowiki>|#FFB100}}
+{{Cl|PRINT}} x$;
+{{Cl|PLAY}} x$
+{{CodeEnd}}
+{{Small|Code by Luke}}
+
+----
+
+;Example 6:Demonstrates usage of [[VARPTR$]] with '''PLAY'''.
+{{CodeStart}}
+{{Text|<nowiki>'Play scale in 7 different octaves</nowiki>|#919191}}
+scale$ = {{Text|<nowiki>"CDEFGAB"</nowiki>|#FFB100}}
+
+play$ = {{Text|<nowiki>"L16O="</nowiki>|#FFB100}} + {{Cl|VARPTR$}}(i%) + {{Text|<nowiki>"X"</nowiki>|#FFB100}} + {{Cl|VARPTR$}}(scale$)
+
+{{Cl|FOR}} i% = {{Text|0|#F580B1}} {{Cl|TO}} {{Text|6|#F580B1}}
+    {{Cl|PLAY}} play$
+{{Cl|NEXT}}
+{{CodeEnd}}
+
+----
+
+;Example 7:Multi-voice '''PLAY''' demo.
+{{CodeStart}}
+{{Text|<nowiki>'-----------------------------------------------------------------------------------------------------------------------</nowiki>|#919191}}
+{{Text|<nowiki>' QB64-PE v4.0.0 multi-voice PLAY Demo by a740g</nowiki>|#919191}}
+{{Text|<nowiki>'-----------------------------------------------------------------------------------------------------------------------</nowiki>|#919191}}
+
+{{Cm|$IF}} {{Text|VERSION|#55FF55}} < {{Text|4.0.0|#F580B1}} {{Cm|THEN}}
+    {{Cm|$ERROR}} This requires the latest version of QB64-PE from https://github.com/QB64-Phoenix-Edition/QB64pe/releases/latest
+{{Cm|$END IF}} 
+
+{{Cl|_DEFINE}} A-Z {{Cl|AS}} {{Cl|LONG}}
+{{Cl|OPTION}} {{Cl|_EXPLICIT}}
+
+{{Cl|CONST}} APP_NAME = {{Text|<nowiki>"Multi-voice PLAY Demo"</nowiki>|#FFB100}}
+{{Cl|CONST}} LOOPS = {{Text|3|#F580B1}}
+
+{{Cl|_TITLE}} APP_NAME
+
+{{Cl|DIM}} {{Cl|AS}} {{Cl|STRING}} CH0Verse_1, CH0Verse_2, CH1Verse_1, CH1Verse_2, CH2Verse_1, CH2Verse_2, CH2Verse_3, CH3Verse_1
+{{Cl|DIM}} {{Cl|AS}} {{Cl|STRING}} Channel_0, Channel_1, Channel_2, Channel_3, Caption
+{{Cl|DIM}} c {{Cl|AS}} {{Cl|LONG}}
+
+{{Cl|DO}}
+    {{Cl|DO}}
+        {{Cl|CLS}}
+        {{Cl|PRINT}}
+        {{Cl|PRINT}} {{Text|<nowiki>"Enter number for a tune to play."</nowiki>|#FFB100}}
+        {{Cl|PRINT}}
+        {{Cl|PRINT}} {{Text|<nowiki>"1. Demo 1 by J. Baker"</nowiki>|#FFB100}}
+        {{Cl|PRINT}} {{Text|<nowiki>"2. Demo 2 by Wilbert Brants"</nowiki>|#FFB100}}
+        {{Cl|PRINT}} {{Text|<nowiki>"3. Demo 3 by Wilbert Brants"</nowiki>|#FFB100}}
+        {{Cl|PRINT}} {{Text|<nowiki>"4. Demo 4 by J. Baker"</nowiki>|#FFB100}}
+        {{Cl|PRINT}} {{Text|<nowiki>"5. Demo 5 by Wilbert Brants"</nowiki>|#FFB100}}
+        {{Cl|PRINT}}
+        {{Cl|INPUT}} {{Text|<nowiki>"Your choice (0 exits)"</nowiki>|#FFB100}}; c
+    {{Cl|DO...LOOP|LOOP WHILE}} c < {{Text|0|#F580B1}} {{Cl|OR (boolean)|OR}} c > {{Text|7|#F580B1}}
+
+    {{Cl|SELECT CASE}} c
+        {{Cl|CASE}} {{Text|1|#F580B1}}
+            Caption = {{Text|<nowiki>"Demo 1 by J. Baker"</nowiki>|#FFB100}}
+
+            {{Text|144|#F580B1}}
+            CH0Verse_1 = {{Text|<nowiki>"t144 l4 q0 w1 o0 ^75_100 v32 w1 ^75_100 o0 dd2 w8 ^100_80 o4 c"</nowiki>|#FFB100}}
+            CH0Verse_2 = {{Text|<nowiki>"w4 ^75_100 o0 d2 w8 ^100_80 o4 cd"</nowiki>|#FFB100}}
+
+            CH1Verse_1 = {{Text|<nowiki>"t144 q0 w1 o2 /1^100_99 v31 l1 gba /1\20^25_79 l4 gab2"</nowiki>|#FFB100}}
+            CH1Verse_2 = {{Text|<nowiki>"v40 /9^100\1 l1 gba \2 l4 gab2"</nowiki>|#FFB100}}
+
+            CH2Verse_1 = {{Text|<nowiki>"t144 l4 w2 o3 q20 v33 r1r1"</nowiki>|#FFB100}}
+            CH2Verse_2 = {{Text|<nowiki>"cd>d<e"</nowiki>|#FFB100}}
+            CH2Verse_3 = {{Text|<nowiki>"cd>d2<"</nowiki>|#FFB100}}
+
+            CH3Verse_1 = {{Text|<nowiki>"t144 q0 w9 y15 o3 _100 v29 l8 d"</nowiki>|#FFB100}}
+
+            Channel_0 = {{Text|RepeatVerse|#55FF55}}(CH0Verse_1 + CH0Verse_1 + CH0Verse_1 + CH0Verse_1 + CH0Verse_1 + CH0Verse_1 + CH0Verse_1 + CH0Verse_1 + CH0Verse_2 + CH0Verse_2 + CH0Verse_2 + CH0Verse_2, LOOPS)
+            Channel_1 = {{Text|RepeatVerse|#55FF55}}(CH1Verse_1 + CH1Verse_1 + CH1Verse_2, LOOPS)
+            Channel_2 = {{Text|RepeatVerse|#55FF55}}(CH2Verse_1 + CH2Verse_1 + CH2Verse_1 + CH2Verse_1 + CH2Verse_2 + CH2Verse_2 + CH2Verse_2 + CH2Verse_3, LOOPS)
+            Channel_3 = {{Text|RepeatVerse|#55FF55}}(CH3Verse_1, {{Text|96|#F580B1}} * LOOPS)
+
+        {{Cl|CASE}} {{Text|2|#F580B1}}
+            Caption = {{Text|<nowiki>"Demo 2 by Wilbert Brants"</nowiki>|#FFB100}}
+
+            CH0Verse_1 = {{Text|<nowiki>"t103 w2 o0 q8 v38 L8 G4B-B-G4B-B-  G4>E-E-<G4>E-E-<  A>CF4<A>CF4<  F4AAGB->D4<"</nowiki>|#FFB100}}
+            CH1Verse_1 = {{Text|<nowiki>"t103 w1 o1 q2 v33 L8 GB->D4<GB->D4<  GB->E-<B-GB->E-<B-  A>CF4<A>CF4<  FA>C<AGB->D4<"</nowiki>|#FFB100}}
+            CH2Verse_1 = {{Text|<nowiki>"t103 w1 o3 q1 v35 L4 GG2G8F8 E-E-2E-8D8 CCCD E-2D2"</nowiki>|#FFB100}}
+            CH2Verse_2 = {{Text|<nowiki>"B-B-2B-8A8 GG2G8F8 CCCD E-2D2"</nowiki>|#FFB100}}
+            CH2Verse_3 = {{Text|<nowiki>"B-B-2B-8A8 GG2G8F8 ACFA G2D2"</nowiki>|#FFB100}}
+
+            Channel_0 = CH0Verse_1 + CH0Verse_1 + CH0Verse_1 + CH0Verse_1
+            Channel_1 = CH1Verse_1 + CH1Verse_1 + CH1Verse_1 + CH1Verse_1
+            Channel_2 = CH2Verse_1 + CH2Verse_2 + CH2Verse_1 + CH2Verse_3
+            Channel_3 = _STR_EMPTY
+
+        {{Cl|CASE}} {{Text|3|#F580B1}}
+            Caption = {{Text|<nowiki>"Demo 3 by Wilbert Brants"</nowiki>|#FFB100}}
+
+            CH0Verse_1 = {{Text|<nowiki>"t144 w2 o0 q16 v22 l8 v+cv-ceeg4 v+ f v- faa>cc< v+ c v- ceeg4 v+ f v- faa>cc< ggbb>d4< q8 g4c2"</nowiki>|#FFB100}}
+            CH1Verse_1 = {{Text|<nowiki>"t144 w1 o1 q2 v20 l4 gec f2a8c8 gec f2a8c8 gbd ec2"</nowiki>|#FFB100}}
+            CH2Verse_1 = {{Text|<nowiki>"t144 w3 o3 q2 v22 l8 cegceg l4 caf l8 cegceg l4 caf l8 gbdgbd l4 cgg"</nowiki>|#FFB100}}
+
+            Channel_0 = {{Text|RepeatVerse|#55FF55}}(CH0Verse_1, LOOPS)
+            Channel_1 = {{Text|RepeatVerse|#55FF55}}(CH1Verse_1, LOOPS)
+            Channel_2 = {{Text|RepeatVerse|#55FF55}}(CH2Verse_1, LOOPS)
+            Channel_3 = _STR_EMPTY
+
+        {{Cl|CASE}} {{Text|4|#F580B1}}
+            Caption = {{Text|<nowiki>"Demo 4 by J. Baker"</nowiki>|#FFB100}}
+
+            Channel_0 = {{Text|<nowiki>"t120 w1 o0 q2 v20 l8 <dced> dcge4 l4 q1 <d1> r8 l8 q2 dg l4 q1 <d1> l8 q2 dge q1 <d1> q2 dcdrr v+ <<dd>> v- r"</nowiki>|#FFB100}}
+            Channel_1 = {{Text|<nowiki>"t120 w1 o1 q1 v21 l8 >dcde< dcde#4 l4 >d1< l8 de l4 >f1 l8 ddfe1< dedfe dd r4"</nowiki>|#FFB100}}
+            Channel_2 = _STR_EMPTY
+            Channel_3 = _STR_EMPTY
+
+        {{Cl|CASE}} {{Text|5|#F580B1}}
+            Caption = {{Text|<nowiki>"Demo 5 by Wilbert Brants"</nowiki>|#FFB100}}
+
+            CH0Verse_1 = {{Text|<nowiki>"T103 q16 O0 V22 W2 L4 V+CV-E8E8 <FA> <V+GV-B8B8> CE"</nowiki>|#FFB100}}
+            CH1Verse_1 = {{Text|<nowiki>"T103 q8 O2 V22 W1 L8 CEG>C< <FA>CF <GB>DG CEG>C<"</nowiki>|#FFB100}}
+            CH2Verse_1 = {{Text|<nowiki>"T103 q1 O3 v60 W4 L4 CEC<G> CEC2 CEC<G> CE16R16E16R16C2 CEC<G> CEC2 CEC<G> C<G16>R16E16R16C2"</nowiki>|#FFB100}}
+
+            Channel_0 = {{Text|RepeatVerse|#55FF55}}(CH0Verse_1, {{Text|4|#F580B1}} * LOOPS)
+            Channel_1 = {{Text|RepeatVerse|#55FF55}}(CH1Verse_1, {{Text|4|#F580B1}} * LOOPS)
+            Channel_2 = {{Text|RepeatVerse|#55FF55}}(CH2Verse_1, LOOPS)
+            Channel_3 = _STR_EMPTY
+
+        {{Cl|CASE ELSE}}
+            {{Cl|EXIT DO}} {{Text|<nowiki>' Exit program</nowiki>|#919191}}
+    {{Cl|END SELECT}}
+
+    {{Text|PlayMML|#55FF55}} Channel_0, Channel_1, Channel_2, Channel_3, Caption
+{{Cl|LOOP}}
+
+{{Cl|SYSTEM}}
+
+{{Cl|SUB}} {{Text|PlayMML|#55FF55}} (chan0 {{Cl|AS}} {{Cl|STRING}}, chan1 {{Cl|AS}} {{Cl|STRING}}, chan2 {{Cl|AS}} {{Cl|STRING}}, chan3 {{Cl|AS}} {{Cl|STRING}}, caption {{Cl|AS}} {{Cl|STRING}})
+    {{Cl|PLAY}} chan0, chan1, chan2, chan3
+
+    {{Cl|PRINT}}
+    {{Cl|PRINT}} {{Text|<nowiki>"Playing "</nowiki>|#FFB100}}; caption; {{Text|<nowiki>"..."</nowiki>|#FFB100}}
+
+    {{Cl|DIM}} curLine {{Cl|AS}} {{Cl|LONG}}: curLine = {{Cl|CSRLIN}}
+
+    {{Cl|DO}}
+        {{Cl|_LIMIT}} {{Text|15|#F580B1}}
+
+        {{Cl|LOCATE}} curLine, {{Text|1|#F580B1}}
+    {{Cl|DO...LOOP|LOOP WHILE}} {{Text|DisplayVoiceStats|#55FF55}}
+
+    {{Cl|SLEEP}} {{Text|1|#F580B1}}
+    {{Cl|_KEYCLEAR}}
+{{Cl|END SUB}}
+
+{{Cl|FUNCTION}} {{Text|RepeatVerse$|#55FF55}} (verse {{Cl|AS}} {{Cl|STRING}}, count {{Cl|AS}} {{Cl|_UNSIGNED}} {{Cl|LONG}})
+    {{Cl|DIM}} buffer {{Cl|AS}} {{Cl|STRING}}
+
+    {{Cl|DIM}} i {{Cl|AS}} {{Cl|_UNSIGNED}} {{Cl|LONG}}
+
+    {{Cl|WHILE}} i < count
+        buffer = buffer + verse
+        i = i + {{Text|1|#F580B1}}
+    {{Cl|WEND}}
+
+    {{Text|RepeatVerse|#55FF55}} = buffer
+{{Cl|END FUNCTION}}
+
+{{Cl|FUNCTION}} {{Text|DisplayVoiceStats%%|#55FF55}}
+    {{Cl|STATIC}} voiceTotalTime({{Text|0|#F580B1}} {{Cl|TO}} {{Text|3|#F580B1}}) {{Cl|AS}} {{Cl|DOUBLE}}
+
+    {{Cl|DIM}} voiceElapsedTime({{Text|0|#F580B1}} {{Cl|TO}} {{Text|3|#F580B1}}) {{Cl|AS}} {{Cl|DOUBLE}}
+    {{Cl|DIM}} i {{Cl|AS}} {{Cl|LONG}}
+
+    {{Cl|FOR}} i = {{Text|0|#F580B1}} {{Cl|TO}} {{Text|3|#F580B1}}
+        voiceElapsedTime(i) = {{Cl|PLAY (function)|PLAY}}(i)
+
+        {{Cl|IF}} voiceElapsedTime(i) > voiceTotalTime(i) {{Cl|THEN}}
+            voiceTotalTime(i) = voiceElapsedTime(i)
+        {{Cl|END IF}}
+
+        {{Cl|PRINT USING}} {{Text|<nowiki>"Voice #: ### of ### seconds left"</nowiki>|#FFB100}}; i; voiceElapsedTime(i); voiceTotalTime(i)
+    {{Cl|NEXT}} i
+
+    {{Cl|DIM}} playing {{Cl|AS}} {{Cl|_BYTE}}: playing = voiceElapsedTime({{Text|0|#F580B1}}) > {{Text|0|#F580B1}} {{Cl|_ORELSE}} voiceElapsedTime({{Text|1|#F580B1}}) > {{Text|0|#F580B1}} {{Cl|_ORELSE}} voiceElapsedTime({{Text|2|#F580B1}}) > {{Text|0|#F580B1}} {{Cl|_ORELSE}} voiceElapsedTime({{Text|3|#F580B1}}) > {{Text|0|#F580B1}}
+
+    {{Cl|IF}} {{Cl|NOT}} playing {{Cl|THEN}}
+        {{Cl|FOR}} i = {{Text|0|#F580B1}} {{Cl|TO}} {{Text|3|#F580B1}}
+            voiceTotalTime(i) = {{Text|0|#F580B1}}
+        {{Cl|NEXT}} i
+    {{Cl|END IF}}
+
+    {{Text|DisplayVoiceStats|#55FF55}} = playing
+{{Cl|END FUNCTION}}
+{{CodeEnd}}
+
+
+
+{{PageSeeAlso}}
+* [[PLAY (function)]]
+* [[SOUND]], [[BEEP]], [[_WAVE]]
+* [[_SNDOPEN]], [[_SNDRAW]]
+
+
+{{PageNavigation}}

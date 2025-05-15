@@ -1,0 +1,8 @@
+R(
+@
+IFO=
+ONF GO
+GOTO
+THENPRINT
+GOTO31
+print @

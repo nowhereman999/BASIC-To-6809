@@ -1,0 +1,26 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:40:30}}
+{{DISPLAYTITLE:_AUTODISPLAY (function)}}
+The [[_AUTODISPLAY (function)|_AUTODISPLAY]] function returns the current display mode as true (-1) if automatic or false (0) if disabled using [[_DISPLAY]].
+
+
+{{PageSyntax}}
+: {{Parameter|displayStatus%%}} = [[_AUTODISPLAY (function)|_AUTODISPLAY]]
+
+
+{{PageDescription}}
+* The function returns true (-1) if [[_AUTODISPLAY]] is enabled. This is the default state and indicates that every screen change (text or graphics) is displayed immediately to the user.
+* If [[_DISPLAY]] is used, then [[_AUTODISPLAY (function)|_AUTODISPLAY]] returns 0, to indicate that screen changes (text or graphics) are only displayed per request, by calling [[_DISPLAY]] again to refresh the screen.
+
+
+{{PageAvailability}}
+* '''QB64 v1.2 and up'''
+* '''QB64-PE all versions'''
+
+
+{{PageSeeAlso}}
+* [[_AUTODISPLAY]]
+* [[_DISPLAY]]
+
+
+{{PageNavigation}}

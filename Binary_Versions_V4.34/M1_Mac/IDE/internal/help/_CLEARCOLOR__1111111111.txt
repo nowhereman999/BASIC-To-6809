@@ -1,0 +1,99 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:40:44}}
+{{DISPLAYTITLE:_CLEARCOLOR}}
+The [[_CLEARCOLOR]] statement sets a specific color to be treated as transparent when an image is later put (via [[_PUTIMAGE]]) onto another image.
+
+
+{{PageSyntax}}
+:[[_CLEARCOLOR]] {{{Parameter|color&}}|_NONE}[, {{Parameter|Dest_Handle&}}]
+
+
+{{PageParameters}}
+* In color modes using a palette, {{Parameter|color&}} is the palette index of the new transparent color value or _NONE designates no clear colors.
+* If {{Parameter|color&}} is not a valid palette index, an [[ERROR Codes|illegal function call]] error will occur.
+* In 32-bit color modes, {{Parameter|color&}} is the [[_LONG]] color value of the new transparent color.
+* If {{Parameter|Dest_Handle&}} is omitted, the destination is assumed to be the current write page. Zero can designate the current program screen.
+
+
+{{PageDescription}}
+* If {{Parameter|Dest_Handle&}} is an invalid handle, then an [[ERROR Codes|invalid handle]] error is returned. Check for bad handle values of -1 first.
+* In 32-bit color modes, it simply sets the Alpha to 0 for all pixels matching the specified color.
+* In the second syntax, transparency is disabled for color modes using a palette.
+* '''Note:''' [[_SETALPHA]] can affect any _CLEARCOLOR alpha setting within the color range set.
+* '''NOTE: 32 bit [[_NEWIMAGE]] screen page backgrounds are transparent black or [[_ALPHA]] 0. Use [[_DONTBLEND]] or [[CLS]] for opaque.'''
+
+
+{{PageExamples}}
+''Example 1:'' Using _CLEARCOLOR to "mask" the background color of an image.
+{{CodeStart}}
+{{Cl|SCREEN}} {{Text|13|#F580B1}}
+img& = {{Cl|_LOADIMAGE}}({{Text|<nowiki>"qb64_trans.png"</nowiki>|#FFB100}})
+{{Cl|_PUTIMAGE}} , img&, {{Text|0|#F580B1}} {{Text|<nowiki>'place actual image with background</nowiki>|#919191}}
+K$ = {{Cl|INPUT$}}({{Text|1|#F580B1}})
+{{Cl|CLS}} , {{Cl|_RGB}}({{Text|255|#F580B1}}, {{Text|0|#F580B1}}, {{Text|0|#F580B1}}) {{Text|<nowiki>'clear screen with red background</nowiki>|#919191}}
+{{Cl|_CLEARCOLOR}} {{Cl|_RGB}}({{Text|255|#F580B1}}, {{Text|255|#F580B1}}, {{Text|255|#F580B1}}), img&
+{{Cl|_PUTIMAGE}} , img&, {{Text|0|#F580B1}} {{Text|<nowiki>'place image without white background</nowiki>|#919191}}
+{{Cl|PRINT}} {{Cl|_CLEARCOLOR (function)|_CLEARCOLOR}}(img&) {{Text|<nowiki>'displays closest clear color attribute</nowiki>|#919191}}
+{{Cl|END}}
+{{CodeEnd}}
+
+----
+
+''Example 2:'' Using a _CLEARCOLOR transparency with images created on a [[_NEWIMAGE]] page. Does not require an image file.
+{{CodeStart}}
+{{Cl|SCREEN}} {{Cl|_NEWIMAGE}}({{Text|512|#F580B1}}, {{Text|384|#F580B1}}, {{Text|32|#F580B1}}) {{Text|<nowiki>' screen uses handle value</nowiki>|#919191}}
+{{Cl|CIRCLE}} ({{Text|50|#F580B1}}, {{Text|50|#F580B1}}), {{Text|50|#F580B1}}, {{Cl|_RGB}}({{Text|128|#F580B1}}, {{Text|0|#F580B1}}, {{Text|0|#F580B1}}) {{Text|<nowiki>' create a red ball image</nowiki>|#919191}}
+{{Cl|PAINT}} ({{Text|50|#F580B1}}, {{Text|50|#F580B1}}), {{Cl|_RGB}}({{Text|255|#F580B1}}, {{Text|0|#F580B1}}, {{Text|0|#F580B1}}), {{Cl|_RGB}}({{Text|128|#F580B1}}, {{Text|0|#F580B1}}, {{Text|0|#F580B1}})
+redball = {{Cl|_NEWIMAGE}}({{Text|101|#F580B1}}, {{Text|101|#F580B1}}, {{Text|32|#F580B1}}) {{Text|<nowiki>' create a new image page</nowiki>|#919191}}
+{{Cl|_PUTIMAGE}} , {{Text|0|#F580B1}}, redball, ({{Text|0|#F580B1}}, {{Text|0|#F580B1}})-({{Text|101|#F580B1}}, {{Text|101|#F580B1}}) {{Text|<nowiki>' put screen page 0 image onto redball page</nowiki>|#919191}}
+{{Cl|_CLEARCOLOR}} {{Cl|_RGB}}({{Text|0|#F580B1}}, {{Text|0|#F580B1}}, {{Text|0|#F580B1}}), redball {{Text|<nowiki>' makes black become see-through</nowiki>|#919191}}
+{{Cl|CLS}} , {{Cl|_RGB}}({{Text|0|#F580B1}}, {{Text|0|#F580B1}}, {{Text|255|#F580B1}}) {{Text|<nowiki>' erase original ball and create a blue background</nowiki>|#919191}}
+{{Cl|DO}}
+    {{Cl|_PUTIMAGE}} ({{Cl|RND}} * {{Text|512|#F580B1}}, {{Cl|RND}} * {{Text|384|#F580B1}}), redball
+    {{Cl|SLEEP}} {{Text|1|#F580B1}} {{Text|<nowiki>' one second delay</nowiki>|#919191}}
+{{Cl|DO...LOOP|LOOP UNTIL}} {{Cl|INKEY$}} <> {{Text|<nowiki>""</nowiki>|#FFB100}}
+{{CodeEnd}}
+
+----
+
+''Example 3:'' Fading an image with a _CLEARCOLOR background using a new page image to prevent [[_SETALPHA]] changes.
+{{CodeStart}}
+mainscreen = {{Cl|_NEWIMAGE}}({{Text|640|#F580B1}}, {{Text|480|#F580B1}}, {{Text|32|#F580B1}}) {{Text|<nowiki>' Main Screen (viewable)</nowiki>|#919191}}
+{{Cl|SCREEN}} mainscreen
+{{Cl|_SCREENMOVE}} {{Cl|_MIDDLE}}
+Image1& = {{Cl|_LOADIMAGE}}({{Text|<nowiki>"qb64_trans.png"</nowiki>|#FFB100}}) {{Text|<nowiki>'<<<<<< any image with one background color to clear</nowiki>|#919191}}
+
+{{Cl|IF}} Image1& < {{Text|-1|#F580B1}} {{Cl|THEN}} {{Text|<nowiki>'check loaded image handle value before using!</nowiki>|#919191}}
+    {{Cl|_SOURCE}} Image1&
+    clr~& = {{Cl|POINT}}({{Text|0|#F580B1}}, {{Text|0|#F580B1}}) {{Text|<nowiki>'get background color from image source</nowiki>|#919191}}
+    {{Cl|_CLEARCOLOR}} clr~&, Image1& {{Text|<nowiki>'clear background color of loaded image</nowiki>|#919191}}
+    NewImage1& = {{Cl|_NEWIMAGE}}({{Cl|_WIDTH (function)|_WIDTH}}(Image1&), {{Cl|_HEIGHT}}(Image1&), {{Text|32|#F580B1}}) {{Text|<nowiki>'new image page</nowiki>|#919191}}
+    {{Cl|_PUTIMAGE}} , Image1&, NewImage1& {{Text|<nowiki>'put image without background color on new page</nowiki>|#919191}}
+    {{Cl|_FREEIMAGE}} Image1& {{Text|<nowiki>'free loaded image from memory</nowiki>|#919191}}
+{{Cl|END IF}}
+{{Cl|_DEST}} mainscreen:
+
+a& = {{Text|0|#F580B1}}: d = {{Text|1|#F580B1}}
+{{Cl|DO}}
+    {{Cl|_LIMIT}} {{Text|10|#F580B1}} {{Text|<nowiki>'regulate speed of fades</nowiki>|#919191}}
+    {{Cl|CLS}}
+    a& = a& + d
+    {{Cl|IF}} a& = {{Text|255|#F580B1}} {{Cl|THEN}} d = -d {{Text|<nowiki>'reverse fade</nowiki>|#919191}}
+    {{Cl|_SETALPHA}} a&, , NewImage1& {{Text|<nowiki>'sets alpha level of all colors to fade image page in/out</nowiki>|#919191}}
+    {{Cl|_PUTIMAGE}} ({{Text|0|#F580B1}}, {{Text|342|#F580B1}}), NewImage1&
+    {{Cl|LOCATE}} {{Text|1|#F580B1}}, {{Text|1|#F580B1}}: {{Cl|PRINT}} {{Text|<nowiki>"Alpha: "</nowiki>|#FFB100}}; a&
+    {{Cl|_DISPLAY}}
+{{Cl|DO...LOOP|LOOP UNTIL}} a& = {{Text|0|#F580B1}}
+{{Cl|END}}
+{{CodeEnd}}
+:''Note:'' If the _CLEARCOLOR image background was not put onto a separate page, [[_SETALPHA]] would display it also.
+
+
+{{PageSeeAlso}}
+* [[_CLEARCOLOR (function)]]
+* [[_SETALPHA]] {{Text|(sets transparency level)}}
+* [[_ALPHA]], [[_ALPHA32]] {{Text|(read functions)}}
+* [[Images]], [[Creating Sprite Masks]]
+
+
+{{PageNavigation}}

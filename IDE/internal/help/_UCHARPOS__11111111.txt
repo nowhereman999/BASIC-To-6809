@@ -1,0 +1,79 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:43:15}}
+{{DISPLAYTITLE:_UCHARPOS}}
+The '''_UCHARPOS''' function calculates the starting pixel positions of every character of the text [[STRING|string]] (0 being the starting pixel position of the first character). This information is returned in a [[LONG|long]] array. The function also returns the number of characters in the text [[STRING|string]]. The function supports Unicode encoded text.
+
+
+{{PageSyntax}}
+: {{Parameter|codepoints&}} = [[_UCHARPOS]]({{Parameter|text$}}[, {{Parameter|posArray&([index&])}}][, {{Parameter|utfEncoding&}}][, {{Parameter|fontHandle&}}])
+
+
+{{PageParameters}}
+* {{Parameter|text$}} is any literal or variable [[STRING]] value. This can be a Unicode encoded text.
+* {{Parameter|posArray&([index&])}} is a [[LONG|long]] array that contains the pixel position information after a call to '''_UCHARPOS'''. An optional index can be used to specify the starting point in the array.
+* {{Parameter|utfEncoding&}} is an optional UTF encoding of {{Parameter|text$}}. This can be 0 for ASCII, 8 for UTF-8, 16 for UTF-16 or 32 for UTF-32.
+* {{Parameter|fontHandle&}} is an optional font handle.
+
+
+{{PageDescription}}
+* If {{Parameter|posArray&()}} is omitted, then the function returns the number of characters in the text [[STRING|string]].
+* If {{Parameter|utfEncoding&}} is omitted, then it is assumed to be 0 (ASCII).
+* If {{Parameter|fontHandle&}} is omitted, then the current write page font is used.
+* {{Parameter|posArray&(codepoints&)}} (assuming {{Parameter|posArray&()}} is declared (indexed) as 0 [[TO]] {{Parameter|codepoints&}}) will hold the (ending pixel position of the last character) + 1.
+* This can be useful when the positions of every character in a string are required (e.g. when underlining text or drawing a text cursor). This can be especially helpful when using variable width fonts.
+* When working with Unicode encoded text, instead of calling the function twice (first time to get the array size and then a second time to get the pixel positions), call it once with a large enough array (0 [[TO]] [[LEN]]({{Parameter|text$}})) and then resize the array (0 [[TO]] {{Parameter|codepoints&}}) using [[REDIM]] [[PRESERVE]].
+
+
+{{PageAvailability}}
+<!-- QB64 = a version or none, QBPE = a version or all, Platforms = yes or no -->
+<gallery widths="48px" heights="48px" mode="nolines">
+File:Qb64.png|'''none'''
+File:Qbpe.png|'''v3.8.0'''
+File:Apix.png
+File:Win.png|'''yes'''
+File:Lnx.png|'''yes'''
+File:Osx.png|'''yes'''
+</gallery>
+<!-- additional availability notes go below here -->
+* Since '''QB64-PE v3.14.0''' it supports both, little-endian and big-endian UTF-16 encodings and also correctly handles the UTF-16 byte order mark (BOM) now.
+
+
+{{PageExamples}}
+; Example: Underlines every character of a text printed using a variable width font.
+{{CodeStart}}
+{{Cl|OPTION}} {{Cl|_EXPLICIT}}
+
+{{Cl|SCREEN}} {{Text|12|#F580B1}}
+
+{{Cl|CONST}} TEXT = {{Text|<nowiki>"Hello, world!"</nowiki>|#FFB100}}
+{{Cl|CONST}} TEXT_X = {{Text|220|#F580B1}}
+{{Cl|CONST}} TEXT_Y = {{Text|220|#F580B1}}
+
+{{Cl|DIM}} fh {{Cl|AS}} {{Cl|LONG}}: fh = {{Cl|_LOADFONT}}({{Text|<nowiki>"arial.ttf"</nowiki>|#FFB100}}, {{Text|32|#F580B1}})
+{{Cl|_FONT}} fh
+
+{{Cl|DIM}} arr({{Text|0|#F580B1}} {{Cl|TO}} {{Cl|LEN}}(TEXT)) {{Cl|AS}} {{Cl|LONG}}, i {{Cl|AS}} {{Cl|LONG}}
+
+{{Cl|PRINT}} {{Text|<nowiki>"Len of "</nowiki>|#FFB100}}; TEXT; {{Text|<nowiki>" ="</nowiki>|#FFB100}}; {{Cl|_UCHARPOS}}(TEXT, arr())
+
+{{Cl|_UPRINTSTRING}} (TEXT_X, TEXT_Y), TEXT
+
+{{Cl|FOR}} i = {{Cl|LBOUND}}(arr) {{Cl|TO}} {{Cl|UBOUND}}(arr) - {{Text|1|#F580B1}}
+    {{Cl|PRINT}} arr(i + {{Text|1|#F580B1}});
+    {{Cl|LINE}} (TEXT_X + arr(i), TEXT_Y + {{Cl|_UFONTHEIGHT}})-(TEXT_X + arr(i + {{Text|1|#F580B1}}) - {{Text|1|#F580B1}}, TEXT_Y + {{Cl|_UFONTHEIGHT}}), {{Text|9|#F580B1}} + i {{Cl|MOD}} {{Text|7|#F580B1}}
+{{Cl|NEXT}}
+
+{{Cl|END}}
+{{CodeEnd}}
+
+
+{{PageSeeAlso}}
+* [https://qb64phoenix.com/forum/showthread.php?tid=2826 Featured in our "Keyword of the Day" series]
+* [[_UFONTHEIGHT]], [[_ULINESPACING]], [[_UPRINTWIDTH]], [[_UPRINTSTRING]]
+* [[_FONTWIDTH]], [[_FONTHEIGHT]], [[_PRINTWIDTH]]
+* [[_NEWIMAGE]], [[_LOADFONT]]
+* [[_PRINTSTRING]], [[_FONT]]
+* [[Text Using Graphics]]
+
+
+{{PageNavigation}}

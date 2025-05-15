@@ -1,0 +1,28 @@
+{{QBDLDATE:01-28-2023}}
+{{QBDLTIME:11:51:18}}
+{{DISPLAYTITLE:_glPolygonOffset}}
+The '''_glPolygonOffset''' statement sets the scale and units OpenGL uses to calculate depth values.
+
+
+{{PageSyntax}}
+: [[_glPolygonOffset]] GLfloat {{Parameter|factor}}, GLfloat {{Parameter|units}}
+
+
+{{PageParameters}}
+* OpenGL is using its own set of variable types to describe its command parameters.
+* Use the following table to find the respective QB64 [[Variable Types]].
+{{OpenGLTypesPlugin}}
+
+
+{{PageDescription}}
+* OpenGL's documentation is available in several places, so we won't reproduce it here for another time.
+* The full description for this command can be found at [https://learn.microsoft.com/en-us/windows/win32/opengl/glpolygonoffset Microsoft Docs] and is also valid for QB64 usage.
+
+
+{{PageSeeAlso}}
+* [[_GL|SUB _GL]]
+* [[_glDepthFunc]], [[_glDisable]], [[_glEnable]], [https://learn.microsoft.com/en-us/windows/win32/opengl/glgetbooleanv--glgetdoublev--glgetfloatv--glgetintegerv _glGet]
+* [[_glIsEnabled]], [[_glLineWidth]], [[_glStencilOp]], [https://learn.microsoft.com/en-us/windows/win32/opengl/gltexenv-functions _glTexEnv]
+
+
+{{PageNavigation}}

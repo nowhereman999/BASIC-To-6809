@@ -344,6 +344,8 @@ PlaySDCStackOrcR:
         FCB     $11,$3D,%00000001       ; otherwise, put the 6309 in native mode.  This is LDMD  #%00000001
 !       RORA                            ; Move bit 0 to the Carry bit
         BCC     >                       ; if the Carry bit is clear, then not a CoCo 3, skip ahead
-        STA     <$D9                    ; Put CoCo 3 in High speed mode
+        LDA     #$5A                    ; Command for GIME-X & GIME-Z for triple speed mode
+        STA     <$D9                    ; Put CoCo 3 in doouble speed mode
+        STA     <$D9                    ; Try CoCo 3 in triple speed mode
 !
         PULS    CC,DP,PC        ; Restore CC & DP

@@ -1,0 +1,47 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:41:50}}
+{{DISPLAYTITLE:_LOGERROR}}
+The '''_LOGERROR''' statement writes a log message at the Error level with an accompanying stacktrace.
+
+
+{{PageSyntax}}
+: [[_LOGERROR]] {{Parameter|message}}
+
+
+{{PageParameters}}
+* {{Parameter|message}} is a string to write to the log output.
+
+
+{{PageDescription}}
+* See the page on the [[Logging]] system for more detailed usage information.
+* Log messages at the Error level include a stacktrace at the point of the log statement which lists the subs and functions that were called to ultimately reach that log statement, this information can be useful for debugging errors.
+* Stacktraces originating from a '''_LOGERROR''' statement will only include the names of QB64 [[SUB]]s and [[FUNCTION]]s (detonated with a "(QB64)" after the name). Stacktraces originating from the QB64 internals will also include the names of C++ functions.
+
+
+{{PageAvailability}}
+<!-- QB64 = a version or none, QBPE = a version or all, Platforms = yes or no -->
+<gallery widths="48px" heights="48px" mode="nolines">
+File:Qb64.png|'''no'''
+File:Qbpe.png|'''v4.0.0'''
+File:Apix.png
+File:Win.png|'''yes'''
+File:Lnx.png|'''yes'''
+File:Osx.png|'''yes'''
+</gallery>
+<!-- additional availability notes go below here -->
+
+
+{{PageExamples}}
+; Example 1 : Writes a log message at the Error level
+{{CodeStart}}
+{{Cl|_LOGERROR}} {{Text|<nowiki>"This is an error message"</nowiki>|#FFB100}}
+{{CodeEnd}}
+
+
+{{PageSeeAlso}}
+* [[_LOGMINLEVEL]]
+* [[_LOGTRACE]], [[_LOGINFO]], [[_LOGWARN]]
+* [[Logging]]
+
+
+{{PageNavigation}}

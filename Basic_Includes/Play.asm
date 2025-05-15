@@ -17,11 +17,33 @@ IRQAddress  RMB 2       IRQ pointer address will be stored here when the program
 
 ; Restore IRQ back to normal
 EndPlayCommand:
+* Check and re-enable any high speed options
+        STA     >$FFD7                  ; Put CoCo in Hi speed mode
+        LDA     CoCoHardware            ; Get the CoCo Hardware info byte
+        BPL     >                       ; If bit 7 is clear then skip forward it's a 6809
+        FCB     $11,$3D,%00000001       ; otherwise, put the 6309 in native mode.  This is LDMD  #%00000001
+!       RORA                            ; Move bit 0 to the Carry bit
+        BCC     >                       ; if the Carry bit is clear, then not a CoCo 3, skip ahead
+        LDA     #$5A                    ; Command for GIME-X & GIME-Z for triple speed mode
+        STA     >$FFD9                  ; Put CoCo 3 in doouble speed mode
+        STA     >$FFD9                  ; Try CoCo 3 in triple speed mode
+!
+
         LDD     #BASIC_IRQ      ; Get Regular IRQ address
         STD     [IRQAddress]    ; Restore address of IRQ JMP location back to normal
         BRA     AnalogMuxOff    ; DISABLE ANA MUX AND RETURN
 
 Play:
+* Check and disable any high speed options
+        LDA     >CoCoHardware           ; Get the CoCo Hardware info byte
+        BPL     >                       ; If bit 7 is clear then skip forward it's a 6809
+        FCB     $11,$3D,%00000000       ; otherwise, put the 6309 in emulation mode.  This is LDMD  #%00000000
+!       RORA                            ; Move bit 0 to the Carry bit
+        BCC     >                       ; if the Carry bit is clear, then not a CoCo 3, skip ahead
+        STA     >$FFD8                  ; Put CoCo 3 in Regular speed mode
+! 
+        STA     >$FFD6                  ; Put CoCo in Regular speed mode
+
         LDX     #_StrVar_PF00+1 ; Get the start of the play command string
         LDU     #_StrVar_IFRight+1 ; Set the start of the play command string
         LDB     _StrVar_PF00    ; Get the string length in B
@@ -54,8 +76,7 @@ Play:
         LDX     #_StrVar_IFRight+1 ; Point X at the start of the play command string
         LDB     _StrVar_IFRight
         DECB
-        PSHS    B,X             ; Save the length of the play string and Pointer of the Play string on the stack
-;        BRA     L9A39           ; Skip ahead
+        BRA     L9A39           ; Skip ahead
 L9A37   PULS    B,X             ; GET PLAY STRING START AND LENGTH
 L9A39   STB     VD8             ; LENGTH OF PLAY COMMAND
         BEQ     L9A37           ; GET NEW STRING DATA IF LENGTH = 0
@@ -137,23 +158,26 @@ L9AB2   CMPA    #'T'            ; MODIFY TEMPO?
 L9AC0   JMP     L9BAC           ; EVALUATE THE >,<,+,-,= OPERATORS
 ; Convert Deciaml value to D'
 PlayDecimalToD:
-        PSHS    X,U             ; Save X & U
+        PSHS    CC,U          ; Save CC,X & U
+        ORCC    #$50            ; No interrupts, we don't want U messing things up (just in case)
         LDX     VD9             ; Get the pointer to the string
         LDU     #DecNumber      ; Point a Decimal # start
 !       LDA     ,X+             ; Get the character
+        DEC     VD8
         CMPA    #';'            ; is it a semicolon?
         BEQ     >
-        DEC     VD8
         CMPA    #'0'            ; Is it a zero or higher?
         BLO     >               ; if not then skip ahead
         CMPA    #'9'            ; is it a nine or lower?
         BHI     >               ; if not then skip ahead
         STA     ,U+             ; save the number in U, increment U
         BRA     <               ; get another character
-!       CLR     ,U              ; Clear the end of the pointer (flag as end)
+!       LEAX    -1,X
+        INC     VD8
+        CLR     ,U              ; Clear the end of the pointer (flag as end)
         STX     VD9             ; update the pointer
         JSR     DecToD          ; Convert a decimal string of numbers to a signed integer in D
-        PULS    X,U,PC          ; Restore X & U and return
+        PULS    CC,U,PC       ; Restore CC, X & U and return
 ; Clear carry if numeric
 L90AA   CMPA    #'0'            ; ASCII ZERO
         BLO     >               ; RETURN IF ACCA < ASCII 0
@@ -224,6 +248,7 @@ L9B2B   LDA     TEMPO           ; GET TEMPO
 ; THE PLAY COMMAND. WHEN A NOTE IS DONE, THE IRQ SERVICING
 ; ROUTINE WILL RETURN CONTROL TO THE MAIN PLAY COMMAND INTERPRETATION LOOP
         LEAU    $01,S           ; LOAD U W/CURRENT VALUE OF (STACK POINTER+1) SO THAT THE STACK
+        STU     PlayStackPointer+2  ; Self mod stack pointer
 ; POINTER WILL BE PROPERLY RESET WHEN IRQ VECTORS
 ; YOU OUT OF THE PLAY TIMING ROUTINES BELOW
         LDA     OCTAVE          ; GET CURRENT OCTAVE

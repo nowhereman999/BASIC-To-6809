@@ -1,0 +1,31 @@
+{{QBDLDATE:01-28-2023}}
+{{QBDLTIME:11:52:33}}
+{{DISPLAYTITLE:_glTexImage1D}}
+The '''_glTexImage1D''' statement specifies a one-dimensional texture image.
+
+
+{{PageSyntax}}
+: [[_glTexImage1D]] GLenum {{Parameter|target}}, GLint {{Parameter|level}}, GLint {{Parameter|internalformat}}, GLsizei {{Parameter|width}}, GLint {{Parameter|border}}, GLint {{Parameter|format}}, GLenum {{Parameter|type}}, const GLvoid {{Parameter|*pixels}}
+
+
+{{PageParameters}}
+* OpenGL is using its own set of variable types to describe its command parameters.
+* Use the following table to find the respective QB64 [[Variable Types]].
+{{OpenGLTypesPlugin}}
+
+
+{{PageDescription}}
+* OpenGL's documentation is available in several places, so we won't reproduce it here for another time.
+* The full description for this command can be found at [https://learn.microsoft.com/en-us/windows/win32/opengl/glteximage1d Microsoft Docs] and is also valid for QB64 usage.
+
+
+{{PageSeeAlso}}
+* [[_GL|SUB _GL]]
+* [[_glBegin]], [[_glCopyPixels]], [[_glCopyTexImage1D]], [[_glCopyTexImage2D]]
+* [[_glCopyTexSubImage1D]], [[_glCopyTexSubImage2D]], [[_glDrawPixels]], [[_glEnd]]
+* [https://learn.microsoft.com/en-us/windows/win32/opengl/glfog _glFog], [[_glGetTexImage]], [[_glIsEnabled]], [https://learn.microsoft.com/en-us/windows/win32/opengl/glpixelstore-functions _glPixelStore]
+* [https://learn.microsoft.com/en-us/windows/win32/opengl/glpixeltransfer _glPixelTransfer], [https://learn.microsoft.com/en-us/windows/win32/opengl/gltexenv-functions _glTexEnv], [https://learn.microsoft.com/en-us/windows/win32/opengl/gltexgen-functions _glTexGen], [[_glTexImage2D]]
+* [[_glTexSubImage1D]], [[_glTexSubImage2D]], [https://learn.microsoft.com/en-us/windows/win32/opengl/gltexparameter-functions _glTexParameter]
+
+
+{{PageNavigation}}

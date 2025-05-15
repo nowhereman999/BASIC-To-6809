@@ -8,6 +8,18 @@ https://github.com/pwillard/basto6809Manual
 For more info check out the blog post here:
 https://wordpress.com/post/nowhereman999.wordpress.com/5054
 
+V 4.34
+- Can now handle 10000 IF/THEN/ELSE commands per program, was previously set at 100
+- Fixed a bug detecting string array variables
+- Made STRING$ function now handle ascii codes instead of only string values for the 2nd value in the command
+- Fixed a bug with MID$
+- can now handle 1000 deep expression comparisons, was limited to 10 previously
+- Fixed a bug with IF/THEN/ELSE where compiler could re-use the same labels
+- Fixed a bug with numeric arrays with one element (wasn't pointing at the correct RAM location)
+- Fixed a bug with the SDC_GETCURDIR$ command
+- Fixed a bug with the PLAY command (IRQ was returning to the wrong location)
+- PLAY command now automatically plays at normal speed then automatically speeds up the CoCo after playing
+
 V 4.33
 - If your CoCo 3 can support 2.8 Mhz high speed the compiled code now runs at triple speed (2.8 Mhz)
   for most operations (not disk, etc.)

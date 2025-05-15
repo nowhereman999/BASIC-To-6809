@@ -1,0 +1,154 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:40:45}}
+{{DISPLAYTITLE:_CLIPBOARD$ (function)}}
+The '''_CLIPBOARD$''' function returns the current Operating System's clipboard contents as a [[STRING]].
+
+
+{{PageSyntax}}
+:{{Parameter|result$}} = [[_CLIPBOARD$ (function)|_CLIPBOARD$]]
+
+
+{{PageDescription}}
+* Text returned can contain the entire contents of a copied file or web page or text from a previous [[_CLIPBOARD$]] statement.
+* The string returned can also contain formatting like CRLF ([[CHR$]](13) + [[CHR$]](10)) end of line characters.
+* The clipboard can be used to copy, paste and communicate between running programs.
+
+
+{{PageExamples}}
+;Example 1:Passing a string value between two running programs no matter where they are located.
+{{CodeStart}}
+{{Text|<nowiki>'=================</nowiki>|#919191}}
+{{Text|<nowiki>'=== Program 1 ===</nowiki>|#919191}}
+{{Text|<nowiki>'=================</nowiki>|#919191}}
+
+{{Cl|PRINT}} {{Text|<nowiki>"Start Program2 to read your text entries! Empty entry quits!"</nowiki>|#FFB100}}
+{{Cl|_CLIPBOARD$}} = {{Text|<nowiki>"Entry program started!"</nowiki>|#FFB100}} {{Text|<nowiki>'set clipboard initially</nowiki>|#919191}}
+
+{{Cl|DO}}
+    {{Cl|LINE INPUT}} {{Text|<nowiki>"Enter some text to send to other program: "</nowiki>|#FFB100}}, text$
+    {{Cl|IF}} text$ = {{Text|<nowiki>""</nowiki>|#FFB100}} {{Cl|THEN}} {{Cl|EXIT DO}}
+    {{Cl|_CLIPBOARD$}} = text$
+{{Cl|LOOP}}
+
+{{Cl|SYSTEM}}
+{{CodeEnd}}
+{{CodeStart}}
+{{Text|<nowiki>'=================</nowiki>|#919191}}
+{{Text|<nowiki>'=== Program 2 ===</nowiki>|#919191}}
+{{Text|<nowiki>'=================</nowiki>|#919191}}
+
+{{Cl|PRINT}} {{Text|<nowiki>"Enter text in Program1 and this program will read it. Esc key quits!"</nowiki>|#FFB100}}
+
+{{Cl|DO}}: {{Cl|_LIMIT}} {{Text|100|#F580B1}}
+    text$ = CLIPBOARD$ {{Text|<nowiki>'function returns clipboard contents</nowiki>|#919191}}
+    {{Cl|IF}} {{Cl|LEN}}(text$) {{Cl|THEN}}
+        {{Cl|PRINT}} text$
+        {{Cl|_CLIPBOARD$}} = {{Text|<nowiki>""</nowiki>|#FFB100}} {{Text|<nowiki>'clear clipboard after a read</nowiki>|#919191}}
+    {{Cl|END IF}}
+{{Cl|DO...LOOP|LOOP UNTIL}} {{Cl|INKEY$}} = {{Cl|CHR$}}({{Text|27|#F580B1}})
+
+{{Cl|END}}
+{{CodeEnd}}
+:''Explanation:'' Compile and run both programs at once to see the interaction. You could also run them on different paths.
+
+----
+
+;Example 2:A minimized program that pops up when Ctrl + Shift is entered anytime in '''Windows''' and adds clipboard text to be Pasted:
+{{CodeStart}}
+{{Text|<nowiki>'"ClippyBoard" program uses GetKeyState Win API to monitor a specific key combination.</nowiki>|#919191}}
+{{Text|<nowiki>'This demo will maximize the window and focus on program when Shift+A is pressed.</nowiki>|#919191}}
+
+{{Cl|DECLARE}} {{Cl|DYNAMIC}} {{Cl|LIBRARY}} {{Text|<nowiki>"user32"</nowiki>|#FFB100}}
+    {{Cl|FUNCTION}} {{Text|FindWindowA%&|#55FF55}} ({{Cl|BYVAL}} ClassName {{Cl|AS}} {{Cl|_OFFSET (function)|_OFFSET}}, WindowName$) {{Text|<nowiki>'find process handle by title</nowiki>|#919191}}
+    {{Cl|FUNCTION}} {{Text|GetKeyState%|#55FF55}} ({{Cl|BYVAL}} nVirtKey {{Cl|AS}} {{Cl|LONG}}) {{Text|<nowiki>'Windows virtual key presses</nowiki>|#919191}}
+    {{Cl|FUNCTION}} {{Text|ShowWindow&|#55FF55}} ({{Cl|BYVAL}} hwnd {{Cl|AS}} {{Cl|_OFFSET (function)|_OFFSET}}, {{Cl|BYVAL}} nCmdShow {{Cl|AS}} {{Cl|LONG}}) {{Text|<nowiki>'maximize process</nowiki>|#919191}}
+    {{Cl|FUNCTION}} {{Text|GetForegroundWindow%&|#55FF55}} {{Text|<nowiki>'find currently focused process handle</nowiki>|#919191}}
+    {{Cl|FUNCTION}} {{Text|SetForegroundWindow&|#55FF55}} ({{Cl|BYVAL}} hwnd {{Cl|AS}} {{Cl|_OFFSET (function)|_OFFSET}}) {{Text|<nowiki>'set foreground window process(focus)</nowiki>|#919191}}
+{{Cl|END DECLARE}}
+
+title$ = {{Text|<nowiki>"Clippy Clipboard (Ctrl+Shift)"</nowiki>|#FFB100}} {{Text|<nowiki>'title of program window</nowiki>|#919191}}
+{{Cl|_TITLE}} title$ {{Text|<nowiki>'set program title</nowiki>|#919191}}
+hwnd%& = {{Text|FindWindowA|#55FF55}}({{Text|0|#F580B1}}, title$ + {{Cl|CHR$}}({{Text|0|#F580B1}})) {{Text|<nowiki>'find this program's process handle</nowiki>|#919191}}
+
+{{Cl|SCREEN}} {{Text|13|#F580B1}}
+{{Cl|_SCREENMOVE}} {{Cl|_MIDDLE}}
+
+{{Cl|COLOR}} {{Text|10|#F580B1}}: {{Cl|PRINT}}
+{{Cl|PRINT}} {{Text|<nowiki>" Press Ctrl+Shift to see clipboard menu."</nowiki>|#FFB100}}
+
+{{Cl|_DELAY}} {{Text|4|#F580B1}}
+x& = {{Text|ShowWindow&|#55FF55}}(hwnd%&, {{Text|2|#F580B1}}) {{Text|<nowiki>'minimize</nowiki>|#919191}}
+
+{{Cl|DO}}: {{Cl|_LIMIT}} {{Text|30|#F580B1}} {{Text|<nowiki>'save CPU usage while waiting for key press</nowiki>|#919191}}
+
+    {{Cl|IF}} {{Text|GetKeyState|#55FF55}}({{Text|16|#F580B1}}) < {{Text|0|#F580B1}} {{Cl|AND (boolean)|AND}} {{Text|GetKeyState|#55FF55}}({{Text|17|#F580B1}}) < {{Text|0|#F580B1}} {{Cl|THEN}} {{Text|<nowiki>'<==== Shift+A</nowiki>|#919191}}
+        FGwin%& = {{Text|GetForegroundWindow%&|#55FF55}} {{Text|<nowiki>'get current process in focus</nowiki>|#919191}}
+        y& = {{Text|ShowWindow&|#55FF55}}(hwnd%&, {{Text|1|#F580B1}}) {{Text|<nowiki>'maximize minimized program</nowiki>|#919191}}
+
+        {{Cl|IF}} FGwin%& <> hwnd%& {{Cl|THEN}} z& = {{Text|SetForegroundWindow&|#55FF55}}(hwnd%&) {{Text|<nowiki>'set focus when necessary</nowiki>|#919191}}
+        {{Cl|_DELAY}} {{Text|1|#F580B1}}
+        {{Text|GetKey|#55FF55}}
+        x& = {{Text|ShowWindow&|#55FF55}}(hwnd%&, {{Text|2|#F580B1}}) {{Text|<nowiki>'minimize after letter key entry</nowiki>|#919191}}
+        {{Cl|COLOR}} {{Text|10|#F580B1}}: {{Cl|PRINT}}
+        {{Cl|PRINT}} {{Text|<nowiki>" Press Ctrl+Shift to see clipboard menu."</nowiki>|#FFB100}}
+    {{Cl|END IF}}
+{{Cl|LOOP}}
+
+
+{{Cl|SUB}} {{Text|GetKey|#55FF55}}
+    {{Cl|CLS}}
+    {{Cl|COLOR}} {{Text|12|#F580B1}}: {{Cl|PRINT}}: {{Cl|PRINT}} {{Cl|_CLIPBOARD$ (function)|_CLIPBOARD$}}
+    {{Cl|DO}}: {{Cl|DO...LOOP|LOOP UNTIL}} {{Cl|INKEY$}} = {{Text|<nowiki>""</nowiki>|#FFB100}}
+    {{Cl|_DELAY}} {{Text|1|#F580B1}}
+    {{Cl|CLS}}
+    {{Cl|COLOR}} {{Text|11|#F580B1}}: {{Cl|PRINT}} {{Text|<nowiki>"Select a letter clipboard option:"</nowiki>|#FFB100}}
+    {{Cl|PRINT}}
+    {{Cl|PRINT}} {{Text|<nowiki>"A = Address"</nowiki>|#FFB100}}
+    {{Cl|PRINT}} {{Text|<nowiki>"C = Cell phone"</nowiki>|#FFB100}}
+    {{Cl|PRINT}} {{Text|<nowiki>"E = Email"</nowiki>|#FFB100}}
+    {{Cl|PRINT}} {{Text|<nowiki>"F = First Name"</nowiki>|#FFB100}}
+    {{Cl|PRINT}} {{Text|<nowiki>"H = Home phone"</nowiki>|#FFB100}}
+    {{Cl|PRINT}} {{Text|<nowiki>"L = Last Name"</nowiki>|#FFB100}}
+    {{Cl|PRINT}} {{Text|<nowiki>"N = Name"</nowiki>|#FFB100}}
+    {{Cl|PRINT}} {{Text|<nowiki>"M = MAC address"</nowiki>|#FFB100}}
+    {{Cl|PRINT}} {{Text|<nowiki>"P = Password"</nowiki>|#FFB100}}
+    {{Cl|PRINT}} {{Text|<nowiki>"W = Work name"</nowiki>|#FFB100}}
+    {{Cl|PRINT}} {{Text|<nowiki>"X = QUIT!"</nowiki>|#FFB100}}
+    {{Cl|PRINT}} {{Text|<nowiki>"Z = Zip code"</nowiki>|#FFB100}}
+    {{Cl|COLOR}} {{Text|14|#F580B1}}: {{Cl|PRINT}}
+    {{Cl|PRINT}} {{Text|<nowiki>"Another letter will skip or X = EXIT!"</nowiki>|#FFB100}}
+
+    K$ = {{Cl|UCASE$}}({{Cl|INPUT$}}({{Text|1|#F580B1}}))
+
+    {{Cl|SELECT CASE}} K$ {{Text|<nowiki>'The following text should be your personal user info:</nowiki>|#919191}}
+        {{Cl|CASE}} {{Text|<nowiki>"A"</nowiki>|#FFB100}}: {{Cl|_CLIPBOARD$}} = {{Text|<nowiki>"my address"</nowiki>|#FFB100}}
+        {{Cl|CASE}} {{Text|<nowiki>"C"</nowiki>|#FFB100}}: {{Cl|_CLIPBOARD$}} = {{Text|<nowiki>"cell number"</nowiki>|#FFB100}}
+        {{Cl|CASE}} {{Text|<nowiki>"E"</nowiki>|#FFB100}}: {{Cl|_CLIPBOARD$}} = {{Text|<nowiki>"myemail"</nowiki>|#FFB100}}
+        {{Cl|CASE}} {{Text|<nowiki>"F"</nowiki>|#FFB100}}: {{Cl|_CLIPBOARD$}} = {{Text|<nowiki>"formal name"</nowiki>|#FFB100}}
+        {{Cl|CASE}} {{Text|<nowiki>"H"</nowiki>|#FFB100}}: {{Cl|_CLIPBOARD$}} = {{Text|<nowiki>"home number"</nowiki>|#FFB100}}
+        {{Cl|CASE}} {{Text|<nowiki>"L"</nowiki>|#FFB100}}: {{Cl|_CLIPBOARD$}} = {{Text|<nowiki>"lastname"</nowiki>|#FFB100}}
+        {{Cl|CASE}} {{Text|<nowiki>"M"</nowiki>|#FFB100}}: {{Cl|_CLIPBOARD$}} = {{Text|<nowiki>"modempassword"</nowiki>|#FFB100}}
+        {{Cl|CASE}} {{Text|<nowiki>"N"</nowiki>|#FFB100}}: {{Cl|_CLIPBOARD$}} = {{Text|<nowiki>"name"</nowiki>|#FFB100}}
+        {{Cl|CASE}} {{Text|<nowiki>"P"</nowiki>|#FFB100}}: {{Cl|_CLIPBOARD$}} = {{Text|<nowiki>"password"</nowiki>|#FFB100}}
+        {{Cl|CASE}} {{Text|<nowiki>"X"</nowiki>|#FFB100}}: {{Cl|END}}
+        {{Cl|CASE}} {{Text|<nowiki>"Z"</nowiki>|#FFB100}}: {{Cl|_CLIPBOARD$}} = {{Text|<nowiki>"zipcode"</nowiki>|#FFB100}}
+    {{Cl|END SELECT}}
+    {{Cl|CLS}}
+    {{Cl|PRINT}}
+    {{Cl|PRINT}}
+    {{Cl|COLOR}} {{Text|14|#F580B1}}: {{Cl|PRINT}} {{Cl|_CLIPBOARD$ (function)|_CLIPBOARD$}}
+    {{Cl|BEEP}}
+    {{Cl|_DELAY}} {{Text|2|#F580B1}}
+{{Cl|END SUB}}
+{{CodeEnd}}
+{{Small|Code by Ted Weissgerber}}
+: ''Explanation:'' The program will run minimized until Ctrl + Shift is entered and will pop up to ask for a letter choice that contains the text you want in the clipboard. More letter choices can be added. Text can be pasted into a web page or entry box and the program will minimize until it is needed later. The program uses very little resources!
+
+
+{{PageSeeAlso}}
+* [https://qb64phoenix.com/forum/showthread.php?tid=1238 Featured in our "Keyword of the Day" series]
+* [[_CLIPBOARD$]] (statement)
+* [[_CLIPBOARDIMAGE (function)]], [[_CLIPBOARDIMAGE]] (statement)
+
+
+{{PageNavigation}}

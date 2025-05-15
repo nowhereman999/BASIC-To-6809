@@ -1,0 +1,17 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:45:52}}
+The '''>=''' condition symbol denotes that a value must be greater than or equal to another value for the condition to be '''true'''.
+
+
+{{PageExamples}}
+: IF x [[Greater Than Or Equal|>=]] 320 THEN PRINT "Right or center of screen"
+
+
+{{PageSeeAlso}}
+* [[Equal|=]]
+* [[Not Equal|<>]]
+* [[Less Than Or Equal|<=]]
+* [[Relational Operations]]
+
+
+{{PageNavigation}}

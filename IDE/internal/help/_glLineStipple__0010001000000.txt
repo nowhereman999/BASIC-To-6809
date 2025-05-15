@@ -1,0 +1,27 @@
+{{QBDLDATE:01-28-2023}}
+{{QBDLTIME:11:50:42}}
+{{DISPLAYTITLE:_glLineStipple}}
+The '''_glLineStipple''' statement specifies the line stipple pattern.
+
+
+{{PageSyntax}}
+: [[_glLineStipple]] GLint {{Parameter|factor}}, GLushort {{Parameter|pattern}}
+
+
+{{PageParameters}}
+* OpenGL is using its own set of variable types to describe its command parameters.
+* Use the following table to find the respective QB64 [[Variable Types]].
+{{OpenGLTypesPlugin}}
+
+
+{{PageDescription}}
+* OpenGL's documentation is available in several places, so we won't reproduce it here for another time.
+* The full description for this command can be found at [https://learn.microsoft.com/en-us/windows/win32/opengl/gllinestipple Microsoft Docs] and is also valid for QB64 usage.
+
+
+{{PageSeeAlso}}
+* [[_GL|SUB _GL]]
+* [[_glBegin]], [[_glEnd]], [[_glLineWidth]], [[_glPolygonStipple]]
+
+
+{{PageNavigation}}

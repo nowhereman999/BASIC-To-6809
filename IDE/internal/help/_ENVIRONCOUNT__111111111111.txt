@@ -1,0 +1,24 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:41:17}}
+{{DISPLAYTITLE:_ENVIRONCOUNT}}
+The [[_ENVIRONCOUNT]] function returns the number of items (key/value pairs) currently stored in the system environment variables table.
+
+
+{{PageSyntax}}
+: {{Parameter|totalKeys&}} = [[_ENVIRONCOUNT]]
+
+
+{{PageDescription}}
+* Any changes made at runtime to the environment table are discarded when your program ends
+
+
+{{PageAvailability}}
+* '''QB64 v2.0 and up'''
+* '''QB64-PE all versions'''
+
+
+{{PageSeeAlso}}
+* [[ENVIRON$]], [[ENVIRON]]
+
+
+{{PageNavigation}}

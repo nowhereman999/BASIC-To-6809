@@ -1,0 +1,45 @@
+{{QBDLDATE:01-28-2023}}
+{{QBDLTIME:11:50:01}}
+{{DISPLAYTITLE:_glGetBooleanv}}
+The '''_glGetBooleanv''' statement returns the value or values of a selected parameter.
+
+
+{{PageSyntax}}
+: [[_glGetBooleanv]] GLenum {{Parameter|pname}}, GLboolean {{Parameter|*params}}
+
+
+{{PageParameters}}
+* OpenGL is using its own set of variable types to describe its command parameters.
+* Use the following table to find the respective QB64 [[Variable Types]].
+{{OpenGLTypesPlugin}}
+
+
+{{PageDescription}}
+* OpenGL's documentation is available in several places, so we won't reproduce it here for another time.
+* The full description for this command can be found at [https://learn.microsoft.com/en-us/windows/win32/opengl/glgetbooleanv Microsoft Docs] and is also valid for QB64 usage.
+
+
+{{PageSeeAlso}}
+* [[_GL|SUB _GL]]
+* [[_glAccum]], [[_glAlphaFunc]], [[_glBegin]], [[_glBlendFunc]]
+* [[_glCallList]], [[_glClearAccum]], [[_glClearColor]], [[_glClearDepth]]
+* [[_glClearIndex]], [[_glClearStencil]], [[_glClipPlane]], [https://learn.microsoft.com/en-us/windows/win32/opengl/glcolor-functions _glColor]
+* [[_glColorMask]], [[_glColorMaterial]], [[_glCullFace]], [[_glDepthFunc]]
+* [[_glDepthMask]], [[_glDepthRange]], [[_glDrawBuffer]], [https://learn.microsoft.com/en-us/windows/win32/opengl/gledgeflag-functions _glEdgeFlag]
+* [[_glEnd]], [https://learn.microsoft.com/en-us/windows/win32/opengl/glfog _glFog], [[_glFrontFace]], [[_glGetClipPlane]]
+* [[_glGetError]], [https://learn.microsoft.com/en-us/windows/win32/opengl/glgetlight _glGetLight], [https://learn.microsoft.com/en-us/windows/win32/opengl/glgetmap _glGetMap], [https://learn.microsoft.com/en-us/windows/win32/opengl/glgetmaterial _glGetMaterial]
+* [https://learn.microsoft.com/en-us/windows/win32/opengl/glgetpixelmap _glGetPixelMap], [[_glGetPolygonStipple]], [[_glGetString]], [https://learn.microsoft.com/en-us/windows/win32/opengl/glgettexenv _glGetTexEnv]
+* [https://learn.microsoft.com/en-us/windows/win32/opengl/glgettexgen _glGetTexGen], [[_glGetTexImage]], [https://learn.microsoft.com/en-us/windows/win32/opengl/glgettexlevelparameter _glGetTexLevelParameter], [https://learn.microsoft.com/en-us/windows/win32/opengl/glgettexparameter _glGetTexParameter]
+* [[_glHint]], [https://learn.microsoft.com/en-us/windows/win32/opengl/glindex-functions _glIndex], [[_glIndexMask]], [[_glIsEnabled]]
+* [https://learn.microsoft.com/en-us/windows/win32/opengl/gllight-functions _glLight], [https://learn.microsoft.com/en-us/windows/win32/opengl/gllightmodel-functions _glLightModel], [[_glLineStipple]], [[_glLineWidth]]
+* [[_glListBase]], [[_glLogicOp]], [https://learn.microsoft.com/en-us/windows/win32/opengl/glmap1 _glMap1], [https://learn.microsoft.com/en-us/windows/win32/opengl/glmap2 _glMap2]
+* [https://learn.microsoft.com/en-us/windows/win32/opengl/glmapgrid-functions _glMapGrid], [[_glMatrixMode]], [[_glNewList]], [https://learn.microsoft.com/en-us/windows/win32/opengl/glnormal-functions _glNormal]
+* [https://learn.microsoft.com/en-us/windows/win32/opengl/glpixelmap _glPixelMap], [https://learn.microsoft.com/en-us/windows/win32/opengl/glpixelstore-functions _glPixelStore], [https://learn.microsoft.com/en-us/windows/win32/opengl/glpixeltransfer _glPixelTransfer], [[_glPixelZoom]]
+* [[_glPointSize]], [[_glPolygonMode]], [[_glPolygonStipple]], [[_glPushAttrib]]
+* [[_glPushMatrix]], [[_glPushName]], [https://learn.microsoft.com/en-us/windows/win32/opengl/glrasterpos-functions _glRasterPos], [[_glReadPixels]]
+* [[_glScissor]], [[_glShadeModel]], [[_glStencilFunc]], [[_glStencilMask]]
+* [[_glStencilOp]], [https://learn.microsoft.com/en-us/windows/win32/opengl/gltexcoord-functions _glTexCoord], [https://learn.microsoft.com/en-us/windows/win32/opengl/gltexenv-functions _glTexEnv], [https://learn.microsoft.com/en-us/windows/win32/opengl/gltexgen-functions _glTexGen]
+* [[_glTexImage1D]], [[_glTexImage2D]], [[_glViewport]]
+
+
+{{PageNavigation}}

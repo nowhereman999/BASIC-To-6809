@@ -1,0 +1,39 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:45:07}}
+The [[RTRIM$]] function removes trailing space characters from a [[STRING]] value.
+
+
+{{PageSyntax}}
+:{{parameter|return$}} = [[RTRIM$]]({{Parameter|value$}})
+
+
+{{PageDescription}}
+* {{Parameter|value$}} is the [[STRING]] value to trim.
+* If {{Parameter|value$}} contains no trailing space characters, {{Parameter|value$}} is returned unchanged.
+* Convert fixed length [[STRING]] values by using a different {{parameter|return$}} variable.
+
+
+{{PageExamples}}
+Trimming a fixed length string value for use by another string variable:
+{{CodeStart}}
+name$ = {{Cl|RTRIM$}}(contact.name) ' trims spaces from end of fixed length {{Cl|TYPE}} value.
+{{CodeEnd}}
+
+Trimming text string ends:
+{{CodeStart}}{{Cl|PRINT}} {{Cl|RTRIM$}}("some text") + "."
+{{Cl|PRINT}} {{Cl|RTRIM$}}("some text   ") + "."
+{{Cl|PRINT}} {{Cl|RTRIM$}}("Tommy    ")
+{{CodeEnd}}
+{{OutputStart}}some text.
+some text.
+Tommy
+{{OutputEnd}}
+
+
+{{PageSeeAlso}}
+* [https://qb64phoenix.com/forum/showthread.php?tid=1246 Featured in our "Keyword of the Day" series]
+* [[_TRIM$]], [[LTRIM$]], [[STR$]]
+* [[LSET]], [[RSET]]
+
+
+{{PageNavigation}}

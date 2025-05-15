@@ -1,0 +1,44 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:45:39}}
+[[XOR (boolean)|XOR]] evaluates two conditions and if either of them is True then it returns True, if both of them are True then it returns False, if both of them are False then it returns False.
+
+
+{{PageSyntax}}
+: {{Parameter|condition}} [[XOR (boolean)|XOR]] {{Parameter|condition2}}
+
+
+{{PageDescription}}
+* Either {{Parameter|condition}} or {{Parameter|condition2}} must be True for the evaluation to return True.
+* It is called '''"exclusive OR"''' because the conditions cannot both be True for it to return True like the [[OR (boolean)|OR]] evaluation.
+* {{Parameter|condition}} and {{Parameter|condition2}} can themselves contain XOR evaluations.
+
+
+{{RelationalOperationsPlugin}}
+
+
+{{PageExamples}}
+
+''Example:'' Dilemma...
+{{CodeStart}}
+
+True = {{Cl|NOT}} False
+AndersWon = True
+PeterWon = True
+{{Cl|IF...THEN|IF}} AndersWon = True {{Cl|XOR (boolean)|XOR}} PeterWon = True {{Cl|THEN}}
+{{Cl|PRINT}} "Thank you for your honesty!"
+{{Cl|ELSE}}
+{{Cl|PRINT}} "You can't both have won (or lost)!"
+{{Cl|END IF}}
+
+{{CodeEnd}}
+{{OutputStart}}
+You can't both have won (or lost)!
+{{OutputEnd}}
+
+
+{{PageSeeAlso}}
+* [[OR (boolean)]], [[AND (boolean)]]
+* [[IF...THEN]]
+
+
+{{PageNavigation}}
