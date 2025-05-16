@@ -734,6 +734,26 @@ If DataArrayCount > 0 Then
         q2$ = Right$("00" + Hex$(DataArray(x + 2)), 2) + Right$("00" + Hex$(DataArray(x + 3)), 2)
         Print #1, q1$; q2$; "   ;";
         Print #1, Right$("0000" + Hex$(x + a), 4); ": ";
+        If DataArray(x) >= 32 And DataArray(x) <= 126 Then
+            Print #1, Chr$(DataArray(x));
+        Else
+            Print #1, ".";
+        End If
+        If DataArray(x + 1) >= 32 And DataArray(x + 1) <= 126 Then
+            Print #1, Chr$(DataArray(x + 1));
+        Else
+            Print #1, ".";
+        End If
+        If DataArray(x + 2) >= 32 And DataArray(x + 2) <= 126 Then
+            Print #1, Chr$(DataArray(x + 2));
+        Else
+            Print #1, ".";
+        End If
+        If DataArray(x + 3) >= 32 And DataArray(x + 3) <= 126 Then
+            Print #1, Chr$(DataArray(x + 3)); "  ";
+        Else
+            Print #1, ".  ";
+        End If
         Print #1, Right$("00" + Hex$(DataArray(x)), 2); " "; Right$("00" + Hex$(DataArray(x + 1)), 2); " ";
         Print #1, Right$("00" + Hex$(DataArray(x + 2)), 2); " "; Right$("00" + Hex$(DataArray(x + 3)), 2)
     Next x
@@ -5017,8 +5037,6 @@ GoTo GEB4CommaEndBracket
 
 ' All commands use: 'Commands.bas'
 ' Minimal commands use: 'CommandsMin.bas'
-
-
 DoDATA:
 ' Add the data on this line to the DataArray, keeping track of the location/size with DataArrayCount
 ' DATA lines are special lines that may conatin spaces
@@ -5028,11 +5046,16 @@ Do Until v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A) Or v = &H27
         ' Found a comma, check for another comma in a row
         v = Array(x): x = x + 1
         If v = &H2C Then
-            DataArray(DataArrayCount) = 0: DataArrayCount = DataArrayCount + 1 ' Length of string
+            ' Got two commas in a row, add a value of zero
+            DataArray(DataArrayCount) = 0: DataArrayCount = DataArrayCount + 1 ' MSB 0
+            DataArray(DataArrayCount) = 0: DataArrayCount = DataArrayCount + 1 ' LSB 0
+            x = x - 1 ' a comma so point at it again
             GoTo DoDATA
         End If
-        If v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A) Then
-            DataArray(DataArrayCount) = 0: DataArrayCount = DataArrayCount + 1 ' Length of string
+        If v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A) Or v = &H27 Then
+            ' Ending after a comma, add a value of zero
+            DataArray(DataArrayCount) = 0: DataArrayCount = DataArrayCount + 1 ' MSB 0
+            DataArray(DataArrayCount) = 0: DataArrayCount = DataArrayCount + 1 ' LSB 0
             GoTo DoDATA
         End If
     End If
@@ -5056,7 +5079,7 @@ Do Until v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A) Or v = &H27
         End If
         GoTo DoDATA
     End If
-    If (v >= Asc("0") And v <= Asc("9")) Or v = Asc("-") Or v = Asc(".") Then
+    If (v >= Asc("0") And v <= Asc("9")) Or v = Asc("-") Or v = Asc(".") Or v = Asc("+") Then
         'We have a number to copy
         Temp$ = ""
         Do Until (v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A)) Or v = &H2C Or v = &H27 ' copy until we reach an EOL or comma or '
@@ -6078,6 +6101,7 @@ If v = &HFF And (Array(x) = &H03 Or Array(x) = &H04) Then
     GoTo ConsumeCommentsAndEOL ' Consume any comments and the EOL and Return
 End If
 GoTo DoDim ' Set the next array values
+
 DoREAD:
 Do Until v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A)
     v = Array(x): x = x + 1

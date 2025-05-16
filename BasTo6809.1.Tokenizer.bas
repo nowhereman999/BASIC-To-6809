@@ -3640,7 +3640,7 @@ While I <= Len(Expression$)
                 'We found a line with the DATA command
                 MoreDataToCheck:
                 If I > Len(Expression$) Then GoTo LoopFindSpaces ' we have reached the end of the expression
-                V = Asc(Mid$(Expression$, I, 1)): I = I + 1 'Ge the first byte after the command DATA or after a comma
+                V = Asc(Mid$(Expression$, I, 1)): I = I + 1 'Get the first byte after the command DATA or after a comma
                 If V = Asc(" ") Then
                     If I <= Len(Expression$) Then
                         GoTo MoreDataToCheck ' skip extra spaces after a comma or after the command DATA

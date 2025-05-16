@@ -1,4 +1,7 @@
-V$ = "4.34"
+V$ = "4.35"
+'       - Fixed a problem with handling DATA statements that had many comma's in a row like (DATA "THIS",,,2,,)
+
+' V 4.34
 '       - Can now handle 10000 IF/THEN/ELSE commands per program, was previously set at 100
 '       - Fixed a bug detecting string array variables
 '       - Made STRING$ function now handle ascii codes instead of only string values for the 2nd value in the command
