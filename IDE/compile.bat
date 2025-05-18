@@ -1,9 +1,27 @@
 @echo off
-SET target=%1
-SET FILE=%2
-SET FILENOEXT=%3
+setlocal enabledelayedexpansion
 
-IF "%target%"=="" GOTO default
+REM Initialize variables
+set target=
+set FILE=
+set FILENOEXT=
+
+REM Parse arguments
+:parse
+if "%~1"=="" goto done
+echo %~1 | findstr "=" >nul
+if %errorlevel%==0 (
+    for /f "tokens=1,2 delims==" %%A in ("%~1") do (
+        set "%%A=%%B"
+    )
+) else (
+    set target=%~1
+)
+shift
+goto parse
+:done
+
+IF "%target%"=="defaultF11" GOTO default
 IF "%target%"=="Command1" GOTO cmd1
 IF "%target%"=="Command2" GOTO cmd2
 IF "%target%"=="Command3" GOTO cmd3
@@ -18,7 +36,7 @@ ECHO Running default build...
 REM Compile program %FILE%
 ./BasTo6809 -ascii %FILE%
 REM Use LWASM to assemble %FILENOEXT%.asm into a CoCo LOADMable program called %FILENOEXT%.bin
-	lwasm -9bl -p cd -o.\%(FILENOEXT%.bin %FILENOEXT%.asm > .\NEW_Assembly_Listing.txt
+	lwasm -9bl -p cd -o.\%FILENOEXT%.bin %FILENOEXT%.asm > .\NEW_Assembly_Listing.txt
 REM Add other commands to copy the program onto a .DSK file and start an emulator in debug mode
 REM	-rm GO.BIN
 REM	./cc1sl -l $(FILENOEXT).bin -oGO.BIN
@@ -40,7 +58,7 @@ ECHO Running Command2...
 REM Compile program %FILE%
 ./BasTo6809 -ascii %FILE%
 REM Use LWASM to assemble %FILENOEXT%.asm into a CoCo LOADMable program called %FILENOEXT%.bin
-	lwasm -9bl -p cd -o.\%(FILENOEXT%.bin %FILENOEXT%.asm > .\NEW_Assembly_Listing.txt
+	lwasm -9bl -p cd -o.\%FILENOEXT%.bin %FILENOEXT%.asm > .\NEW_Assembly_Listing.txt
 GOTO end
 
 :cmd3
@@ -48,7 +66,7 @@ ECHO Running Command3...
 REM Compile program %FILE%
 ./BasTo6809 -ascii %FILE%
 REM Use LWASM to assemble %FILENOEXT%.asm into a CoCo LOADMable program called %FILENOEXT%.bin
-	lwasm -9bl -p cd -o.\%(FILENOEXT%.bin %FILENOEXT%.asm > .\NEW_Assembly_Listing.txt
+	lwasm -9bl -p cd -o.\%FILENOEXT%.bin %FILENOEXT%.asm > .\NEW_Assembly_Listing.txt
 REM Compress big >32k files and name if GO.BIN
 REM	-rm GO.BIN
 	.\cc1sl -l %FILENOEXT%.bin -oGO.BIN
@@ -59,7 +77,7 @@ ECHO Running Command4...
 REM Compile program %FILE%
 ./BasTo6809 -ascii %FILE%
 REM Use LWASM to assemble %FILENOEXT%.asm into a CoCo LOADMable program called %FILENOEXT%.bin
-	lwasm -9bl -p cd -o.\%(FILENOEXT%.bin %FILENOEXT%.asm > .\NEW_Assembly_Listing.txt
+	lwasm -9bl -p cd -o.\%FILENOEXT%.bin %FILENOEXT%.asm > .\NEW_Assembly_Listing.txt
 GOTO end
 
 :cmd5
@@ -67,7 +85,8 @@ ECHO Running Command5...
 REM Compile program %FILE%
 ./BasTo6809 -ascii %FILE%
 REM Use LWASM to assemble %FILENOEXT%.asm into a CoCo LOADMable program called %FILENOEXT%.bin
-	lwasm -9bl -p cd -o.\%(FILENOEXT%.bin %FILENOEXT%.asm > .\NEW_Assembly_Listing.txt
+	lwasm -9bl -p cd -o.\%FILENOEXT%.bin %FILENOEXT%.asm > .\NEW_Assembly_Listing.txt
 GOTO end
 
 :end
+endlocal
