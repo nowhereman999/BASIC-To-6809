@@ -1,4 +1,0 @@
-
-DIM SHARED Error_Happened AS LONG
-DIM SHARED Error_Message AS STRING
-

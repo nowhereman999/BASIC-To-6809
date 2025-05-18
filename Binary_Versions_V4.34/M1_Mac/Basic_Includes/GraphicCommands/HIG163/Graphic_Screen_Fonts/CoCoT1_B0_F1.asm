@@ -1,0 +1,8584 @@
+; Font Name: CoCoT1
+; Description: Pixel match of the Motorola MC6847T1 VDG chip
+;              Matches the font of newer CoCo 2's
+;              Since the pixels are single dots, this font will produce artifact colours
+;
+; Font table that points to the compiled sprite code
+; Only ASCII codes from $20 to $7F are supported
+FontWidth       EQU     8
+FontHeight      EQU     10
+CharJumpTable_HIG163:
+        FDB     Character_Blank         ; $20
+        FDB     Character_Exclamation   ; $21 !
+        FDB     Character_Quote         ; $22 "
+        FDB     Character_Pound         ; $23 #
+        FDB     Character_DollarSign    ; $24 $
+        FDB     Character_Percent       ; $25 %
+        FDB     Character_Ampersand     ; $26 &
+        FDB     Character_Apostrophe    ; $27 '
+        FDB     Character_OpenBracket   ; $28 (
+        FDB     Character_CloseBracket  ; $29 )
+        FDB     Character_Asterisk      ; $2A *
+        FDB     Character_Plus          ; $2B +
+        FDB     Character_Comma         ; $2C ,
+        FDB     Character_Hyphen        ; $2D -
+        FDB     Character_Decimal       ; $2E .
+        FDB     Character_Slash         ; $2F /
+        FDB     Character_0             ; $30 0
+        FDB     Character_1             ; $31 1
+        FDB     Character_2             ; $32 2
+        FDB     Character_3             ; $33 3
+        FDB     Character_4             ; $34 4
+        FDB     Character_5             ; $35 5
+        FDB     Character_6             ; $36 6
+        FDB     Character_7             ; $37 7
+        FDB     Character_8             ; $38 8
+        FDB     Character_9             ; $39 9
+        FDB     Character_Colon         ; $3A :
+        FDB     Character_Semicolon     ; $3B ;
+        FDB     Character_Less          ; $3C <
+        FDB     Character_Equal         ; $3D =
+        FDB     Character_Great         ; $3E >
+        FDB     Character_QuestionMark  ; $3F ?
+        FDB     Character_AtSign        ; $40 @
+        FDB     Character_A             ; $41 A
+        FDB     Character_B             ; $42 B
+        FDB     Character_C             ; $43 C
+        FDB     Character_D             ; $44 D
+        FDB     Character_E             ; $45 E
+        FDB     Character_F             ; $46 F
+        FDB     Character_G             ; $47 G
+        FDB     Character_H             ; $48 H
+        FDB     Character_I             ; $49 I
+        FDB     Character_J             ; $4A J
+        FDB     Character_K             ; $4B K
+        FDB     Character_L             ; $4C L
+        FDB     Character_M             ; $4D M
+        FDB     Character_N             ; $4E N
+        FDB     Character_O             ; $4F O
+        FDB     Character_P             ; $50 P
+        FDB     Character_Q             ; $51 Q
+        FDB     Character_R             ; $52 R
+        FDB     Character_S             ; $53 S
+        FDB     Character_T             ; $54 T
+        FDB     Character_U             ; $55 U
+        FDB     Character_V             ; $56 V
+        FDB     Character_W             ; $57 W
+        FDB     Character_X             ; $58 X
+        FDB     Character_Y             ; $59 Y
+        FDB     Character_Z             ; $5A Z
+        FDB     Character_OpenSBracket  ; $5B [
+        FDB     Character_Backslash     ; $5C \
+        FDB     Character_CloseSBracket ; $5D ]
+        FDB     Character_Caret         ; $5E ^
+        FDB     Character_Underscore    ; $5F _
+        FDB     Character_Backtick      ; $60 `
+        FDB     Character_a             ; $61 a
+        FDB     Character_b             ; $62 b
+        FDB     Character_c             ; $63 c
+        FDB     Character_d             ; $64 d
+        FDB     Character_e             ; $65 e
+        FDB     Character_f             ; $66 f
+        FDB     Character_g             ; $67 g
+        FDB     Character_h             ; $68 h
+        FDB     Character_i             ; $69 i
+        FDB     Character_j             ; $6A j
+        FDB     Character_k             ; $6B k
+        FDB     Character_l             ; $6C l
+        FDB     Character_m             ; $6D m
+        FDB     Character_n             ; $6E n
+        FDB     Character_o             ; $6F o
+        FDB     Character_p             ; $70 p
+        FDB     Character_q             ; $71 q
+        FDB     Character_r             ; $72 r
+        FDB     Character_s             ; $73 s
+        FDB     Character_t             ; $74 t
+        FDB     Character_u             ; $75 u
+        FDB     Character_v             ; $76 v
+        FDB     Character_w             ; $77 w
+        FDB     Character_x             ; $78 x
+        FDB     Character_y             ; $79 y
+        FDB     Character_z             ; $7A z
+        FDB     Character_OpenCurlyBracket ; $7B {
+        FDB     Character_Pipe          ; $7C |
+        FDB     Character_CloseCurlyBracket ; $7D }
+        FDB     Character_Tilde         ; $7E ~
+        FDB     Character_Blank         ; $7F DEL
+; Table end
+; **************************************
+;  Blank
+;0 00000000
+;1 00000000
+;2 00000000
+;3 00000000
+;4 00000000
+;5 00000000
+;6 00000000
+;7 00000000
+;8 00000000
+;9 00000000
+Character_Blank:
+        LEAU    BytesPerRow_HIG163*9+6,U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LEAY    ,X
+        STD     ,U
+        PSHU    D,X,Y                   ; 9
+        LEAU    -BytesPerRow_HIG163+6,U
+        STD     ,U
+        PSHU    D,X,Y                   ; 8
+        LEAU    -BytesPerRow_HIG163+6,U
+        STD     ,U
+        PSHU    D,X,Y                   ; 7
+        LEAU    -BytesPerRow_HIG163+6,U
+        STD     ,U
+        PSHU    D,X,Y                   ; 6
+        LEAU    -BytesPerRow_HIG163+6,U
+        STD     ,U
+        PSHU    D,X,Y                   ; 5
+        LEAU    -BytesPerRow_HIG163+6,U
+        STD     ,U
+        PSHU    D,X,Y                   ; 4
+        LEAU    -BytesPerRow_HIG163+6,U
+        STD     ,U
+        PSHU    D,X,Y                   ; 3
+        LEAU    -BytesPerRow_HIG163+6,U
+        STD     ,U
+        PSHU    D,X,Y                   ; 2
+        LEAU    -BytesPerRow_HIG163+6,U
+        STD     ,U
+        PSHU    D,X,Y                   ; 1
+        LEAU    -BytesPerRow_HIG163+6,U
+        STD     ,U
+        PSHU    D,X,Y                   ; 0
+        RTS
+; **************************************
+; !
+;0 00000000
+;1 00001000
+;2 00001000
+;3 00001000
+;4 00001000
+;5 00001000
+;6 00000000
+;7 00001000
+;8 00000000
+;9 00000000
+Character_Exclamation:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; "
+;0 00000000
+;1 00010100
+;2 00010100
+;3 00010100
+;4 00000000
+;5 00000000
+;6 00000000
+;7 00000000
+;8 00000000
+;9 00000000
+Character_Quote:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00010100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00010100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00010100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; #
+;0 00000000
+;1 00010100
+;2 00010100
+;3 00111110
+;4 00000000
+;5 00111110
+;6 00010100
+;7 00010100
+;8 00000000
+;9 00000000
+Character_Pound:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00010100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00010100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00111110
+        STX     ,Y
+        STU     2,Y
+        STU     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00111110
+        STX     ,Y
+        STU     2,Y
+        STU     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00010100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00010100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; $
+;0 00000000
+;1 00001000
+;2 00011110
+;3 00100000
+;4 00011100
+;5 00000010
+;6 00111100
+;7 00001000
+;8 00000000
+;9 00000000
+Character_DollarSign:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00011110
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STU     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00100000
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00011100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00000010
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00111100
+        STX     ,Y
+        STU     2,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; %
+;0 00000000
+;1 00110000
+;2 00110010
+;3 00000100
+;4 00001000
+;5 00010000
+;6 00100110
+;7 00000110
+;8 00000000
+;9 00000000
+Character_Percent:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00110000
+        STX     ,Y
+        STU     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00110010
+        STX     ,Y
+        STU     2,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00000100
+        STX     ,Y
+        STX     2,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00010000
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00100110
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STA     4,Y
+        STB     5,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00000110
+        STX     ,Y
+        STX     2,Y
+        STA     4,Y
+        STB     5,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; &
+;0 00000000
+;1 00010000
+;2 00101000
+;3 00101000
+;4 00010000
+;5 00101010
+;6 00100100
+;7 00011010
+;8 00000000
+;9 00000000
+Character_Ampersand:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00010000
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00101000
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00101000
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00010000
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00101010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STB     4,Y
+        STA     5,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00100100
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00011010
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STB     4,Y
+        STA     5,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; '
+;0 00000000
+;1 00011000
+;2 00011000
+;3 00010000
+;4 00100000
+;5 00000000
+;6 00000000
+;7 00000000
+;8 00000000
+;9 00000000
+Character_Apostrophe:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00011000
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00011000
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00010000
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00100000
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; (
+;0 00000000
+;1 00000100
+;2 00001000
+;3 00010000
+;4 00010000
+;5 00010000
+;6 00001000
+;7 00000100
+;8 00000000
+;9 00000000
+Character_OpenBracket:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00000100
+        STX     ,Y
+        STX     2,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00010000
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00010000
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00010000
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00000100
+        STX     ,Y
+        STX     2,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; )
+;0 00000000
+;1 00010000
+;2 00001000
+;3 00000100
+;4 00000100
+;5 00000100
+;6 00001000
+;7 00010000
+;8 00000000
+;9 00000000
+Character_CloseBracket:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00010000
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00000100
+        STX     ,Y
+        STX     2,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00000100
+        STX     ,Y
+        STX     2,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00000100
+        STX     ,Y
+        STX     2,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00010000
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; *
+;0 00000000
+;1 00000000
+;2 00001000
+;3 00101010
+;4 00011100
+;5 00011100
+;6 00101010
+;7 00001000
+;8 00000000
+;9 00000000
+Character_Asterisk:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00101010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STB     4,Y
+        STA     5,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00011100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00011100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00101010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STB     4,Y
+        STA     5,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; +
+;0 00000000
+;1 00000000
+;2 00001000
+;3 00001000
+;4 00111110
+;5 00001000
+;6 00001000
+;7 00000000
+;8 00000000
+;9 00000000
+Character_Plus:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00111110
+        STX     ,Y
+        STU     2,Y
+        STU     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; ,
+;0 00000000
+;1 00000000
+;2 00000000
+;3 00000000
+;4 00011000
+;5 00011000
+;6 00010000
+;7 00100000
+;8 00000000
+;9 00000000
+Character_Comma:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00011000
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00011000
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00010000
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00100000
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; -
+;0 00000000
+;1 00000000
+;2 00000000
+;3 00000000
+;4 00111110
+;5 00000000
+;6 00000000
+;7 00000000
+;8 00000000
+;9 00000000
+Character_Hyphen:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00111110
+        STX     ,Y
+        STU     2,Y
+        STU     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; .
+;0 00000000
+;1 00000000
+;2 00000000
+;3 00000000
+;4 00000000
+;5 00000000
+;6 00011000
+;7 00011000
+;8 00000000
+;9 00000000
+Character_Decimal:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00011000
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00011000
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; /
+;0 00000000
+;1 00000000
+;2 00000010
+;3 00000100
+;4 00001000
+;5 00010000
+;6 00100000
+;7 00000000
+;8 00000000
+;9 00000000
+Character_Slash:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00000010
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00000100
+        STX     ,Y
+        STX     2,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00010000
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00100000
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; 0
+;0 00000000
+;1 00011100
+;2 00100010
+;3 00100110
+;4 00101010
+;5 00110010
+;6 00100010
+;7 00011100
+;8 00000000
+;9 00000000
+Character_0:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00011100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00100110
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STA     4,Y
+        STB     5,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00101010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STB     4,Y
+        STA     5,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00110010
+        STX     ,Y
+        STU     2,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00011100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; 1
+;0 00000000
+;1 00001000
+;2 00011000
+;3 00001000
+;4 00001000
+;5 00001000
+;6 00001000
+;7 00011100
+;8 00000000
+;9 00000000
+Character_1:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00011000
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00011100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; 2
+;0 00000000
+;1 00011100
+;2 00100010
+;3 00000010
+;4 00011100
+;5 00100000
+;6 00100000
+;7 00111110
+;8 00000000
+;9 00000000
+Character_2:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00011100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00000010
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00011100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00100000
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00100000
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00111110
+        STX     ,Y
+        STU     2,Y
+        STU     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; 3
+;0 00000000
+;1 00011100
+;2 00100010
+;3 00000010
+;4 00001100
+;5 00000010
+;6 00100010
+;7 00011100
+;8 00000000
+;9 00000000
+Character_3:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00011100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00000010
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00001100
+        STX     ,Y
+        STX     2,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00000010
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00011100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; 4
+;0 00000000
+;1 00000100
+;2 00001100
+;3 00010100
+;4 00100100
+;5 00111110
+;6 00000100
+;7 00000100
+;8 00000000
+;9 00000000
+Character_4:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00000100
+        STX     ,Y
+        STX     2,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00001100
+        STX     ,Y
+        STX     2,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00010100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00100100
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00111110
+        STX     ,Y
+        STU     2,Y
+        STU     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00000100
+        STX     ,Y
+        STX     2,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00000100
+        STX     ,Y
+        STX     2,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; 5
+;0 00000000
+;1 00111110
+;2 00100000
+;3 00111100
+;4 00000010
+;5 00000010
+;6 00100010
+;7 00011100
+;8 00000000
+;9 00000000
+Character_5:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00111110
+        STX     ,Y
+        STU     2,Y
+        STU     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00100000
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00111100
+        STX     ,Y
+        STU     2,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00000010
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00000010
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00011100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; 6
+;0 00000000
+;1 00001100
+;2 00010000
+;3 00100000
+;4 00111100
+;5 00100010
+;6 00100010
+;7 00011100
+;8 00000000
+;9 00000000
+Character_6:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00001100
+        STX     ,Y
+        STX     2,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00010000
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00100000
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00111100
+        STX     ,Y
+        STU     2,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00011100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; 7
+;0 00000000
+;1 00111110
+;2 00000010
+;3 00000100
+;4 00001000
+;5 00010000
+;6 00100000
+;7 00100000
+;8 00000000
+;9 00000000
+Character_7:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00111110
+        STX     ,Y
+        STU     2,Y
+        STU     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00000010
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00000100
+        STX     ,Y
+        STX     2,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00010000
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00100000
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00100000
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; 8
+;0 00000000
+;1 00011100
+;2 00100010
+;3 00100010
+;4 00011100
+;5 00100010
+;6 00100010
+;7 00011100
+;8 00000000
+;9 00000000
+Character_8:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00011100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00011100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00011100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; 9
+;0 00000000
+;1 00011100
+;2 00100010
+;3 00100010
+;4 00011110
+;5 00000010
+;6 00000100
+;7 00011000
+;8 00000000
+;9 00000000
+Character_9:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00011100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00011110
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STU     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00000010
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00000100
+        STX     ,Y
+        STX     2,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00011000
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; :
+;0 00000000
+;1 00000000
+;2 00011000
+;3 00011000
+;4 00000000
+;5 00011000
+;6 00011000
+;7 00000000
+;8 00000000
+;9 00000000
+Character_Colon:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00011000
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00011000
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00011000
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00011000
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; ;
+;0 00000000
+;1 00011000
+;2 00011000
+;3 00000000
+;4 00011000
+;5 00011000
+;6 00010000
+;7 00100000
+;8 00000000
+;9 00000000
+Character_Semicolon:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00011000
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00011000
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00011000
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00011000
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00010000
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00100000
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; <
+;0 00000000
+;1 00000100
+;2 00001000
+;3 00010000
+;4 00100000
+;5 00010000
+;6 00001000
+;7 00000100
+;8 00000000
+;9 00000000
+Character_Less:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00000100
+        STX     ,Y
+        STX     2,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00010000
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00100000
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00010000
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00000100
+        STX     ,Y
+        STX     2,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; =
+;0 00000000
+;1 00000000
+;2 00000000
+;3 00111100
+;4 00000000
+;5 00111100
+;6 00000000
+;7 00000000
+;8 00000000
+;9 00000000
+Character_Equal:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00111100
+        STX     ,Y
+        STU     2,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00111100
+        STX     ,Y
+        STU     2,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; >
+;0 00000000
+;1 00010000
+;2 00001000
+;3 00000100
+;4 00000010
+;5 00000100
+;6 00001000
+;7 00010000
+;8 00000000
+;9 00000000
+Character_Great:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00010000
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00000100
+        STX     ,Y
+        STX     2,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00000010
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00000100
+        STX     ,Y
+        STX     2,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00010000
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; ?
+;0 00000000
+;1 00011100
+;2 00100010
+;3 00000010
+;4 00000100
+;5 00001000
+;6 00000000
+;7 00001000
+;8 00000000
+;9 00000000
+Character_QuestionMark:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00011100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00000010
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00000100
+        STX     ,Y
+        STX     2,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; @
+;0 00000000
+;1 00011100
+;2 00100010
+;3 00000010
+;4 00011010
+;5 00100110
+;6 00100010
+;7 00011100
+;8 00000000
+;9 00000000
+Character_AtSign:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00011100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00000010
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00011010
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STB     4,Y
+        STA     5,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00100110
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STA     4,Y
+        STB     5,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00011100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; A
+;0 00000000
+;1 00001000
+;2 00010100
+;3 00100010
+;4 00100010
+;5 00111110
+;6 00100010
+;7 00100010
+;8 00000000
+;9 00000000
+Character_A:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00010100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00111110
+        STX     ,Y
+        STU     2,Y
+        STU     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; B
+;0 00000000
+;1 00111100
+;2 00010010
+;3 00010010
+;4 00011100
+;5 00010010
+;6 00010010
+;7 00111100
+;8 00000000
+;9 00000000
+Character_B:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00111100
+        STX     ,Y
+        STU     2,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00010010
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00010010
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00011100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00010010
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00010010
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00111100
+        STX     ,Y
+        STU     2,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; C
+;0 00000000
+;1 00011100
+;2 00100010
+;3 00100000
+;4 00100000
+;5 00100000
+;6 00100010
+;7 00011100
+;8 00000000
+;9 00000000
+Character_C:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00011100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00100000
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00100000
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00100000
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00011100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; D
+;0 00000000
+;1 00111100
+;2 00010010
+;3 00010010
+;4 00010010
+;5 00010010
+;6 00010010
+;7 00111100
+;8 00000000
+;9 00000000
+Character_D:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00111100
+        STX     ,Y
+        STU     2,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00010010
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00010010
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00010010
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00010010
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00010010
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00111100
+        STX     ,Y
+        STU     2,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; E
+;0 00000000
+;1 00111110
+;2 00100000
+;3 00100000
+;4 00111000
+;5 00100000
+;6 00100000
+;7 00111110
+;8 00000000
+;9 00000000
+Character_E:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00111110
+        STX     ,Y
+        STU     2,Y
+        STU     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00100000
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00100000
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00111000
+        STX     ,Y
+        STU     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00100000
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00100000
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00111110
+        STX     ,Y
+        STU     2,Y
+        STU     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; F
+;0 00000000
+;1 00111110
+;2 00100000
+;3 00100000
+;4 00111000
+;5 00100000
+;6 00100000
+;7 00100000
+;8 00000000
+;9 00000000
+Character_F:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00111110
+        STX     ,Y
+        STU     2,Y
+        STU     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00100000
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00100000
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00111000
+        STX     ,Y
+        STU     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00100000
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00100000
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00100000
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; G
+;0 00000000
+;1 00011110
+;2 00100000
+;3 00100000
+;4 00100110
+;5 00100010
+;6 00100010
+;7 00011110
+;8 00000000
+;9 00000000
+Character_G:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00011110
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STU     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00100000
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00100000
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00100110
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STA     4,Y
+        STB     5,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00011110
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STU     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; H
+;0 00000000
+;1 00100010
+;2 00100010
+;3 00100010
+;4 00111110
+;5 00100010
+;6 00100010
+;7 00100010
+;8 00000000
+;9 00000000
+Character_H:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00111110
+        STX     ,Y
+        STU     2,Y
+        STU     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; I
+;0 00000000
+;1 00011100
+;2 00001000
+;3 00001000
+;4 00001000
+;5 00001000
+;6 00001000
+;7 00011100
+;8 00000000
+;9 00000000
+Character_I:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00011100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00011100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; J
+;0 00000000
+;1 00000010
+;2 00000010
+;3 00000010
+;4 00000010
+;5 00000010
+;6 00100010
+;7 00011100
+;8 00000000
+;9 00000000
+Character_J:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00000010
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00000010
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00000010
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00000010
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00000010
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00011100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; K
+;0 00000000
+;1 00100010
+;2 00100100
+;3 00101000
+;4 00110000
+;5 00101000
+;6 00100100
+;7 00100010
+;8 00000000
+;9 00000000
+Character_K:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00100100
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00101000
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00110000
+        STX     ,Y
+        STU     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00101000
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00100100
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; L
+;0 00000000
+;1 00100000
+;2 00100000
+;3 00100000
+;4 00100000
+;5 00100000
+;6 00100000
+;7 00111110
+;8 00000000
+;9 00000000
+Character_L:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00100000
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00100000
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00100000
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00100000
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00100000
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00100000
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00111110
+        STX     ,Y
+        STU     2,Y
+        STU     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; M
+;0 00000000
+;1 00100010
+;2 00110110
+;3 00101010
+;4 00101010
+;5 00100010
+;6 00100010
+;7 00100010
+;8 00000000
+;9 00000000
+Character_M:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00110110
+        STX     ,Y
+        STU     2,Y
+        STA     4,Y
+        STB     5,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00101010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STB     4,Y
+        STA     5,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00101010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STB     4,Y
+        STA     5,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; N
+;0 00000000
+;1 00100010
+;2 00100010
+;3 00110010
+;4 00101010
+;5 00100110
+;6 00100010
+;7 00100010
+;8 00000000
+;9 00000000
+Character_N:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00110010
+        STX     ,Y
+        STU     2,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00101010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STB     4,Y
+        STA     5,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00100110
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STA     4,Y
+        STB     5,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; O
+;0 00000000
+;1 00011100
+;2 00100010
+;3 00100010
+;4 00100010
+;5 00100010
+;6 00100010
+;7 00011100
+;8 00000000
+;9 00000000
+Character_O:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00011100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00011100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; P
+;0 00000000
+;1 00111100
+;2 00100010
+;3 00100010
+;4 00111100
+;5 00100000
+;6 00100000
+;7 00100000
+;8 00000000
+;9 00000000
+Character_P:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00111100
+        STX     ,Y
+        STU     2,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00111100
+        STX     ,Y
+        STU     2,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00100000
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00100000
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00100000
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; Q
+;0 00000000
+;1 00011100
+;2 00100010
+;3 00100010
+;4 00100010
+;5 00101010
+;6 00100100
+;7 00011010
+;8 00000000
+;9 00000000
+Character_Q:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00011100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00101010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STB     4,Y
+        STA     5,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00100100
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00011010
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STB     4,Y
+        STA     5,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; R
+;0 00000000
+;1 00111100
+;2 00100010
+;3 00100010
+;4 00111100
+;5 00101000
+;6 00100100
+;7 00100010
+;8 00000000
+;9 00000000
+Character_R:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00111100
+        STX     ,Y
+        STU     2,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00111100
+        STX     ,Y
+        STU     2,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00101000
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00100100
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; S
+;0 00000000
+;1 00011100
+;2 00100010
+;3 00100000
+;4 00011100
+;5 00000010
+;6 00100010
+;7 00011100
+;8 00000000
+;9 00000000
+Character_S:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00011100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00100000
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00011100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00000010
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00011100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; T
+;0 00000000
+;1 00111110
+;2 00001000
+;3 00001000
+;4 00001000
+;5 00001000
+;6 00001000
+;7 00001000
+;8 00000000
+;9 00000000
+Character_T:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00111110
+        STX     ,Y
+        STU     2,Y
+        STU     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; U
+;0 00000000
+;1 00100010
+;2 00100010
+;3 00100010
+;4 00100010
+;5 00100010
+;6 00100010
+;7 00011100
+;8 00000000
+;9 00000000
+Character_U:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00011100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; V
+;0 00000000
+;1 00100010
+;2 00100010
+;3 00100010
+;4 00010100
+;5 00010100
+;6 00001000
+;7 00001000
+;8 00000000
+;9 00000000
+Character_V:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00010100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00010100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; W
+;0 00000000
+;1 00100010
+;2 00100010
+;3 00100010
+;4 00100010
+;5 00101010
+;6 00110110
+;7 00100010
+;8 00000000
+;9 00000000
+Character_W:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00101010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STB     4,Y
+        STA     5,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00110110
+        STX     ,Y
+        STU     2,Y
+        STA     4,Y
+        STB     5,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; X
+;0 00000000
+;1 00100010
+;2 00100010
+;3 00010100
+;4 00001000
+;5 00010100
+;6 00100010
+;7 00100010
+;8 00000000
+;9 00000000
+Character_X:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00010100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00010100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; Y
+;0 00000000
+;1 00100010
+;2 00100010
+;3 00010100
+;4 00001000
+;5 00001000
+;6 00001000
+;7 00001000
+;8 00000000
+;9 00000000
+Character_Y:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00010100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; Z
+;0 00000000
+;1 00111110
+;2 00000010
+;3 00000100
+;4 00001000
+;5 00010000
+;6 00100000
+;7 00111110
+;8 00000000
+;9 00000000
+Character_Z:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00111110
+        STX     ,Y
+        STU     2,Y
+        STU     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00000010
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00000100
+        STX     ,Y
+        STX     2,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00010000
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00100000
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00111110
+        STX     ,Y
+        STU     2,Y
+        STU     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; [
+;0 00000000
+;1 00011100
+;2 00010000
+;3 00010000
+;4 00010000
+;5 00010000
+;6 00010000
+;7 00011100
+;8 00000000
+;9 00000000
+Character_OpenSBracket:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00011100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00010000
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00010000
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00010000
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00010000
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00010000
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00011100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; \
+;0 00000000
+;1 00100000
+;2 00010000
+;3 00001000
+;4 00000100
+;5 00000010
+;6 00000000
+;7 00000000
+;8 00000000
+;9 00000000
+Character_Backslash:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00100000
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00010000
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00000100
+        STX     ,Y
+        STX     2,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00000010
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; ]
+;0 00000000
+;1 00011100
+;2 00000100
+;3 00000100
+;4 00000100
+;5 00000100
+;6 00000100
+;7 00011100
+;8 00000000
+;9 00000000
+Character_CloseSBracket:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00011100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00000100
+        STX     ,Y
+        STX     2,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00000100
+        STX     ,Y
+        STX     2,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00000100
+        STX     ,Y
+        STX     2,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00000100
+        STX     ,Y
+        STX     2,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00000100
+        STX     ,Y
+        STX     2,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00011100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; ^
+;0 00000000
+;1 00001000
+;2 00010100
+;3 00100010
+;4 00000000
+;5 00000000
+;6 00000000
+;7 00000000
+;8 00000000
+;9 00000000
+Character_Caret:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00010100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; _
+;0 00000000
+;1 00000000
+;2 00000000
+;3 00000000
+;4 00000000
+;5 00000000
+;6 00000000
+;7 00111110
+;8 00000000
+;9 00000000
+Character_Underscore:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00111110
+        STX     ,Y
+        STU     2,Y
+        STU     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; `
+;0 00000000
+;1 00011000
+;2 00011000
+;3 00001000
+;4 00000100
+;5 00000000
+;6 00000000
+;7 00000000
+;8 00000000
+;9 00000000
+Character_Backtick:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00011000
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00011000
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00000100
+        STX     ,Y
+        STX     2,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; a
+;0 00000000
+;1 00000000
+;2 00000000
+;3 00011100
+;4 00000010
+;5 00011110
+;6 00100010
+;7 00011110
+;8 00000000
+;9 00000000
+Character_a:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00011100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00000010
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00011110
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STU     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00011110
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STU     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; b
+;0 00000000
+;1 00100000
+;2 00100000
+;3 00101100
+;4 00110010
+;5 00100010
+;6 00110010
+;7 00101100
+;8 00000000
+;9 00000000
+Character_b:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00100000
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00100000
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00101100
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00110010
+        STX     ,Y
+        STU     2,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00110010
+        STX     ,Y
+        STU     2,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00101100
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; c
+;0 00000000
+;1 00000000
+;2 00000000
+;3 00011100
+;4 00100010
+;5 00100000
+;6 00100010
+;7 00011100
+;8 00000000
+;9 00000000
+Character_c:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00011100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00100000
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00011100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; d
+;0 00000000
+;1 00000010
+;2 00000010
+;3 00011010
+;4 00100110
+;5 00100010
+;6 00100110
+;7 00011010
+;8 00000000
+;9 00000000
+Character_d:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00000010
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00000010
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00011010
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STB     4,Y
+        STA     5,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00100110
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STA     4,Y
+        STB     5,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00100110
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STA     4,Y
+        STB     5,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00011010
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STB     4,Y
+        STA     5,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; e
+;0 00000000
+;1 00000000
+;2 00000000
+;3 00011100
+;4 00100010
+;5 00111110
+;6 00100000
+;7 00011100
+;8 00000000
+;9 00000000
+Character_e:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00011100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00111110
+        STX     ,Y
+        STU     2,Y
+        STU     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00100000
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00011100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; f
+;0 00000000
+;1 00001000
+;2 00010100
+;3 00010000
+;4 00111000
+;5 00010000
+;6 00010000
+;7 00010000
+;8 00000000
+;9 00000000
+Character_f:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00010100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00010000
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00111000
+        STX     ,Y
+        STU     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00010000
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00010000
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00010000
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; g
+;0 00000000
+;1 00000000
+;2 00000000
+;3 00011010
+;4 00100110
+;5 00100110
+;6 00011010
+;7 00000010
+;8 00100010
+;9 00011100
+Character_g:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00011010
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STB     4,Y
+        STA     5,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00100110
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STA     4,Y
+        STB     5,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00100110
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STA     4,Y
+        STB     5,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00011010
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STB     4,Y
+        STA     5,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00000010
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00011100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STU     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; h
+;0 00000000
+;1 00100000
+;2 00100000
+;3 00101100
+;4 00110010
+;5 00100010
+;6 00100010
+;7 00100010
+;8 00000000
+;9 00000000
+Character_h:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00100000
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00100000
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00101100
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00110010
+        STX     ,Y
+        STU     2,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; i
+;0 00000000
+;1 00001000
+;2 00000000
+;3 00011000
+;4 00001000
+;5 00001000
+;6 00001000
+;7 00011100
+;8 00000000
+;9 00000000
+Character_i:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00011000
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00011100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; j
+;0 00000000
+;1 00000000
+;2 00000000
+;3 00000010
+;4 00000000
+;5 00000010
+;6 00000010
+;7 00000010
+;8 00100010
+;9 00011100
+Character_j:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00000010
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00000010
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00000010
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00000010
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00011100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STU     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; k
+;0 00000000
+;1 00100000
+;2 00100000
+;3 00100100
+;4 00101000
+;5 00110000
+;6 00101000
+;7 00100100
+;8 00000000
+;9 00000000
+Character_k:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00100000
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00100000
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00100100
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00101000
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00110000
+        STX     ,Y
+        STU     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00101000
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00100100
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; l
+;0 00000000
+;1 00011000
+;2 00001000
+;3 00001000
+;4 00001000
+;5 00001000
+;6 00001000
+;7 00011100
+;8 00000000
+;9 00000000
+Character_l:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00011000
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00011100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; m
+;0 00000000
+;1 00000000
+;2 00000000
+;3 00110100
+;4 00101010
+;5 00101010
+;6 00101010
+;7 00101010
+;8 00000000
+;9 00000000
+Character_m:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00110100
+        STX     ,Y
+        STU     2,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00101010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STB     4,Y
+        STA     5,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00101010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STB     4,Y
+        STA     5,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00101010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STB     4,Y
+        STA     5,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00101010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STB     4,Y
+        STA     5,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; n
+;0 00000000
+;1 00000000
+;2 00000000
+;3 00101100
+;4 00110010
+;5 00100010
+;6 00100010
+;7 00100010
+;8 00000000
+;9 00000000
+Character_n:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00101100
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00110010
+        STX     ,Y
+        STU     2,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; o
+;0 00000000
+;1 00000000
+;2 00000000
+;3 00011100
+;4 00100010
+;5 00100010
+;6 00100010
+;7 00011100
+;8 00000000
+;9 00000000
+Character_o:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00011100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00011100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; p
+;0 00000000
+;1 00000000
+;2 00000000
+;3 00101100
+;4 00110010
+;5 00100010
+;6 00110010
+;7 00101100
+;8 00100000
+;9 00100000
+Character_p:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00101100
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00110010
+        STX     ,Y
+        STU     2,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00110010
+        STX     ,Y
+        STU     2,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00101100
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00100000
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00100000
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; q
+;0 00000000
+;1 00000000
+;2 00000000
+;3 00011010
+;4 00100110
+;5 00100010
+;6 00100110
+;7 00011010
+;8 00000010
+;9 00000010
+Character_q:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00011010
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STB     4,Y
+        STA     5,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00100110
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STA     4,Y
+        STB     5,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00100110
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STA     4,Y
+        STB     5,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00011010
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STB     4,Y
+        STA     5,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000010
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000010
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        RTS       
+; **************************************
+; r
+;0 00000000
+;1 00000000
+;2 00000000
+;3 00101100
+;4 00110010
+;5 00100000
+;6 00100000
+;7 00100000
+;8 00000000
+;9 00000000
+Character_r:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00101100
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00110010
+        STX     ,Y
+        STU     2,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00100000
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00100000
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00100000
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; s
+;0 00000000
+;1 00000000
+;2 00000000
+;3 00011110
+;4 00100000
+;5 00011100
+;6 00000010
+;7 00111100
+;8 00000000
+;9 00000000
+Character_s:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00011110
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STU     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00100000
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00011100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00000010
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00111100
+        STX     ,Y
+        STU     2,Y
+        STU     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; t
+;0 00000000
+;1 00001000
+;2 00001000
+;3 00111110
+;4 00001000
+;5 00001000
+;6 00001010
+;7 00000100
+;8 00000000
+;9 00000000
+Character_t:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00111110
+        STX     ,Y
+        STU     2,Y
+        STU     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00001010
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00000100
+        STX     ,Y
+        STX     2,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; u
+;0 00000000
+;1 00000000
+;2 00000000
+;3 00100010
+;4 00100010
+;5 00100010
+;6 00100110
+;7 00011010
+;8 00000000
+;9 00000000
+Character_u:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00100110
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STA     4,Y
+        STB     5,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00011010
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STB     4,Y
+        STA     5,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; v
+;0 00000000
+;1 00000000
+;2 00000000
+;3 00100010
+;4 00100010
+;5 00100010
+;6 00010100
+;7 00001000
+;8 00000000
+;9 00000000
+Character_v:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00010100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; w
+;0 00000000
+;1 00000000
+;2 00000000
+;3 00100010
+;4 00100010
+;5 00101010
+;6 00101010
+;7 00010100
+;8 00000000
+;9 00000000
+Character_w:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00101010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STB     4,Y
+        STA     5,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00101010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STB     4,Y
+        STA     5,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00010100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; x
+;0 00000000
+;1 00000000
+;2 00000000
+;3 00100010
+;4 00010100
+;5 00001000
+;6 00010100
+;7 00100010
+;8 00000000
+;9 00000000
+Character_x:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00010100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00010100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; y
+;0 00000000
+;1 00000000
+;2 00000000
+;3 00100010
+;4 00100010
+;5 00100010
+;6 00011110
+;7 00000010
+;8 00100010
+;9 00011100
+Character_y:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00011110
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STU     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00000010
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00100010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STX     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00011100
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STU     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; z
+;0 00000000
+;1 00000000
+;2 00000000
+;3 00111110
+;4 00000100
+;5 00001000
+;6 00010000
+;7 00111110
+;8 00000000
+;9 00000000
+Character_z:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00111110
+        STX     ,Y
+        STU     2,Y
+        STU     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00000100
+        STX     ,Y
+        STX     2,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00010000
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00111110
+        STX     ,Y
+        STU     2,Y
+        STU     4,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; {
+;0 00000000
+;1 00000100
+;2 00001000
+;3 00001000
+;4 00010000
+;5 00001000
+;6 00001000
+;7 00000100
+;8 00000000
+;9 00000000
+Character_OpenCurlyBracket:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00000100
+        STX     ,Y
+        STX     2,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00010000
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00000100
+        STX     ,Y
+        STX     2,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; |
+;0 00000000
+;1 00001000
+;2 00001000
+;3 00001000
+;4 00000000
+;5 00001000
+;6 00001000
+;7 00001000
+;8 00000000
+;9 00000000
+Character_Pipe:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; }
+;0 00000000
+;1 00010000
+;2 00001000
+;3 00001000
+;4 00000100
+;5 00001000
+;6 00001000
+;7 00010000
+;8 00000000
+;9 00000000
+Character_CloseCurlyBracket:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00010000
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00000100
+        STX     ,Y
+        STX     2,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00001000
+        STX     ,Y
+        STX     2,Y
+        STB     4,Y
+        STA     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00010000
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
+; **************************************
+; ~
+;0 00000000
+;1 00010000
+;2 00101010
+;3 00000100
+;4 00000000
+;5 00000000
+;6 00000000
+;7 00000000
+;8 00000000
+;9 00000000
+Character_Tilde:
+        TFR     U,Y                     * Y = U
+        LDA     G_Background
+        LDB     G_Background
+        TFR     D,X
+        LDA     G_Foreground
+        LDB     G_Foreground
+        TFR     D,U
+        LDA     G_Background
+;0 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;1 00010000
+        STX     ,Y
+        STA     2,Y
+        STB     3,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;2 00101010
+        STX     ,Y
+        STB     2,Y
+        STA     3,Y
+        STB     4,Y
+        STA     5,Y
+        STB     6,Y
+        STA     7,Y
+        LEAY BytesPerRow_HIG163,Y
+;3 00000100
+        STX     ,Y
+        STX     2,Y
+        STA     4,Y
+        STB     5,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;4 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;5 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;6 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;7 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;8 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        LEAY BytesPerRow_HIG163,Y
+;9 00000000
+        STX     ,Y
+        STX     2,Y
+        STX     4,Y
+        STX     6,Y
+        RTS       
