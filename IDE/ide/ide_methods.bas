@@ -297,48 +297,75 @@ FUNCTION ide2 (ignore)
         menuDesc$(m, i - 1) = "Jumps to the specified line number"
 
         menusize(m) = i - 1
-
+'xxx
         m = m + 1: i = 0: RunMenuID = m
-        menu$(m, i) = "Run": i = i + 1
-        menu$(m, i) = "#Start  F5": i = i + 1
-        menuDesc$(m, i - 1) = "Compiles current program and runs it"
-        menu$(m, i) = "Run #Only (No EXE)": i = i + 1
-        menuDesc$(m, i - 1) = "Runs current program without compiling"
-        menu$(m, i) = "Modify #COMMAND$...": i = i + 1
-        menuDesc$(m, i - 1) = "Sets string returned by COMMAND$ function"
-        menu$(m, i) = "-": i = i + 1
+'        menu$(m, i) = "Run": i = i + 1
+        menu$(m, i) = "Compile": i = i + 1
+'        menu$(m, i) = "#Start  F5": i = i + 1
+'        menuDesc$(m, i - 1) = "Compiles current program and runs it"
+'        menu$(m, i) = "Run #Only (No EXE)": i = i + 1
+'        menuDesc$(m, i - 1) = "Runs current program without compiling"
+'        menu$(m, i) = "Modify #COMMAND$...": i = i + 1
+'        menuDesc$(m, i - 1) = "Sets string returned by COMMAND$ function"
+'        menu$(m, i) = "-": i = i + 1
 
-        LoggingEnableMenu = i
-        menu$(m, i) = "Display #Logging Output": i = i + 1
-        menuDesc$(m, i - 1) = "Turns on logging output and displays it in a console window"
-        IF LoggingEnabled THEN
-            menu$(RunMenuID, LoggingEnableMenu) = CHR$(7) + menu$(RunMenuID, LoggingEnableMenu)
-        END IF
+'        LoggingEnableMenu = i
+'        menu$(m, i) = "Display #Logging Output": i = i + 1
+'        menuDesc$(m, i - 1) = "Turns on logging output and displays it in a console window"
+'        IF LoggingEnabled THEN
+'            menu$(RunMenuID, LoggingEnableMenu) = CHR$(7) + menu$(RunMenuID, LoggingEnableMenu)
+'        END IF
 
-        RunMenuSaveExeWithSource = i
-        menu$(m, i) = "Output EXE to Source #Folder": i = i + 1
-        menuDesc$(m, i - 1) = "Toggles compiling program to QB64-PE's folder or to source folder"
-        IF SaveExeWithSource THEN
-            menu$(RunMenuID, RunMenuSaveExeWithSource) = CHR$(7) + menu$(RunMenuID, RunMenuSaveExeWithSource)
-        END IF
-        GenerateLicenseEnableMenu = i
-        menu$(m, i) = "#Generate License For EXE": i = i + 1
-        menuDesc$(m, i - 1) = "The license file is placed next to the executable"
-        IF GenerateLicenseFile THEN
-            menu$(RunMenuID, GenerateLicenseEnableMenu) = CHR$(7) + menu$(RunMenuID, GenerateLicenseEnableMenu)
-        END IF
-        IF os$ = "LNX" AND MacOSX = 0 THEN
-            menu$(m, i) = "Change #Terminal": i = i + 1
-            menuDesc$(m, i - 1) = "Configure the terminal used for $CONSOLE and logging output"
-        END IF
-        menu$(m, i) = "-": i = i + 1
+'        RunMenuSaveExeWithSource = i
+'        menu$(m, i) = "Output EXE to Source #Folder": i = i + 1
+'        menuDesc$(m, i - 1) = "Toggles compiling program to QB64-PE's folder or to source folder"
+'        IF SaveExeWithSource THEN
+'            menu$(RunMenuID, RunMenuSaveExeWithSource) = CHR$(7) + menu$(RunMenuID, RunMenuSaveExeWithSource)
+'        END IF
+
+'        GenerateLicenseEnableMenu = i
+'        menu$(m, i) = "#Generate License For EXE": i = i + 1
+'        menuDesc$(m, i - 1) = "The license file is placed next to the executable"
+'        IF GenerateLicenseFile THEN
+'            menu$(RunMenuID, GenerateLicenseEnableMenu) = CHR$(7) + menu$(RunMenuID, GenerateLicenseEnableMenu)
+'        END IF
+
+'        IF os$ = "LNX" AND MacOSX = 0 THEN
+'            menu$(m, i) = "Change #Terminal": i = i + 1
+'            menuDesc$(m, i - 1) = "Configure the terminal used for $CONSOLE and logging output"
+'        END IF
+'        menu$(m, i) = "-": i = i + 1
 
         IF os$ = "LNX" THEN
-            menu$(m, i) = "Make E#xecutable Only  F11": i = i + 1
+            menu$(m, i) = "Compile using makefile      F11": i = i + 1
+            menuDesc$(m, i - 1) = "Compiles using the first/default entry in the makefile"
+            menu$(m, i) = "-": i = i + 1
+            menu$(m, i) = "Compile using Command1": i = i + 1
+            menuDesc$(m, i - 1) = "Compiles using the Command1 entry in the makefile"
+            menu$(m, i) = "Compile using Command2": i = i + 1
+            menuDesc$(m, i - 1) = "Compiles using the Command2 entry in the makefile"
+            menu$(m, i) = "Compile using Command3": i = i + 1
+            menuDesc$(m, i - 1) = "Compiles using the Command3 entry in the makefile"
+            menu$(m, i) = "Compile using Command4": i = i + 1
+            menuDesc$(m, i - 1) = "Compiles using the Command4 entry in the makefile"
+            menu$(m, i) = "Compile using Command5": i = i + 1
+            menuDesc$(m, i - 1) = "Compiles using the Command5 entry in the makefile"
         ELSE
-            menu$(m, i) = "Make E#XE Only  F11": i = i + 1
+            menu$(m, i) = "Compile using compile.bat   F11": i = i + 1
+            menuDesc$(m, i - 1) = "Compiles using the first/default entry in the compile.bat file"
+            menu$(m, i) = "-": i = i + 1
+            menu$(m, i) = "Compile using Command1": i = i + 1
+            menuDesc$(m, i - 1) = "Compiles using the Command1 entry in the compile.bat file"
+            menu$(m, i) = "Compile using Command2": i = i + 1
+            menuDesc$(m, i - 1) = "Compiles using the Command2 entry in the compile.bat file"
+            menu$(m, i) = "Compile using Command3": i = i + 1
+            menuDesc$(m, i - 1) = "Compiles using the Command3 entry in the compile.bat file"
+            menu$(m, i) = "Compile using Command4": i = i + 1
+            menuDesc$(m, i - 1) = "Compiles using the Command4 entry in the compile.bat file"
+            menu$(m, i) = "Compile using Command5": i = i + 1
+            menuDesc$(m, i - 1) = "Compiles using the Command5 entry in the compile.bat file"
         END IF
-        menuDesc$(m, i - 1) = "Compiles current program without running it"
+
         menusize(m) = i - 1
 
         m = m + 1: i = 0: DebugMenuID = m
@@ -380,7 +407,7 @@ FUNCTION ide2 (ignore)
         menusize(m) = i - 1
 
 'xxx
-        m = m - 2
+        m = m - 1
 'xxx
         m = m + 1: i = 0: OptionsMenuID = m
         menu$(m, i) = "Options": i = i + 1
@@ -660,13 +687,6 @@ FUNCTION ide2 (ignore)
         END IF 'no restore
 
         skipload:
-
-
-
-
-
-
-
 
 
 
@@ -1736,8 +1756,12 @@ FUNCTION ide2 (ignore)
         IF KB = _KEY_F11 THEN 'make exe only
             idemexe:
             iderunmode = 2
-            GOTO idemrunspecial
+'xxx
+'            GOTO idemrunspecial
+            GOTO SDECB_macro01
         END IF
+
+
 
         IF KB = _KEY_F12 THEN 'show call stack
             IF callStackLength > 0 THEN
@@ -1753,6 +1777,58 @@ FUNCTION ide2 (ignore)
             GOTO showWatchList
         END IF
 
+'xxx
+' Added code to use make option
+        If 1=2 then ' Always ignore, Everything here are FUNCTIONS, so we can't just add a section of code here
+' Come here if the user uses F11 or selects a compile command from the menus
+            SDECB_macro01:
+' Save file to disk first
+            PCOPY 2, 0
+            IF ideprogname = "" THEN
+                ProposedTitle$ = FindProposedTitle$
+                IF ProposedTitle$ = "" THEN ProposedTitle$ = "untitled" + tempfolderindexstr$
+                IF UseGuiDialogs THEN
+                    a$ = SaveFile$(ProposedTitle$ + ".bas")
+                ELSE
+                    a$ = idefiledialog$(ProposedTitle$ + ".bas", 2)
+                END IF
+            ELSE
+                idesave idepath$ + idepathsep$ + ideprogname
+            END IF
+            PCOPY 3, 0: SCREEN , , 3, 0:' GOTO ideloop
+
+            LOCATE , , 0
+            clearStatusWindow 0
+            COLOR 15, 1
+            IF os$ = "LNX" THEN
+                _PRINTSTRING (2, idewy - 3), "Running make file..."
+            ELSE
+                _PRINTSTRING (2, idewy - 3), "Running .BAT file..."
+            END IF
+            dummy = DarkenFGBG(1) ' I think this darkens the screen
+            IF os$ = "LNX" Or MacOSX = 1 THEN
+                ' ---- LINUX or macOS ----
+'                SDECB_command$ = "make defaultF11 FILE=" + ideprogname$ + " FILENOEXT=" + RemoveFileExtension$(ideprogname$)
+                SDECB_status = SHELL(SDECB_command$)
+            ELSE
+                ' ---- WINDOWS ----
+'                SDECB_command$ = "debug.bat"
+                ' Use start/wait to run in a new window and auto-close
+                SDECB_status = SHELL("start /wait cmd /c " + CHR$(34) + SDECB_command$ + CHR$(34))
+            END IF
+
+            LOCATE , , 0
+            clearStatusWindow 0
+            COLOR 15, 1
+            IF SDECB_status = 0 THEN
+                _PRINTSTRING (2, idewy - 3), "Build succeeded!"
+            ELSE
+                _PRINTSTRING (2, idewy - 3), "Build failed with code: " + str$(SDECB_status)
+            END IF
+
+            GOTO ideloop
+        END IF
+'xxx
         IF KB = _KEY_F5 THEN 'Note: F5 or SHIFT+F5 accepted
             startPaused = 0
             idemrun:
@@ -1768,9 +1844,15 @@ FUNCTION ide2 (ignore)
                                            "source code is saved. You can change that by unchecking the\n" + _
                                            "option 'Output EXE to Source Folder' in the Run menu.", "#OK;#Don't show this again;#Cancel")
                 ELSE
-                    result = idemessagebox("Run", "Your program will be compiled to your 'qb64pe' folder. You can\n" + _
+'xxx
+'                    result = idemessagebox("Run", "Your program will be compiled to your 'qb64pe' folder. You can\n" + _
+'                                         "change that by checking the option 'Output EXE to Source\n" + _
+'                                         "Folder' in the Run menu.", "#OK;#Don't show this again;#Cancel")
+
+                    result = idemessagebox("Run", "Your program will be compiled to your 'SDECB' folder. You can\n" + _
                                          "change that by checking the option 'Output EXE to Source\n" + _
                                          "Folder' in the Run menu.", "#OK;#Don't show this again;#Cancel")
+'xxx
                 END IF
                 IF result = 2 THEN
                     WriteConfigSetting generalSettingsSection$, "ExeToSourceFolderFirstTimeMsg", "True"
@@ -6091,11 +6173,81 @@ FUNCTION ide2 (ignore)
                 PCOPY 3, 0: SCREEN , , 3, 0
                 GOTO ideloop
             END IF
+'xxx
+'            IF menu$(m, s) = "Make E#XE Only  F11" OR menu$(m, s) = "Make E#xecutable Only  F11" THEN
+'                PCOPY 3, 0: SCREEN , , 3, 0
+'                GOTO idemexe
+'            END IF
 
-            IF menu$(m, s) = "Make E#XE Only  F11" OR menu$(m, s) = "Make E#xecutable Only  F11" THEN
+
+            IF menu$(m, s) = "Compile using makefile      F11" OR menu$(m, s) = "Compile using compile.bat   F11" THEN
                 PCOPY 3, 0: SCREEN , , 3, 0
+                IF os$ = "LNX" Or MacOSX = 1 THEN
+                    ' ---- LINUX or macOS ----
+                    SDECB_command$ = "make defaultF11 FILE=" + ideprogname$ + " FILENOEXT=" + RemoveFileExtension$(ideprogname$)
+                ELSE
+                    ' ---- WINDOWS ----
+                    SDECB_command$ = "debug.bat"
+                END IF
                 GOTO idemexe
             END IF
+
+            IF menu$(m, s) = "Compile using Command1" THEN
+                PCOPY 3, 0: SCREEN , , 3, 0
+                IF os$ = "LNX" Or MacOSX = 1 THEN
+                    ' ---- LINUX or macOS ----
+                    SDECB_command$ = "make Command1 FILE=" + ideprogname$ + " FILENOEXT=" + RemoveFileExtension$(ideprogname$)
+                ELSE
+                    ' ---- WINDOWS ----
+                    SDECB_command$ = "debug.bat"
+                END IF
+                GOTO idemexe
+            END IF
+            IF menu$(m, s) = "Compile using Command2" THEN
+                PCOPY 3, 0: SCREEN , , 3, 0
+                IF os$ = "LNX" Or MacOSX = 1 THEN
+                    ' ---- LINUX or macOS ----
+                    SDECB_command$ = "make Command2 FILE=" + ideprogname$ + " FILENOEXT=" + RemoveFileExtension$(ideprogname$)
+                ELSE
+                    ' ---- WINDOWS ----
+                    SDECB_command$ = "debug.bat"
+                END IF
+                GOTO idemexe
+            END IF
+            IF menu$(m, s) = "Compile using Command3" THEN
+                PCOPY 3, 0: SCREEN , , 3, 0
+                IF os$ = "LNX" Or MacOSX = 1 THEN
+                    ' ---- LINUX or macOS ----
+                    SDECB_command$ = "make Command3 FILE=" + ideprogname$ + " FILENOEXT=" + RemoveFileExtension$(ideprogname$)
+                ELSE
+                    ' ---- WINDOWS ----
+                    SDECB_command$ = "debug.bat"
+                END IF
+                GOTO idemexe
+            END IF
+            IF menu$(m, s) = "Compile using Command4" THEN
+                PCOPY 3, 0: SCREEN , , 3, 0
+                IF os$ = "LNX" Or MacOSX = 1 THEN
+                    ' ---- LINUX or macOS ----
+                    SDECB_command$ = "make Command4 FILE=" + ideprogname$ + " FILENOEXT=" + RemoveFileExtension$(ideprogname$)
+                ELSE
+                    ' ---- WINDOWS ----
+                    SDECB_command$ = "debug.bat"
+                END IF
+                GOTO idemexe
+            END IF
+            IF menu$(m, s) = "Compile using Command5" THEN
+                PCOPY 3, 0: SCREEN , , 3, 0
+                IF os$ = "LNX" Or MacOSX = 1 THEN
+                    ' ---- LINUX or macOS ----
+                    SDECB_command$ = "make Command5 FILE=" + ideprogname$ + " FILENOEXT=" + RemoveFileExtension$(ideprogname$)
+                ELSE
+                    ' ---- WINDOWS ----
+                    SDECB_command$ = "debug.bat"
+                END IF
+                GOTO idemexe
+            END IF
+
 
             IF menu$(m, s) = "Start #Paused  F7 or F8" THEN
                 PCOPY 3, 0: SCREEN , , 3, 0
