@@ -1,7 +1,0 @@
-/Users/glenhewlett/Downloads/qb64pe4.1/source/ide
-/Users/glenhewlett/Downloads/qb64pe4.1/source/settings
-/Users/glenhewlett/Downloads/qb64pe4.1/source/subs_functions
-/Users/glenhewlett/Downloads/qb64pe4.1/source/internal
-/Users/glenhewlett/Downloads/qb64pe4.1/source/utilities
-/Users/glenhewlett/Downloads/qb64pe4.1/source/emit
-/Users/glenhewlett/Downloads/qb64pe4.1/source/global

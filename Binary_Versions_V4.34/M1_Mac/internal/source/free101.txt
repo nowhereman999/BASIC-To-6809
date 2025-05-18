@@ -1,4 +1,0 @@
-if(oldstr3789){
-if(oldstr3789->fixed)qbs_set(oldstr3789,_FUNC_GETPREVELEMENT_STRING_A);
-qbs_free(_FUNC_GETPREVELEMENT_STRING_A);
-}

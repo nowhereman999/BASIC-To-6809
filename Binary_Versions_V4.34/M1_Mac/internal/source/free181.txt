@@ -1,5 +1,0 @@
-if(oldstr4113){
-if(oldstr4113->fixed)qbs_set(oldstr4113,_FUNC_LOGICALNOT_STRING_EXP);
-qbs_free(_FUNC_LOGICALNOT_STRING_EXP);
-}
-qbs_free(_FUNC_LOGICALNOT_STRING_ELE);
