@@ -8,6 +8,9 @@ https://github.com/pwillard/basto6809Manual
 For more info check out the blog post here:
 https://wordpress.com/post/nowhereman999.wordpress.com/5054
 
+V 4.36
+- Added command COPYBACKGROUND, which copies the background on a CoCo 3 from buffer 0 to buffer 1
+
 V 4.35
 - Fixed a problem with handling DATA statements that had many comma's in a row like (DATA "THIS",,,2,,)
 
