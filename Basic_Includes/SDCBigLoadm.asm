@@ -143,16 +143,8 @@ SDCBigLoadmDone:
 
 BigLoadmSDCStack:
         LDS     #$FFFF          ; Restore the Stack pointer (self mod)
-* Check and re-enable any high speed options
-        LDA     >CoCoHardware           ; Get the CoCo Hardware info byte
-        BPL     >                       ; If bit 7 is clear then skip forward it's a 6809
-        FCB     $11,$3D,%00000001       ; otherwise, put the 6309 in native mode.  This is LDMD  #%00000001
-!       RORA                            ; Move bit 0 to the Carry bit
-        BCC     >                       ; if the Carry bit is clear, then not a CoCo 3, skip ahead
-        LDA     #$5A                    ; Command for GIME-X & GIME-Z for triple speed mode
-        STA     <$D9                    ; Put CoCo 3 in doouble speed mode
-        STA     <$D9                    ; Try CoCo 3 in triple speed mode
-!
+        JSR     SetCPUSpeed     ; Set the CPU Speed back to what the user wants
         LDB     #$3A
-        STB     $FFA2                   ; Restore normal Bank 2 = $4000
-        PULS    CC,DP,PC                ; Restore CC & DP & return
+        STB     $FFA2           ; Restore normal Bank 2 = $4000
+        PULS    CC,DP,PC        ; Restore CC & DP & return
+

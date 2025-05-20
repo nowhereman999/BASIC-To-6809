@@ -4479,6 +4479,16 @@ SUB reginternal
     regid
 
     clearid
+    id.n = "CPUSpeed"
+    id.subfunc = 2
+    id.callname = "sub_coco"
+    id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER)
+    id.specialformat = "?"
+    id.hr_syntax = "CPUSPEED [Speed Setting]"
+    regid
+
+    clearid
     id.n = "GCopy"
     id.subfunc = 2
     id.callname = "sub_coco"
@@ -4833,7 +4843,6 @@ SUB reginternal
     id.hr_syntax = "VIEW x,y"
     regid
 
-'WAIT
     clearid
     id.n = "Wait"
     id.subfunc = 2
@@ -4842,6 +4851,16 @@ SUB reginternal
     id.arg = MKL$(LONGTYPE - ISPOINTER)
     id.specialformat = "{VBL|VBL}"
     id.hr_syntax = "WAIT VBL"
+    regid
+
+    clearid
+    id.n = "CopyBackground"
+    id.subfunc = 2
+    id.callname = "sub_coco"
+    id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER)
+    id.specialformat = "[?]"
+    id.hr_syntax = "COPYBACKGROUND"
     regid
 
     clearid

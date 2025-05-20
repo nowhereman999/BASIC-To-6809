@@ -6721,6 +6721,25 @@ If FirstGmode = 0 Then
 End If
 Return
 
+' Set the speed of the CoCo's CPU
+'
+' 1 = Normal speed is 28.63636 divided by 32 = 0.89488625 Mhz
+' 2 = Double speed is 28.63636 divided by 16 = 1.7897725 Mhz
+' 3 = High speed is   28.63636 divided by 10 = 2.863636 Mhz
+' Anything else then the CPU will be set in Native mode and run at it's max speed
+DoSETSPEED:
+If Array(x) = &HF5 And (Array(x + 1) = &H0D Or Array(x + 1) = &H3A) Then
+    ' no Value given for the GCLS colour, use the default forground colour
+    A$ = "CLRB": C$ = "Make B=0 so it will act like Max speed for this hardware": GoSub AO
+    GoTo SkipGettingSpeed ' skip ahead
+End If
+'Get the speed value in D
+GoSub GetExpressionB4EOL ' Get the expression before an End of Line in Expression$
+ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression, value is now in D
+SkipGettingSpeed:
+A$ = "JSR": B$ = "SetCPUSpeedB" + GModeName$(Gmode): C$ = "Go set the speed of the CPU to B": GoSub AO
+Return
+
 ' Colour a new graphics screen mode GCLS variable, variable is the colour #
 DoGCLS:
 If Array(x) = &HF5 And (Array(x + 1) = &H0D Or Array(x + 1) = &H3A) Then
@@ -9084,6 +9103,10 @@ Else
     Print "Can't find the VBL command after WAIT on";: GoTo FoundError
 End If
 
+DoCopyBackground:
+A$ = "JSR": B$ = "DuplicateBackground": C$ = "Go duplicate the background from buffer 0 to buffer 1": GoSub AO
+Return
+
 ' GModeName$(16) = "FG6R": GModeMaxX$(16) = "255": GModeMaxY$(16) = "191": GModeStartAddress$(16) = "E00": GModeScreenSize$(16) = "1800"
 DoSPRITE:
 v = Array(x): x = x + 1
@@ -9574,6 +9597,8 @@ Select Case GeneralCommands$(v)
         GoTo DoSLEEP
     Case "SOUND"
         GoTo DoSOUND
+    Case "COPYBACKGROUND"
+        GoTo DoCopyBackground
     Case "SPRITE"
         GoTo DoSPRITE
     Case "SPRITE_LOAD"

@@ -1868,6 +1868,7 @@ For ii = 0 To 171
         Temp$ = "GraphicCommands/GraphicVariables": GoSub AddIncludeTemp ' Add code for graphics variables
         If ii > 99 Then
             Temp$ = "GraphicCommands/CoCo3_Graphic_CodeJump": GoSub AddIncludeTemp ' Add code for CoCo3 graphics handling
+            Temp$ = "GraphicCommands/CoCo3_DuplicateBackgroundBuffer": GoSub AddIncludeTemp ' Add code for the COPYBACKGROUND command
         Else
             ' CoCo 1 & 2 graphics mode, Check if ProgramStart should be changed
             If GModePageLib(ii) <> 0 Then
@@ -2045,6 +2046,7 @@ Temp$ = "DHex_to_String": GoSub AddIncludeTemp
 Temp$ = "Mulitply16x16": GoSub AddIncludeTemp
 Temp$ = "Divide16with16": GoSub AddIncludeTemp
 Temp$ = "SquareRoot": GoSub AddIncludeTemp
+Temp$ = "SetCPUSpeed": GoSub AddIncludeTemp
 
 If Sprites = 1 Then
     Print #1, "; Adding the Compiled Sprites and pointers..."
@@ -2297,18 +2299,11 @@ End If
 Print #1, "* Let's detect the CPU type:"
 A$ = "LDX": B$ = "#$8000": C$ = "X = $8000": GoSub AO
 A$ = "TFR": B$ = "X,A": C$ = "If it's 6809 then A will equal $00, if it's a 6309 then A will now equal $80": GoSub AO
-A$ = "TSTA": C$ = "Check A": GoSub AO
-A$ = "BEQ": B$ = ">": C$ = "If A=0 then skip forward it's a 6809": GoSub AO
-A$ = "FCB": B$ = "$11,$3D,%00000001": C$ = "Put the 6309 in native mode.  This is LDMD  #%00000001": GoSub AO
-Z$ = "!": GoSub AO
 
 Print #1, "* Let's detect the CoCo version:"
 A$ = "LDX": B$ = "$FFFE": C$ = "Get the RESET location": GoSub AO
 A$ = "CMPX": B$ = "#$8C1B": C$ = "Check if it's a CoCo 3": GoSub AO
 A$ = "BNE": B$ = "SaveCoCo1": C$ = "Setup IRQ, using CoCo 1 IRQ Jump location": GoSub AO
-A$ = "LDB": B$ = "#$5A": C$ = "If possible use 2.86 Mhz": GoSub AO
-A$ = "STB": B$ = "$FFD9": C$ = "Put the CoCo 3 in double speed mode": GoSub AO
-A$ = "STB": B$ = "$FFD9": C$ = "Try and put the CoCo 3 in triple speed mode (GIME-X or GIME-Z)": GoSub AO
 A$ = "ORA": B$ = "#%00000001": C$ = "If it's CoCo 3 then we set bit 0 of the CoCoHardware Desriptor byte": GoSub AO
 A$ = "LDX": B$ = "#$FEF7": C$ = "X = Address for the COCO 3 IRQ JMP": GoSub AO
 A$ = "LDY": B$ = "#$FEFD": C$ = "Y = Address for the COCO 3 NMI JMP": GoSub AO
@@ -2337,6 +2332,11 @@ If Disk = 1 Then
     A$ = "LDU": B$ = "#DNMISV": C$ = "U=Address of our NMIRQ": GoSub AO
     A$ = "STU": B$ = "1,Y": C$ = "Save the Address of the NMIRQ": GoSub AO
 End If
+
+'Set the CPU to the Max speed
+A$ = "CLRB": C$ = "B=0, make the CPU wus max speed": GoSub AO
+A$ = "JSR": B$ = "SetCPUSpeedB": C$ = "Save max speed and set the CPU to Max speed it can handle": GoSub AO
+
 ' Setup Sprite blocks
 If CoCo3 = 1 And Sprites = 1 Then
     Z$ = "* Setup which blocks the sprites are located at in RAM": GoSub AO

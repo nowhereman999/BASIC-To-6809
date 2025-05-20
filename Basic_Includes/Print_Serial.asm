@@ -124,6 +124,7 @@ LA2F3           LDB         PIA1+2          ; WAIT FOR HANDSHAKE
                 LSRB                        ; CHECK FOR R5232 STATUS?
                 BCS         LA2F3           ; NOT YET READY
                 PULS        B,X,PC          ; RESTORE REGISTERS
+                
 LA2FB           LDB         #2              ; SET RS232 OUTPUT HIGH (MARKING)
 LA2FD           STB         DA              ; STORE TO THE D/A CONVERTER REGISTER
                 BSR         LA302           ; GO WAIT A WHILE

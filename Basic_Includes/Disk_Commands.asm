@@ -461,17 +461,7 @@ GetMLBlock:
         BSR     DiskReadWordD   ; Read next two bytes into D
         ADDD    _Var_PF10       ; D = D + LOADM Offset amount    
         STD     EXECAddress     ; Save the EXEC address
-
-* Check and re-enable any high speed options
-        LDA     CoCoHardware            ; Get the CoCo Hardware info byte
-        BPL     >                       ; If bit 7 is clear then skip forward it's a 6809
-        FCB     $11,$3D,%00000001       ; otherwise, put the 6309 in native mode.  This is LDMD  #%00000001
-!       RORA                            ; Move bit 0 to the Carry bit
-        BCC     >                       ; if the Carry bit is clear, then not a CoCo 3, skip ahead
-        LDA     #$5A                    ; Command for GIME-X & GIME-Z for triple speed mode
-        STA     >$FFD9                  ; Put CoCo 3 in doouble speed mode
-        STA     >$FFD9                  ; Try CoCo 3 in triple speed mode
-!
+        JSR     SetCPUSpeed     ; Set the CPU Speed back to what the user wants
         RTS                     ; File has been LOADMed into memory, Return
 
 DoPREAMBLE:

@@ -1,4 +1,8 @@
-V$ = "4.35"
+V$ = "4.36"
+'       - Added command SPEED # where # is 1 for .895 Mhz, 2 for 1.79 Mhz, 3 for 2.8636 MHz and anything else will just set the speed to max for that computer's hardware
+'       - Added command COPYBACKGROUND, which copies the background on a CoCo 3 from buffer 0 to buffer 1
+
+' V 4.35
 '       - Fixed a problem with handling DATA statements that had many comma's in a row like (DATA "THIS",,,2,,)
 
 ' V 4.34

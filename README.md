@@ -9,6 +9,8 @@ For more info check out the blog post here:
 https://wordpress.com/post/nowhereman999.wordpress.com/5054
 
 V 4.36
+- Added command CPUSPEED # where # is 1 for .895 Mhz, 2 for 1.79 Mhz, 3 for 2.8636 MHz and anything else will
+  set the speed to max for that computer's hardware.  Which also will put a 6309 in native mode.
 - Added command COPYBACKGROUND, which copies the background on a CoCo 3 from buffer 0 to buffer 1
 
 V 4.35
