@@ -2352,6 +2352,7 @@ GoTo FindElses ' Loop until we get the END IF associated with our IF
 GotNestedIFs:
 ENDIFCheck = IFProc
 IFCount = IFCount - IFProc ' Reset the IFCounter to what it was before we got our first IF (not nested IF)
+
 x = FirstIFLocation ' x = the point where the expression starts for the first IF
 IFProc = 0
 IFSP = 0
@@ -2360,6 +2361,8 @@ IFSP = 0
 IFProcessed:
 IFCount = IFCount + 1
 IFProc = IFProc + 1
+'xxx
+IFSTack(IFProc) = IFCount
 IFSP = IFSP + 1
 ElseStack(IFSP) = IFCount
 
@@ -6727,7 +6730,7 @@ Return
 ' 2 = Double speed is 28.63636 divided by 16 = 1.7897725 Mhz
 ' 3 = High speed is   28.63636 divided by 10 = 2.863636 Mhz
 ' Anything else then the CPU will be set in Native mode and run at it's max speed
-DoSETSPEED:
+DoCPUSPEED:
 If Array(x) = &HF5 And (Array(x + 1) = &H0D Or Array(x + 1) = &H3A) Then
     ' no Value given for the GCLS colour, use the default forground colour
     A$ = "CLRB": C$ = "Make B=0 so it will act like Max speed for this hardware": GoSub AO
@@ -6737,7 +6740,7 @@ End If
 GoSub GetExpressionB4EOL ' Get the expression before an End of Line in Expression$
 ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression, value is now in D
 SkipGettingSpeed:
-A$ = "JSR": B$ = "SetCPUSpeedB" + GModeName$(Gmode): C$ = "Go set the speed of the CPU to B": GoSub AO
+A$ = "JSR": B$ = "SetCPUSpeedB": C$ = "Go set the speed of the CPU to B": GoSub AO
 Return
 
 ' Colour a new graphics screen mode GCLS variable, variable is the colour #
@@ -9103,8 +9106,23 @@ Else
     Print "Can't find the VBL command after WAIT on";: GoTo FoundError
 End If
 
-DoCopyBackground:
-A$ = "JSR": B$ = "DuplicateBackground": C$ = "Go duplicate the background from buffer 0 to buffer 1": GoSub AO
+DoCopyBlocks:
+' Get the numeric value before a comma
+' Get first number in D
+GoSub GetExpressionB4Comma: x = x + 2 ' Get the expression before a Comma, & move past it
+ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression, return with value in D
+A$ = "STB": B$ = "<_Var_PF00+1": C$ = "Save Source Block Number": GoSub AO
+' Get the numeric value before a comma
+' Get 2nd number in D
+GoSub GetExpressionB4Comma: x = x + 2 ' Get the expression before a Comma, & move past it
+ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression, return with value in D
+A$ = "STB": B$ = "<_Var_PF01+1":: C$ = "Save Destination Block Number": GoSub AO
+' Get the numeric value before a Colon or EOL
+' Get 2nd number in D
+GoSub GetExpressionB4EOL 'Handle an expression that ends with a colon or End of a Line
+ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression, return with value in D
+A$ = "STB": B$ = "<_Var_PF02+1":: C$ = "Save Number of 8k blocks to copy": GoSub AO
+A$ = "JSR": B$ = "Copy8kBlocks": C$ = "Go copy the 8k blocks": GoSub AO
 Return
 
 ' GModeName$(16) = "FG6R": GModeMaxX$(16) = "255": GModeMaxY$(16) = "191": GModeStartAddress$(16) = "E00": GModeScreenSize$(16) = "1800"
@@ -9525,12 +9543,10 @@ Select Case GeneralCommands$(v)
         GoTo DoPCOPY
     Case "PLAY"
         GoTo DoPLAY
-
     Case "PLAYFIELD"
         GoTo DoPlayfield
     Case "VIEW"
         GoTo DoView
-
     Case "SDC_PLAY"
         GoTo DoSDC_PLAY
     Case "SDC_PLAYORCL"
@@ -9555,6 +9571,8 @@ Select Case GeneralCommands$(v)
         GoTo DoSDC_PUTBYTE1
     Case "SDC_SETPOS"
         GoTo DoSDC_SETPOS
+    Case "CPUSPEED"
+        GoTo DoCPUSPEED
     Case "POKE"
         GoTo DoPOKE
     Case "PRINT"
@@ -9597,8 +9615,8 @@ Select Case GeneralCommands$(v)
         GoTo DoSLEEP
     Case "SOUND"
         GoTo DoSOUND
-    Case "COPYBACKGROUND"
-        GoTo DoCopyBackground
+    Case "COPYBLOCKS"
+        GoTo DoCopyBlocks
     Case "SPRITE"
         GoTo DoSPRITE
     Case "SPRITE_LOAD"

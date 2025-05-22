@@ -1,6 +1,10 @@
 V$ = "4.36"
-'       - Added command SPEED # where # is 1 for .895 Mhz, 2 for 1.79 Mhz, 3 for 2.8636 MHz and anything else will just set the speed to max for that computer's hardware
-'       - Added command COPYBACKGROUND, which copies the background on a CoCo 3 from buffer 0 to buffer 1
+'       - Added command CPUSPEED # where # is 1 for .895 Mhz, 2 for 1.79 Mhz, 3 for 2.8636 MHz and anything else will
+'         set the speed to max for that computer's hardware.  Which also will put a 6309 in native mode.
+'       - Added command COPYBLOCKS, which copies 8k blocks using stack blasting useful for CoCo3 copying from buffer 0 to buffer 1
+'       - Fix a bug with deep IF/THEN/ELSE layers that could exit to the wrong location
+'       - Tweaked the DIV16 & DIV16Rounding code so that the resulting value in D will be reflected in the condition codes when exiting the
+'         routine
 
 ' V 4.35
 '       - Fixed a problem with handling DATA statements that had many comma's in a row like (DATA "THIS",,,2,,)

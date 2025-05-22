@@ -1281,11 +1281,11 @@ For ii = 0 To 171
     If GModeLib(ii) = 1 Then
         If ii < 100 Then
             ' CoCo 1 & 2 graphics mode, Check if ProgramStart should be changed
-            If GModePageLib(ii) <> 0 Then
-                ' the user wants to use multiple graphics pages
-                PStart = Val("&H" + ProgramStart$) + Val("&H" + GModeScreenSize$(ii)) * GModePageLib(ii)
-                ProgramStart$ = Hex$(PStart)
-            End If
+            '            If GModePageLib(ii) <> 0 Then
+            ' the user wants to use multiple graphics pages
+            PStart = Val("&H" + ProgramStart$) + Val("&H" + GModeScreenSize$(ii)) * (GModePageLib(ii) + 1)
+            ProgramStart$ = Hex$(PStart)
+            '            End If
         End If
     End If
 Next ii
@@ -1418,8 +1418,11 @@ If CoCo3 = 1 And (SpritePointer <> -1 Or SamplePointer <> -1) Then
     A$ = "FDB": B$ = "$3D3E": C$ = "Blocks are back to normal": GoSub AO
     A$ = "FCB": B$ = "$3F": C$ = "Blocks are back to normal": GoSub AO
 End If
-If CoCo3 = 1 Then
+
+If Gmode > 99 Then
+    '    If CoCo3 = 1 Then
     ProgramStart$ = "E00" ' Force the CoCo 3 to start at $E00
+    '    End If
 End If
 DirectPage$ = ProgramStart$
 DirectPage = Val("&H" + DirectPage$)
@@ -1868,14 +1871,7 @@ For ii = 0 To 171
         Temp$ = "GraphicCommands/GraphicVariables": GoSub AddIncludeTemp ' Add code for graphics variables
         If ii > 99 Then
             Temp$ = "GraphicCommands/CoCo3_Graphic_CodeJump": GoSub AddIncludeTemp ' Add code for CoCo3 graphics handling
-            Temp$ = "GraphicCommands/CoCo3_DuplicateBackgroundBuffer": GoSub AddIncludeTemp ' Add code for the COPYBACKGROUND command
-        Else
-            ' CoCo 1 & 2 graphics mode, Check if ProgramStart should be changed
-            If GModePageLib(ii) <> 0 Then
-                ' the user wants to use multiple graphics pages
-                PStart = Val("&H" + ProgramStart$) + Val("&H" + GModeScreenSize$(ii)) * GModePageLib(ii)
-                ProgramStart$ = Hex$(PStart)
-            End If
+            Temp$ = "GraphicCommands/CoCo3_Copy8kBlocks": GoSub AddIncludeTemp ' Add code for the Copy8kBlocks command
         End If
         Temp$ = "GraphicCommands/" + GModeName$(ii) + "/" + GModeName$(ii) + "_Main": GoSub AddIncludeTemp
     End If
@@ -2046,7 +2042,7 @@ Temp$ = "DHex_to_String": GoSub AddIncludeTemp
 Temp$ = "Mulitply16x16": GoSub AddIncludeTemp
 Temp$ = "Divide16with16": GoSub AddIncludeTemp
 Temp$ = "SquareRoot": GoSub AddIncludeTemp
-Temp$ = "SetCPUSpeed": GoSub AddIncludeTemp
+Temp$ = "CPUSpeed": GoSub AddIncludeTemp
 
 If Sprites = 1 Then
     Print #1, "; Adding the Compiled Sprites and pointers..."

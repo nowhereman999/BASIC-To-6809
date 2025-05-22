@@ -45,7 +45,7 @@ DivDone:
         BEQ     >             ; If B is even then leave the flags alone
         LDD     #$0000        ; Clear D
         SUBD    Numerator     ; D = 0 - Result (make it negative)
-        FCB     $8C           ; Skip the next two bytes
+        BRA     DivGoodD        ; Don't do a CMPX as this will change the condition codes, we might need to use the value of D in a comparison, after we exit
 !       LDD     Numerator     ; Get the result in D
 DivGoodD:
         PULS    X,PC          ; X now has the remainder, then return
@@ -82,6 +82,7 @@ Div_AgainR:
 @IncX:
 	LEAX	1,X           ; X = X + 1
 !       TFR     X,D           ; D now has the result
+        STD     -2,S          ; Set the condition codes properly
 DivDoneR:
 	RTS
 

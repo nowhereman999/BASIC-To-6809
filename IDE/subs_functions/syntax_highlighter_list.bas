@@ -164,7 +164,7 @@ listOfKeywords$ = listOfKeywords$ +_
 
 ' [CoCo BASIC to 6809 commands] (A to E)
 listOfCustomKeywords$ = listOfCustomKeywords$ +_
-"@BUTTON@CMPEQ@CMPGE@CMPGT@CMPLE@CMPLT@CMPNE@"+_
+"@BUTTON@CMPEQ@CMPGE@CMPGT@CMPLE@CMPLT@CMPNE@COPYBLOCKS@CPUSPEED@"+_
 "" +_
 ""
 

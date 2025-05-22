@@ -4854,13 +4854,13 @@ SUB reginternal
     regid
 
     clearid
-    id.n = "CopyBackground"
+    id.n = "CopyBlocks"
     id.subfunc = 2
     id.callname = "sub_coco"
     id.args = 1
     id.arg = MKL$(LONGTYPE - ISPOINTER)
-    id.specialformat = "[?]"
-    id.hr_syntax = "COPYBACKGROUND"
+    id.specialformat = "?,?,?"
+    id.hr_syntax = "COPYBLOCKS Source,Destination,Count"
     regid
 
     clearid
