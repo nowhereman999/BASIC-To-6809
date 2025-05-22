@@ -1754,11 +1754,21 @@ FUNCTION ide2 (ignore)
         END IF
 
         IF KB = _KEY_F11 THEN 'make exe only
+'xxx
+            PCOPY 3, 0: SCREEN , , 3, 0
+            IF os$ = "LNX" Or MacOSX = 1 THEN
+                ' ---- LINUX or macOS ----
+                SDECB_command$ = "make defaultF11 FILE=" + ideprogname$ + " FILENOEXT=" + RemoveFileExtension$(ideprogname$)
+            ELSE
+                ' ---- WINDOWS ----
+                SDECB_command$ = "compile.bat defaultF11 FILE=" + ideprogname$ + " FILENOEXT=" + RemoveFileExtension$(ideprogname$)
+            END IF
+
             idemexe:
             iderunmode = 2
-'xxx
 '            GOTO idemrunspecial
             GOTO SDECB_macro01
+
         END IF
 
 

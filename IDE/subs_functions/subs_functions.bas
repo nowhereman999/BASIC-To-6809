@@ -2352,9 +2352,9 @@ SUB reginternal
     id.callname = "func_point"
     id.args = 2
     id.arg = MKL$(SINGLETYPE - ISPOINTER) + MKL$(SINGLETYPE - ISPOINTER)
-    id.specialformat = "?[,?]"
+    id.specialformat = "(?,?)"
     id.ret = DOUBLETYPE - ISPOINTER
-    id.hr_syntax = "POINT(x, y) or POINT({0|1|2|3})"
+    id.hr_syntax = "POINT(x, y)"
     regid
 
     clearid
@@ -2596,29 +2596,6 @@ SUB reginternal
     id.callname = "func_csrlin"
     id.ret = LONGTYPE - ISPOINTER
     id.hr_syntax = "CSRLIN"
-    regid
-
-
-    clearid
-    id.n = "Paint"
-    id.subfunc = 2
-    id.callname = "sub_paint"
-    id.args = 5
-    id.arg = MKL$(FLOATTYPE - ISPOINTER) + MKL$(FLOATTYPE - ISPOINTER) + MKL$(ULONGTYPE - ISPOINTER) + MKL$(ULONGTYPE - ISPOINTER) + MKL$(STRINGTYPE - ISPOINTER)
-    id.specialformat = "[{Step}](?,?)[,[?][,[?][,?]]]"
-    'PAINT [STEP] (x!,y!)[,[paint] [,[bordercolor&] [,background$]]]
-    id.hr_syntax = "PAINT [STEP] (x!, y!)[,[fillColor&] [,[bordercolor&] [,pattern$]]]"
-    regid
-
-    clearid
-    id.n = "Circle"
-    id.subfunc = 2
-    id.callname = "sub_circle"
-    id.args = 7
-    id.arg = MKL$(FLOATTYPE - ISPOINTER) + MKL$(FLOATTYPE - ISPOINTER) + MKL$(FLOATTYPE - ISPOINTER) + MKL$(ULONGTYPE - ISPOINTER) + MKL$(FLOATTYPE - ISPOINTER) + MKL$(FLOATTYPE - ISPOINTER) + MKL$(FLOATTYPE - ISPOINTER)
-    id.specialformat = "[{Step}](?,?),?[,[?][,[?][,[?][,?]]]]"
-    'CIRCLE [STEP] (x!,y!),radius![,[color&] [,[start!] [,[end!] [,aspect!]]]]
-    id.hr_syntax = "CIRCLE [STEP] (x!, y!), radius![, [color&] [, [start!] [, [end!] [, aspect!]]]]"
     regid
 
     clearid
@@ -3142,16 +3119,6 @@ SUB reginternal
     id.args = 1
     id.arg = MKL$(ULONGTYPE - ISPOINTER)
     id.hr_syntax = "ERROR codeNumber%"
-    regid
-
-    clearid
-    id.n = "Line"
-    id.subfunc = 2
-    id.callname = "sub_line"
-    id.args = 7
-    id.arg = MKL$(FLOATTYPE - ISPOINTER) + MKL$(FLOATTYPE - ISPOINTER) + MKL$(FLOATTYPE - ISPOINTER) + MKL$(FLOATTYPE - ISPOINTER) + MKL$(LONGTYPE - ISPOINTER) + MKL$(LONGTYPE - ISPOINTER) + MKL$(LONGTYPE - ISPOINTER)
-    id.specialformat = "[[{Step}](?,?)]-[{Step}](?,?)[,[?][,[{B|BF}][,?]]]"
-    id.hr_syntax = "LINE [STEP] [(column1, row1)]-[STEP] (column2, row2), color[, [{B|BF}], style%]"
     regid
 
     clearid
@@ -4514,8 +4481,8 @@ SUB reginternal
     id.callname = "sub_coco"
     id.args = 2
     id.arg = MKL$(DOUBLETYPE - ISPOINTER) + MKL$(DOUBLETYPE - ISPOINTER)
-    id.specialformat = "?[,?]"
-    id.hr_syntax = "GMODE #[,graphics page #]"
+    id.specialformat = "[?][,?]"
+    id.hr_syntax = "GMODE [GMODE #][,graphics page #]"
     regid
 
     clearid
@@ -4857,8 +4824,8 @@ SUB reginternal
     id.n = "CopyBlocks"
     id.subfunc = 2
     id.callname = "sub_coco"
-    id.args = 1
-    id.arg = MKL$(LONGTYPE - ISPOINTER)
+    id.args = 3
+    id.arg = MKL$(LONGTYPE - ISPOINTER) + MKL$(LONGTYPE - ISPOINTER) + MKL$(LONGTYPE - ISPOINTER)
     id.specialformat = "?,?,?"
     id.hr_syntax = "COPYBLOCKS Source,Destination,Count"
     regid
@@ -4866,7 +4833,7 @@ SUB reginternal
     clearid
     id.n = "WPoke"
     id.subfunc = 2
-    id.callname = "sub_poke"
+    id.callname = "sub_coco"
     id.args = 2
     id.arg = MKL$(LONGTYPE - ISPOINTER) + MKL$(LONGTYPE - ISPOINTER)
     id.hr_syntax = "WPOKE segment_offset, offset_value"
@@ -4875,11 +4842,51 @@ SUB reginternal
     clearid
     id.n = "WPeek"
     id.subfunc = 1
-    id.callname = "func_peek"
+    id.callname = "sub_coco"
     id.args = 1
     id.arg = MKL$(LONGTYPE - ISPOINTER)
     id.ret = LONGTYPE - ISPOINTER
     id.hr_syntax = "WPEEK(segment_offset)"
+    regid
+
+    clearid
+    id.n = "Set"
+    id.subfunc = 2
+    id.callname = "sub_coco"
+    id.args = 3
+    id.arg = MKL$(FLOATTYPE - ISPOINTER) + MKL$(FLOATTYPE - ISPOINTER) + MKL$(LONGTYPE - ISPOINTER)
+    id.specialformat = "(?,?,?)"
+    id.hr_syntax = "SET(x,y,ColourValue)"
+    regid
+    clearid
+
+    id.n = "Paint"
+    id.subfunc = 2
+    id.callname = "sub_coco"
+    id.args = 4
+    id.arg = MKL$(FLOATTYPE - ISPOINTER) + MKL$(FLOATTYPE - ISPOINTER) + MKL$(FLOATTYPE - ISPOINTER) + MKL$(ULONGTYPE - ISPOINTER)
+    id.specialformat = "(?,?),?,?"
+    id.hr_syntax = "PAINT (x, y), OldColour, FillColour"
+    regid
+
+    clearid
+    id.n = "Circle"
+    id.subfunc = 2
+    id.callname = "sub_coco"
+    id.args = 4
+    id.arg = MKL$(FLOATTYPE - ISPOINTER) + MKL$(FLOATTYPE - ISPOINTER) + MKL$(FLOATTYPE - ISPOINTER) + MKL$(ULONGTYPE - ISPOINTER)
+    id.specialformat = "(?,?),?,?"
+    id.hr_syntax = "CIRCLE (x, y), radius, color"
+    regid
+
+    clearid
+    id.n = "Line"
+    id.subfunc = 2
+    id.callname = "sub_coco"
+    id.args = 5
+    id.arg = MKL$(FLOATTYPE - ISPOINTER) + MKL$(FLOATTYPE - ISPOINTER) + MKL$(FLOATTYPE - ISPOINTER) + MKL$(FLOATTYPE - ISPOINTER) + MKL$(FLOATTYPE - ISPOINTER)
+    id.specialformat = "[(?,?)]-(?,?),?[,[{B|BF}]]"
+    id.hr_syntax = "LINE [(x1, y1)]-(x2, y2), color[,[{B|BF}]"
     regid
 
     reginternalsubfunc = 0
