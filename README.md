@@ -15,6 +15,7 @@ V 4.36
 - Fix a bug with deep IF/THEN/ELSE layers that could exit to the wrong location
 - Tweaked the DIV16 & DIV16Rounding code so that the resulting value in D will be reflected in the condition codes when exiting the
   routine
+- IDE fixed F11 not working
 
 V 4.35
 - Fixed a problem with handling DATA statements that had many comma's in a row like (DATA "THIS",,,2,,)
