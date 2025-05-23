@@ -1,0 +1,4 @@
+if(oldstr4082){
+if(oldstr4082->fixed)qbs_set(oldstr4082,_FUNC_NUMERICEXPRESSION_STRING_EXP);
+qbs_free(_FUNC_NUMERICEXPRESSION_STRING_EXP);
+}
