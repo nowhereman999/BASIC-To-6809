@@ -1,0 +1,68 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:40:31}}
+{{DISPLAYTITLE:_BASE64DECODE$}}
+The '''_BASE64DECODE$''' function decodes a Base64-encoded [[STRING|string]] back to its original binary or textual representation.
+
+
+{{PageSyntax}}
+: {{Parameter|decodedString$}} = [[_BASE64DECODE$]]({{Parameter|stringToDecode$}})
+
+
+{{PageParameters}}
+* {{Parameter|stringToDecode$}} is the Base64-encoded string to be decoded. It must conform to the Base64 encoding standard.
+
+
+{{PageDescription}}
+* The '''_BASE64DECODE$''' function takes a Base64-encoded string as input and returns the decoded data as a string.
+* If the input string is invalid or improperly formatted for Base64, the function will return an empty string.
+* It is commonly used for decoding strings that were previously encoded with [[_BASE64ENCODE$]].
+* The decoded string may contain binary data, so ensure the target string variable can handle such content if necessary.
+
+
+{{PageAvailability}}
+<!-- QB64 = a version or none, QBPE = a version or all, Platforms = yes or no -->
+<gallery widths="48px" heights="48px" mode="nolines">
+File:Qb64.png|'''none'''
+File:Qbpe.png|'''v4.1.0'''
+File:Apix.png
+File:Win.png|'''yes'''
+File:Lnx.png|'''yes'''
+File:Osx.png|'''yes'''
+</gallery>
+<!-- additional availability notes go below here -->
+
+
+{{PageExamples}}
+; Example 1: Decoding a Base64 string.
+{{CodeStart}}
+{{Cl|CONST}} encodedString = _
+    {{Text|<nowiki>"VGhvJyBtdWNoIGlzIHRha2VuLCBtdWNoIGFiaWRlczsgYW5kIHRobycNCldlIGFyZSBub3Qgbm9"</nowiki>|#FFB100}} + _
+    {{Text|<nowiki>"3IHRoYXQgc3RyZW5ndGggd2hpY2ggaW4gb2xkIGRheXMNCk1vdmVkIGVhcnRoIGFuZCBoZWF2ZW"</nowiki>|#FFB100}} + _
+    {{Text|<nowiki>"47IHRoYXQgd2hpY2ggd2UgYXJlLCB3ZSBhcmU7DQpPbmUgZXF1YWwgdGVtcGVyIG9mIGhlcm9pY"</nowiki>|#FFB100}} + _
+    {{Text|<nowiki>"yBoZWFydHMsDQpNYWRlIHdlYWsgYnkgdGltZSBhbmQgZmF0ZSwgYnV0IHN0cm9uZyBpbiB3aWxs"</nowiki>|#FFB100}} + _
+    {{Text|<nowiki>"DQpUbyBzdHJpdmUsIHRvIHNlZWssIHRvIGZpbmQsIGFuZCBub3QgdG8geWllbGQu"</nowiki>|#FFB100}}
+
+{{Cl|PRINT}} {{Text|<nowiki>"Decoded string: "</nowiki>|#FFB100}}; {{Cl|_BASE64DECODE$}}(encodedString)
+{{CodeEnd}}
+{{OutputStart}}
+Decoded string:
+Tho' much is taken, much abides; and tho'
+
+We are not now that strength which in old days
+
+Moved earth and heaven; that which we are, we are;
+
+One equal temper of heroic hearts,
+
+Made weak by time and fate, but strong in will
+
+To strive, to seek, to find, and not to yield.
+{{OutputEnd}}
+
+
+{{PageSeeAlso}}
+* [[_BASE64ENCODE$]]
+* [[_INFLATE$]], [[_DEFLATE$]]
+
+
+{{PageNavigation}}

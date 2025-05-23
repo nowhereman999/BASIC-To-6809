@@ -1,0 +1,73 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:41:16}}
+{{DISPLAYTITLE:_EMBEDDED$}}
+The '''_EMBEDDED$''' function is used to recall the data of a file which was earlier embedded into the EXE file using the [[$EMBED]] metacommand. You can roughly compare this to a [[RESTORE]] to any [[DATA]] block and then using [[READ]] to retrieve the data.
+
+
+{{PageSyntax}}
+: {{Parameter|filedata$}} = [[_EMBEDDED$]]("{{Parameter|handle}}")
+
+
+{{PageParameters}}
+; IMPORTANT
+:* The parameter {{Parameter|handle}} must be given as a {{Text|single literal string|red}} enclosed in quotes, variables cannot be used here.
+:* Your inputs are checked while typing to ensure its validity, warnings (if any) will be displayed immediately in the IDE status area.
+* The {{Parameter|filedata$}} will receive the embedded file data as a single contiguous string, just as you would regularly [[OPEN]] the file and read its entire contents into that string.
+* The {{Parameter|handle}} is a unique case sensitive identifier beginning with a letter and only containing lower/upper case letters and/or numbers. It must exactly match the {{Parameter|handle}} value used to [[$EMBED]] the respective file.
+** You can compare this identifier to the line label in front of a [[DATA]] block, which is later used in a [[RESTORE]] call to set the [[READ]] pointer to exactly that [[DATA]] block.
+
+
+{{PageDescription}}
+* All embedded files can be recalled individually by using its respective {{Parameter|handle}} identifier.
+** If required, decompression is done internally, hence you always get back the original file contents.
+* Recalling a file multiple times is possible, but in regard for the needed decompression time considered inefficient. Rather recall the file once and store the result in a [[STRING]] variable, if you know you need it multiple times in your program.
+* To easily embed a file into your compiled EXE file use the [[$EMBED]] metacommand.
+* Embedding files can be useful to deliver a program inclusive all required assets in just one EXE file.
+* No more worries whether a user installs your program correctly and retains the required folder structure.
+* If required, you can easily write the files back to disk using the [[_WRITEFILE]] command, i.e. you could create your own simple installer or package manager.
+* Embedded images, sounds or fonts can be passed directly to [[_LOADIMAGE]], [[_SNDOPEN]] or [[_LOADFONT]] respectively when using the ''memory load'' capabilities of these functions.
+
+
+{{PageAvailability}}
+<!-- QB64 = a version or none, QBPE = a version or all, Platforms = yes or no -->
+<gallery widths="48px" heights="48px" mode="nolines">
+File:Qb64.png|'''none'''
+File:Qbpe.png|'''v3.10.0'''
+File:Apix.png
+File:Win.png|'''yes'''
+File:Lnx.png|'''yes'''
+File:Osx.png|'''yes'''
+</gallery>
+<!-- additional availability notes go below here -->
+
+
+{{PageExamples}}
+; Example: Embeds two image files into the compiled EXE, then memory loads and displays it.
+{{CodeStart}}
+{{Cm|$EMBED}}:{{Text|<nowiki>'source\peLogo.png','bigImg'</nowiki>|#919191}}
+{{Cm|$EMBED}}:{{Text|<nowiki>'source\qb64pe.png','smallImg'</nowiki>|#919191}}
+
+{{Cl|SCREEN}} {{Cl|_NEWIMAGE}}({{Text|640|#F580B1}}, {{Text|480|#F580B1}}, {{Text|32|#F580B1}})
+
+bi& = {{Cl|_LOADIMAGE}}({{Cl|_EMBEDDED$}}({{Text|<nowiki>"bigImg"</nowiki>|#FFB100}}), {{Text|32|#F580B1}}, {{Text|<nowiki>"memory"</nowiki>|#FFB100}})
+si& = {{Cl|_LOADIMAGE}}({{Cl|_EMBEDDED$}}({{Text|<nowiki>"smallImg"</nowiki>|#FFB100}}), {{Text|32|#F580B1}}, {{Text|<nowiki>"memory"</nowiki>|#FFB100}})
+
+{{Cl|_PUTIMAGE}} ({{Text|140|#F580B1}}, {{Text|180|#F580B1}}), bi&
+{{Cl|_PUTIMAGE}} ({{Text|410|#F580B1}}, {{Text|230|#F580B1}}), si&
+
+{{Cl|_FREEIMAGE}} si&
+{{Cl|_FREEIMAGE}} bi&
+
+{{Cl|END}}
+{{CodeEnd}}
+{{Small|Example by RhoSigma}}
+
+
+{{PageSeeAlso}}
+* [https://qb64phoenix.com/forum/showthread.php?tid=2740 Featured in our "Keyword of the Day" series]
+* [[$EMBED]]
+* [[DATA]], [[RESTORE]], [[READ]]
+* [[_LOADFONT]], [[_LOADIMAGE]], [[_SNDOPEN]]
+
+
+{{PageNavigation}}

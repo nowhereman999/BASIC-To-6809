@@ -4889,6 +4889,17 @@ SUB reginternal
     id.hr_syntax = "LINE [(x1, y1)]-(x2, y2), color[,[{B|BF}]"
     regid
 
+    clearid
+    id.n = "Trim"
+    id.musthave = "$"
+    id.subfunc = 1
+    id.callname = "sub_coco"
+    id.args = 1
+    id.arg = MKL$(STRINGTYPE - ISPOINTER)
+    id.ret = STRINGTYPE - ISPOINTER
+    id.hr_syntax = "TRIM$(text$)"
+    regid
+
     reginternalsubfunc = 0
 
 END SUB

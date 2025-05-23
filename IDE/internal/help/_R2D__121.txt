@@ -1,0 +1,35 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:42:31}}
+{{DISPLAYTITLE:_R2D}}
+The [[_R2D]] function converts a '''radian''' value into a '''degree''' value.
+
+
+{{PageSyntax}}
+: {{Parameter|result!}} = [[_R2D]]({{Parameter|num}})
+
+
+{{PageAvailability}}
+* '''QB64 v1.0 and up'''
+* '''QB64-PE all versions'''
+
+
+{{PageExamples}}
+''Example:'' Coverting Radian into Degree.
+{{CodeStart}}
+{{Cl|INPUT}} {{Text|<nowiki>"Give me an angle in Radians "</nowiki>|#FFB100}}, R
+D = {{Cl|_R2D}}(R)
+{{Cl|PRINT}} {{Text|<nowiki>"That angle in Degrees is "</nowiki>|#FFB100}}; D
+{{CodeEnd}}
+{{OutputStart}}
+Give me an angle in Radians 0.5
+That angle in Degrees is    28.64789
+{{OutputEnd}}
+
+
+{{PageSeeAlso}}
+* [[_D2G]], [[_D2R]]
+* [[_G2D]], [[_G2R]]
+* [[_R2G]]
+
+
+{{PageNavigation}}

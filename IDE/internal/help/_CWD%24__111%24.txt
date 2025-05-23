@@ -1,0 +1,66 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:40:58}}
+{{DISPLAYTITLE:_CWD$}}
+
+The [[_CWD$]] function returns the current working directory path as a string value without a trailing path separator (see also '''Availability''' below).
+
+
+{{PageSyntax}}
+: {{Parameter|workingDirectory$}} = [[_CWD$]]
+
+
+{{PageDescription}}
+* By default, the initial working directory path is usually the same as the directory of the executable file run.
+* The current working directory can be changed with the [[CHDIR]] or [[SHELL]] command; CHDIR sets it, _CWD$ returns it.
+* Path returns will change only when the working path has changed.  When in C:\ and run QB64\cwd.exe, it will still return C:\
+* The current working directory string can be used in [[OPEN]] statements and [[SHELL]] commands that deal with files.
+* Works in Windows, macOS and Linux. [[_OS$]] can be used by a program to predict the proper slash separations in different OS's.
+
+=== Errors ===
+* If an error occurs while obtaining the working directory from the operating system, [[ERROR Codes|error code]] 51 (Internal Error) will be generated.
+
+
+{{PageAvailability}}
+<!-- QB64 = a version or none, QBPE = a version or all, Platforms = yes or no -->
+<gallery widths="48px" heights="48px" mode="nolines">
+File:Qb64.png|'''v1.0'''
+File:Qbpe.png|'''all'''
+File:Apix.png
+File:Win.png|'''yes'''
+File:Lnx.png|'''yes'''
+File:Osx.png|'''yes'''
+</gallery>
+<!-- additional availability notes go below here -->
+* Since '''QB64-PE v4.1.0''' the path is always returned '''with''' a trailing path separator, hence you don't need to add it yourself anymore. The change was implemented to be in line with [[_DIR$]] and [[_FULLPATH$]].
+** Old code, which is adding a separator, still works as all supported platforms were tested and proved they doesn't care about multiple consecutive path separators.
+
+
+{{PageExamples}}
+''Example:'' Get the current working directory, and move around the file system:
+{{CodeStart}}
+startdir$ = {{Cl|_CWD$}}
+{{Cl|PRINT}} {{Text|<nowiki>"We started at "</nowiki>|#FFB100}}; startdir$
+{{Cl|MKDIR}} {{Text|<nowiki>"a_temporary_dir"</nowiki>|#FFB100}}
+{{Cl|CHDIR}} {{Text|<nowiki>"a_temporary_dir"</nowiki>|#FFB100}}
+{{Cl|PRINT}} {{Text|<nowiki>"We are now in "</nowiki>|#FFB100}}; {{Cl|_CWD$}}
+{{Cl|CHDIR}} startdir$
+{{Cl|PRINT}} {{Text|<nowiki>"And now we're back in "</nowiki>|#FFB100}}; {{Cl|_CWD$}}
+{{Cl|RMDIR}} {{Text|<nowiki>"a_temporary_dir"</nowiki>|#FFB100}}
+{{CodeEnd}}
+{{OutputStart}}
+We started at C:\QB64
+We are now in C:\QB64\a_temporary_dir
+And now we're back in C:\QB64
+{{OutputEnd}}
+
+
+{{PageSeeAlso}}
+* [[CHDIR]] {{Text|(Change the current working directory)}}
+* [[RMDIR]] {{Text|(Remove a directory in the file system)}}
+* [[KILL]] {{Text|(Delete a file in the file system)}}
+* [[MKDIR]] {{Text|(Create a directory in the file system)}}
+* [[_OS$]] {{Text|(returns current OS to program)}}
+* [[_STARTDIR$]] {{Text|(returns path the user called program from)}}
+
+
+{{PageNavigation}}

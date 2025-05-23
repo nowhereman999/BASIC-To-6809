@@ -1,4 +1,8 @@
-V$ = "4.36"
+V$ = "4.37"
+'       - Added TRIM$,LTRIM$ & RTRIM$ commands that will remove the spaces in a string
+'       - Fixed a bug where the IRQ wasn't being set properly if you used PLAY and a CoCo 3 GMODE
+
+' V 4.36
 '       - Added command CPUSPEED # where # is 1 for .895 Mhz, 2 for 1.79 Mhz, 3 for 2.8636 MHz and anything else will
 '         set the speed to max for that computer's hardware.  Which also will put a 6309 in native mode.
 '       - Added command COPYBLOCKS, which copies 8k blocks using stack blasting useful for CoCo3 copying from buffer 0 to buffer 1

@@ -1,0 +1,38 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:41:33}}
+{{DISPLAYTITLE:_GLRENDER}}
+'''_GLRENDER''' is just a fancy [[_DISPLAYORDER]], it's a convenience statement for the case you don't care about the harware image layers but only about the relation of the software and OpenGL layers. Both statements modify the same thing.
+
+
+{{PageSyntax}}
+: [[_GLRENDER]] {{Parameter|mode}}
+
+
+{{PageParameters}}
+The {{Parameter|mode}} can be one of the following with the correspondence to the full '''_DISPLAYORDER''' statement:
+* ''_BEHIND'' - the OpenGL layer is placed behind the software layer.
+** same as {{InlineCode}}{{Cl|_DISPLAYORDER}} _GLRENDER, _SOFTWARE, _HARDWARE, _HARDWARE1{{InlineCodeEnd}}
+* ''_ONTOP'' - the OpenGL layer is placed in front (on top) of the software layer ('''default''').
+** same as {{InlineCode}}{{Cl|_DISPLAYORDER}} _SOFTWARE, _HARDWARE, _GLRENDER, _HARDWARE1{{InlineCodeEnd}}
+* ''_ONLY'' - the OpenGL layer is the only one to be displayed, may speed up display update, if you don't use the software layer.
+** same as {{InlineCode}}{{Cl|_DISPLAYORDER}} _GLRENDER{{InlineCodeEnd}}
+
+
+{{PageAvailability}}
+<!-- QB64 = a version or none, QBPE = a version or all, Platforms = yes or no -->
+<gallery widths="48px" heights="48px" mode="nolines">
+File:Qb64.png|'''v1.0'''
+File:Qbpe.png|'''all'''
+File:Apix.png
+File:Win.png|'''yes'''
+File:Lnx.png|'''yes'''
+File:Osx.png|'''yes'''
+</gallery>
+<!-- additional availability notes go below here -->
+
+
+{{PageSeeAlso}}
+* [[Hardware images]]
+
+
+{{PageNavigation}}

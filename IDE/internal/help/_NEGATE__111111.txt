@@ -1,0 +1,72 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:42:16}}
+{{DISPLAYTITLE:_NEGATE}}
+'''_NEGATE''' is a [[Boolean|boolean]] logical operator that will change a false statement to a true one and vice-versa.
+
+
+{{PageSyntax}}
+:{{Parameter|result}} = [[_NEGATE]] {{Parameter|value}}
+
+
+{{PageDescription}}
+* Unlike [[NOT]], which evaluates a value and returns the bitwise opposite, '''_NEGATE''' returns the logical opposite. Meaning that {{InlineCode}}{{Cl|_NEGATE}} non_zero_value = {{Text|0|#F580B1}}{{InlineCodeEnd}}.
+* Often called a negative logic operator, it returns the opposite of a value as true or false.
+
+
+{{PageAvailability}}
+<!-- QB64 = a version or none, QBPE = a version or all, Platforms = yes or no -->
+<gallery widths="48px" heights="48px" mode="nolines">
+File:Qb64.png|'''none'''
+File:Qbpe.png|'''v3.13.0'''
+File:Apix.png
+File:Win.png|'''yes'''
+File:Lnx.png|'''yes'''
+File:Osx.png|'''yes'''
+</gallery>
+<!-- additional availability notes go below here -->
+
+
+{{PageExamples}}
+;Example: NOT versus _NEGATE
+{{CodeStart}}
+{{Cl|DECLARE LIBRARY}}
+    {{Cl|FUNCTION}} {{Text|isdigit&|#55FF55}} ({{Cl|BYVAL}} n {{Cl|AS}} {{Cl|LONG}})
+{{Cl|END DECLARE}}
+
+{{Cl|IF}} {{Cl|NOT}} {{Text|isdigit|#55FF55}}({{Cl|ASC (function)|ASC}}({{Text|<nowiki>"1"</nowiki>|#FFB100}})) {{Cl|THEN}}
+    {{Cl|PRINT}} {{Text|<nowiki>"NOT: 1 is not a digit."</nowiki>|#FFB100}}
+{{Cl|ELSE}}
+    {{Cl|PRINT}} {{Text|<nowiki>"NOT: 1 is a digit."</nowiki>|#FFB100}}
+{{Cl|END IF}}
+
+{{Cl|IF}} {{Cl|_NEGATE}} {{Text|isdigit|#55FF55}}({{Cl|ASC (function)|ASC}}({{Text|<nowiki>"1"</nowiki>|#FFB100}})) {{Cl|THEN}}
+    {{Cl|PRINT}} {{Text|<nowiki>"_NEGATE: 1 is not a digit."</nowiki>|#FFB100}}
+{{Cl|ELSE}}
+    {{Cl|PRINT}} {{Text|<nowiki>"_NEGATE: 1 is a digit."</nowiki>|#FFB100}}
+{{Cl|END IF}}
+
+{{Cl|END}}
+{{CodeEnd}}
+{{OutputStart}}
+NOT: 1 is not a digit.
+_NEGATE: 1 is a digit.
+{{OutputEnd}}
+{{PreStart}}
+'''Explanation'''
+ [[NOT]] is a bitwise operator that inverts all the bits in an integer,
+ whereas '''_NEGATE''' is a logical operator that flips the truth value of
+ a boolean expression.
+{{PreEnd}}
+
+
+{{PageSeeAlso}}
+* [https://qb64phoenix.com/forum/showthread.php?tid=2671 Featured in our "Keyword of the Day" series]
+* [[_BIT]], [[&B]], [[_BYTE]]
+* [[AND]], [[XOR]], [[OR]]
+* [[AND (boolean)]], [[XOR (boolean)]], [[OR (boolean)]]
+* [[_ANDALSO]], [[_ORELSE]]
+* [[Binary]], [[Boolean]]
+* [[Mathematical Operations]]
+
+
+{{PageNavigation}}

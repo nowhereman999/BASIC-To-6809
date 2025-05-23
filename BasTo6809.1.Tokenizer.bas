@@ -2314,6 +2314,7 @@ If PlayCommand = 1 Then
     A$ = "LEAU": B$ = "1,X": C$ = "U=X+1": GoSub AO
     A$ = "STU": B$ = "IRQAddress": C$ = "Save the IRQ address for the PLAY command to change/restore, points at the actual JMP location": GoSub AO
 End If
+
 ' Save the original IRQ jump address so we can restore it once done
 A$ = "LDU": B$ = "#OriginalIRQ": C$ = "U=Address of the IRQ": GoSub AO
 A$ = "LDA": B$ = ",X": C$ = "A = Branch Instruction": GoSub AO
@@ -2321,17 +2322,17 @@ A$ = "STA": B$ = ",U": C$ = "Save Branch Instruction": GoSub AO
 A$ = "LDD": B$ = "1,X": C$ = "D = Address": GoSub AO
 A$ = "STD": B$ = "1,U": C$ = "Backup the Address of the IRQ": GoSub AO
 
-A$ = "LDA": B$ = "#$7E": C$ = "JMP instruction": GoSub AO
+' Set the CPU to the Max speed
+A$ = "CLRB": C$ = "B=0, make the CPU wus max speed": GoSub AO
+A$ = "JSR": B$ = "SetCPUSpeedB": C$ = "Save max speed and set the CPU to Max speed it can handle": GoSub AO
+
+A$ = "LDB": B$ = "#$7E": C$ = "JMP instruction": GoSub AO
 If Disk = 1 Then
     ' Add our NMI
-    A$ = "STA": B$ = ",Y": C$ = "A = JMP Instruction": GoSub AO
+    A$ = "STB": B$ = ",Y": C$ = "A = JMP Instruction": GoSub AO
     A$ = "LDU": B$ = "#DNMISV": C$ = "U=Address of our NMIRQ": GoSub AO
     A$ = "STU": B$ = "1,Y": C$ = "Save the Address of the NMIRQ": GoSub AO
 End If
-
-'Set the CPU to the Max speed
-A$ = "CLRB": C$ = "B=0, make the CPU wus max speed": GoSub AO
-A$ = "JSR": B$ = "SetCPUSpeedB": C$ = "Save max speed and set the CPU to Max speed it can handle": GoSub AO
 
 ' Setup Sprite blocks
 If CoCo3 = 1 And Sprites = 1 Then
@@ -2350,6 +2351,10 @@ End If
 
 ' Start the IRQ
 If CoCo3 = 1 Then
+    ' Use our IRQ address
+    A$ = "STB": B$ = ",X": C$ = "A = JMP Instruction": GoSub AO
+    A$ = "LDU": B$ = "#BASIC_IRQ": C$ = "U=Address of our IRQ": GoSub AO
+    A$ = "STU": B$ = "1,X": C$ = "U=Address of the IRQ": GoSub AO
     If Sprites = 1 Or Samples = 1 Then
         Print #1, T2$; "INCLUDE        ./Basic_Includes/CoCo3_FIRQ_Setup.asm"
     End If
@@ -2357,7 +2362,7 @@ If CoCo3 = 1 Then
     A$ = "ANDCC": B$ = "#%10101111": C$ = "= %10101111 this will Enable the FIRQ & IRQ to start": GoSub AO
 Else
     ' Use our IRQ address
-    A$ = "STA": B$ = ",X": C$ = "A = JMP Instruction": GoSub AO
+    A$ = "STB": B$ = ",X": C$ = "A = JMP Instruction": GoSub AO
     A$ = "LDU": B$ = "#BASIC_IRQ": C$ = "U=Address of our IRQ": GoSub AO
     A$ = "STU": B$ = "1,X": C$ = "U=Address of the IRQ": GoSub AO
     ' Make FIRQ an RTI

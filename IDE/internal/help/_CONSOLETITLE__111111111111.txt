@@ -1,0 +1,55 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:40:53}}
+{{DISPLAYTITLE:_CONSOLETITLE}}
+The [[_CONSOLETITLE]] statement creates the title of the console window using a literal or variable [[STRING|string]].
+
+
+{{PageSyntax}}
+: [[_CONSOLETITLE]] {{Parameter|text$}}
+
+
+{{PageDescription}}
+* The ''text$'' used can be a literal or variable [[STRING]] value.
+* '''[[Keywords currently not supported by QB64#Keywords_not_supported_in_Linux_or_macOS_versions|Keyword not supported in Linux or macOS versions]]'''
+
+
+{{PageAvailability}}
+<!-- QB64 = a version or none, QBPE = a version or all, Platforms = yes or no -->
+<gallery widths="48px" heights="48px" mode="nolines">
+File:Qb64.png|'''v1.4'''
+File:Qbpe.png|'''all'''
+File:Apix.png
+File:Win.png|'''yes'''
+File:Lnx.png|'''no'''
+File:Osx.png|'''no'''
+</gallery>
+<!-- additional availability notes go below here -->
+
+
+{{PageExamples}}
+;Example: Hiding the main program window while displaying the console window with a title.
+{{CodeStart}}
+{{Cm|$SCREENHIDE}}
+{{Cl|_DELAY}} {{Text|4|#F580B1}}
+{{Cm|$CONSOLE}}
+{{Cl|_CONSOLETITLE}} {{Text|<nowiki>"Error Log"</nowiki>|#FFB100}}
+
+{{Cl|_DEST}} {{Cl|_CONSOLE}}
+{{Cl|PRINT}} {{Text|<nowiki>"Errors go here! (fyi, this line is not an error)"</nowiki>|#FFB100}}
+{{Cl|END}}
+{{CodeEnd}}
+
+{{PreStart}}
+'''Note:'''
+ You can also use [[SHELL]] "title consoletitle" to set the title of the
+ console window. However, recommended is to use '''_CONSOLETITLE'''.
+{{PreEnd}}
+
+
+{{PageSeeAlso}}
+* [[$CONSOLE]], [[_CONSOLE]]
+* [[$SCREENHIDE]], [[$SCREENSHOW]]
+* [[_SCREENHIDE]], [[_SCREENSHOW]]
+
+
+{{PageNavigation}}

@@ -1,0 +1,66 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:43:57}}
+The '''EOF''' function indicates that the end of a file or HTTP response has been reached.
+
+
+{{PageSyntax}}
+: {{Parameter|endReached%%}} =  [[EOF]]([#]{{Parameter|fileNumber&}})
+: {{Parameter|endReached%%}} =  [[EOF]]([#]{{Parameter|httpHandle&}})
+
+
+{{PageDescription}}
+* {{Parameter|fileNumber&}} or {{Parameter|httpHandle&}} is the number of the file or HTTP connected being read. '''#''' is not required.
+** {{Parameter|fileNumber&}} is a file opened using [[OPEN]].
+** {{Parameter|httpHandle&}} is a HTTP connection opened using [[_OPENCLIENT]].
+* Returns 0 until the end of a file. This avoids a file read error.
+* Returns ''true(-1)'' at the end of the file.
+
+=== Notes ===
+* In files opened with the [[INPUT (file mode)]] the '''EOF''' function returns '''true''' after any used input function reads a [[CHR$]](26) (Ctrl-Z) from the file, which denotes the "logical" end of a file. This is not necessarily equal to the "physical" end.
+** Although this subtle behavior is not required nowadays, it is still here for the sake of compatibility. If you're interested in the historic cause of it see [https://devblogs.microsoft.com/oldnewthing/20040316-00/?p=40233 this Article].
+** To be able to read those files completely use the [[BINARY|BINARY (file mode)]] instead, which is also much faster when used in conjunction with the regular [[INPUT (file statement)|INPUT]], [[LINE INPUT (file statement)|LINE INPUT]] and [[INPUT$]] functions.
+* [[GET]] can return invalid data at the end of a file. Read '''EOF''' after a [[GET]] operation to see if the end of the file has been reached and discard the last read if required.
+** This is not a problem when using [[GET]] with HTTP connections with a variable length string, the string will always only contain valid data or be empty.
+
+
+{{PageExamples}}
+;Example 1:Showing the difference between INPUT and BINARY file modes when Ctrl-Z is involved.
+{{CodeStart}}
+'Write a simple test file with Ctrl-Z in the middle.
+{{Cl|OPEN}} "test.txt" {{Cl|FOR}} {{Cl|OUTPUT}} {{Cl|AS}} #1
+{{Cl|PRINT}} #1, "Hello"; {{Cl|CHR$}}(26); "World!"
+{{Cl|CLOSE}} #1
+
+'Now read it back, but uhh, this gives us the "Hello"
+'only because of the Ctrl-Z.
+{{Cl|OPEN}} "test.txt" {{Cl|FOR}} {{Cl|INPUT}} {{Cl|AS}} #1
+{{Cl|WHILE}} {{Cl|NOT}} {{Cl|EOF}}(1)
+    {{Cl|PRINT}} {{Cl|INPUT$}}(1, 1);
+{{Cl|WEND}}
+{{Cl|CLOSE}} #1
+
+{{Cl|PRINT}}: {{Cl|PRINT}}
+
+'However, it works in the BINARY file mode.
+{{Cl|OPEN}} "test.txt" {{Cl|FOR}} {{Cl|BINARY}} {{Cl|AS}} #1
+{{Cl|WHILE}} {{Cl|NOT}} {{Cl|EOF}}(1)
+    {{Cl|PRINT}} {{Cl|INPUT$}}(1, 1);
+{{Cl|WEND}}
+{{Cl|CLOSE}} #1
+{{CodeEnd}}
+{{OutputStart}}
+Hello
+
+Hello→World!
+{{OutputEnd}}
+
+
+{{PageSeeAlso}}
+* [[OPEN]]
+* [[LOF]], [[LEN]]
+* [[INPUT (file statement)]]
+* [[LINE INPUT (file statement)]]
+* [[GET]], [[PUT]]
+
+
+{{PageNavigation}}

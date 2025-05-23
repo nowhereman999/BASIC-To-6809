@@ -8377,6 +8377,7 @@ Else
     Print "String commands should always have an ExpressionCount > 0, doing";: GoTo FoundError
 End If
 Return
+
 DoEOF:
 Color 14
 Print "Can't do command EOF yet, found on line "; linelabel$
@@ -8792,6 +8793,114 @@ Color 14
 Print "Can't do command DSKO yet, found on line "; linelabel$
 Color 15
 System
+
+' Remove spaces at the start and end of a string
+DoTRIM:
+' Get the string value after the first open bracket
+GoSub ParseStringExpression0 ' Recursively get the next string value
+resultP10$(PE10Count) = Parse00_Term$
+Num = StrParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+If Num < 10 Then Num$ = "0" + Num$
+A$ = "LDX": B$ = "#_StrVar_PF" + Num$ + "+1": C$ = "X points at the copy of the string we want to trim" + Num$: GoSub AO
+A$ = "LDA": B$ = "-1,X": C$ = "A = the size of original string": GoSub AO
+Z$ = "!"
+A$ = "TSTA": C$ = "Is A zero?": GoSub AO
+A$ = "BEQ": B$ = "@Done": C$ = "If the string is blank we are done": GoSub AO
+A$ = "LDB": B$ = ",X+": C$ = "Get a byte, and move pointer to the right": GoSub AO
+A$ = "DECA": C$ = "Decrement the counter": GoSub AO
+A$ = "CMPB": B$ = "#$20": C$ = "Is the byte a space?": GoSub AO
+A$ = "BEQ": B$ = "<": C$ = "Loop if so": GoSub AO
+A$ = "INCA": C$ = "Fix the counter": GoSub AO
+A$ = "CMPA": B$ = "_StrVar_PF" + Num$: C$ = "Compare A to the original size": GoSub AO
+A$ = "BEQ": B$ = ">": C$ = "Skip ahead if it's the same (no blanks on the left)": GoSub AO
+A$ = "LDX": B$ = "#_StrVar_PF" + Num$ + "+1": C$ = "X points at the copy of the string we want to trim" + Num$: GoSub AO
+A$ = "LDB": B$ = "_StrVar_PF" + Num$: C$ = "B = the original size": GoSub AO
+A$ = "STA": B$ = "-1,X": C$ = "Set the size of string": GoSub AO
+A$ = "SUBB": B$ = "_StrVar_PF" + Num$: C$ = "B=B-new size": GoSub AO
+A$ = "ABX": C$ = "X=X+B": GoSub AO
+A$ = "LDB": B$ = "_StrVar_PF" + Num$: C$ = "B = the new size": GoSub AO
+A$ = "LDU": B$ = "#_StrVar_PF" + Num$ + "+1": C$ = "U points at the start of the string we want to trim" + Num$: GoSub AO
+Z$ = "!"
+A$ = "LDA": B$ = ",X+": C$ = "Get a byte, and move pointer to the right": GoSub AO
+A$ = "STA": B$ = ",U+": C$ = "Put a byte, and move pointer to the right": GoSub AO
+A$ = "DECB": C$ = "Decrement the counter": GoSub AO
+A$ = "BNE": B$ = "<": C$ = "Keep copying if not zero": GoSub AO
+A$ = "LDX": B$ = "#_StrVar_PF" + Num$ + "+1": C$ = "X points at the copy of the string we want to trim" + Num$: GoSub AO
+A$ = "LDB": B$ = "-1,X": C$ = "B = the size of original string": GoSub AO
+A$ = "ABX": C$ = "X=X+B": C$ = "X points at the end of the string": GoSub AO
+Z$ = "!"
+A$ = "LDA": B$ = ",-X": C$ = "Move left and Get a byte": GoSub AO
+A$ = "DECB": C$ = "Decrement the counter": GoSub AO
+A$ = "CMPA": B$ = "#$20": C$ = "Is the byte a space?": GoSub AO
+A$ = "BEQ": B$ = "<": C$ = "Loop if so": GoSub AO
+A$ = "INCB": C$ = "Fix the counter": GoSub AO
+Z$ = "@Done"
+A$ = "STB": B$ = "_StrVar_PF" + Num$: C$ = "Update the new size as B": GoSub AO
+Print #1,
+Return
+
+' Remove spaces at the end of a string
+DoLTRIM:
+' Get the string value after the first open bracket
+GoSub ParseStringExpression0 ' Recursively get the next string value
+resultP10$(PE10Count) = Parse00_Term$
+Num = StrParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+If Num < 10 Then Num$ = "0" + Num$
+A$ = "LDX": B$ = "#_StrVar_PF" + Num$ + "+1": C$ = "X points at the copy of the string we want to trim" + Num$: GoSub AO
+A$ = "LDA": B$ = "-1,X": C$ = "A = the size of original string": GoSub AO
+Z$ = "!"
+A$ = "TSTA": C$ = "Is A zero?": GoSub AO
+A$ = "BEQ": B$ = "@Done": C$ = "If the string is blank we are done": GoSub AO
+A$ = "LDB": B$ = ",X+": C$ = "Get a byte, and move pointer to the right": GoSub AO
+A$ = "DECA": C$ = "Decrement the counter": GoSub AO
+A$ = "CMPB": B$ = "#$20": C$ = "Is the byte a space?": GoSub AO
+A$ = "BEQ": B$ = "<": C$ = "Loop if so": GoSub AO
+A$ = "INCA": C$ = "Fix the counter": GoSub AO
+A$ = "CMPA": B$ = "_StrVar_PF" + Num$: C$ = "Compare A to the original size": GoSub AO
+A$ = "BEQ": B$ = ">": C$ = "Skip ahead if it's the same (no blanks on the left)": GoSub AO
+A$ = "LDX": B$ = "#_StrVar_PF" + Num$ + "+1": C$ = "X points at the copy of the string we want to trim" + Num$: GoSub AO
+A$ = "LDB": B$ = "_StrVar_PF" + Num$: C$ = "B = the original size": GoSub AO
+A$ = "STA": B$ = "-1,X": C$ = "Set the size of string": GoSub AO
+A$ = "SUBB": B$ = "_StrVar_PF" + Num$: C$ = "B=B-new size": GoSub AO
+A$ = "ABX": C$ = "X=X+B": GoSub AO
+A$ = "LDB": B$ = "_StrVar_PF" + Num$: C$ = "B = the new size": GoSub AO
+A$ = "LDU": B$ = "#_StrVar_PF" + Num$ + "+1": C$ = "U points at the start of the string we want to trim" + Num$: GoSub AO
+Z$ = "!"
+A$ = "LDA": B$ = ",X+": C$ = "Get a byte, and move pointer to the right": GoSub AO
+A$ = "STA": B$ = ",U+": C$ = "Put a byte, and move pointer to the right": GoSub AO
+A$ = "DECB": C$ = "Decrement the counter": GoSub AO
+A$ = "BNE": B$ = "<": C$ = "Keep copying if not zero": GoSub AO
+A$ = "BRA": B$ = "@Done": C$ = "If the string is blank we are done": GoSub AO
+Z$ = "@SaveB"
+A$ = "STB": B$ = "_StrVar_PF" + Num$: C$ = "Update the new size as B": GoSub AO
+Z$ = "@Done": GoSub AO
+Print #1,
+Return
+
+' Remove spaces at the start of a string
+DoRTRIM:
+' Get the string value after the first open bracket
+GoSub ParseStringExpression0 ' Recursively get the next string value
+resultP10$(PE10Count) = Parse00_Term$
+Num = StrParseCount: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+If Num < 10 Then Num$ = "0" + Num$
+A$ = "LDX": B$ = "#_StrVar_PF" + Num$ + "+1": C$ = "X points at the copy of the string we want to trim" + Num$: GoSub AO
+A$ = "LDB": B$ = "-1,X": C$ = "B = the size of original string": GoSub AO
+A$ = "ABX": C$ = "X=X+B": GoSub AO
+Z$ = "!"
+A$ = "TSTB": C$ = "Is B zero?": GoSub AO
+A$ = "BEQ": B$ = "@SaveB": C$ = "If the string is blank we are done": GoSub AO
+A$ = "LDA": B$ = ",-X": C$ = "Move left and Get a byte": GoSub AO
+A$ = "DECB": C$ = "Decrement the counter": GoSub AO
+A$ = "CMPA": B$ = "#$20": C$ = "Is the byte a space?": GoSub AO
+A$ = "BEQ": B$ = "<": C$ = "Loop if so": GoSub AO
+A$ = "INCB": C$ = "Fix the counter": GoSub AO
+Z$ = "@SaveB"
+A$ = "STB": B$ = "_StrVar_PF" + Num$: C$ = "Update the new size as B": GoSub AO
+Z$ = "@Done": GoSub AO
+Print #1,
+Return
+
 DoSTR:
 GoSub ParseExpression0FlagErase ' Recursively check the next value
 ' At this point D has the value to be converted to a string
@@ -8800,10 +8909,6 @@ If Num < 10 Then Num$ = "0" + Num$
 A$ = "LDX": B$ = "#_StrVar_PF" + Num$: C$ = "X points at the string we want to save our converted value of D in _StrVar_PF" + Num$: GoSub AO
 A$ = "JSR": B$ = "D_to_String_at_X": C$ = "Convert value in D to a string where X points": GoSub AO
 Return
-Color 14
-Print "Can't do command STR yet, found on line "; linelabel$
-Color 15
-System
 
 DoCHR:
 GoSub ParseExpression0FlagErase ' Recursively check the next value
@@ -8816,6 +8921,7 @@ Num = StrParseCount: GoSub NumAsString 'Convert number in Num to a string withou
 If Num < 10 Then Num$ = "0" + Num$
 A$ = "STD": B$ = "_StrVar_PF" + Num$: C$ = "Save Length of the CHR$ string as one byte and that byte in B in _StrVar_PF" + Num$: GoSub AO
 Return
+
 DoLEFT:
 ' Get the string value after the first open bracket
 GoSub ParseStringExpression0 ' Recursively get the next string value
@@ -8841,8 +8947,9 @@ A$ = "STB": B$ = StringPointerTemp$: C$ = "Update the new size as B": GoSub AO
 Z$ = "@Done"
 A$ = "PULS": B$ = "D": C$ = "Fix the Stack": GoSub AO
 Print #1, "!"
-Print #1, ""
+Print #1,
 Return
+
 DoRIGHT:
 ' Get the string value after the first open bracket
 GoSub ParseStringExpression0 ' Recursively get the next string value
@@ -9409,6 +9516,12 @@ Select Case StringCommands$(v)
         GoTo DoSDC_FILEINFO
     Case "SDC_GETCURDIR$"
         GoTo DoSDC_GETCURDIR
+    Case "TRIM$"
+        GoTo DoTRIM
+    Case "LTRIM$"
+        GoTo DoLTRIM
+    Case "RTRIM$"
+        GoTo DoRTRIM
     Case Else
         Print "Unknown String command on";: GoTo FoundError
         System

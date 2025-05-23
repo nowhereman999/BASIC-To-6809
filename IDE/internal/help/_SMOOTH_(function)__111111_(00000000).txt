@@ -1,0 +1,26 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:42:55}}
+{{DISPLAYTITLE:_SMOOTH (function)}}
+The [[_SMOOTH (function)]] returns -1 when the current [[_FULLSCREEN]] mode has antialiasing enabled or 0 when it's disabled.
+
+
+{{PageSyntax}}
+: {{Parameter|isSmoothEnabled%%}} = [[_SMOOTH]]
+
+
+{{PageDescription}}
+* Use in conjunction with the [[_FULLSCREEN (function)|_FULLSCREEN]] function to determine the current full screen mode being used.
+* Use [[_ALLOWFULLSCREEN]] to limit which fullscreen modes are allowed with the key combo ALT+ENTER.
+
+
+{{PageAvailability}}
+* '''QB64 v1.3 and up'''
+* '''QB64-PE all versions'''
+
+
+{{PageSeeAlso}}
+* [[_FULLSCREEN]], [[_FULLSCREEN (function)]]
+* [[_ALLOWFULLSCREEN]]
+
+
+{{PageNavigation}}
