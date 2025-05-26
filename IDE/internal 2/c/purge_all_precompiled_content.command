@@ -1,1 +1,0 @@
-make OS=osx clean
