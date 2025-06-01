@@ -62,7 +62,6 @@ PixelTable1_FG2C:
 ; B = x coordinate
 ; Returns with:
 ; B = Colour value of the point
-* PMODE 4 POINT command
 POINT_FG2C:
         PSHS    B               ; Save x value
         LSRA

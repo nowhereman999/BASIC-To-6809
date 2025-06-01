@@ -60,21 +60,23 @@ ShowSpriteFrame:
         LEAS    5,S                     ; Fix the stack
         RTS
 
+
+; ***********************************************************************************
 ; Called by the Sprite LOCATE command
-; Enter with y coordinate in B
+; Enter with y coordinate in D
 SpriteLocate:
-; 2,S = Y co-ordinate
-; 3,S & 4,S = X co-ordinate
-; 5,S = Sprite #
+; 2,S & 3,S = Y co-ordinate
+; 4,S & 5,S = X co-ordinate
+; 6,S = Sprite #
 ; Point at the y & X location of the sprite
         LDX     #SpriteTable             ; Point at the start of the Sprite Table
-        LDB     5,S                     ; Get the sprite #
+        LDB     6,S                     ; Get the sprite #
         LDA     #5                      ; 5 bytes per sprite entry
         MUL                             ; Multiply by the sprite #
         ABX                             ; X points at the start of the sprite table entry for sprite B
-        LDB     2,S                     ; Get the y co-ordinate
+        LDB     3,S                     ; Get the y co-ordinate
         STB     SpriteY,X               ; Save the y co-ordinate
-        LDD     3,S                     ; Get the x co-ordinate
+        LDD     4,S                     ; Get the x co-ordinate
         STD     SpriteX,X               ; Save the x co-ordinate
         RTS
 
@@ -266,7 +268,7 @@ AddSpriteToSpriteCache:
 ; Handle 2 colour mode
  IFEQ NumberOfColours-2
   IFEQ Artifacting-1
-; Hadnle special GMODE 18 which has anrtifacting and an extra byte in the table which
+; Handle special GMODE 18 which has anrtifacting and an extra byte in the table which
 ; describes whether or not this particular sprite is a walking/anim sprite
 !       LDB     2,S     ; Get the frame number
         LDA     ,X+     ; Is this a special Walk/ANIM sprite?
@@ -411,14 +413,14 @@ CalculateSpriteLocation:
 DoWaitVBL:
 ; 1 - Show Screen 1
 ; Wait for VSYNC
-        LDB     $FF02                   ; Reset Vsync flag
-!       LDB     $FF03                   ; See if Vsync has occurred yet
-        BPL     <                       ; If not then keep looping, until the Vsync occurs
-; Show Screen 1
-        LDD     BEGGRP                  ; D = The screen starting address for Screen 0
-        ADDD    #ScreenSize             ; D points at Screen 1
-        LSRA                            ; Location in RAM to start the graphics screen / 2 as it must start in a 512 byte block
-        JSR     SetGraphicsStartA       ; Show Screen 1
+;        LDB     $FF02                   ; Reset Vsync flag
+;!       LDB     $FF03                   ; See if Vsync has occurred yet
+;        BPL     <                       ; If not then keep looping, until the Vsync occurs
+;; Show Screen 1
+;        LDD     BEGGRP                  ; D = The screen starting address for Screen 0
+;        ADDD    #ScreenSize             ; D points at Screen 1
+;        LSRA                            ; Location in RAM to start the graphics screen / 2 as it must start in a 512 byte block
+;        JSR     SetGraphicsStartA       ; Show Screen 1
 ; 2 - Update screen 0 with sprite cache commands
         LDU     #SpriteCache0           ; U = The Sprite Cache start for screen 0
 !       CMPU    SpriteCachePointer0      ; Have we processed all the sprite commands?
@@ -449,6 +451,14 @@ DoWaitVBL:
 @RestoreU:
         LDU     #$FFFF                  ; Self mod, restore U
         BRA     <                       ; Loop until all the sprite commands have been processed
+
+
+; Show Screen 1
+        LDD     BEGGRP                  ; D = The screen starting address for Screen 0
+        ADDD    #ScreenSize             ; D points at Screen 1
+        LSRA                            ; Location in RAM to start the graphics screen / 2 as it must start in a 512 byte block
+        JSR     SetGraphicsStartA       ; Show Screen 1
+
 
 ; 5 - reset sprite cache pointer to the beginning of the cache
 !       LDU     #SpriteCache0           ; U = The Sprite Cache0 start

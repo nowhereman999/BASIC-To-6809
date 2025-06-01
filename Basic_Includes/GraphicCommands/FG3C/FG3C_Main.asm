@@ -65,7 +65,6 @@ PixelTable1_FG3C:
 ; B = x coordinate
 ; Returns with:
 ; B = Colour value of the point
-* PMODE 4 POINT command
 POINT_FG3C:
         PSHS    B               ; Save x value
         ANDB    #%01111111      ; Make sure it's 127 or less

@@ -91,14 +91,14 @@ PRINT_D_Graphics_Screen_FG6C:
         BRA     AtoGraphics_Screen_FG6C ; Print A on the screen and return
 
 AtoGraphics_Screen_FG6C:
-* Put character of the graphics screen
+* Put character on the graphics screen
         PSHS  D,X,Y,U
         LDX   GraphicCURPOS
         CMPA  #$08      ; Is it a backspace?
         BNE   >
         CMPX  BEGGRP    ; Start of the screen?
         BEQ   @DoneGraphicText   ; Retore the registers and return
-                LDA   #$20      ; Draw a Blank
+        LDA   #$20      ; Draw a Blank
         LEAX  -BytesPerChar,X ; Back up the position
         BSR   @GraphicTextDrawAatX  ; Go Draw character A on screen at X
         BRA   @GraphicsTextUpdateCursor  ; Update Cursor and exit
@@ -111,22 +111,7 @@ AtoGraphics_Screen_FG6C:
         LEAX  Screen_Size_FG6C-BytesPerRow_FG6C*FontHeight,X  ; X = Screen Start + screen size - 1 row = bottom of the screen
         STX   GraphicCURPOS
 !       CMPA  #$0D      ; Enter Key?
-        BNE   @GraphicsTextNotEnter
-        LDX   GraphicCURPOS
-        LDA   #$20      ; Blank
-!       BSR   @GraphicTextDrawAatX  ; Go Draw character A on screen at X
-        LEAX  BytesPerChar,X       ; Move to the next position
-        TFR   X,B       ; B = X (LSB)
-        BITB  #BytesPerRow_FG6C-1      ; Is it the start of a new row?
-        BNE   <         ; if not keep printing a blank
-        LEAX  (FontHeight-1)*BytesPerRow_FG6C,X    ; Point at the start of the next row
-        LEAU  (FontHeight-1)*BytesPerRow_FG6C,U    ; U = screen End
-        PSHS  U         ; Save the value on the stack
-        CMPX  ,S++      ; Compare X with the value on the stack, fix the stack
-        BLO   @GraphicsTextUpdateCursor
-        LDX   BEGGRP                  ; X = Screen Start
-        LEAX  Screen_Size_FG6C-BytesPerRow_FG6C*FontHeight,X  ; X = Screen Start + screen size - 1 row = bottom of the screen
-        BRA   @GraphicsTextUpdateCursor  ; Update Cursor and exit
+        BEQ   @GraphicsTextUpdateCursor  ; Update Cursor and exit
 @GraphicsTextNotEnter:
         BSR   @GraphicTextDrawAatX  ; Go Draw character A on screen at X
         LEAX  BytesPerChar,X       ; Move to the next position

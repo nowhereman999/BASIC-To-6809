@@ -78,6 +78,27 @@
     LDA     #%01111100                          *
     STA     GIME_InitializeRegister0_FF90       * CoCo 3 Mode, MMU Enabled, GIME IRQ Enabled, GIME FIRQ Enabled, Vector RAM at FEXX enabled, Standard SCS Normal, ROM Map 16k Int, 16k Ext
 
+; Set graphics mode to text
+    LDX    #$0400        ; C$ = "Text screen starts here        ; GoSub AO
+    STX    BEGGRP        ; C$ = "Update the Screen starting location        ; GoSub AO
+    LDA    #$0F        ; C$ = "$0F Back to Text Mode for the CoCo 3        ; GoSub AO
+    STA    $FF9C        ; C$ = "Neccesary for CoCo 3 GIME to use this mode        ; GoSub AO
+; Go to CoCo 3 Text mode
+    LDA    #$CC        ; GoSub AO
+    STA    $FF90        ; GoSub AO
+    LDD    #$0000        ; GoSub AO
+    STD    $FF98        ; GoSub AO
+    STD    $FF9A        ; GoSub AO
+    STD    $FF9E        ; GoSub AO
+    LDD    #$0FE0        ; GoSub AO
+    STD    $FF9C        ; GoSub AO
+    LDA    #Internal_Alphanumeric        ; C$ = "A = Text mode requested        ; GoSub AO
+; Update the Graphic mode and the screen viewer location
+    JSR    SetGraphicModeA        ; C$ = "Go setup the mode        ; GoSub AO
+    LDA    BEGGRP        ; C$ = "Get the MSB of the Screen starting location        ; GoSub AO
+    LSRA        ; C$ = "Divide by 2 - 512 bytes per start location        ; GoSub AO
+    JSR    SetGraphicsStartA        ; C$ = "Go set the address of the screen        ; GoSub AO
+
     ;         Initialization Register 1 - INIT1
     ;         ┌────────── Bit  7   - Unused
     ;         │┌───────── Bit  6   - Memory type (1=256K, 0=64K chips)

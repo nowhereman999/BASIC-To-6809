@@ -65,7 +65,6 @@ PixelTable1_FG6C:
 ; B = x coordinate
 ; Returns with:
 ; B = Colour value of the point
-* PMODE 4 POINT command
 POINT_FG6C:
         PSHS    B               ; Save x coordinate on the stack
         LSRB

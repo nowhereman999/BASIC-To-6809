@@ -62,7 +62,6 @@ PixelTable1_FG1C:
 ; B = x coordinate
 ; Returns with:
 ; B = Colour value of the pixel
-* PMODE 4 POINT command
 POINT_FG1C:
         PSHS    B               ; Save x coordinate on the stack
         ANDB    #%00111111      ; Make sure it's 63 or less

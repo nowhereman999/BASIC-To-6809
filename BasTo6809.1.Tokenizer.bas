@@ -304,6 +304,8 @@ Check$ = "GMODE": GoSub FindGenCommandNumber ' Gets the General Command number o
 C_GMODE = ii
 Check$ = "SPRITE_LOAD": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
 C_SPRITE_LOAD = ii
+Check$ = "SPRITE": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+C_SPRITE = ii
 Check$ = "SAMPLE_LOAD": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
 C_SAMPLE_LOAD = ii
 Check$ = "PLAYFIELD": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
@@ -1026,6 +1028,8 @@ While x < filesize
                 Playfield = Val(N$)
                 If Playfield < 1 Or Playfield > 5 Then Print "Error: PLAYFIELD command, Must be an acutal number (not a variable) and can only handle values from 1 to 5";: GoTo FoundError
                 x = Tempx 'Set things back to normal
+            Case C_SPRITE
+                Sprites = 1
             Case C_SPRITE_LOAD
                 ' Found a Sprite Load command
                 ' Get the address and name of the sprite to load
@@ -1209,7 +1213,6 @@ For ii = 0 To 171
 Next ii
 
 ' Sprite setup stuff
-Sprites = 0
 For I = 0 To 31
     If Sprite$(I) <> "" Then Sprites = 1
 Next I
@@ -1871,7 +1874,6 @@ For ii = 0 To 171
         Temp$ = "GraphicCommands/GraphicVariables": GoSub AddIncludeTemp ' Add code for graphics variables
         If ii > 99 Then
             Temp$ = "GraphicCommands/CoCo3_Graphic_CodeJump": GoSub AddIncludeTemp ' Add code for CoCo3 graphics handling
-            Temp$ = "GraphicCommands/CoCo3_Copy8kBlocks": GoSub AddIncludeTemp ' Add code for the Copy8kBlocks command
         End If
         Temp$ = "GraphicCommands/" + GModeName$(ii) + "/" + GModeName$(ii) + "_Main": GoSub AddIncludeTemp
     End If
@@ -1987,6 +1989,9 @@ For ii = 0 To GeneralCommandsFoundCount - 1
         Temp$ = "Sound": GoSub AddIncludeTemp ' Add code for the sound command
         Temp$ = "Audio_Muxer": GoSub AddIncludeTemp 'SOUND routine also requires the Muxer to be turned on
     End If
+    If Temp$ = "COPYBLOCKS" Then
+        Temp$ = "CoCo3_Copy8kBlocks": GoSub AddIncludeTemp ' Add code for the Copy8kBlocks command
+    End If
 Next ii
 
 For ii = 0 To StringCommandsFoundCount - 1
@@ -2076,23 +2081,24 @@ If Sprites = 1 Then
             End If
         Next I
         Temp$ = "GraphicCommands/SpriteHandler": GoSub AddIncludeTemp
+
+        Z$ = "SpriteDrawTable:": GoSub AO
+        For I = 0 To 31
+            If Sprite$(I) <> "" Then
+                ' Find the last backslash
+                p = _InStrRev(Sprite$(I), "/")
+                If p = 0 Then p = _InStrRev(Sprite$(I), "\")
+                ' Extract the filename
+                If p > 0 Then
+                    SpriteName$ = Mid$(Sprite$(I), p + 1)
+                Else
+                    SpriteName$ = Sprite$(I) ' No backslash found, assume it's just a filename
+                End If
+                SpriteName$ = Left$(SpriteName$, Len(SpriteName$) - 4) ' remove the .asm
+                A$ = "FDB": B$ = SpriteName$ + "_Draw": C$ = "Points to the Sprite Drawing Table (in the compiled sprite.asm file)": GoSub AO
+            End If
+        Next I
     End If
-    '    Z$ = "SpriteDrawTable:": GoSub AO
-    '    For I = 0 To 31
-    '        If Sprite$(I) <> "" Then
-    '            ' Find the last backslash
-    '            p = _InStrRev(Sprite$(I), "/")
-    '            If p = 0 Then p = _InStrRev(Sprite$(I), "\")
-    '            ' Extract the filename
-    '            If p > 0 Then
-    '                SpriteName$ = Mid$(Sprite$(I), p + 1)
-    '            Else
-    '                SpriteName$ = Sprite$(I) ' No backslash found, assume it's just a filename
-    '            End If
-    '            SpriteName$ = Left$(SpriteName$, Len(SpriteName$) - 4) ' remove the .asm
-    '            A$ = "FDB": B$ = SpriteName$ + "_Draw": C$ = "Points to the Sprite Drawing Table (in the compiled sprite.asm file)": GoSub AO
-    '        End If
-    '    Next I
     Z$ = "SpriteBackupTable:": GoSub AO
     For I = 0 To 31
         If Sprite$(I) <> "" Then
@@ -2146,12 +2152,31 @@ A$ = "TFR": B$ = "A,DP": C$ = "Setup the Direct page to use our variable locatio
 If CoCo3 = 1 Then
     A$ = "LDA": B$ = "#$38": C$ = "Normal First Bank": GoSub AO
     A$ = "STA": B$ = "$FFA8": C$ = "Make first block in 2nd bank the same as the first bank, this is where the IRQs are": GoSub AO
-    'we are using CoCo 3 commands, So let's put it in CoCo 3 mode
+    ' We are using CoCo 3 commands, So let's put it in CoCo 3 mode
     Z$ = "* CoCo 3 commands were detected, Enabling CoCo3 mode and Hi Speed": GoSub AO
     A$ = "LDA": B$ = "#%01111100": C$ = "CoCo 3 Mode, MMU Enabled, GIME IRQ Enabled, GIME FIRQ Enabled, Vector RAM at FEXX enabled, Standard SCS Normal, ROM Map 16k Int, 16k Ext": GoSub AO
     A$ = "STA": B$ = "$FF90": C$ = "Make the changes": GoSub AO
+    ' Set graphics mode to text
+    A$ = "LDX": B$ = "#$0400": C$ = "Text screen starts here": GoSub AO
+    A$ = "STX": B$ = "BEGGRP": C$ = "Update the Screen starting location": GoSub AO
+    A$ = "LDA": B$ = "#$0F": C$ = "$0F Back to Text Mode for the CoCo 3": GoSub AO
+    A$ = "STA": B$ = "$FF9C": C$ = "Neccesary for CoCo 3 GIME to use this mode": GoSub AO
+    ' Go to CoCo 3 Text mode
+    A$ = "LDA": B$ = "#$CC": GoSub AO
+    A$ = "STA": B$ = "$FF90": GoSub AO
+    A$ = "LDD": B$ = "#$0000": GoSub AO
+    A$ = "STD": B$ = "$FF98": GoSub AO
+    A$ = "STD": B$ = "$FF9A": GoSub AO
+    A$ = "STD": B$ = "$FF9E": GoSub AO
+    A$ = "LDD": B$ = "#$0FE0": GoSub AO
+    A$ = "STD": B$ = "$FF9C": GoSub AO
+    A$ = "LDA": B$ = "#Internal_Alphanumeric": C$ = "A = Text mode requested": GoSub AO
+    ' Update the Graphic mode and the screen viewer location
+    A$ = "JSR": B$ = "SetGraphicModeA": C$ = "Go setup the mode": GoSub AO
+    A$ = "LDA": B$ = "BEGGRP": C$ = "Get the MSB of the Screen starting location": GoSub AO
+    A$ = "LSRA": C$ = "Divide by 2 - 512 bytes per start location": GoSub AO
+    A$ = "JSR": B$ = "SetGraphicsStartA": C$ = "Go set the address of the screen": GoSub AO
 End If
-
 Z$ = "* Enable 6 Bit DAC output": GoSub AO
 A$ = "LDA": B$ = "$FF23": C$ = "* PIA1_Byte_3_IRQ_Ct_Snd * $FF23 GET PIA": GoSub AO
 A$ = "ORA": B$ = "#%00001000": C$ = "* SET 6-BIT SOUND ENABLE": GoSub AO
@@ -2372,6 +2397,7 @@ Else
     A$ = "ANDCC": B$ = "#%11101111": C$ = "= %11101111 this will Enable the IRQ to start": GoSub AO
 End If
 Z$ = "; *** User's Program code starts here ***": GoSub AO
+
 System 1 ' End with flag of 1 = All went OK
 
 ' Tokens for variables type:

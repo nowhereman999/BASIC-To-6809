@@ -8,6 +8,15 @@ https://github.com/pwillard/basto6809Manual
 For more info check out the blog post here:
 https://wordpress.com/post/nowhereman999.wordpress.com/5054
 
+V 4.39
+- Fixed SCREEN and GMODE commands so that the graphic screen is only shown with the SCREEN 1 command now and pointers for screen
+  locations are set properly
+- Fixed an issue with IF/THEN/ELSE in certain conditions
+
+V 4.38
+- Tweaked the COPYBLOCKS command, if there is a 6309 in the CoCo it will use TFM to do the copy (way faster)
+- Fixed a bug where the SCREEN command wasn't going back to text mode or graphics mode when sprites are being used
+
 V 4.37
 - Added TRIM$,LTRIM$ & RTRIM$ commands that will remove the spaces in a string
 - Fixed a bug where the IRQ wasn't being set properly if you used PLAY and a CoCo 3 GMODE 

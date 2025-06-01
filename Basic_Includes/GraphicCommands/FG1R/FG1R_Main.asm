@@ -79,7 +79,6 @@ PixelTableClear_FG1R:
 ; B = x coordinate
 ; Returns with:
 ; B = Colour value of the point
-* PMODE 4 POINT command
 POINT_FG1R:
         PSHS    B               ; Save x value
         LSRA

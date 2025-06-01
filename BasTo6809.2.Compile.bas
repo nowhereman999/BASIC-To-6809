@@ -2311,62 +2311,81 @@ DoELSEIF:
 
 
 ' Found an IF
+' ========== Globals (share across all routines) ==========
+' IFCount   : an ever‐increasing counter for each new IF
+' IFSP      : “stack pointer” for nested IFs (starts at 0)
+' IFStack() : array storing the IFCount for each nested level
+' ElseStack(): same as IFStack(), used to emit labels
+' ELSELocation(): 0/1 flag indicating “did we find an ELSE?” for that IF
+' Filesize  : length of Array() in bytes
+' Array(x)  : the raw token stream of your compiled BASIC (bytes)
+' x         : your current byte‐pointer into Array()
+' IF_CMD, ELSE_CMD, END_CMD, THEN_CMD : numeric op‐codes from Array()
+'
+' You also need these helper subs:
+'   NumAsString   : converts numeric IFCount into a two‐character string Num$
+'   AO            : emits whatever is in A$, B$, C$ as a single line (e.g. “BEQ    _ELSE_03   ; …”)
+'
+' Make sure you never reset IFSP or IFProc inside these routines, except exactly where noted below.
+
+' ==============================
+' (1) PROCEDURE to call as soon as you see “IF … THEN”
+' ==============================
 DoIF:
-If ENDIFCheck > 0 Then GoTo IFProcessed ' We've already processed this IF so skip processing again
-FirstIFLocation = x ' This is the point where the expression starts
-ElseCount = 0
-IFProc = 0
+' --- Step 1: Assign a unique ID to this new IF and push it onto the IF‐stack ---
+IFCount = IFCount + 1 ' e.g. 0→1→2→3… each time you hit a brand‐new IF
+IFSP = IFSP + 1 ' “push” a new stack slot
+IFProc = IFSP ' index into IFStack/ElseStack arrays
+IFSTack(IFProc) = IFCount ' record that ID
+ElseStack(IFProc) = IFCount ' we use the same ID for ELSE and END IF labels
+ELSELocation(IFProc) = 0 ' default = “no ELSE until we find one”
 
-NestedIF:
-IFLocation = x ' This is the point where the expression starts
-IFCount = IFCount + 1
-IFProc = IFProc + 1
+' --- Step 2: Scan ahead (without changing the real x) to see if this IF has an ELSE BEFORE its matching END IF ---
+FirstIFLocation = x ' remember where the condition begins (just after the IF token)
+ScanPos = x ' we’ll use ScanPos to walk ahead, then restore x
+ENDIFCheck = 1 ' we’re looking for our own END IF (depth = 1)
+FoundELSE = 0
 
-IFSTack(IFProc) = IFCount 'If Stack
-ElseStack(IFProc) = IFCount ' Else Stack
-ELSELocation(IFProc) = 0
-ENDIFCheck = 1 ' We found an IF so flag it
-FoundELSE = 0 ' We haven't found and ELSE yet
-GoSub DoesThisIFHaveAnELSE ' Check if this IF has an ELSE if so FoundELSE will = 1
-ELSELocation(IFProc) = FoundELSE
-x = IFLocation ' x = the point where the expression starts for the first IF
-
-'Keep checking until we get an END IF that goes with the current IF (adding to IFProc if we find more IFs
-ENDIFCheck = 0
-FindElses:
-If x + 4 > Filesize Then GoTo GotNestedIFs ' Keep checking unless we get to the end of the file
-v = Array(x): x = x + 1 'get a byte
-If v = &HFF And Array(x) * 256 + Array(x + 1) = END_CMD And Array(x + 2) = &HFF And Array(x + 3) * 256 + Array(x + 4) = IF_CMD Then
-    'We found an END IF
-    ENDIFCheck = ENDIFCheck - 1
-    If ENDIFCheck <= 0 Then GoTo GotNestedIFs ' check until we get to the END IF that is associated with our IF
-End If
-If v = &HFF And Array(x) * 256 + Array(x + 1) = IF_CMD Then
-    If Array(x - 4) = &HFF And Array(x - 3) * 256 + Array(x - 2) = END_CMD Then
-        'Found an END IF, carry on
+ScanAheadLoop:
+If ScanPos + 3 > Filesize Then GoTo DoneScanning ' (malformed BASIC? just bail)
+v = Array(ScanPos): ScanPos = ScanPos + 1 ' read one byte of token
+' Check if we’ve hit another “IF” at depth > 0
+If v = &HFF And Array(ScanPos) * 256 + Array(ScanPos + 1) = IF_CMD Then
+    ' Look ahead to see if this is actually “END IF” or a fresh IF
+    If (Array(ScanPos - 4) = &HFF And Array(ScanPos - 3) * 256 + Array(ScanPos - 2) = END_CMD) Then
+        ' That was an “END IF,” so do NOT treat as a nested IF
     Else
-        GoTo NestedIF ' found another real IF
+        ENDIFCheck = ENDIFCheck + 1
     End If
 End If
-GoTo FindElses ' Loop until we get the END IF associated with our IF
-GotNestedIFs:
-ENDIFCheck = IFProc
-IFCount = IFCount - IFProc ' Reset the IFCounter to what it was before we got our first IF (not nested IF)
 
-x = FirstIFLocation ' x = the point where the expression starts for the first IF
-IFProc = 0
-IFSP = 0
+' Check if this byte sequence is ELSE
+If v = &HFF And Array(ScanPos) * 256 + Array(ScanPos + 1) = ELSE_CMD Then
+    If ENDIFCheck = 1 Then
+        FoundELSE = 1
+        GoTo DoneScanning
+    End If
+End If
 
-' We get here after the IF and nested IFs are processed or a nested IF has just been found
-IFProcessed:
-IFCount = IFCount + 1
-IFProc = IFProc + 1
-'xxx
-IFSTack(IFProc) = IFCount
-IFSP = IFSP + 1
-ElseStack(IFSP) = IFCount
+' Check if this byte sequence is END IF
+    If v = &HFF _
+       And Array(ScanPos)*256 + Array(ScanPos+1) = END_CMD _
+       And Array(ScanPos+2) = &HFF _
+       And Array(ScanPos+3)*256 + Array(ScanPos+4) = IF_CMD Then
 
-' We are inside a nested IF/THEN/ELSE we've already processed
+    ENDIFCheck = ENDIFCheck - 1
+    If ENDIFCheck = 0 Then GoTo DoneScanning
+End If
+
+GoTo ScanAheadLoop
+
+DoneScanning:
+ELSELocation(IFProc) = FoundELSE ' record whether an ELSE appeared first
+x = FirstIFLocation ' restore x so we can actually parse the condition
+' (Now x points just after “IF” in the token stream.)
+
+x = FirstIFLocation ' rewind pointer to re-parse the expression
+
 ' x points just past the IF        , ' This is the point where the expression starts
 CheckIfTrue$ = ""
 SaveIFX = x ' Save this position, just in case we have floating point compares to test for
@@ -2425,31 +2444,6 @@ End If
 'x = x - 2: v = Array(x)
 'GoTo ConsumeCommentsAndEOL ' Consume any comments and the EOL and Return
 Return
-
-' Check if this IF has an associated ELSE
-DoesThisIFHaveAnELSE:
-If x + 3 > Filesize Then GoTo GotNestedIFs ' Keep checking unless we get to the end of the file
-v = Array(x): x = x + 1 'get a byte
-If v = &HFF And Array(x) * 256 + Array(x + 1) = IF_CMD Then
-    If Array(x - 4) = &HFF And Array(x - 3) * 256 + Array(x - 2) = END_CMD Then
-        'Found And End IF
-    Else
-        ENDIFCheck = ENDIFCheck + 1 ' found a real IF
-    End If
-End If
-If v = &HFF And Array(x) * 256 + Array(x + 1) = ELSE_CMD Then
-    'We found an ELSE command for the current IF
-    If ENDIFCheck = 1 Then
-        FoundELSE = 1
-        Return
-    End If
-End If
-If v = &HFF And Array(x) * 256 + Array(x + 1) = END_CMD And Array(x + 2) = &HFF And Array(x + 3) * 256 + Array(x + 4) = IF_CMD Then
-    'We found an END IF
-    ENDIFCheck = ENDIFCheck - 1
-    If ENDIFCheck = 0 Then Return ' check until we get to the END IF that is associated with our IF
-End If
-GoTo DoesThisIFHaveAnELSE
 
 ' Format the characters between the IF and the THEN as:
 ' ex.  IF ((A*(4+B)=2 AND C=3) OR B=1 OR D=1) AND Z=2 THEN as
@@ -5818,12 +5812,14 @@ If v = &HFF Then
     v = Array(x) * 256 + Array(x + 1): x = x + 2
     If v = IF_CMD Then
         'We found an END IF
-        Num = ElseStack(IFSP): GoSub NumAsString 'num=IFCount associated with this IFProc
-        ElseStack(Temp) = 0 ' flag as used
+        Num = ElseStack(IFSP): GoSub NumAsString
         If Num < 10 Then Num$ = "0" + Num$
-        Z$ = "_IFDone_" + Num$: C$ = "END IF line": GoSub AO
+        ' Emit the label `_IFDone_##:` so that any BEQ/BRA jumps land here
+        Z$ = "_IFDone_" + Num$: C$ = "Label: END IF": GoSub AO
+        ' Now pop the IFstack:
         IFSP = IFSP - 1
-        ENDIFCheck = ENDIFCheck - 1 ' we completed this IF
+        ' (If you have a depth variable like ENDIFCheck, decrement it here:
+        ENDIFCheck = ENDIFCheck - 1
         GoTo SkipUntilEOLColon ' Consume any comments and the EOL/colon and Return
     Else
         If v = SELECT_CMD Then
@@ -6567,7 +6563,7 @@ A$ = "PSHS": B$ = "B": C$ = "Save the Source Graphics Page # on the stack": GoSu
 If Gmode < 100 Then
     ' Copy CoCo 1 & 2 graphic screens
     A$ = "CLRA": C$ = "Clear MSB": GoSub AO
-    A$ = "DECB": C$ = "D has the Destination Page #": GoSub AO
+    '    A$ = "DECB": C$ = "D has the Destination Page #": GoSub AO
     A$ = "LDX": B$ = "#$" + GModeScreenSize$(Gmode): C$ = "Get the Size of a graphics screen": GoSub AO
     A$ = "PSHS": B$ = "D,X": C$ = "Save the two 16 bit WORDS on the stack, to be multiplied": GoSub AO
     A$ = "JSR": B$ = "MUL16": C$ = "Do 16 bit x 16 bit Multiply, D = WORD on Stack ,S * WORD on stack 2,S, lowest 16 bit result will be in D": GoSub AO ' D = D * X
@@ -6577,7 +6573,7 @@ If Gmode < 100 Then
 
     A$ = "CLRA": C$ = "Clear MSB": GoSub AO
     A$ = "LDB": B$ = "3,S": C$ = "Get the Source Graphics Page #": GoSub AO
-    A$ = "DECB": C$ = "D has the Source Page #": GoSub AO
+    '    A$ = "DECB": C$ = "D has the Source Page #": GoSub AO
     A$ = "LDX": B$ = "#$" + GModeScreenSize$(Gmode): C$ = "Get the Size of a graphics screen": GoSub AO
     A$ = "PSHS": B$ = "D,X": C$ = "Save the two 16 bit WORDS on the stack, to be multiplied": GoSub AO
     A$ = "JSR": B$ = "MUL16": C$ = "Do 16 bit x 16 bit Multiply, D = WORD on Stack ,S * WORD on stack 2,S, lowest 16 bit result will be in D": GoSub AO ' D = D * X
@@ -6664,10 +6660,11 @@ If Gmode > 99 Then
     End If
     A$ = "LDD": B$ = "#$" + GModeStartAddress$(Gmode): C$ = "A = the location in RAM to start the graphics screen": GoSub AO
     A$ = "STD": B$ = "BEGGRP": C$ = "Update the Screen starting location": GoSub AO
-    A$ = "LDA": B$ = "#" + GMode$(Gmode): C$ = "A = Graphic mode requested": GoSub AO
-    A$ = "STA": B$ = "$FF99": C$ = "GIME_VideoResolution_FF99": GoSub AO
-    A$ = "LDA": B$ = "#%10000000": C$ = "Video_Mode_Register, Graphics mode, Colour output, 60 hz, max vertical res": GoSub AO
-    A$ = "STA": B$ = "$FF98": C$ = "GIME_VideoMode_FF98": GoSub AO
+    ' Skip actually going into graphics mode, that should be done with the screen command
+    '    A$ = "LDA": B$ = "#" + GMode$(Gmode): C$ = "A = Graphic mode requested": GoSub AO
+    '    A$ = "STA": B$ = "$FF99": C$ = "GIME_VideoResolution_FF99": GoSub AO
+    '    A$ = "LDA": B$ = "#%10000000": C$ = "Video_Mode_Register, Graphics mode, Colour output, 60 hz, max vertical res": GoSub AO
+    '    A$ = "STA": B$ = "$FF98": C$ = "GIME_VideoMode_FF98": GoSub AO
 
     v1 = Val("&H" + GModeScreenSize$(Gmode))
     TempVal = 0
@@ -6678,12 +6675,12 @@ If Gmode > 99 Then
     A$ = "MUL": C$ = "B = Blocks required per screen * the Screen requested": GoSub AO
     A$ = "STB": B$ = "CC3ScreenStart": C$ = "Save the screen block location": GoSub AO
     ' Pointer value in RAM is Block Number * $2000 / 8 or Block Number * $400 in our 512k of RAM
-    A$ = "TFR": B$ = "B,A": C$ = "A = $2000 screen block location": GoSub AO
-    A$ = "CLRB": C$ = "Clear B": GoSub AO
-    A$ = "LSLA": C$ = "A=A*2": GoSub AO
-    A$ = "LSLA": C$ = "A=A*4, D=B * $400 = the screen start location": GoSub AO
-    A$ = "STD": B$ = "$FF9D": C$ = "GIME_VerticalOffset1_FF9D": GoSub AO
-    A$ = "STB": B$ = "$FF9F": C$ = "B=0, Hor_Offset_Reg, Don't use a Horizontal offset - GIME_HorizontalOffset_FF9F": GoSub AO
+    '    A$ = "TFR": B$ = "B,A": C$ = "A = $2000 screen block location": GoSub AO
+    '    A$ = "CLRB": C$ = "Clear B": GoSub AO
+    '    A$ = "LSLA": C$ = "A=A*2": GoSub AO
+    '    A$ = "LSLA": C$ = "A=A*4, D=B * $400 = the screen start location": GoSub AO
+    '    A$ = "STD": B$ = "$FF9D": C$ = "GIME_VerticalOffset1_FF9D": GoSub AO
+    '    A$ = "STB": B$ = "$FF9F": C$ = "B=0, Hor_Offset_Reg, Don't use a Horizontal offset - GIME_HorizontalOffset_FF9F": GoSub AO
 Else
     ' We are using a CoCo 1 or CoCo 2 graphics mode
     GScreenStart = Val("&H" + GModeStartAddress$(Gmode)) ' Get screen start location
@@ -6712,12 +6709,13 @@ Else
     Z$ = "@UpdateScreenStart": GoSub AO
     A$ = "STD": B$ = "BEGGRP": C$ = "Update the Screen starting location": GoSub AO
     Print #1,
-    A$ = "LSRA": C$ = "A = the location in RAM to start the graphics screen / 2 as it must start in a 512 byte block": GoSub AO
-    ' Wait for vsync
-    A$ = "LDB": B$ = "$FF02": C$ = "Reset Vsync flag": GoSub AO
-    Z$ = "!": A$ = "LDB": B$ = "$FF03": C$ = "See if Vsync has occurred yet": GoSub AO
-    A$ = "BPL": B$ = "<": C$ = "If not then keep looping, until the Vsync occurs": GoSub AO
-    A$ = "JSR": B$ = "SetGraphicsStartA": C$ = "Go setup the screen start location": GoSub AO
+    ' Skip actually going into graphics mode, that should be done with the screen command
+    '    A$ = "LSRA": C$ = "A = the location in RAM to start the graphics screen / 2 as it must start in a 512 byte block": GoSub AO
+    '    ' Wait for vsync
+    '    A$ = "LDB": B$ = "$FF02": C$ = "Reset Vsync flag": GoSub AO
+    '    Z$ = "!": A$ = "LDB": B$ = "$FF03": C$ = "See if Vsync has occurred yet": GoSub AO
+    '    A$ = "BPL": B$ = "<": C$ = "If not then keep looping, until the Vsync occurs": GoSub AO
+    '    A$ = "JSR": B$ = "SetGraphicsStartA": C$ = "Go setup the screen start location": GoSub AO
 End If
 If FirstGmode = 0 Then
     FirstGmode = 1
@@ -6817,6 +6815,10 @@ A$ = "BRA": B$ = ">": GoSub AO
 Z$ = "@DoGraphicMode:": GoSub AO
 If Gmode > 99 Then
     ' We are using a CoCo 3 graphics mode
+    A$ = "LDA": B$ = "#%01111100": C$ = "CoCo 3 Mode, MMU Enabled, GIME IRQ Enabled, GIME FIRQ Enabled, Vector RAM at FEXX enabled, Standard SCS Normal, ROM Map 16k Int, 16k Ext": GoSub AO
+    A$ = "STA": B$ = "$FF90": C$ = "Make the changes": GoSub AO
+    A$ = "LDD": B$ = "#$" + GModeStartAddress$(Gmode): C$ = "A = the location in RAM to start the graphics screen": GoSub AO
+    A$ = "STD": B$ = "BEGGRP": C$ = "Update the Screen starting location": GoSub AO
     A$ = "LDA": B$ = "#" + GMode$(Gmode): C$ = "A = Graphic mode requested": GoSub AO
     A$ = "STA": B$ = "$FF99": C$ = "Vid_Res_Reg": GoSub AO
     A$ = "LDA": B$ = "#%10000000": GoSub AO
@@ -6827,7 +6829,7 @@ If Gmode > 99 Then
     A$ = "LSLA": C$ = "A=A*4": GoSub AO
     A$ = "STD": B$ = "$FF9D": C$ = "Update the VidStart": GoSub AO
     A$ = "CLR": B$ = "$FF9F": C$ = "Hor_Offset_Reg, Don't use a Horizontal offset": GoSub AO
-    '    Z$ = "!": GoSub AO
+    A$ = "BRA": B$ = "@Done": C$ = "Skip ahead": GoSub AO
     '    Print #1, ' Need a space for @ in assembly
     '    Return
 Else
@@ -6839,15 +6841,29 @@ Else
         A$ = "LDA": B$ = "#10": C$ = "10 for Semigrpahics 24": GoSub AO
         A$ = "STA": B$ = "$FF9C": C$ = "Neccesary for CoCo 3 GIME to use this mode": GoSub AO
     End If
+    A$ = "CLRA": C$ = "D=B": GoSub AO
+    A$ = "LDB": B$ = "GModePage": C$ = "Get the screen Page #": GoSub AO
+    A$ = "BNE": B$ = "@Skip1": C$ = "If not the first page then go calc where to set the graphics page viewer": GoSub AO
+    A$ = "LDD": B$ = "#$" + GModeStartAddress$(Gmode): C$ = "A = the location in RAM to start the graphics screen": GoSub AO
+    A$ = "BRA": B$ = "@UpdateScreenStart": C$ = "Go update the screen start location"
+    Z$ = "@Skip1"
+    A$ = "LDX": B$ = "#$" + GModeScreenSize$(Gmode): C$ = "X = the screen size": GoSub AO
+    A$ = "PSHS": B$ = "D,X": C$ = "Save the two 16 bit WORDS on the stack, to be multiplied": GoSub AO
+    A$ = "JSR": B$ = "MUL16": C$ = "Do 16 bit x 16 bit Multiply, D = WORD on Stack ,S * WORD on stack 2,S, lowest 16 bit result will be in D": GoSub AO
+    A$ = "LEAS": B$ = "4,S": C$ = "Fix the Stack": GoSub AO
+    A$ = "ADDD": B$ = "#$0E00": C$ = "D = Screen Page + Screen start location": GoSub AO
+    Z$ = "@UpdateScreenStart": GoSub AO
+    A$ = "STD": B$ = "BEGGRP": C$ = "Update the Screen starting location": GoSub AO
     A$ = "LDA": B$ = "#" + GMode$(Gmode): C$ = "A = Graphic mode requested": GoSub AO
 End If
 Z$ = "!"
 A$ = "ORA": B$ = "CSSVAL": C$ = "Add in the colour select value into A": GoSub AO
 ' Update the Graphic mode and the screen viewer location
 A$ = "JSR": B$ = "SetGraphicModeA": C$ = "Go setup the mode": GoSub AO
-A$ = "LDA": B$ = "BEGGRP": C$ = "Get the MSB of the Screen starting location": GoSub AO
+A$ = "LDA": B$ = "BEGGRP": C$ = "Update the Screen starting location": GoSub AO
 A$ = "LSRA": C$ = "Divide by 2 - 512 bytes per start location": GoSub AO
 A$ = "JSR": B$ = "SetGraphicsStartA": C$ = "Go set the address of the screen": GoSub AO
+Z$ = "@Done": GoSub AO
 Print #1, ' Need a space for @ in assembly
 Return
 
@@ -9306,7 +9322,11 @@ If v = &HFF Then
             End If
             A$ = "PSHS": B$ = "B": C$ = "Save the frame #": GoSub AO
             A$ = "JSR": B$ = "ShowSpriteFrame": C$ = "Jump to code to change the sprite frame #": GoSub AO
-            A$ = "LEAS": B$ = "6,S": C$ = "Fix the Stack": GoSub AO
+            If Gmode > 99 Then
+                A$ = "LEAS": B$ = "6,S": C$ = "Fix the Stack": GoSub AO
+            Else
+                A$ = "LEAS": B$ = "2,S": C$ = "Fix the Stack": GoSub AO
+            End If
             Return
         Case BACKUP_CMD
             ' Save the background behind the sprite # given
