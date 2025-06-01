@@ -309,7 +309,7 @@ Print "           create xx anim sprites from this single image"
 Print "           The image should contain the animation frames all in a row (max 32 frames per PNG file)"
 Print "-ox      - Offset pixel for where the left edge of the sprite(s) will be generated from"
 Print
-Print "-bx option handles the way the sprite handles the graphics behind the sprite."
+Print "-bx        This option handles the way the sprite handles the graphics behind the sprite."
 Print "-b0      - No backup or restore of the data behind the sprite will be done, this is the fastest but it makes a destructive sprite"
 Print "-b1      - (default) Add code that will restore the background behind the sprite"
 Print "-b2      - Always write a byte pattern behind the sprite, this is faster than restoring using option -b1"
