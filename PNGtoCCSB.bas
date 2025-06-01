@@ -297,7 +297,7 @@ count = _CommandCount
 If count > 0 Then GoTo 100
 99 Print: Print "PNG to CoCo Sprite Compiler & Background Image Renderer v"; VersionNumber$; " by Glen Hewlett"
 Print
-Print "Usage: PNGtoCoCo -gx [-sx] [-a[w]xx] [-bx] [-pxxx] [-scroll] [-cx] [-dx] [-x] [-blkxx] [-makepal] [-usepal] [-v#] InName.png"
+Print "Usage: PNGtoCCSB -gx [-sx] [-a[w]xx] [-bx] [-pxxx] [-scroll] [-cx] [-dx] [-x] [-blkxx] [-makepal] [-usepal] [-v#] InName.png"
 Print "Where:"
 Print "InName.png is a 32 bit RGBA (includes transparency) png file"
 Print "-gx      - Where x is the GMODE # the basic program will use to draw the created sprite/background image"
