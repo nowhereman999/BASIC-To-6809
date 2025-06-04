@@ -329,6 +329,7 @@ For check = 1 To count
     If LCase$(Left$(N$, 2)) = "-p" Then ProgramStart$ = Right$(N$, Len(N$) - 2): GoTo CheckNextCMDOption
     If LCase$(Left$(N$, 2)) = "-f" Then Font$ = Right$(N$, Len(N$) - 2): GoTo CheckNextCMDOption
     If LCase$(Left$(N$, 2)) = "-a" Then AutoStart = 1: GoTo CheckNextCMDOption
+    If LCase$(Left$(N$, 7)) = "-dragon" Then Dragon = 1: GoTo CheckNextCMDOption
     ' check if we got a file name yet if so then the next filename will be output
     OutName$ = N$
     CheckNextCMDOption:
@@ -1927,7 +1928,7 @@ If PrintGraphicsText = 1 Then
     Next i3
 End If
 
-' List of includes needs to be added, only if it's not already in the list
+' List of includes needing to be added, only if it's not already in the list
 Print #1, "; Section of necessary included code:"
 For ii = 0 To GeneralCommandsFoundCount - 1
     Temp$ = UCase$(GeneralCommandsFound$(ii))
@@ -1942,7 +1943,12 @@ For ii = 0 To GeneralCommandsFoundCount - 1
         Temp$ = "GetJoyD": GoSub AddIncludeTemp ' Add code to quickly get the Joystick values and set the values of 0,31 or 63
     End If
     If Temp$ = "INPUT" Then
-        Temp$ = "KeyboardInput": GoSub AddIncludeTemp
+        '        Temp$ = "KeyboardInput": GoSub AddIncludeTemp
+        If Dragon = 1 Then
+            Temp$ = "InkeyDragon": GoSub AddIncludeTemp ' Add the Dragon Inkey library
+        Else
+            Temp$ = "Inkey": GoSub AddIncludeTemp ' Add the CoCo Inkey library
+        End If
         Temp$ = "INPUTCode": GoSub AddIncludeTemp
         Temp$ = "DecimalStringToD": GoSub AddIncludeTemp ' Add commands for converting decimal numbers to D
     End If
@@ -1997,7 +2003,11 @@ Next ii
 For ii = 0 To StringCommandsFoundCount - 1
     Temp$ = UCase$(StringCommandsFound$(ii))
     If Temp$ = "INKEY$" Then
-        Temp$ = "Inkey": GoSub AddIncludeTemp ' Add the Inkey library
+        If Dragon = 1 Then
+            Temp$ = "InkeyDragon": GoSub AddIncludeTemp ' Add the Dragon Inkey library
+        Else
+            Temp$ = "Inkey": GoSub AddIncludeTemp ' Add the CoCo Inkey library
+        End If
     End If
     If Temp$ = "STR$" Then
         Temp$ = "D_to_String": GoSub AddIncludeTemp ' Add the D_to_String library
@@ -2297,7 +2307,8 @@ A$ = "RTS": C$ = "Return from clearing the variables": GoSub AO
 
 Z$ = "SkipClear:": GoSub AO
 A$ = "BSR": B$ = "ClearVariables": C$ = "Go clear the all the variables": GoSub AO
-A$ = "DEC": B$ = "CASFLG": C$ = "set the case flag to $FF = Normal uppercase": GoSub AO
+A$ = "LDA": B$ = "#$FF": GoSub AO
+A$ = "STA": B$ = "CASFLG": C$ = "set the case flag to $FF = Normal uppercase": GoSub AO
 A$ = "LDD": B$ = ">$0112": C$ = "Get the Extended BASIC's TIMER value": GoSub AO
 A$ = "STD": B$ = "_Var_Timer": C$ = "Use Basic's Timer as a starting point for the TIMER value, just in case someone uses it for Randomness": GoSub AO
 A$ = "STD": B$ = "Seed1": C$ = "Save TIMER value as the Random number seed value": GoSub AO
@@ -2330,6 +2341,7 @@ A$ = "LDX": B$ = "#$FEF7": C$ = "X = Address for the COCO 3 IRQ JMP": GoSub AO
 A$ = "LDY": B$ = "#$FEFD": C$ = "Y = Address for the COCO 3 NMI JMP": GoSub AO
 A$ = "BRA": B$ = ">": C$ = "Skip ahead": GoSub AO
 Z$ = "SaveCoCo1": GoSub AO
+' reset the coco 1/2 interrupt jumps
 A$ = "LDX": B$ = "#$010C": C$ = "X = Address for the COCO 1 IRQ JMP": GoSub AO
 A$ = "LDY": B$ = "#$0109": C$ = "Y = Address for the COCO 1 NMI JMP": GoSub AO
 Z$ = "!"
@@ -2348,7 +2360,7 @@ A$ = "LDD": B$ = "1,X": C$ = "D = Address": GoSub AO
 A$ = "STD": B$ = "1,U": C$ = "Backup the Address of the IRQ": GoSub AO
 
 ' Set the CPU to the Max speed
-A$ = "CLRB": C$ = "B=0, make the CPU wus max speed": GoSub AO
+A$ = "CLRB": C$ = "B=0, make the CPU max speed as default": GoSub AO
 A$ = "JSR": B$ = "SetCPUSpeedB": C$ = "Save max speed and set the CPU to Max speed it can handle": GoSub AO
 
 A$ = "LDB": B$ = "#$7E": C$ = "JMP instruction": GoSub AO
@@ -2357,6 +2369,10 @@ If Disk = 1 Then
     A$ = "STB": B$ = ",Y": C$ = "A = JMP Instruction": GoSub AO
     A$ = "LDU": B$ = "#DNMISV": C$ = "U=Address of our NMIRQ": GoSub AO
     A$ = "STU": B$ = "1,Y": C$ = "Save the Address of the NMIRQ": GoSub AO
+Else
+    ' Set NMI as RTI
+    A$ = "LDA": B$ = "#$3B": C$ = "RTI instruction": GoSub AO
+    A$ = "STA": B$ = ",Y": C$ = "Save RTI Instruction instead of NMI IRQ JMP": GoSub AO
 End If
 
 ' Setup Sprite blocks

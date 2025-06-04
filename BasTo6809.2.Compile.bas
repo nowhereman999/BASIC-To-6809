@@ -5652,8 +5652,8 @@ A$ = "STA": B$ = "CommaCount": C$ = "Save the number of commas to look for": GoS
 x = Start
 
 ' Fill the KeyBuff from user input, it will be terminated with a comma
-A$ = "JSR": B$ = "GetInput": C$ = "Show ? and get user input in KeyBuff, U points to the end of the buffer, B has # of characters that were input": GoSub AO
-A$ = "LDU": B$ = "#KeyBuff": C$ = "U = source starts address": GoSub AO
+A$ = "JSR": B$ = "GetInput": C$ = "Show ? and get user input in _StrVar_PF00, U points to the end of the buffer, B has # of characters that were input": GoSub AO
+A$ = "LDU": B$ = "#_StrVar_PF00": C$ = "U = source starts address": GoSub AO
 If count = 0 Then
     ' No commas, just one entry for this INPUT command
     v = Array(x): x = x + 1 ' Get the type of variable

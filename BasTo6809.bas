@@ -1,4 +1,8 @@
-V$ = "4.39"
+V$ = "4.40"
+'       - Added -dragon option, which will output a compiled program that will work for the Dragon computers keyboard layout instead of the CoCo keyboard layout
+'       - Now if coco1/2 or dragon mode, and no drive the NMI IRQ is set to RTI
+
+' V 4.39
 '       - Fixed SCREEN and GMODE commands so that the graphic screen is only shown with the SCREEN 1 command now and pointers for screen
 '         locations are set properly
 '       - Fixed an issue with IF/THEN/ELSE in certain conditions
@@ -323,6 +327,7 @@ If count = 0 Then
     Print "       set the input type with the -coco or -ascii options"
     Print "       -coco     - A regular tokenized Color Computer BASIC program"
     Print "       -ascii    - A plain text BASIC program in regular ASCII, from a text editor or a program like QB64"
+    Print "       -dragon   - Destination code is for a Dragon computer (Keyboard layout is different than a CoCo)"
     Print "       -sxxx     - Sets the max length to reserve for strings in an array (default and max is 255 bytes)"
     Print "                   If your program needs more space and you aren't using larger strings this option"
     Print "                   can make your program use a lot less RAM"
@@ -340,7 +345,7 @@ If count = 0 Then
     Print "       -a        - Makes the program autostart after it is LOADed on the CoCo"
     Print "       -h        - Show this help message"
     Print
-    Print "See BasTo6809.txt file for more help"
+    Print "See Manual.pdf file for more help"
     System
 End If
 nt = 0: newp = 0: endp = 0: BranchCheck = 0: StringArraySize = 255: KeepTempFiles = 0: AutoStart = 0
@@ -351,6 +356,7 @@ For check = 1 To count
     N$ = Command$(check)
     If LCase$(Left$(N$, 5)) = "-coco" Then BASICMode = 1: GoTo CheckNextCMDOption
     If LCase$(Left$(N$, 6)) = "-ascii" Then BASICMode = 3: GoTo CheckNextCMDOption
+    If LCase$(Left$(N$, 7)) = "-dragon" Then Dragon = 1: GoTo CheckNextCMDOption
     If LCase$(Left$(N$, 2)) = "-s" Then StringArraySize = Val(Right$(N$, Len(N$) - 2)): GoTo CheckNextCMDOption
     If LCase$(Left$(N$, 2)) = "-o" Then Optimize = Val(Right$(N$, Len(N$) - 2)): GoTo CheckNextCMDOption
     If LCase$(Left$(N$, 2)) = "-b" Then BranchCheck = Val(Right$(N$, Len(N$) - 2)): GoTo CheckNextCMDOption
@@ -419,6 +425,7 @@ If InStr(LCase$(I$), "compileoptions") > 0 Then
         If LCase$(Left$(N$, 2)) = "-k" Then KeepTempFiles = 1
         If LCase$(Left$(N$, 2)) = "-f" Then Font$ = Right$(N$, Len(N$) - 2)
         If LCase$(Left$(N$, 2)) = "-a" Then AutoStart = 1
+        If LCase$(Left$(N$, 7)) = "-dragon" Then Dragon = 1
         If Left$(N$, 2) = "-v" Then
             ' Show the Version number and exit
             Print "BasTo6809 - BASIC to 6809 Assembly converter V"; V$
@@ -835,6 +842,7 @@ Verbose$ = " -v" + Num$ + " "
 p$ = " -p" + ProgramStart$ + " "
 f$ = "-f" + Font$ + " "
 
+If Dragon = 1 Then Dragon$ = " -dragon " Else Dragon$ = ""
 If KeepTempFiles = 1 Then KeepTempFiles$ = " -k " Else KeepTempFiles$ = ""
 If AutoStart = 1 Then AutoStart$ = " -a " Else AutoStart$ = ""
 ' We now have the BASIC program in a good text format as the file BASIC_Text.bas
@@ -845,11 +853,11 @@ If InStr(CompilerVersion$, "[MACOSX]") > 0 Or InStr(CompilerVersion$, "[LINUX]")
 Else
     PreString$ = ".\"
 End If
-returncode = Shell(PreString$ + "BasTo6809.1.Tokenizer " + c$ + s$ + o$ + b$ + Verbose$ + p$ + f$ + AutoStart$ + OutName$)
+returncode = Shell(PreString$ + "BasTo6809.1.Tokenizer " + c$ + s$ + o$ + b$ + Dragon$ + Verbose$ + p$ + f$ + AutoStart$ + OutName$)
 If returncode = 0 Then System
 ' We now have the BASIC program in a good tokenized format as the file BasicTokenized.bin
 ' Call the compiler with a few command line options to pass through to the compiler
-returncode = Shell(PreString$ + "BasTo6809.2.Compile " + c$ + s$ + o$ + b$ + Verbose$ + KeepTempFiles$ + AutoStart$ + OutName$)
+returncode = Shell(PreString$ + "BasTo6809.2.Compile " + c$ + s$ + o$ + b$ + Dragon$ + Verbose$ + KeepTempFiles$ + AutoStart$ + OutName$)
 If returncode = 0 Then System
 System
 

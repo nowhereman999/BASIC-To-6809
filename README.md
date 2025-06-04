@@ -8,6 +8,12 @@ https://github.com/pwillard/basto6809Manual
 For more info check out the blog post here:
 https://wordpress.com/post/nowhereman999.wordpress.com/5054
 
+V 4.40
+- Added -dragon option, which will output a compiled program that will work for the Dragon computers keyboard layout instead
+  of the CoCo keyboard layout
+- Removed Keyboardinput.asm as the INKEY and INPUT commands no longer use it, should save about 300 bytes
+
+
 V 4.39
 - Fixed SCREEN and GMODE commands so that the graphic screen is only shown with the SCREEN 1 command now and pointers for screen
   locations are set properly

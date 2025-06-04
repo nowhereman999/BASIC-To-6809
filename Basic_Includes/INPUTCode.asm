@@ -1,5 +1,5 @@
 * Code needed for the input command
-* Get the users input into the buffer KeyBuff
+* Get the users input into the buffer _StrVar_PF00
 CommaCount   RMB     1          ; Number of commas found
 GetInput:
         LDA     #'?             ; Load A with a ?
@@ -7,22 +7,24 @@ GetInput:
         LDA     #$20            ; Load A with a space
         JSR     PrintA_On_Screen   ; Go print A on screen @ Cursor Position
 ; Get keyboard input into a buffer   
-        LDU     #KeyBuff        ; U = keyboard buffer start
+@Loop0:
+        LDU     #_StrVar_PF00   ; U = keyboard buffer start
         CLRB                    ; Clear buffer size counter
 @Loop1  LDA     #$CF            ; White cursor
         JSR     PrintA_On_Screen   ; Go print A on screen @ Cursor Position
         DEC     CURPOS+1        ; Set next position to print on screen on top of the cursor
         BNE     >               ; ""
         DEC     CURPOS          ; ""
-!       JSR     InKey           ; Get input
+;!       JSR     InKey           ; Get input
+!       JSR     KEYIN
         TSTA                    ; was a key pressed?
         BEQ     <               ; If not then get some more
-        CMPA    #$03            ; Was the Break key pressed?
-        BEQ     EXITProgram     ; If so then leave the program
+;        CMPA    #$03            ; Was the Break key pressed?
+;        BEQ     EXITProgram     ; If so then leave the program
         CMPA    #$08            ; Was the Backspace key pressed?
         BNE     >               ; Skip forword if not
         TSTB                    ; Check buffer size counter
-        BEQ     @Loop1          ; If it's zero then ignore Backspace key press
+        BEQ     @Loop0          ; If it's zero then ignore Backspace key press
         DECB                    ; Decrement the buffer size counter
         LEAU    -1,U            ; Decrement the buffer pointer
         JSR     PrintA_On_Screen   ; Go print A on screen @ Cursor Position
@@ -44,7 +46,7 @@ GetInput:
 @CheckCommas:         
         PSHS    B               ; Save B = buffer size on the stack
         PSHS    B               ; Save B = buffer size on the stack this time for a counter check
-        LDU     #KeyBuff        ; U points at the start of the Input buffer + 1
+        LDU     #_StrVar_PF00   ; U points at the start of the Input buffer + 1
         CLRA                    ; Clear A so D = B and our comma counter is zero
 @CheckCommaLoop:
         LDB     ,U+             ; Get the value in the buffer
@@ -60,7 +62,7 @@ GetInput:
         BEQ     @CommasGood     ; If we have the correct amount of Comma's then we're good exit, put a ","
 ; Otherwise we have to print ?? and get more input
         BSR     >               ; Go print '??'
-        FCC     '?? '            ; Print??
+        FCC     '?? '           ; Print??
 !       LDX     ,S++            ; X points at the string to print
         LDB     #2              ; B = number of characters to print
 !       LDA     ,X++            ; Get the next character to print
@@ -68,7 +70,7 @@ GetInput:
         DECB                    ; Decrement the number of characters to print
         BNE     <               ; Keep going if there are more characters to print
         PULS    B               ; Restore B from the stack
-        LDU     #KeyBuff        ; U points at the start of the Input buffer
+        LDU     #_StrVar_PF00   ; U points at the start of the Input buffer
         CLRA
         LEAU    D,U             ; U points at the correct posisiton to carry on getting more input
         LDA     #',             ; Add a semi-colon here
@@ -82,7 +84,7 @@ GetInput:
         LDB     ,S              ; B=Buffer size
         BEQ     @SkipCommaCheck ; If the buffer is zero then skip checking for a comma
         CLRB                    ; Clear our new buffer size counter
-        LDU     #KeyBuff        ; U points at the start of the Input buffer
+        LDU     #_StrVar_PF00   ; U points at the start of the Input buffer
 @KeepGoing:
         INCB                    ; Incrment the buffer size counter
         LDA     ,U+             ; Get the next value in the buffer
@@ -104,7 +106,7 @@ GetInput:
         BNE     <               ; Keep going until we've printed the entire string
 @CommasGood:
         LDB     ,S              ; Restore B, get the buffer size
-        LDU     #KeyBuff        ; U = keyboard buffer start
+        LDU     #_StrVar_PF00   ; U = keyboard buffer start
         CLRA                    ; Clear A
         LEAU    D,U             ; U = keyboard buffer start + B
         LDA     #',             ; Add a comma to the end of the string

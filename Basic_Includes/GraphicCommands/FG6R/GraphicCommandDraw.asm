@@ -11,13 +11,7 @@ ScaleValue              FCB     4             ; Scale value for the draw command
 AngleValue              FCB     0             ; Angle value for the draw command
 NoUpdateFlag            FCB     0             ; Flag to see if we are doing a no update move or not
 
-Draw0:
-Draw1:
-Draw2:
-Draw3:
-* PMODE 4 Draw command
-Draw4:
-Draw:
+DrawFG6R:
         LDX     #_StrVar_PF00+1 ; Get the start of the draw command string
         LDU     #_StrVar_PF00+1 ; Get the start of the draw command string
         LDB     _StrVar_PF00    ; Get the string length in B
@@ -244,7 +238,7 @@ DrawA4:
 ; Do the Colour command
 DrawC4:
         BSR     GetNumberinDrawCommand  ; Get the number from the string in D (actually only need value in B) B)
-        ANDB    #%00000001      ; PMODE 4 only has 2 colours Black = 0 and White = 1
+        ANDB    #%00000001      ; FG6R only has 2 colours Black = 0 and White = 1
         STB     FORCOL          ; Save the new colour value
         BRA     DrawMainLoop4   ; go get next command
 ; Do the X command
