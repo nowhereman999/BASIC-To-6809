@@ -1,5 +1,5 @@
 # BASIC-To-6809
-A BASIC compiler for the TRS-80 Color Computer
+A BASIC compiler for the TRS-80 Color Computer 1,2 & 3 and also the Dragon computers
 
 Binaries for M1 Macs are available in the binaries folder.
 Binaries for Windows and Linux are available here:
