@@ -4,12 +4,15 @@ A BASIC compiler for the TRS-80 Color Computer 1,2 & 3 and also the Dragon compu
 Binaries for M1 Mac & Windows are available in the binaries folder
 Linux users can find a helpful build script in the binaries folder
 There may be more updated versions of the Binaries for Windows and Linux available here:
+
 https://github.com/pwillard/basto6809Manual
 
 Installation and much more info is available in the manual found here:
+
 https://github.com/nowhereman999/BASIC-To-6809/blob/main/Manual.pdf
 
 For more info check out the blog post here:
+
 https://wordpress.com/post/nowhereman999.wordpress.com/5054
 
 V 4.41
