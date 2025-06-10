@@ -217,7 +217,7 @@ BAKCOL		FCB  0		* Background color
 BEGGRP		RMB  2		* Start address of the screen page
 ;ENDGRP		RMB  2		* End address of the screen page
 CSSVAL		RMB  1		* CSS value
-LineColour      RMB  1          * Colour value for the Line command
+LineColour      FCB  3          * Colour value for the Line command
 
 ; Variables
 x0              RMB 2

@@ -1,0 +1,52 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:43:00}}
+{{DISPLAYTITLE:_SNDOPENRAW}}
+The [[_SNDOPENRAW]] function opens a new channel to fill with _SNDRAW content to manage multiple dynamically generated sounds.
+
+
+{{PageSyntax}}
+: {{Parameter|pipeHandle&}} = [[_SNDOPENRAW]]
+
+
+{{PageDescription}}
+* You can manage multiple dynamically generated sounds at once without having to worry about mixing.
+* Use [[_SNDCLOSE]] to remove the pipe sound handles from memory.
+
+
+{{PageAvailability}}
+<!-- QB64 = a version or none, QBPE = a version or all, Platforms = yes or no -->
+<gallery widths="48px" heights="48px" mode="nolines">
+File:Qb64.png|'''v0.960'''
+File:Qbpe.png|'''all'''
+File:Apix.png
+File:Win.png|'''yes'''
+File:Lnx.png|'''yes'''
+File:Osx.png|'''yes'''
+</gallery>
+<!-- additional availability notes go below here -->
+
+
+{{PageExamples}}
+''Example:'' Combining 2 sounds without worrying about mixing:
+{{CodeStart}}
+a = {{Cl|_SNDOPENRAW}}
+b = {{Cl|_SNDOPENRAW}}
+
+{{Cl|FOR...NEXT|FOR}} x = 1 {{Cl|TO}} 100000
+    {{Cl|_SNDRAW}} {{Cl|SIN}}(x / 10), , a 'fill with a tone
+    {{Cl|_SNDRAW}} {{Cl|RND}} * 1 - 0.5, , b 'fill with static
+{{Cl|NEXT}}
+
+{{Cl|_SNDCLOSE}} a
+{{Cl|_SNDCLOSE}} b
+{{CodeEnd}}
+{{Small|Code by Galleon}}
+
+
+{{PageSeeAlso}}
+* [[_SNDRAWDONE]]
+* [[_SNDRAW]]
+* [[_SNDCLOSE]]
+
+
+{{PageNavigation}}

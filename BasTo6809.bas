@@ -1,4 +1,12 @@
-V$ = "4.40"
+V$ = "4.41"
+'       - Added the DRAW command for all graphics modes including the semi-graphics modes
+'       - Improved the handling of single line IF commands that have THEN or ELSE with a line number and not a GOTO line number
+'       - Fixed POKE command so it can now handle math funxtions directly for both the address and the value to poke
+'       - Fixed a bug with LINE command with horizontal lines with two colours, depending on the offset it could draw the line smaller
+'         than it should be
+'       - Updated SDECB.bas IDE to ignore TIMER, it can now be treated as a variable to be set just as on Extended Color BASIC
+
+' V 4.40
 '       - Added -dragon option, which will output a compiled program that will work for the Dragon computers keyboard layout instead of the CoCo keyboard layout
 '       - Now if coco1/2 or dragon mode, and no drive the NMI IRQ is set to RTI
 
@@ -343,6 +351,7 @@ If count = 0 Then
     Print "       -fxxxx    - Where xxxx is the font name used for printing to the PMODE 4 screen (default is Arcade)"
     Print "                   Look in folder Basic_Includes/Graphic_Screen_Fonts to see font names available"
     Print "       -a        - Makes the program autostart after it is LOADed on the CoCo"
+    Print "       -r        - At the end of the program the compiler will try to return to BASIC, default is to do and endless loop"
     Print "       -h        - Show this help message"
     Print
     Print "See Manual.pdf file for more help"
@@ -365,6 +374,7 @@ For check = 1 To count
     If LCase$(Left$(N$, 2)) = "-k" Then KeepTempFiles = 1: GoTo CheckNextCMDOption
     If LCase$(Left$(N$, 2)) = "-f" Then Font$ = Right$(N$, Len(N$) - 2): GoTo CheckNextCMDOption
     If LCase$(Left$(N$, 2)) = "-a" Then AutoStart = 1: GoTo CheckNextCMDOption
+    If LCase$(Left$(N$, 2)) = "-r" Then Ret2Basic = 1: GoTo CheckNextCMDOption
     If Left$(N$, 2) = "-v" Then
         ' Show the Version number and exit
         Print "BasTo6809 - BASIC to 6809 Assembly converter V"; V$
@@ -845,6 +855,8 @@ f$ = "-f" + Font$ + " "
 If Dragon = 1 Then Dragon$ = " -dragon " Else Dragon$ = ""
 If KeepTempFiles = 1 Then KeepTempFiles$ = " -k " Else KeepTempFiles$ = ""
 If AutoStart = 1 Then AutoStart$ = " -a " Else AutoStart$ = ""
+If Ret2Basic = 1 Then Ret2Basic$ = " -r " Else Ret2Basic$ = ""
+
 ' We now have the BASIC program in a good text format as the file BASIC_Text.bas
 ' Tokenize the BASIC Program
 CompilerVersion$ = _OS$
@@ -853,11 +865,11 @@ If InStr(CompilerVersion$, "[MACOSX]") > 0 Or InStr(CompilerVersion$, "[LINUX]")
 Else
     PreString$ = ".\"
 End If
-returncode = Shell(PreString$ + "BasTo6809.1.Tokenizer " + c$ + s$ + o$ + b$ + Dragon$ + Verbose$ + p$ + f$ + AutoStart$ + OutName$)
+returncode = Shell(PreString$ + "BasTo6809.1.Tokenizer " + c$ + s$ + o$ + b$ + Dragon$ + Verbose$ + p$ + f$ + AutoStart$ + Ret2Basic$ + OutName$)
 If returncode = 0 Then System
 ' We now have the BASIC program in a good tokenized format as the file BasicTokenized.bin
 ' Call the compiler with a few command line options to pass through to the compiler
-returncode = Shell(PreString$ + "BasTo6809.2.Compile " + c$ + s$ + o$ + b$ + Dragon$ + Verbose$ + KeepTempFiles$ + AutoStart$ + OutName$)
+returncode = Shell(PreString$ + "BasTo6809.2.Compile " + c$ + s$ + o$ + b$ + Dragon$ + Verbose$ + KeepTempFiles$ + AutoStart$ + Ret2Basic$ + OutName$)
 If returncode = 0 Then System
 System
 

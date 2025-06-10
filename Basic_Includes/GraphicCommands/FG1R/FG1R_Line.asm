@@ -41,15 +41,20 @@ DoLINE_FG1R:
 * See if we have more then 8 pixels to draw
 !       LDB     endX+1
         SUBB    startX+1        ;
-        CMPB    #16             ; If we have more then 16 pixels to draw then go draw the line normally
+        CMPB    #$10            ; If we have less then 17 pixels to draw then go draw the line normally
         BLS     LineNotHorizontal_FG1R  ; If the size is <= 16 then go draw the line normally
-
+; 22 / 8 = 2
+; 2 - 1 = 1
 ; Turn pixels into bytes
+        LDA     startX+1
+        ANDA    #%00000111
+        PSHS    A
+        ADDB    ,S+
         LSRB                    ; B=B/2
         LSRB                    ; B=B/4
         LSRB                    ; B=B/8, we now have the number of bytes to draw
         DECB
-        PSHS    B               ; Save the # of pixels to draw for this horizontal line
+!       PSHS    B               ; Save the # of pixels to draw for this horizontal line
 
 ; Draw the bits at the beginning that aren't a complete byte
         LDA     startY+1        ; A=Y value

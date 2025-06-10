@@ -13,7 +13,12 @@ For more info check out the blog post here:
 https://wordpress.com/post/nowhereman999.wordpress.com/5054
 
 V 4.41
+- Added the DRAW command for all graphics modes including the semi-graphics modes
+- Improved the handling of single line IF commands that have THEN or ELSE with a line number and not a GOTO line number 
 - Fixed POKE command so it can now handle math funxtions directly for both the address and the value to poke
+- Fixed a bug with LINE command with horizontal lines with two colours, depending on the offset it could draw the line smaller
+  than it should be
+- Updated SDECB.bas IDE to ignore TIMER, it can now be treated as a variable to be set just as on Extended Color BASIC
 
 V 4.40
 - Added -dragon option, which will output a compiled program that will work for the Dragon computers keyboard layout instead

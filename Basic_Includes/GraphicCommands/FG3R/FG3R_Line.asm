@@ -45,6 +45,10 @@ DoLINE_FG3R:
         BLS     LineNotHorizontal_FG3R  ; If the size is <= 16 then go draw the line normally
 
 ; Turn pixels into bytes
+        LDA     startX+1
+        ANDA    #%00000111
+        PSHS    A
+        ADDB    ,S+
         LSRB                    ; B=B/2
         LSRB                    ; B=B/4
         LSRB                    ; B=B/8, we now have the number of bytes to draw

@@ -46,7 +46,12 @@ DoLINE_HIG130:
         SUBB    startX+1        ;
         CMPB    #16             ; If we have more then 16 pixels to draw then go draw the line normally
         BLS     LineNotHorizontal_HIG130  ; If the size is <= 16 then go draw the line normally
+        
 ; Turn pixels into bytes
+        LDA     startX+1
+        ANDA    #%00000111
+        PSHS    A
+        ADDB    ,S+
         LSRB                    ; B=B/2
         LSRB                    ; B=B/4
         LSRB                    ; B=B/8, we now have the number of bytes to draw

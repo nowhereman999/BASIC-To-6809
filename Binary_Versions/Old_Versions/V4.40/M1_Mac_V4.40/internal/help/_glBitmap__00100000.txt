@@ -1,0 +1,28 @@
+{{QBDLDATE:01-28-2023}}
+{{QBDLTIME:11:48:47}}
+{{DISPLAYTITLE:_glBitmap}}
+The '''_glBitmap''' statement draws a bitmap.
+
+
+{{PageSyntax}}
+: [[_glBitmap]] GLSizei {{Parameter|width}}, GLSizei {{Parameter|height}}, GLfloat {{Parameter|xorig}}, GLfloat {{Parameter|yorig}}, GLfloat {{Parameter|xmove}}, GLfloat {{Parameter|ymove}}, const GLubyte {{Parameter|*bitmap}}
+
+
+{{PageParameters}}
+* OpenGL is using its own set of variable types to describe its command parameters.
+* Use the following table to find the respective QB64 [[Variable Types]].
+{{OpenGLTypesPlugin}}
+
+
+{{PageDescription}}
+* OpenGL's documentation is available in several places, so we won't reproduce it here for another time.
+* The full description for this command can be found at [https://learn.microsoft.com/en-us/windows/win32/opengl/glbitmap Microsoft Docs] and is also valid for QB64 usage.
+
+
+{{PageSeeAlso}}
+* [[_GL|SUB _GL]]
+* [[_glBegin]], [[_glDrawPixels]], [[_glEnd]], [https://learn.microsoft.com/en-us/windows/win32/opengl/glpixelstore-functions _glPixelStore]
+* [https://learn.microsoft.com/en-us/windows/win32/opengl/glpixeltransfer _glPixelTransfer], [https://learn.microsoft.com/en-us/windows/win32/opengl/glrasterpos-functions _glRasterPos]
+
+
+{{PageNavigation}}

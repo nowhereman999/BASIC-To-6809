@@ -741,7 +741,7 @@ While x <= filesize
             INArray(C) = V: C = C + 1 ' write byte to ouput array
             If V = &HF5 And Array(x) = &H0D Then INArray(C) = &H0D: C = C + 1: x = x + 1
         Else
-            ' Print "not a multi line IF"
+            ' Print "not a multi line IF "; Hex$(V)
             ' This is a one line IF/THEN/ELSE command that ends with a $F5 $0D
             ' Make it a multi line IF THEN ELSE
             ' We've copied everything upto and including the THEN
@@ -751,9 +751,8 @@ While x <= filesize
             INArray(C) = &H0D: C = C + 1 ' Add EOL
             INArray(C) = 0: C = C + 1 ' start of next line - line label length of zero
             'Check for a number could be IF THEN 50
-            FoundLineNumber:
             If V >= Asc("0") And V <= Asc("9") Then
-                ' Found a line number, change it to a new line with GOTO linenumber
+                ' Found first line number, change it to a new line with GOTO linenumber
                 INArray(C) = &HFF: C = C + 1 ' General command
                 Num = C_GOTO: GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSB
                 INArray(C) = MSB: C = C + 1: INArray(C) = LSB: C = C + 1 ' write command to ouput array
@@ -761,19 +760,45 @@ While x <= filesize
                     INArray(C) = V: C = C + 1 ' write line number
                     V = Array(x): x = x + 1 ' copy the line number
                 Wend
-                x = x - 1
-                While Array(x) = &HF5 And Array(x + 1) = &H3A: V = Array(x): x = x + 2: Wend ' consume any colons
-                V = Array(x): x = x + 1
-                If V = &HF5 And Array(x) = &H0D Then INArray(C) = &HF5: C = C + 1: GoTo FixedGoto ' The &H0D will be added below
+                INArray(C) = &HF5: C = C + 1 ' Add EOL
+                INArray(C) = &H0D: C = C + 1 ' Add EOL
+                INArray(C) = 0: C = C + 1 ' line label length of zero
+            Else
+                ' Could already be a GOTO, add and EOL after if so
+                If V = &HFF And Array(x) * 256 + Array(x + 1) = C_GOTO Then
+                    ' Found a GOTO
+                    INArray(C) = V: C = C + 1 ' write byte to ouput array
+                    V = Array(x): x = x + 1 ' get the GOTO command # MSB
+                    INArray(C) = V: C = C + 1 ' write byte to ouput array
+                    V = Array(x): x = x + 1 ' get the GOTO command # LSB
+                    INArray(C) = V: C = C + 1 ' write byte to ouput array
+                    ' Copy the line number
+                    V = Array(x): x = x + 1 ' copy the line number
+                    While V < &HF0
+                        INArray(C) = V: C = C + 1 ' write line number
+                        V = Array(x): x = x + 1 ' copy the line number
+                    Wend
+                    INArray(C) = &HF5: C = C + 1 ' Add EOL
+                    INArray(C) = &H0D: C = C + 1 ' Add EOL
+                    INArray(C) = 0: C = C + 1 ' line label length of zero
+                End If
             End If
-            ' Not a line number after the THEN
-            x = x - 1
+            x = x - 1: V = Array(x)
             Do Until V = &HF5 And Array(x) = &H0D
                 V = Array(x): x = x + 1 ' get a byte
+                If V = &HF5 And Array(x) = &H3A Then
+                    ' We have a colon, remove duplicates & turn it into an EOL
+                    x = x - 1
+                    While Array(x) = &HF5 And Array(x + 1) = &H3A: x = x + 2: Wend ' consume any colons
+                    INArray(C) = &HF5: C = C + 1 ' add EOL instead of the colon(s)
+                    INArray(C) = &H0D: C = C + 1 ' add EOL
+                    INArray(C) = &H00: C = C + 1 ' line label length of zero
+                    V = Array(x): x = x + 1 ' get the next byte
+                End If
                 INArray(C) = V: C = C + 1 ' write byte to ouput array
                 If V = &HFF Then
                     If Array(x) * 256 + Array(x + 1) = C_IF Then
-                        ' Found an IF
+                        ' Found another IF
                         IfCounter = IfCounter + 1
                         C = C - 1 ' Don't keep the &HFF it just wrote
                         INArray(C) = &HF5: C = C + 1 ' add EOL instead of the IF Command
@@ -787,27 +812,56 @@ While x <= filesize
                     End If
                     If Array(x) * 256 + Array(x + 1) = C_THEN Or Array(x) * 256 + Array(x + 1) = C_ELSE Then
                         ' Found THEN or ELSE
-                        C = C - 1 ' Don't keep the &HFF it just wrote
+                        C = C - 1
                         INArray(C) = &HF5: C = C + 1 ' add EOL
                         INArray(C) = &H0D: C = C + 1 ' add EOL
                         INArray(C) = 0: C = C + 1 ' line label length
-                        INArray(C) = &HFF: C = C + 1 ' write &HFF command byte to ouput array
+                        INArray(C) = &HFF: C = C + 1 ' add Command
                         V = Array(x): x = x + 1 ' get the THEN or ELSE command # MSB
                         INArray(C) = V: C = C + 1 ' write byte to ouput array
                         V = Array(x): x = x + 1 ' get the THEN or ELSE command # LSB
                         INArray(C) = V: C = C + 1 ' write byte to ouput array
-                        V = Array(x): x = x + 1 ' get the next byte
-                        If V = &HF5 And Array(x) = &H3A Then
-                            ' We have a colon
+                        INArray(C) = &HF5: C = C + 1 ' add EOL
+                        INArray(C) = &H0D: C = C + 1 ' add EOL
+                        INArray(C) = 0: C = C + 1 ' line label length
+                        'Check for a number could be IF THEN 50
+                        If Array(x) >= Asc("0") And Array(x) <= Asc("9") Then
+                            ' Found a line number, change it to a new line with GOTO linenumber
+                            INArray(C) = &HFF: C = C + 1 ' General command
+                            Num = C_GOTO: GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSB
+                            INArray(C) = MSB: C = C + 1: INArray(C) = LSB: C = C + 1 ' write command to ouput array
+                            V = Array(x): x = x + 1 ' copy the line number
+                            While V >= Asc("0") And V <= Asc("9")
+                                INArray(C) = V: C = C + 1 ' write line number
+                                V = Array(x): x = x + 1 ' copy the line number
+                            Wend
                             x = x - 1
-                            While Array(x) = &HF5 And Array(x + 1) = &H3A: x = x + 2: Wend ' consume any colons
-                            V = Array(x): x = x + 1 ' get the next byte
+                            INArray(C) = &HF5: C = C + 1 ' Add EOL
+                            INArray(C) = &H0D: C = C + 1 ' Add EOL
+                            INArray(C) = 0: C = C + 1 ' line label length of zero
+                        Else
+                            V = Array(x)
+                            ' Could already be a GOTO, add and EOL after if so
+                            If Array(x) = &HFF And Array(x + 1) * 256 + Array(x + 2) = C_GOTO Then
+                                ' Found a GOTO
+                                V = Array(x): x = x + 1 ' get the &HFF
+                                INArray(C) = V: C = C + 1 ' write byte to ouput array
+                                V = Array(x): x = x + 1 ' get the GOTO command # MSB
+                                INArray(C) = V: C = C + 1 ' write byte to ouput array
+                                V = Array(x): x = x + 1 ' get the GOTO command # LSB
+                                INArray(C) = V: C = C + 1 ' write byte to ouput array
+                                ' Copy the line number
+                                V = Array(x): x = x + 1 ' copy the line number
+                                While V < &HF0
+                                    INArray(C) = V: C = C + 1 ' write line number
+                                    V = Array(x): x = x + 1 ' copy the line number
+                                Wend
+                                x = x - 1
+                                INArray(C) = &HF5: C = C + 1 ' Add EOL
+                                INArray(C) = &H0D: C = C + 1 ' Add EOL
+                                INArray(C) = 0: C = C + 1 ' line label length of zero
+                            End If
                         End If
-                        If V >= Asc("0") And V <= Asc("9") Then GoTo FoundLineNumber
-                        x = x - 1
-                        INArray(C) = &HF5: C = C + 1 ' Add EOL
-                        INArray(C) = &H0D: C = C + 1 ' Add EOL
-                        INArray(C) = 0: C = C + 1 ' line label length of zero
                     End If
                 End If
             Loop
@@ -1882,7 +1936,13 @@ Next ii
 ' Make sure Grpahics commands are first to be included
 For ii = 0 To GeneralCommandsFoundCount - 1
     Temp$ = UCase$(GeneralCommandsFound$(ii))
-
+    If Temp$ = "SET" Then
+        For i3 = 0 To 171
+            If GModeLib(i3) = 1 Then
+                Temp$ = "GraphicCommands/" + GModeName$(i3) + "/" + GModeName$(i3) + "_Line": GoSub AddIncludeTemp
+            End If
+        Next i3
+    End If
     If Temp$ = "CIRCLE" Then
         For i3 = 0 To 171
             If GModeLib(i3) = 1 Then
@@ -1905,8 +1965,13 @@ For ii = 0 To GeneralCommandsFoundCount - 1
         Next i3
     End If
     If Temp$ = "DRAW" Then
-        Temp$ = "GraphicCommandDraw": GoSub AddIncludeTemp ' Add code for Doing the DRAW command
-        Temp$ = "DecimalStringToD": GoSub AddIncludeTemp ' Add commands for converting decimal numbers to D
+        For i3 = 0 To 171
+            If GModeLib(i3) = 1 Then
+                Temp$ = "GraphicCommands/" + GModeName$(i3) + "/" + GModeName$(i3) + "_Draw": GoSub AddIncludeTemp
+                Temp$ = "DecimalStringToD": GoSub AddIncludeTemp ' Add commands for converting decimal numbers to D
+                Temp$ = "GraphicCommands/" + GModeName$(i3) + "/" + GModeName$(i3) + "_Line": GoSub AddIncludeTemp ' Draw uses the line command
+            End If
+        Next i3
     End If
     If Temp$ = "GET" Or Temp$ = "PUT" Then
         Temp$ = "GraphicCommandsGetPut": GoSub AddIncludeTemp ' Add code to handle Get and Put commands

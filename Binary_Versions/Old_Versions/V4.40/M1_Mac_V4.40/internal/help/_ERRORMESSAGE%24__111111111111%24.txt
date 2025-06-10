@@ -1,0 +1,44 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:41:19}}
+{{DISPLAYTITLE:_ERRORMESSAGE$}}
+The [[_ERRORMESSAGE$]] function returns a human-readable description of the most recent runtime error, or the description of an arbitrary error code passed to it.
+
+
+{{PageSyntax}}
+:{{Parameter|e$}} = [[_ERRORMESSAGE$]]
+:{{Parameter|e$}} = [[_ERRORMESSAGE$]]({{Parameter|errorCode%}})
+
+
+{{PageDescription}}
+* Used in program error troubleshooting.
+* The message returned is identical to the message shown in the dialog box that appears if your program has no error handler. See [[ERROR Codes]] for the full list of error codes and their messages.
+
+
+{{PageExamples}}
+''Example 1:'' Using an error handler that ignores any error.
+{{CodeStart}}
+{{Cl|ON ERROR}} {{Cl|GOTO}} Errhandler
+{{Text|<nowiki>' Main module program error simulation code</nowiki>|#919191}}
+{{Cl|ERROR}} {{Text|7|#F580B1}} {{Text|<nowiki>' simulate an Out of Memory Error</nowiki>|#919191}}
+{{Cl|PRINT}} {{Text|<nowiki>"Error handled...ending program"</nowiki>|#FFB100}}
+{{Cl|SLEEP}} {{Text|4|#F580B1}}
+{{Cl|SYSTEM}} {{Text|<nowiki>' end of program code</nowiki>|#919191}}
+
+Errhandler: {{Text|<nowiki>' error handler sub program line label</nowiki>|#919191}}
+{{Cl|PRINT}} {{Text|<nowiki>"Error"</nowiki>|#FFB100}}; {{Cl|ERR}}; {{Text|<nowiki>"on program file line"</nowiki>|#FFB100}}; {{Cl|_ERRORLINE}}
+{{Cl|PRINT}} {{Text|<nowiki>"Description: "</nowiki>|#FFB100}}; {{Cl|_ERRORMESSAGE$}}; {{Text|<nowiki>"."</nowiki>|#FFB100}}
+{{Cl|BEEP}} {{Text|<nowiki>' warning beep</nowiki>|#919191}}
+{{Cl|RESUME}} {{Cl|NEXT}} {{Text|<nowiki>' moves program to code following the error.</nowiki>|#919191}}
+{{CodeEnd}}
+
+
+{{PageSeeAlso}}
+* [[ON ERROR]]
+* [[_ERRORLINE]]
+* [[_INCLERRORLINE]], [[_INCLERRORFILE$]]
+* [[ERR]], [[ERL]]
+* [[ERROR]]
+* [[ERROR Codes]]
+
+
+{{PageNavigation}}

@@ -47,6 +47,13 @@ DoLINE_HIG148:
         BLS     LineNotHorizontal_HIG148  ; If the size is <= 16 then go draw the line normally
 
 ; Turn pixels into bytes
+        TFR     D,U             ; Save D in U
+        CLRA
+        LDB     startX+1
+        ANDB    #%00000111
+        PSHS    D
+        TFR     U,D
+        ADDD    ,S++
         LSRA
         RORB
         LSRB

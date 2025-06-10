@@ -59,7 +59,7 @@ SUB ExportCodeAs (docFormat$)
     op% = 0 '=> simply link to OPEN page
     ma$ = "@_ARCCOT@_ARCCSC@_ARCSEC@_COT@_COTH@_COSH@_CSC@_CSCH@_SEC@_SECH@_SINH@_TANH@" 'derived math functions
     fu% = 0 '=> Wiki page +(function) check required
-    fu$ = "@_AUTODISPLAY@_BLEND@_BLINK@_CAPSLOCK@_CLEARCOLOR@_CLIPBOARD$@_CLIPBOARDIMAGE@_CONTROLCHR@_DEST@_DISPLAY@_EXIT@_FONT@_FULLSCREEN@_MAPUNICODE@_MEM@_MEMGET@_MESSAGEBOX@_NUMLOCK@_OFFSET@_PALETTECOLOR@_PRINTMODE@_RESIZE@_SCREENICON@_SCROLLLOCK@_SMOOTH@_SOURCE@_WIDTH@ASC@MID$@PLAY@SCREEN@SEEK@SHELL@TIMER@"
+    fu$ = "@_AUTODISPLAY@_BLEND@_BLINK@_CAPSLOCK@_CLEARCOLOR@_CLIPBOARD$@_CLIPBOARDIMAGE@_CONTROLCHR@_DEST@_DISPLAY@_EXIT@_FONT@_FULLSCREEN@_MAPUNICODE@_MEM@_MEMGET@_MESSAGEBOX@_NUMLOCK@_OFFSET@_PALETTECOLOR@_PRINTMODE@_RESIZE@_SCREENICON@_SCROLLLOCK@_SMOOTH@_SOURCE@_WIDTH@ASC@MID$@PLAY@SCREEN@SEEK@SHELL@"
     bo% = 0 '=> Wiki page +(boolean) check required
     bo$ = "@AND@OR@XOR@"
     '----------
@@ -457,7 +457,7 @@ SUB ExportCodeAs (docFormat$)
                 IF UCASE$(LEFT$(la$, 5)) = "ERROR" THEN kw$ = kw$ + " " + LEFT$(la$, 5): page$ = "ON ERROR": in% = -1
                 IF UCASE$(LEFT$(la$, 3)) = "KEY" THEN kw$ = kw$ + " " + LEFT$(la$, 3): page$ = "ON KEY(n)": in% = -1
                 IF UCASE$(LEFT$(la$, 5)) = "STRIG" THEN kw$ = kw$ + " " + LEFT$(la$, 5): page$ = "ON STRIG(n)": in% = -1
-                IF UCASE$(LEFT$(la$, 5)) = "TIMER" THEN kw$ = kw$ + " " + LEFT$(la$, 5): page$ = "ON TIMER(n)": in% = -1
+'                IF UCASE$(LEFT$(la$, 5)) = "TIMER" THEN kw$ = kw$ + " " + LEFT$(la$, 5): page$ = "ON TIMER(n)": in% = -1
             CASE "OPTION": IF UCASE$(LEFT$(la$, 4)) = "BASE" THEN kw$ = kw$ + " " + LEFT$(la$, 4): page$ = "OPTION BASE": in% = -1
             CASE "PALETTE": IF UCASE$(LEFT$(la$, 5)) = "USING" THEN kw$ = kw$ + " " + LEFT$(la$, 5): page$ = "PALETTE USING": in% = -1
             CASE "PRINT"

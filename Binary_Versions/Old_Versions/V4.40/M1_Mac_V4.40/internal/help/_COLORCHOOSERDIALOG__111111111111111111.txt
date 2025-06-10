@@ -1,0 +1,44 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:40:48}}
+{{DISPLAYTITLE:_COLORCHOOSERDIALOG}}
+The '''_COLORCHOOSERDIALOG''' function displays a standard color picker dialog box. It returns a 32-bit RGBA color with the alpha channel set to &HFF (255). A zero is returned if the user cancelled.
+
+
+{{PageSyntax}}
+:{{Parameter|color32bpp~&}} = [[_COLORCHOOSERDIALOG]]([{{Parameter|title$}}][, {{Parameter|defaultRGB~&}}])
+
+
+{{PageParameters}}
+* {{Parameter|title$}} is the dialog box title
+* {{Parameter|defaultRGB~&}} is the default 32-bit RGB color that is pre-selected
+
+
+{{PageDescription}}
+* {{Parameter|title$}} accepts an empty string ('''""''') in which case system defaults are used
+* The dialog box automatically becomes a modal window if the application window is visible
+* {{Parameter|defaultRGB~&}} may be ignored on some platforms
+
+
+{{PageAvailability}}
+* '''QB64-PE v3.4.0 and up'''
+
+
+{{PageExamples}}
+; Example : Color selection
+{{CodeStart}}
+mycolor~& = {{Cl|_COLORCHOOSERDIALOG}}({{Text|<nowiki>"Select a color"</nowiki>|#FFB100}}, {{Cl|_RGB32}}({{Text|0|#F580B1}}, {{Text|255|#F580B1}}, {{Text|255|#F580B1}}))
+{{Cl|IF}} mycolor~& <> {{Text|0|#F580B1}} {{Cl|THEN}} {{Cl|_MESSAGEBOX}} {{Text|<nowiki>"Information"</nowiki>|#FFB100}}, {{Text|<nowiki>"You selected "</nowiki>|#FFB100}} + {{Cl|HEX$}}(mycolor~&)
+{{CodeEnd}}
+
+
+{{PageSeeAlso}}
+* [[_NOTIFYPOPUP]]
+* [[_MESSAGEBOX]]
+* [[_MESSAGEBOX (function)]]
+* [[_INPUTBOX$]]
+* [[_SELECTFOLDERDIALOG$]]
+* [[_OPENFILEDIALOG$]]
+* [[_SAVEFILEDIALOG$]]
+
+
+{{PageNavigation}}

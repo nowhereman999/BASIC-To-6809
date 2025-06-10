@@ -1,0 +1,89 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:41:27}}
+The '''$FORMAT''' [[Metacommand|metacommand]] will control the code formatting behavior of the IDE and the -y command line switch (formatting mode).
+
+
+{{PageSyntax}}
+: {[[REM]] | [[apostrophe|']] } [[$FORMAT]]:{ON|OFF}
+
+
+{{PageDescription}}
+;Note: This metacommand does not affect the compiled program in any way. It's just a simple tool to control the code formatting behavior of the IDE and the command line formatting mode. That's why we decided to implement it as a commented legacy style metacommand behind a [[REM]] or [[apostrophe|']] to avoid compiler errors.
+* '''$FORMAT:OFF''' will temporarily suppress all line indention and auto single-spacing of code elements, so that you may space and align stuff to your free desire (e.g. numbers in [[DATA]] lines).
+* '''$FORMAT:ON''' is used to restore the regular formatting as set in the Options > Code Layout dialog or the format settings given on the command line when using the -y formatting mode.
+** The ON and OFF variants of this metacommand do not nest, hence there must not be a matching count of ON and OFF commands and you also must not necessarily switch it back ON at the end of your program.
+** QB64-PE always makes sure that formatting is ON at the very first line of your program.
+** The commands can also be used in [[$INCLUDE]]d files and no matter what state is finally active in the included file, it won't affect the main code which will always keep its current state as last set before the [[$INCLUDE]].
+
+
+{{PageAvailability}}
+<!-- QB64 = a version or none, QBPE = a version or all, Platforms = yes or no -->
+<gallery widths="48px" heights="48px" mode="nolines">
+File:Qb64.png|'''none'''
+File:Qbpe.png|'''v4.1.0'''
+File:Apix.png
+File:Win.png|'''yes'''
+File:Lnx.png|'''yes'''
+File:Osx.png|'''yes'''
+</gallery>
+<!-- additional availability notes go below here -->
+
+
+{{PageExamples}}
+;Example: Showcasing the use of '''$FORMAT:OFF''' and '''$FORMAT:ON'''.
+{{CodeStart}}
+{{Text|<nowiki>'the layout starts with default settings as given</nowiki>|#919191}}
+{{Text|<nowiki>'in the Options > Code Layout dialog, for this</nowiki>|#919191}}
+{{Text|<nowiki>'example we used the following settings:</nowiki>|#919191}}
+{{Text|<nowiki>'   Auto Indent = ON, Indent Spacing = 4,</nowiki>|#919191}}
+{{Text|<nowiki>'   Auto single-spacing code elemets = ON</nowiki>|#919191}}
+{{Cl|TYPE}} Test
+    one {{Cl|AS}} {{Cl|INTEGER}}
+    two {{Cl|AS}} {{Cl|_BYTE}}
+    three {{Cl|AS}} {{Cl|STRING}} * {{Text|3|#F580B1}}
+    four {{Cl|AS}} {{Cl|_FLOAT}}
+{{Cl|END TYPE}}
+
+{{Cl|DATA}} {{Text|123|#F580B1}},{{Text|45|#F580B1}},{{Text|67|#F580B1}},{{Text|890|#F580B1}}
+{{Cl|DATA}} {{Text|2|#F580B1}},{{Text|456|#F580B1}},{{Text|5|#F580B1}},{{Text|43|#F580B1}}
+{{Cl|DATA}} {{Text|45|#F580B1}},{{Text|9|#F580B1}},{{Text|765|#F580B1}},{{Text|6|#F580B1}}
+
+{{Text|<nowiki>'</nowiki>|#919191}}{{Cm|$FORMAT}}:{{Cl|OFF}}
+{{Text|<nowiki>'will suppress indention and single-spacing until we</nowiki>|#919191}}
+{{Text|<nowiki>'switch it back again, now we can space and align our</nowiki>|#919191}}
+{{Text|<nowiki>'code elements freely and it will not be reformatted,</nowiki>|#919191}}
+{{Text|<nowiki>'note that keywords will still be changed according</nowiki>|#919191}}
+{{Text|<nowiki>'to the chosen case, only indention and spacing is off</nowiki>|#919191}}
+{{Cl|TYPE}}   Test2
+ one   {{Cl|AS}}  {{Cl|INTEGER}}
+ two   {{Cl|AS}} {{Cl|_BYTE}}
+ three {{Cl|AS}}  {{Cl|STRING}}*{{Text|3|#F580B1}}
+ four  {{Cl|AS}} {{Cl|_FLOAT}}
+{{Cl|END TYPE}}   
+
+{{Cl|DATA}} {{Text|123|#F580B1}},  {{Text|45|#F580B1}},  {{Text|67|#F580B1}}, {{Text|890|#F580B1}}
+{{Cl|DATA}}   {{Text|2|#F580B1}}, {{Text|456|#F580B1}},   {{Text|5|#F580B1}},  {{Text|43|#F580B1}}
+{{Cl|DATA}}  {{Text|45|#F580B1}},   {{Text|9|#F580B1}}, {{Text|765|#F580B1}},   {{Text|6|#F580B1}}
+
+{{Text|<nowiki>'</nowiki>|#919191}}{{Cm|$FORMAT}}:{{Cl|ON}}
+{{Text|<nowiki>'this restores back to defaults, hence</nowiki>|#919191}}
+{{Text|<nowiki>'indention and single-spacing is done again</nowiki>|#919191}}
+{{Cl|TYPE}} Test3
+    one {{Cl|AS}} {{Cl|INTEGER}}
+    two {{Cl|AS}} {{Cl|_BYTE}}
+    three {{Cl|AS}} {{Cl|STRING}} * {{Text|3|#F580B1}}
+    four {{Cl|AS}} {{Cl|_FLOAT}}
+{{Cl|END TYPE}}
+
+{{Cl|DATA}} {{Text|123|#F580B1}},{{Text|45|#F580B1}},{{Text|67|#F580B1}},{{Text|890|#F580B1}}
+{{Cl|DATA}} {{Text|2|#F580B1}},{{Text|456|#F580B1}},{{Text|5|#F580B1}},{{Text|43|#F580B1}}
+{{Cl|DATA}} {{Text|45|#F580B1}},{{Text|9|#F580B1}},{{Text|765|#F580B1}},{{Text|6|#F580B1}}
+{{CodeEnd}}
+
+
+{{PageSeeAlso}}
+* [[Metacommand]]s
+* [[QB64 FAQ#Q:_Is_there_a_way_to_use_QB64_from_the_command_line?|QB64(PE) Command Line usage]]
+
+
+{{PageNavigation}}

@@ -1,0 +1,57 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:40:21}}
+{{DISPLAYTITLE:_ACOS}}
+The [[_ACOS]] function returns the angle measured in radians based on an input [[COS]]ine value ranging from -1 to 1.
+
+
+{{PageSyntax}}
+: {{Parameter|radian_angle!}} = [[_ACOS]]({{Parameter|cosine_value!}})
+
+
+{{PageDescription}}
+* The ''cosine_value!'' must be measured >= -1 and <= 1, or an error will be generated.  (PRINT _ACOS(1.2) would give the result of -1.#IND, which is basically QB64's way of telling us that the number doesn't exist, much like 1/0 would.)
+* ARCCOSINE is the inverse function of [[COS]]ine, which lets us turn a [[COS]]ine value back into an angle.
+* Note: Due to rounding with floating point math, the _ACOS may not always give a perfect match for the COS angle which generated this.  You can reduce the number of rounding errors by increasing the precision of your calculations by using [[DOUBLE]] or [[_FLOAT]] precision variables instead of [[SINGLE]].
+
+
+{{PageAvailability}}
+* '''Version 1.000 and up.'''
+
+
+{{PageExamples}}
+''Example:'' Converting a radian angle to its COSine and using that value to find the angle in degrees again using _ACOS:
+{{CodeStart}}
+{{Cl|DEFDBL}} A-Z
+
+{{Cl|INPUT}} {{Text|<nowiki>"Give me an Angle (in Degrees) => "</nowiki>|#FFB100}}; Angle
+{{Cl|PRINT}}
+C = {{Cl|COS}}({{Cl|_D2R}}(Angle)) {{Text|<nowiki>'_D2R is the command to convert Degrees to Radians, which is what COS expects</nowiki>|#919191}}
+{{Cl|PRINT}} {{Text|<nowiki>"The COSINE of the Angle is: "</nowiki>|#FFB100}}; C
+A = {{Cl|_ACOS}}(C)
+{{Cl|PRINT}} {{Text|<nowiki>"The ACOS of "</nowiki>|#FFB100}}; C; {{Text|<nowiki>" is: "</nowiki>|#FFB100}}; A
+{{Cl|PRINT}} {{Text|<nowiki>"Notice, A is the Angle in Radians.  If we convert it to degrees, the value is "</nowiki>|#FFB100}}; {{Cl|_R2D}}(A)
+{{CodeEnd}}
+{{Small|Example by SMcNeill}}
+{{OutputStart}}
+Give me an Angle (in Degrees) => ? 60
+
+The COSINE of the Angle is:  .5000000000000001
+The ACOS of  .5000000000000001  is:  1.047197551196598
+Notice, A is the Angle in Radians.  If we convert it to degrees, we discover the value is  60
+{{OutputEnd}}
+
+
+{{PageSeeAlso}}
+* [[_D2G]] {{Text|(degree to gradient}}, [[_D2R]] {{Text|(degree to radian)}}
+* [[_G2D]] {{Text|(gradient to degree)}}, [[_G2R]] {{Text|(gradient to degree}}
+* [[_R2D]] {{Text|(radian to degree)}}, [[_R2G]] {{Text|(radian to gradient}}
+* [[COS]] {{Text|(cosine)}}, [[SIN]] {{Text|(sine)}}, [[TAN]] {{Text|(tangent)}}
+* [[_ASIN]] {{Text|(arc sine)}}, [[ATN]] {{Text|(arc tangent)}}
+* [[_ACOSH]] {{Text|(arc hyperbolic  cosine)}}, [[_ASINH]] {{Text|(arc hyperbolic  sine)}}, [[_ATANH]] {{Text|(arc hyperbolic  tangent)}}
+* [[_ATAN2]] {{Text|(Compute arc tangent with two parameters)}}
+* [[_HYPOT]] {{Text|(hypotenuse)}}
+*[[Mathematical Operations]]
+*[[Mathematical Operations#Derived_Mathematical_Functions|Derived Mathematical Functions]]
+
+
+{{PageNavigation}}

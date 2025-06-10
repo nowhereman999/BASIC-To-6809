@@ -1,0 +1,40 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:40:35}}
+{{DISPLAYTITLE:_BLINK}}
+The [[_BLINK]] statement toggles blinking colors in text mode (SCREEN 0). Default state is ON.
+
+
+{{PageSyntax}}
+: [[_BLINK]] {ON|OFF}
+
+
+{{PageDescription}}
+* SCREEN 0 emulates the VGA palette with regular colors from 0 to 15 and blinking colors from 16-31 (these are the same colors as 0-15, except their blink attribute is set to on). [[_BLINK]] OFF emulates writing to the video memory and disabling blinking for colors 16-31.
+* Using colors 16-31 for the foreground with [[_BLINK]] set to OFF will produce high intensity background colors.
+* [[_BLINK]] is only effective in SCREEN 0. It's ignored in graphic modes.
+* IF [[_DISPLAY]] is used, blinking is disabled, even if _BLINK is ON, but high intensity backgrounds aren't enabled in this case.
+
+
+{{PageAvailability}}
+* Build 20170816/61 up (August 16, 2017).
+
+
+{{PageExamples}}
+{{CodeStart}}
+{{Cl|COLOR}} {{Text|16|#F580B1}}, {{Text|7|#F580B1}}
+{{Cl|PRINT}} {{Text|<nowiki>"This is printed in black over gray background. Black letters are blinking."</nowiki>|#FFB100}}
+{{Cl|PRINT}} {{Text|<nowiki>"Hit a key..."</nowiki>|#FFB100}}
+{{Cl|SLEEP}}
+{{Cl|_BLINK}} {{Cl|OFF}}
+{{Cl|PRINT}} {{Text|<nowiki>"Now the same text is printed in black over bright white, because blinking was disabled."</nowiki>|#FFB100}}
+{{CodeEnd}}
+
+
+{{PageSeeAlso}}
+* [https://qb64phoenix.com/forum/showthread.php?tid=1319 Featured in our "Keyword of the Day" series]
+* [[_BLINK (function)]]
+* [[OUT]]
+* [[_DISPLAY]]
+
+
+{{PageNavigation}}

@@ -1,10 +1,10 @@
 
 * Line commands
 * Enter with:
-* x at 5,S
-* y at 4,S
-* x1 at 3,S
-* y1 at 2,S
+* x at 9,S & 10,S
+* y at 8,S
+* x1 at 6,S & 7,S
+* y1 at 5,S
 LINE_HIG139:
         CLRA
         PULS    Y               ; Y = return address
@@ -46,7 +46,15 @@ DoLINE_HIG139:
         CMPD    #16             ; If we have more then 16 pixels to draw then go draw the line normally
         BLS     LineNotHorizontal_HIG139  ; If the size is <= 16 then go draw the line normally
 
+
 ; Turn pixels into bytes
+        TFR     D,U             ; Save D in U
+        CLRA
+        LDB     startX+1
+        ANDB    #%00000111
+        PSHS    D
+        TFR     U,D
+        ADDD    ,S++
         LSRA
         RORB
         LSRB

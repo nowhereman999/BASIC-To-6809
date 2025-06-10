@@ -1,0 +1,28 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:43:09}}
+{{DISPLAYTITLE:_SOURCE (function)}}
+The [[_SOURCE (function)|_SOURCE]] function returns the present image source handle value.
+
+
+{{PageSyntax}}
+: {{Parameter|currentSource&}} = [[_SOURCE (function)|_SOURCE]]
+
+
+{{PageDescription}}
+* Returns a handle value that is a [[LONG]] integer type.
+* Save the source handle to a [[LONG]] variable for later restoration using the [[_SOURCE]] statement.
+
+
+{{PageExamples}}
+See the examples in:
+* [[Bitmaps]]
+* [[SaveImage SUB]]
+* [[SaveIcon32]]
+
+
+{{PageSeeAlso}}
+* [[_DEST (function)]]
+* [[_SOURCE]], [[_DEST]]
+
+
+{{PageNavigation}}

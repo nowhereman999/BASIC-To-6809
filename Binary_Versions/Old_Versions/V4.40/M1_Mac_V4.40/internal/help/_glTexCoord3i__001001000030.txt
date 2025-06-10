@@ -1,0 +1,27 @@
+{{QBDLDATE:01-28-2023}}
+{{QBDLTIME:11:52:17}}
+{{DISPLAYTITLE:_glTexCoord3i}}
+The '''_glTexCoord3i''' statement sets the current texture coordinates.
+
+
+{{PageSyntax}}
+: [[_glTexCoord3i]] GLint {{Parameter|s}}, GLint {{Parameter|t}}, GLint {{Parameter|r}}
+
+
+{{PageParameters}}
+* OpenGL is using its own set of variable types to describe its command parameters.
+* Use the following table to find the respective QB64 [[Variable Types]].
+{{OpenGLTypesPlugin}}
+
+
+{{PageDescription}}
+* OpenGL's documentation is available in several places, so we won't reproduce it here for another time.
+* The full description for this command can be found at [https://learn.microsoft.com/en-us/windows/win32/opengl/gltexcoord3i Microsoft Docs] and is also valid for QB64 usage.
+
+
+{{PageSeeAlso}}
+* [[_GL|SUB _GL]]
+* [https://learn.microsoft.com/en-us/windows/win32/opengl/glvertex-functions _glVertex]
+
+
+{{PageNavigation}}

@@ -1,0 +1,20 @@
+qbs *_SUB_UPDATETITLEOFMAINWINDOW_STRING_SFNAME=NULL;
+if (!_SUB_UPDATETITLEOFMAINWINDOW_STRING_SFNAME)_SUB_UPDATETITLEOFMAINWINDOW_STRING_SFNAME=qbs_new(0,0);
+byte_element_struct *byte_element_5119=NULL;
+if (!byte_element_5119){
+if ((mem_static_pointer+=12)<mem_static_limit) byte_element_5119=(byte_element_struct*)(mem_static_pointer-12); else byte_element_5119=(byte_element_struct*)mem_static_malloc(12);
+}
+qbs *_SUB_UPDATETITLEOFMAINWINDOW_STRING_A=NULL;
+if (!_SUB_UPDATETITLEOFMAINWINDOW_STRING_A)_SUB_UPDATETITLEOFMAINWINDOW_STRING_A=qbs_new(0,0);
+byte_element_struct *byte_element_5120=NULL;
+if (!byte_element_5120){
+if ((mem_static_pointer+=12)<mem_static_limit) byte_element_5120=(byte_element_struct*)(mem_static_pointer-12); else byte_element_5120=(byte_element_struct*)mem_static_malloc(12);
+}
+byte_element_struct *byte_element_5121=NULL;
+if (!byte_element_5121){
+if ((mem_static_pointer+=12)<mem_static_limit) byte_element_5121=(byte_element_struct*)(mem_static_pointer-12); else byte_element_5121=(byte_element_struct*)mem_static_malloc(12);
+}
+byte_element_struct *byte_element_5122=NULL;
+if (!byte_element_5122){
+if ((mem_static_pointer+=12)<mem_static_limit) byte_element_5122=(byte_element_struct*)(mem_static_pointer-12); else byte_element_5122=(byte_element_struct*)mem_static_malloc(12);
+}

@@ -1,0 +1,90 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:43:39}}
+The '''CONST''' statement globally defines one or more named numeric or string values which will not change while the program is running.
+
+
+{{PageSyntax}}
+: [[CONST]] {{Parameter|constantName}} = {{Parameter|value}}[, ...]
+
+
+{{PageParameters}}
+* {{Parameter|constantName}} is the constant name or list of names assigned by the programmer.
+* {{Parameter|value}} is the value to initialize the global constant which cannot change once defined.
+** If {{Parameter|constantName}} specifies a numeric type, {{Parameter|value}} must be a numeric expression containing literals and other constants.
+** If {{Parameter|constantName}} specifies a string type, the {{Parameter|value}} must be a literal value.
+
+
+{{PageDescription}}
+* The {{Parameter|constantName}} does not have to include a type suffix. The datatype is automatically infered by the compiler using the {{Parameter|value}}.
+* Constant values cannot reference a variable or user [[FUNCTION]] return value when defined. However, other (already known) constants and most of the internal char, math or color functions can be used, such as [[CHR$]], [[EXP]] or [[_RGBA32]].
+* Constants cannot be reassigned values. They retain the same value throughout all of the program procedures.
+* Constants defined in module-level code have [[SHARED|shared]] scope, so they can also be used in [[SUB]] or [[FUNCTION]] procedures.
+* Constants defined in [[SUB]] or [[FUNCTION]] procedures are local to those procedures.
+* [[CLEAR]] will not affect or change constant values.
+* Since '''QB64-PE v4.0.0''' a huge list of preset [[Constants]] is available in every program.
+
+
+{{PageExamples}}
+;Example 1: Display the circumference and the area of circles:
+{{CodeStart}}
+{{Text|<nowiki>' Declare a numeric constant approximately equal to the ratio of a circle's</nowiki>|#919191}}
+{{Text|<nowiki>' circumference to its diameter:</nowiki>|#919191}}
+{{Cl|CONST}} PI = {{Text|3.141593|#F580B1}}
+
+{{Text|<nowiki>' Declare some string constants:</nowiki>|#919191}}
+{{Cl|CONST}} circumferenceText = {{Text|<nowiki>"The circumference of the circle is"</nowiki>|#FFB100}}
+{{Cl|CONST}} areaText = {{Text|<nowiki>"The area of the circle is"</nowiki>|#FFB100}}
+
+{{Cl|DO}}
+    {{Cl|INPUT}} {{Text|<nowiki>"Enter the radius of a circle or zero to quit"</nowiki>|#FFB100}}; radius
+    {{Cl|IF}} radius = {{Text|0|#F580B1}} {{Cl|THEN}} {{Cl|END}}
+    {{Cl|PRINT}} circumferenceText; {{Text|2|#F580B1}} * PI * radius
+    {{Cl|PRINT}} areaText; PI * radius * radius {{Text|<nowiki>' radius squared</nowiki>|#919191}}
+    {{Cl|PRINT}}
+{{Cl|LOOP}}
+{{Cl|END}}
+{{CodeEnd}}
+{{OutputStart}}
+Enter the radius of a circle or zero to quit? ''10''
+The circumference of the circle is 62.83186
+The area of the circle is 314.1593
+
+Enter the radius of a circle or zero to quit? ''123.456''
+The circumference of the circle is 775.697
+The area of the circle is 47882.226
+
+Enter the radius of a circle or zero to quit? ''0''
+{{OutputEnd}}
+{{PreStart}}
+'''Explanation'''
+ PI cannot change as it is a mathematical constant so it is fitting
+ to define it as a constant. Trying to change PI will result in a
+ calculation error.
+{{PreEnd}}
+
+----
+
+;Example 2: Using _RGB32 to set a constant's value.
+{{CodeStart}}
+{{Cl|SCREEN}} {{Cl|_NEWIMAGE}}({{Text|640|#F580B1}}, {{Text|400|#F580B1}}, {{Text|32|#F580B1}})
+
+{{Cl|CONST}} Red = {{Cl|_RGB32}}({{Text|255|#F580B1}}, {{Text|0|#F580B1}}, {{Text|0|#F580B1}})
+
+{{Cl|COLOR}} Red
+{{Cl|PRINT}} {{Text|<nowiki>"Hello World"</nowiki>|#FFB100}}
+
+{{Cl|END}}
+{{CodeEnd}}
+{{OutputStart}}
+{{Ot|Hello World|red}}
+{{OutputEnd}}
+
+
+{{PageSeeAlso}}
+* [[DIM]], [[SHARED]]
+* [[STATIC]], [[COMMON]]
+* [[Constants]] (Defined by the Compiler)
+* [http://doc.pcsoft.fr/en-US/?6510001 Windows 32 API constant values]
+
+
+{{PageNavigation}}

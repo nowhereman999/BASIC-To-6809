@@ -725,15 +725,15 @@ SUB reginternal
     id.hr_syntax = "_FREETIMER"
     regid
 
-    clearid
-    id.n = "Timer"
-    id.subfunc = 2
-    id.callname = "sub_timer"
-    id.args = 2
-    id.arg = MKL$(LONGTYPE - ISPOINTER) + MKL$(LONGTYPE - ISPOINTER)
-    id.specialformat = "[(?)]{On|Off|Stop|Free}"
-    id.hr_syntax = "TIMER[(number%)] {On|Off|Stop|Free}"
-    regid
+'    clearid
+'    id.n = "Timer"
+'    id.subfunc = 2
+'    id.callname = "sub_timer"
+'    id.args = 2
+'    id.arg = MKL$(LONGTYPE - ISPOINTER) + MKL$(LONGTYPE - ISPOINTER)
+'    id.specialformat = "[(?)]{On|Off|Stop|Free}"
+'    id.hr_syntax = "TIMER[(number%)] {On|Off|Stop|Free}"
+'    regid
 
     clearid
     id.n = "_FullScreen"
@@ -3121,16 +3121,16 @@ SUB reginternal
     id.hr_syntax = "ERROR codeNumber%"
     regid
 
-    clearid
-    id.n = "Timer"
-    id.subfunc = 1
-    id.callname = "func_timer"
-    id.args = 1
-    id.arg = MKL$(DOUBLETYPE - ISPOINTER)
-    id.ret = SINGLETYPE - ISPOINTER
-    id.specialformat = "[?]"
-    id.hr_syntax = "TIMER[(accuracy!)]"
-    regid
+'    clearid
+'    id.n = "Timer"
+'    id.subfunc = 1
+'    id.callname = "func_timer"
+'    id.args = 1
+'    id.arg = MKL$(DOUBLETYPE - ISPOINTER)
+'    id.ret = SINGLETYPE - ISPOINTER
+'    id.specialformat = "[?]"
+'    id.hr_syntax = "TIMER[(accuracy!)]"
+'    regid
 
     clearid
     id.n = "Rnd"

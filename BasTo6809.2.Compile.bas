@@ -289,6 +289,7 @@ For check = 1 To count
     If LCase$(Left$(N$, 2)) = "-v" Then Verbose = Val(Right$(N$, Len(N$) - 2)): GoTo CheckNextCMDOption
     If LCase$(Left$(N$, 2)) = "-k" Then KeepTempFiles = 1: GoTo CheckNextCMDOption
     If LCase$(Left$(N$, 2)) = "-a" Then AutoStart = 1: GoTo CheckNextCMDOption
+    If LCase$(Left$(N$, 2)) = "-r" Then Ret2Basic = 1: GoTo CheckNextCMDOption
     ' check if we got a file name yet if so then the next filename will be output
     OutName$ = N$
     CheckNextCMDOption:
@@ -706,6 +707,9 @@ Wend
 Print #1, "EXITProgram:"
 A$ = "ORCC": B$ = "#$50": C$ = "Turn off the interrupts": GoSub AO
 A$ = "STA": B$ = "$FFD8": C$ = "Put Coco back in normal speed": GoSub AO
+A$ = "LDB": B$ = "#1": C$ = "B=1, make the CPU run at normal speed"
+A$ = "JSR": B$ = "SetCPUSpeedB": C$ = "Set the speed according to B"
+If Ret2Basic <> 1 Then A$ = "BRA": B$ = "*": C$ = "Endless loop, do not return to BASIC": GoSub AO
 ' Restore the IRQ jump address
 A$ = "LDX": B$ = "$FFFE": C$ = "Get the RESET location": GoSub AO
 A$ = "CMPX": B$ = "#$8C1B": C$ = "Check if it's a CoCo 3": GoSub AO
@@ -2258,7 +2262,7 @@ DoELSE:
 Num = ElseStack(IFSP): GoSub NumAsString 'num=IFCount associated with this IFProc
 If Num < 10 Then Num$ = "0" + Num$
 A$ = "BRA": B$ = "_IFDone_" + Num$: C$ = "Jump to END IF line": GoSub AO
-Z$ = "_ELSE_" + Num$: C$ = "If result is zero = FALSE then jump to ELSE/Next line": GoSub AO
+Z$ = "_ELSE_" + Num$: C$ = "If result is zero = FALSE then Get here": GoSub AO
 GoTo ConsumeCommentsAndEOL ' Consume any comments and the EOL and Return
 
 DoELSEIF:
@@ -6182,12 +6186,13 @@ DoPOKE:
 ' Get first number in D
 GoSub GetExpressionB4Comma: x = x + 2 ' Get the expression before a Comma, & move past it
 ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
-A$ = "TFR": B$ = "D,X": C$ = "Save D in X as the place to poke memory": GoSub AO
+A$ = "STD": B$ = "@POKE+1": C$ = "Save location where to poke in memory below (Self mod)": GoSub AO
 'x in the array will now be pointing just past the ,
 'Get value to poke in D (we only use B)
 GoSub GetExpressionB4EOL 'Handle an expression that ends with a colon or End of a Line
 ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
-A$ = "STB": B$ = ",X": C$ = "Store B at X": GoSub AO
+Z$ = "@POKE": A$ = "STB": B$ = ">$FFFF": C$ = "Store B in memory location (Self modded above)": GoSub AO
+Print #1,
 Return
 DoCONT:
 Color 14
@@ -6843,14 +6848,15 @@ Else
     End If
     A$ = "CLRA": C$ = "D=B": GoSub AO
     A$ = "LDB": B$ = "GModePage": C$ = "Get the screen Page #": GoSub AO
-    A$ = "BNE": B$ = "@Skip1": C$ = "If not the first page then go calc where to set the graphics page viewer": GoSub AO
+    A$ = "BEQ": B$ = "@Skip1": C$ = "If first page skip ahead, else calc where to set the graphics page viewer": GoSub AO
     A$ = "LDD": B$ = "#$" + GModeStartAddress$(Gmode): C$ = "A = the location in RAM to start the graphics screen": GoSub AO
     A$ = "BRA": B$ = "@UpdateScreenStart": C$ = "Go update the screen start location"
-    Z$ = "@Skip1"
     A$ = "LDX": B$ = "#$" + GModeScreenSize$(Gmode): C$ = "X = the screen size": GoSub AO
     A$ = "PSHS": B$ = "D,X": C$ = "Save the two 16 bit WORDS on the stack, to be multiplied": GoSub AO
     A$ = "JSR": B$ = "MUL16": C$ = "Do 16 bit x 16 bit Multiply, D = WORD on Stack ,S * WORD on stack 2,S, lowest 16 bit result will be in D": GoSub AO
     A$ = "LEAS": B$ = "4,S": C$ = "Fix the Stack": GoSub AO
+
+    Z$ = "@Skip1"
     A$ = "ADDD": B$ = "#$0E00": C$ = "D = Screen Page + Screen start location": GoSub AO
     Z$ = "@UpdateScreenStart": GoSub AO
     A$ = "STD": B$ = "BEGGRP": C$ = "Update the Screen starting location": GoSub AO
@@ -7180,7 +7186,7 @@ DoDRAW:
 ' Copy strings and quotes to a tempstring
 GoSub GetExpressionB4EOL ' Get the expression before an End of Line in Expression$
 GoSub ParseStringExpression ' Parse the String Expression, value will end up in _StrVar_PF00
-A$ = "JSR": B$ = "Draw": C$ = "Draw command, will draw the commands in the string _StrVar_PF00": GoSub AO
+A$ = "JSR": B$ = "Draw" + GModeName$(Gmode): C$ = "Draw command, will draw the commands in the string _StrVar_PF00": GoSub AO
 Return
 DoPCOPY:
 Color 14

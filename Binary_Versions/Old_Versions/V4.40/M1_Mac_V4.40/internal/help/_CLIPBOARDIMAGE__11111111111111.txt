@@ -1,0 +1,68 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:40:47}}
+{{DISPLAYTITLE:_CLIPBOARDIMAGE}}
+The [[_CLIPBOARDIMAGE]] statement copies a valid QB64 image to the clipboard.
+
+
+{{PageSyntax}}
+: [[_CLIPBOARDIMAGE]] = {{Parameter|existingImageHandle&}}
+
+
+{{PageDescription}}
+* {{Parameter|existingImageHandle&}} is a valid handle to a graphic QB64 image in memory, created with [[_NEWIMAGE]], [[_LOADIMAGE]] or [[_COPYIMAGE]].
+* You can pass [[_SOURCE]], [[_DEST]] or [[_DISPLAY]] to copy the current source, destination or active display pages, as long as they are valid graphic images.
+* SCREEN 0 handles (created either with [[_NEWIMAGE]] or passed using _DEST while in a text screen) are not valid and will create an [[ERROR Codes|Illegal Function Call]] or [[ERROR Codes|Invalid Handle]] error.
+
+
+{{PageAvailability}}
+<!-- QB64 = a version or none, QBPE = a version or all, Platforms = yes or no -->
+<gallery widths="48px" heights="48px" mode="nolines">
+File:Qb64.png|'''v1.2'''
+File:Qbpe.png|'''all'''
+File:Apix.png
+File:Win.png|'''yes'''
+File:Lnx.png|'''yes'''
+File:Osx.png|'''yes'''
+</gallery>
+<!-- additional availability notes go below here -->
+* Available for ''macOS'' and ''Linux'' since '''QB64-PE v3.13.0'''
+
+
+{{PageExamples}}
+;Example: Create a sample image and copy it to the clipboard:
+{{CodeStart}}
+{{Cl|SCREEN}} {{Cl|_NEWIMAGE}}({{Text|800|#F580B1}}, {{Text|600|#F580B1}}, {{Text|32|#F580B1}})
+
+{{Text|<nowiki>'Create image in memory:</nowiki>|#919191}}
+canvas& = {{Cl|_NEWIMAGE}}({{Text|300|#F580B1}}, {{Text|200|#F580B1}}, {{Text|32|#F580B1}})
+{{Cl|_DEST}} canvas&
+
+{{Text|<nowiki>'Draw some random rectangles:</nowiki>|#919191}}
+{{Cl|RANDOMIZE}} {{Cl|TIMER (function)|TIMER}}
+{{Cl|FOR}} i = {{Text|1|#F580B1}} {{Cl|TO}} {{Text|100|#F580B1}}
+    {{Cl|LINE}} ({{Text|-100|#F580B1}} + {{Cl|RND}} * {{Cl|_WIDTH (function)|_WIDTH}}, {{Text|-100|#F580B1}} + {{Cl|RND}} * {{Cl|_HEIGHT}})-{{Cl|STEP}}({{Cl|RND}} * {{Text|150|#F580B1}}, {{Cl|RND}} * {{Text|150|#F580B1}}), {{Cl|_RGB}}({{Cl|RND}} * {{Text|255|#F580B1}}, {{Cl|RND}} * {{Text|255|#F580B1}}, {{Cl|RND}} * {{Text|255|#F580B1}}), BF
+{{Cl|NEXT}}
+{{Cl|LINE}} ({{Text|0|#F580B1}}, {{Text|0|#F580B1}})-({{Cl|_WIDTH (function)|_WIDTH}} - {{Text|1|#F580B1}}, {{Cl|_HEIGHT}} - {{Text|1|#F580B1}}), {{Cl|_RGB}}({{Text|255|#F580B1}}, {{Text|255|#F580B1}}, {{Text|255|#F580B1}}), B
+{{Cl|COLOR}} {{Cl|_RGB}}({{Text|0|#F580B1}}, {{Text|0|#F580B1}}, {{Text|0|#F580B1}}), {{Cl|_RGB}}({{Text|255|#F580B1}}, {{Text|255|#F580B1}}, {{Text|255|#F580B1}})
+m$ = {{Text|<nowiki>" Hello, world! "</nowiki>|#FFB100}}
+{{Cl|_PRINTSTRING}} ({{Cl|_WIDTH (function)|_WIDTH}} / {{Text|2|#F580B1}} - {{Cl|_PRINTWIDTH}}(m$) / {{Text|2|#F580B1}}, {{Cl|_HEIGHT}} / {{Text|2|#F580B1}} - {{Cl|_FONTHEIGHT}} / {{Text|2|#F580B1}}), m$
+
+{{Text|<nowiki>'Show the image:</nowiki>|#919191}}
+{{Cl|_DEST}} {{Text|0|#F580B1}}
+{{Cl|_PUTIMAGE}} ({{Cl|_WIDTH (function)|_WIDTH}} / {{Text|2|#F580B1}} - {{Cl|_WIDTH (function)|_WIDTH}}(canvas&) / {{Text|2|#F580B1}}, {{Cl|_HEIGHT}} / {{Text|2|#F580B1}} - {{Cl|_HEIGHT}}(canvas&) / {{Text|2|#F580B1}}), canvas&
+{{Cl|PRINT}} {{Text|<nowiki>"Image generated."</nowiki>|#FFB100}}
+
+{{Text|<nowiki>'Copy to the clipboard:</nowiki>|#919191}}
+{{Cl|_CLIPBOARDIMAGE}} = canvas&
+
+{{Cl|PRINT}} {{Text|<nowiki>"Image copied to clipboard."</nowiki>|#FFB100}}
+{{CodeEnd}}
+{{Small|Example by Fellippe Heitor}}
+
+
+{{PageSeeAlso}}
+* [[_CLIPBOARDIMAGE (function)|_CLIPBOARDIMAGE]] {{Text|(function - used to paste an image from the clipboard)}}
+* [[_CLIPBOARD$]], [[_CLIPBOARD$ (function)]] {{Text|(used to copy/paste text)}}
+
+
+{{PageNavigation}}

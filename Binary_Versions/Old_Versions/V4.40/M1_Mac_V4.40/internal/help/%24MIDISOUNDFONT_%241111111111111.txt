@@ -1,0 +1,60 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:42:08}}
+The now {{Text|deprecated|red}} [[$MIDISOUNDFONT]] metacommand did enable MIDI support for [[_SNDOPEN]] in QB64-PE versions prior to v3.14.0, and was also considered unstable. It could only be used with the [[$UNSTABLE]]:MIDI flag set. Since v3.14.0 MIDI support is stable and you can use [[_MIDISOUNDBANK]] to load a soundfont.
+
+
+{{PageSyntax}}
+: [[$MIDISOUNDFONT]]: {DEFAULT|"{{Parameter|Filename}}"}
+
+
+{{PageParameters}}
+* DEFAULT indicates that the soundfont provided by QB64-PE should be used to play MIDI files.
+** The provided soundfont is about 1MB in size.
+* {{Parameter|Filename}} can be used to provide your own soundfont for playing MIDI files.
+** The specified soundfont file is compiled into your program and is not required at runtime.
+
+
+{{PageDescription}}
+* The use of this metacommand allows [[_SNDOPEN]] to open MIDI files.
+* The selected soundfont is what is used to play all MIDI files.
+
+
+{{PageAvailability}}
+<!-- QB64 = a version or none, QBPE = a version or all, Platforms = yes or no -->
+<gallery widths="48px" heights="48px" mode="nolines">
+File:Qb64.png|'''none'''
+File:Qbpe.png|'''v3.2.0'''
+File:Apix.png
+File:Win.png|'''yes'''
+File:Lnx.png|'''yes'''
+File:Osx.png|'''yes'''
+</gallery>
+<!-- additional availability notes go below here -->
+* '''$MIDISOUNDFONT''' was {{Text|deprecated|red}} in '''QB64-PE v3.14.0'''. Use [[_MIDISOUNDBANK]] instead.
+
+
+{{PageExamples}}
+{{CodeStart}}
+{{Cl|$UNSTABLE}}:MIDI
+
+' This line is only allowed when {{Cl|$UNSTABLE}}:MIDI is used
+{{Cl|$MIDISOUNDFONT}}: Default
+
+{{Cl|_SNDPLAYFILE}} "example.mid"
+{{CodeEnd}}
+{{CodeStart}}
+{{Cl|$UNSTABLE}}:MIDI
+
+' Using a custom soundfont rather than the default
+{{Cl|$MIDISOUNDFONT}}: "soundfont.sf2"
+
+{{Cl|_SNDPLAYFILE}} "example.mid"
+{{CodeEnd}}
+
+
+{{PageSeeAlso}}
+* [[$UNSTABLE]]
+* [[_MIDISOUNDBANK]], [[_SNDOPEN]]
+
+
+{{PageNavigation}}
