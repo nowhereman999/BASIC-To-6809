@@ -1496,6 +1496,11 @@ Print #1, "Seed1           RMB     1     ; Random number seed location"
 Print #1, "Seed2           RMB     1     ; Random number seed location"
 Print #1, "RNDC            RMB     1     ; Used by Random number generator"
 Print #1, "RNDX            RMB     1     ; Used by Random number generator"
+If PrintGraphicsText = 1 Then
+    ' Found program uses PRINT #-3, to print to the graphics screen
+    Print #1, "GraphicCURPOS   RMB     2     ; Reserve RAM for the Graphics Cursor"
+End If
+Print #1, "CASFLG          FCB     $FF   ; Case flag for keyboard output $FF=UPPER (normal), 0=LOWER"
 Print #1, "_Var_Timer      RMB     2     ; TIMER value"
 Print #1, "StartClearHere:" ' This is the start address of variables that will all be cleared to zero when the program starts
 ' Save space for 10 temporary 16 bit numbers
@@ -1514,11 +1519,6 @@ Print #1, "Numerator       RMB     2     ; Numerator, used in division"
 Print #1, "DATAPointer     RMB     2     ; Variable that points to the current DATA location"
 Print #1, "_NumVar_IFRight RMB     2     ; Temp bytes for IF Compares"
 
-If PrintGraphicsText = 1 Then
-    ' Found program uses PRINT #-3, to print to the graphics screen
-    Print #1, "GraphicCURPOS   RMB     2     ; Reserve RAM for the Graphics Cursor"
-End If
-
 ' Reserve space for Floating Point variables
 Print #1, "; Floating Point Variables Used:"; FloatVariableCount
 For ii = 0 To FloatVariableCount - 1
@@ -1532,7 +1532,6 @@ Print #1, "EveryCasePointer  RMB   2     ; Pointer at the table to keep track of
 Print #1, "EveryCaseStack  RMB     10*2  ; Space Used for nested Cases"
 Print #1, "SoundTone       RMB     1     ; SOUND Tone value"
 Print #1, "SoundDuration   RMB     2     ; SOUND Command duration value"
-Print #1, "CASFLG          RMB     1     ; Case flag for keyboard output $FF=UPPER (normal), 0=LOWER"
 Print #1, "OriginalIRQ     RMB     3     ; We save the original branch and location of the IRQ here, restored before we exit"
 Print #1, "EndClearHere:" ' This is the end address of variables that will all be cleared to zero when the program starts
 Num = Playfield: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$

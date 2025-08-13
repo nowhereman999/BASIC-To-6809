@@ -4900,6 +4900,26 @@ SUB reginternal
     id.hr_syntax = "TRIM$(text$)"
     regid
 
+    clearid
+    id.n = "Audio"
+    id.subfunc = 2
+    id.callname = "sub_coco"
+    id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER)
+    id.specialformat = "{On|Off}"
+    id.hr_syntax = "AUDIO [ON|OFF]"
+    regid
+
+    clearid
+    id.n = "Motor"
+    id.subfunc = 2
+    id.callname = "sub_coco"
+    id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER)
+    id.specialformat = "{On|Off}"
+    id.hr_syntax = "MOTOR [ON|OFF]"
+    regid
+
     reginternalsubfunc = 0
 
 END SUB

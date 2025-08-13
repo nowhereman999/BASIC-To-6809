@@ -164,7 +164,7 @@ listOfKeywords$ = listOfKeywords$ +_
 
 ' [CoCo BASIC to 6809 commands] (A to E)
 listOfCustomKeywords$ = listOfCustomKeywords$ +_
-"@BUTTON@CMPEQ@CMPGE@CMPGT@CMPLE@CMPLT@CMPNE@COPYBLOCKS@CPUSPEED@"+_
+"@AUDIO@BUTTON@CMPEQ@CMPGE@CMPGT@CMPLE@CMPLT@CMPNE@COPYBLOCKS@CPUSPEED@"+_
 "" +_
 ""
 
@@ -182,7 +182,7 @@ listOfCustomKeywords$ = listOfCustomKeywords$ +_
 
 ' [CoCo BASIC to 6809 commands] (M to R)
 listOfCustomKeywords$ = listOfCustomKeywords$ +_
-"@PLAYFIELD@POINT@RNDL@RNDZ@"+_
+"@MOTOR@PLAYFIELD@POINT@RNDL@RNDZ@"+_
 "" +_
 ""
 
@@ -197,5 +197,3 @@ listOfCustomKeywords$ = listOfCustomKeywords$ +_
 "@VIEW@WPEEK@WPOKE@"+_
 "" +_
 ""
-
-
