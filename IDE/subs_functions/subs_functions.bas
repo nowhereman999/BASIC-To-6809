@@ -4920,6 +4920,336 @@ SUB reginternal
     id.hr_syntax = "MOTOR [ON|OFF]"
     regid
 
+    clearid
+    id.n = "CoCoMP3_Raw"
+    id.subfunc = 1
+    id.callname = "sub_coco"
+    id.args = 1
+    id.arg = MKL$(STRINGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER
+    id.hr_syntax = "COCOMP3_RAW(text$)"
+    regid
+
+    clearid
+    id.n = "CoCoMP3_Audio_Mode"
+    id.subfunc = 1
+    id.callname = "sub_coco"
+    id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER
+    id.hr_syntax = "COCOMP3_AUDIO_MODE(x)"
+    regid
+
+    clearid
+    id.n = "CoCoMP3_Combination_Play_Setting"
+    id.subfunc = 1
+    id.callname = "sub_coco"
+    id.args = 2
+    id.arg =  MKL$(LONGTYPE - ISPOINTER) +  MKL$(LONGTYPE - ISPOINTER)
+    id.specialformat = "(?,?)"
+    id.hr_syntax = "COCOMP3_COMBINATION_PLAY_SETTING(x,y)"
+    regid
+    clearid
+
+    clearid
+    id.n = "CoCoMP3_Cycle_Mode_Setting"
+    id.subfunc = 1
+    id.callname = "sub_coco"
+    id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER
+    id.hr_syntax = "COCOMP3_CYCLE_MODE_SETTING(x)"
+    regid
+
+    clearid
+    id.n = "CoCoMP3_End_Combination_Play"
+    id.subfunc = 1
+    id.callname = "sub_coco"
+    id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER
+    id.hr_syntax = "COCOMP3_END_COMBINATION_PLAY(x)"
+    regid
+
+    clearid
+    id.n = "CoCoMP3_End_Playing"
+    id.subfunc = 1
+    id.callname = "sub_coco"
+    id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER
+    id.hr_syntax = "COCOMP3_END_PLAYING(x)"
+    regid
+
+    clearid
+    id.n = "CoCoMP3_Get_Current_Track"
+    id.subfunc = 1
+    id.callname = "sub_coco"
+    id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER
+    id.hr_syntax = "COCOMP3_GET_CURRENT_TRACK(x)"
+    regid
+
+    clearid
+    id.n = "CoCoMP3_Get_Folder_Dir_Track"
+    id.subfunc = 1
+    id.callname = "sub_coco"
+    id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER
+    id.hr_syntax = "COCOMP3_GET_FOLDER_DIR_TRACK(x)"
+    regid
+
+    clearid
+    id.n = "CoCoMP3_Get_Tracks_In_Folder"
+    id.subfunc = 1
+    id.callname = "sub_coco"
+    id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER
+    id.hr_syntax = "COCOMP3_GET_TRACKS_IN_FOLDER(x)"
+    regid
+
+    clearid
+    id.n = "CoCoMP3_Get_Number_Of_Tracks"
+    id.subfunc = 1
+    id.callname = "sub_coco"
+    id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER
+    id.hr_syntax = "COCOMP3_GET_NUMBER_OF_TRACKS(x)"
+    regid
+
+    clearid
+    id.n = "CoCoMP3_Get_Drive_Status"
+    id.subfunc = 1
+    id.callname = "sub_coco"
+    id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER
+    id.hr_syntax = "COCOMP3_GET_DRIVE_STATUS(x)"
+    regid
+
+    clearid
+    id.n = "CoCoMP3_Get_Play_Status"
+    id.subfunc = 1
+    id.callname = "sub_coco"
+    id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER
+    id.hr_syntax = "COCOMP3_GET_PLAY_STATUS(x)"
+    regid
+
+    clearid
+    id.n = "CoCoMP3_Next"
+    id.subfunc = 1
+    id.callname = "sub_coco"
+    id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER
+    id.hr_syntax = "COCOMP3_NEXT(x)"
+    regid
+
+    clearid
+    id.n = "CoCoMP3_Pause"
+    id.subfunc = 1
+    id.callname = "sub_coco"
+    id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER
+    id.hr_syntax = "COCOMP3_PAUSE(x)"
+    regid
+
+    clearid
+    id.n = "CoCoMP3_Play"
+    id.subfunc = 1
+    id.callname = "sub_coco"
+    id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER
+    id.hr_syntax = "COCOMP3_PLAY(x)"
+    regid
+
+    clearid
+    id.n = "CoCoMP3_Play_Next_Folder"
+    id.subfunc = 1
+    id.callname = "sub_coco"
+    id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER
+    id.hr_syntax = "COCOMP3_PLAY_NEXT_FOLDER(x)"
+    regid
+
+    clearid
+    id.n = "CoCoMP3_Play_Previous_Folder"
+    id.subfunc = 1
+    id.callname = "sub_coco"
+    id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER
+    id.hr_syntax = "COCOMP3_PLAY_PREVIOUS_FOLDER(x)"
+    regid
+
+    clearid
+    id.n = "CoCoMP3_Play_Track_Number"
+    id.subfunc = 1
+    id.callname = "sub_coco"
+    id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER
+    id.hr_syntax = "COCOMP3_PLAY_TRACK_NUMBER(x)"
+    regid
+
+    clearid
+    id.n = "CoCoMP3_Play_Track"
+    id.subfunc = 1
+    id.callname = "sub_coco"
+    id.args = 1
+    id.arg = MKL$(STRINGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER
+    id.hr_syntax = "COCOMP3_PLAY_TRACK(text$)"
+    regid
+
+    clearid
+    id.n = "CoCoMP3_Previous"
+    id.subfunc = 1
+    id.callname = "sub_coco"
+    id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER
+    id.hr_syntax = "COCOMP3_PREVIOUS(x)"
+    regid
+
+    clearid
+    id.n = "CoCoMP3_Select_But_No_Play"
+    id.subfunc = 1
+    id.callname = "sub_coco"
+    id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER
+    id.hr_syntax = "COCOMP3_SELECT_BUT_NO_PLAY(x)"
+    regid
+
+    clearid
+    id.n = "CoCoMP3_Set_Cycle_Times"
+    id.subfunc = 1
+    id.callname = "sub_coco"
+    id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER
+    id.hr_syntax = "COCOMP3_SET_CYCLE_TIMES(x)"
+    regid
+
+    clearid
+    id.n = "CoCoMP3_Set_Eq"
+    id.subfunc = 1
+    id.callname = "sub_coco"
+    id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER
+    id.hr_syntax = "COCOMP3_SET_EQ(x)"
+    regid
+
+    clearid
+    id.n = "CoCoMP3_Set_Path_Interlude"
+    id.subfunc = 1
+    id.callname = "sub_coco"
+    id.args = 1
+    id.arg = MKL$(STRINGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER
+    id.hr_syntax = "COCOMP3_SET_PATH_INTERLUDE(text$)"
+    regid
+
+    clearid
+    id.n = "CoCoMP3_Set_Track_Interlude"
+    id.subfunc = 1
+    id.callname = "sub_coco"
+    id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER
+    id.hr_syntax = "COCOMP3_SET_TRACK_INTERLUDE(x)"
+    regid
+
+    clearid
+    id.n = "CoCoMP3_Set_Vol"
+    id.subfunc = 1
+    id.callname = "sub_coco"
+    id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER
+    id.hr_syntax = "COCOMP3_SET_VOL(x)"
+    regid
+
+    clearid
+    id.n = "CoCoMP3_Stop"
+    id.subfunc = 1
+    id.callname = "sub_coco"
+    id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER
+    id.hr_syntax = "COCOMP3_STOP(x)"
+    regid
+
+    clearid
+    id.n = "CoCoMP3_Test"
+    id.subfunc = 1
+    id.callname = "sub_coco"
+    id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER
+    id.hr_syntax = "COCOMP3_TEST(x)"
+    regid
+
+    clearid
+    id.n = "CoCoMP3_Vol_Down"
+    id.subfunc = 1
+    id.callname = "sub_coco"
+    id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER
+    id.hr_syntax = "COCOMP3_VOL_DOWN(x)"
+    regid
+
+    clearid
+    id.n = "CoCoMP3_Vol_Fade"
+    id.subfunc = 1
+    id.callname = "sub_coco"
+    id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER
+    id.hr_syntax = "COCOMP3_VOL_FADE(x)"
+    regid
+
+    clearid
+    id.n = "CoCoMP3_Vol_Max"
+    id.subfunc = 1
+    id.callname = "sub_coco"
+    id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER
+    id.hr_syntax = "COCOMP3_VOL_MAX(x)"
+    regid
+
+    clearid
+    id.n = "CoCoMP3_Vol_Up"
+    id.subfunc = 1
+    id.callname = "sub_coco"
+    id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER
+    id.hr_syntax = "COCOMP3_VOL_UP(x)"
+    regid
+
+    clearid
+    id.n = "Exec"
+    id.subfunc = 2
+    id.callname = "sub_coco"
+    id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER)
+    id.hr_syntax = "EXEC segment_offset"
+    regid
+
     reginternalsubfunc = 0
 
 END SUB

@@ -93,8 +93,8 @@ Print1sSerial:
 AtoSerialPort:
 LA2BF           PSHS        X,B,A,CC        ; SAVE REGISTERS AND INTERRUPT STATUS
                 ORCC        #$50            ; DISABLE IRQ,FIRQ
-LA2C3           LDB         PIA1+2          ; GET RS 232 STATUS
-                LSRB                        ; SHIFT RS 232 STATUS BIT INTO CARRY
+LA2C3           LDB         PIA1+2          ; GET RS-232 STATUS
+                LSRB                        ; SHIFT RS-232 STATUS BIT INTO CARRY
                 BCS         LA2C3           ; LOOP UNTIL READY
                 BSR         LA2FB           ; SET OUTPUT TO MARKING
                 CLRB                        ;
@@ -121,7 +121,7 @@ LA2ED           CLR         LPTPOS          ; RESET CHARACTER COUNTER
                 BSR         LA305
                 BSR         LA305           ; DELAY FOR CARRIAGE RETURN
 LA2F3           LDB         PIA1+2          ; WAIT FOR HANDSHAKE
-                LSRB                        ; CHECK FOR R5232 STATUS?
+                LSRB                        ; CHECK FOR RS232 STATUS?
                 BCS         LA2F3           ; NOT YET READY
                 PULS        B,X,PC          ; RESTORE REGISTERS
                 

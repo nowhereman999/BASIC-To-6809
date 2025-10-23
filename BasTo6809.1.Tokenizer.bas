@@ -1762,7 +1762,7 @@ If PlayCommand = 1 Then
 End If
 Print #1, "ClearHere2nd:" ' This is the start address of variables that will all be cleared to zero when the program starts
 ' Add temp string space
-For Num = 0 To 1
+For Num = 0 To 2
     GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
     If Num < 10 Then Num$ = "0" + Num$
     Print #1, "_StrVar_PF"; Num$; T1$; "RMB "; T1$; "256     ; Temp String Variable"
@@ -2081,11 +2081,17 @@ For ii = 0 To StringCommandsFoundCount - 1
         Temp$ = "SDCFileAccess": GoSub AddIncludeTemp
         '        Temp$ = "SDCVersionCheck": GoSub AddIncludeTemp
     End If
+    If Temp$ = "COCOMP3$" Then
+        Temp$ = "CoCoMP3": GoSub AddIncludeTemp
+    End If
 Next ii
 For ii = 0 To NumericCommandsFoundCount - 1
     Temp$ = UCase$(NumericCommandsFound$(ii))
     If Temp$ = "BUTTON" Then
         Temp$ = "JoyButton": GoSub AddIncludeTemp 'Add code to handle reading the joystick buttons
+    End If
+    If Left$(Temp$, 8) = "COCOMP3_" Then
+        Temp$ = "CoCoMP3_Compiler_Library": GoSub AddIncludeTemp ' Add code for clearing the screen
     End If
     If Temp$ = "SDC_GETBYTE" Or Temp$ = "SDC_MKDIR" Or Temp$ = "SDC_SETDIR" Or Temp$ = "SDC_INITDIR" Or Temp$ = "SDC_DELETE" Then
         Temp$ = "CommSDC": GoSub AddIncludeTemp
@@ -2251,10 +2257,10 @@ If CoCo3 = 1 Then
     A$ = "LSRA": C$ = "Divide by 2 - 512 bytes per start location": GoSub AO
     A$ = "JSR": B$ = "SetGraphicsStartA": C$ = "Go set the address of the screen": GoSub AO
 End If
-Z$ = "* Enable 6 Bit DAC output": GoSub AO
-A$ = "LDA": B$ = "$FF23": C$ = "* PIA1_Byte_3_IRQ_Ct_Snd * $FF23 GET PIA": GoSub AO
-A$ = "ORA": B$ = "#%00001000": C$ = "* SET 6-BIT SOUND ENABLE": GoSub AO
-A$ = "STA": B$ = "$FF23": C$ = "* PIA1_Byte_3_IRQ_Ct_Snd * $FF23 STORE": GoSub AO
+'Z$ = "* Enable 6 Bit DAC output": GoSub AO
+'A$ = "LDA": B$ = "$FF23": C$ = "* PIA1_Byte_3_IRQ_Ct_Snd * $FF23 GET PIA": GoSub AO
+'A$ = "ORA": B$ = "#%00001000": C$ = "* SET 6-BIT SOUND ENABLE": GoSub AO
+'A$ = "STA": B$ = "$FF23": C$ = "* PIA1_Byte_3_IRQ_Ct_Snd * $FF23 STORE": GoSub AO
 
 If LineCommand = 1 Then
     A$ = "LDD": B$ = "#128": C$ = "Set D to the middle of the screen": GoSub AO

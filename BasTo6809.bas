@@ -1,4 +1,10 @@
-V$ = "4.41"
+V$ = "4.43"
+'       - Add supported for the CoCoMP3
+
+' V 4.42
+'       - Added AUDIO ON/OFF and MOTOR ON/OFF work from the IDE
+
+' V 4.41
 '       - Added the DRAW command for all graphics modes including the semi-graphics modes
 '       - Improved the handling of single line IF commands that have THEN or ELSE with a line number and not a GOTO line number
 '       - Fixed POKE command so it can now handle math funxtions directly for both the address and the value to poke

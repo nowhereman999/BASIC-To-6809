@@ -6391,28 +6391,31 @@ If v >= Asc("0") And v <= Asc("9") Or (v = Asc("&") And Array(x) = Asc("H")) The
     x = x - 1 ' make sure to inlcude the first Numeric variable
     GoSub GetExB4SemiComQ13D_EOL ' Get an Expression before a semi colon, a comma a quote, an &HF1,&HF3 or &HFD an EOL/Colon
     ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression, value will end up in D
-    A$ = "TFR": B$ = "D,PC": C$ = "JMP to D": GoSub AO
+    A$ = "TFR": B$ = "D,X": C$ = "X = D": GoSub AO
+    A$ = "JSR": B$ = ",X": C$ = "JSR to X": GoSub AO
     Return
 End If
 If v = &HF0 Then ' Printing a Numeric Array variable, PRINT A(5)
     x = x - 1 ' make sure to inlcude the first Numeric array variable
     GoSub GetExB4SemiComQ13D_EOL ' Get an Expression before a semi colon, a comma a quote, an &HF1,&HF3 or &HFD an EOL/Colon
     ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression, value will end up in D
-    A$ = "TFR": B$ = "D,PC": C$ = "JMP to D": GoSub AO
+    A$ = "TFR": B$ = "D,X": C$ = "X = D": GoSub AO
+    A$ = "JSR": B$ = ",X": C$ = "JSR to X": GoSub AO
     Return
 End If
 If v = &HF2 Then ' Printing a Regular Numeric Variable, PRINT A
     x = x - 1 ' make sure to inlcude the first Numeric variable
     GoSub GetExB4SemiComQ13D_EOL ' Get an Expression before a semi colon, a comma a quote, an &HF1,&HF3 or &HFD an EOL/Colon
     ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression, value will end up in D
-    A$ = "TFR": B$ = "D,PC": C$ = "JMP to D": GoSub AO
+    A$ = "TFR": B$ = "D,X": C$ = "X = D": GoSub AO
+    A$ = "JSR": B$ = ",X": C$ = "JSR to X": GoSub AO
     Return
 End If
 If v = &HF5 Then
     ' Found a special character
     v = Array(x): x = x + 1
     If v = &H0D Or v = &H3A Then ' Execute address in the EXECAddress
-        A$ = "JMP": B$ = "[EXECAddress]": C$ = "Jump to address stored at EXECAddress": GoSub AO
+        A$ = "JSR": B$ = "[EXECAddress]": C$ = "Jump to subroutine at address stored at EXECAddress": GoSub AO
         Return ' we have reached the end of the line return
     End If
 End If
@@ -8816,6 +8819,609 @@ Print "Can't do command DSKO yet, found on line "; linelabel$
 Color 15
 System
 
+' Send Raw string to the CoCoMP3 (for the power user)
+' I=COCOMP3_RAW$(O$)
+' O$ is a string with the hex values you want to send to the CoCoMP3
+' Result: I = the response bytes from the CoCoMP3
+DoCOCOMP3_RAW:
+' Get the string value after the first open bracket
+GoSub ParseStringExpression0 ' Recursively get the next string value
+Num = StrParseCount: GoSub NumAsString: x = x + 2 'Convert number in Num to a string without spaces as Num$, move past close bracket
+If Num < 10 Then Num$ = "0" + Num$
+StringPointerTemp$ = "_StrVar_PF" + Num$ 'StringPointerTemp$ = the Temp string pointer to use
+A$ = "LDX": B$ = "#" + StringPointerTemp$: C$ = "X points at the string to send to the CoCoMP3": GoSub AO
+A$ = "LDB": B$ = ",X+": C$ = "B = the length of the string and X now points at the first byte of the string": GoSub AO
+A$ = "JSR": B$ = "SendToCoCoMP3": C$ = "Send the command to the CoCoMP3, value of A doesn't matter for RAW codes": GoSub AO
+Z$ = "!": GoSub AO
+Return
+
+' Set the audio Mode of CoCoMP3 to either always set AUDIO ON when called, or to leave the Audio settings unchanged
+' I=OCOMP3_AUDIO_MODE(x)
+' Where x is:
+'    0 -     Leave the audio setting unchanged
+'    1 -     (Default) Audio from the CoCoMP3 will come from the
+'            Cassette interface and play through the TV speakers
+' Result: I = the response bytes from the CoCoMP3
+DoCOCOMP3_AUDIO_MODE:
+If ExpressionCount > 0 Then ' Check if we are in the middle of an expression
+    ' Yes we are in an existing expression
+    GoSub ParseExpression0FlagErase ' Recursively check the next value
+    resultP30(PE30Count) = Parse00_Term ' this will return with the next value in D
+Else
+    ' Get the numeric value before a Close bracket
+    v = Array(x): x = x + 1 ' skip the open bracket
+    ' Get first number in D
+    GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+    ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
+End If
+A$ = "TFR": B$ = "D,U": C$ = "U is the secondary value for the CoCoMP3": GoSub AO
+A$ = "LDA": B$ = "#$84": C$ = "Command for AUDIO_MODE": GoSub AO
+A$ = "JSR": B$ = "SendToCoCoMP3": C$ = "Send the command to the CoCoMP3": GoSub AO
+Return
+
+' Set range of tracks to play
+' I=COCOMP3_COMBINATION_PLAY_SETTING(x,y)
+' Where x is the first track and y is the last track in the range
+DoCOCOMP3_COMBINATION_PLAY_SETTING:
+If ExpressionCount > 0 Then ' Check if we are in the middle of an expression
+    ' Yes we are in an existing expression
+    GoSub ParseExpression0FlagErase ' Recursively check the next value
+    resultP30(PE30Count) = Parse00_Term ' this will return with the next value in D
+Else
+    ' Get the numeric value before a Close bracket
+    v = Array(x): x = x + 1 ' skip the open bracket
+    ' Get first number in D
+    GoSub GetExpressionB4Comma: x = x + 2 'Handle an expression that ends with a comma & move past it
+    ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression result with value in D
+    A$ = "TFR": B$ = "D,X": C$ = "X is the primary value for the CoCoMP3": GoSub AO
+    ' Get the numeric value before a Close bracket
+    v = Array(x): x = x + 1 ' skip the open bracket
+    ' Get first number in D
+    GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+    ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
+End If
+A$ = "TFR": B$ = "D,U": C$ = "U is the secondary value for the CoCoMP3": GoSub AO
+A$ = "LDA": B$ = "#$1B": C$ = "Command for COMBINATION-PLAY-SETTING": GoSub AO
+A$ = "JSR": B$ = "SendToCoCoMP3": C$ = "Send the command to the CoCoMP3": GoSub AO
+Return
+
+' Change the playback cycle mode
+' I=COCOMP3_CYCLE_MODE_SETTING(x)
+' Where x is a value of 0 to 7
+DoCOCOMP3_CYCLE_MODE_SETTING:
+If ExpressionCount > 0 Then ' Check if we are in the middle of an expression
+    ' Yes we are in an existing expression
+    GoSub ParseExpression0FlagErase ' Recursively check the next value
+    resultP30(PE30Count) = Parse00_Term ' this will return with the next value in D
+Else
+    ' Get the numeric value before a Close bracket
+    v = Array(x): x = x + 1 ' skip the open bracket
+    ' Get first number in D
+    GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+    ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
+End If
+A$ = "TFR": B$ = "D,X": C$ = "X is the primary value for the CoCoMP3": GoSub AO
+A$ = "LDA": B$ = "#$18": C$ = "Command for CYCLE_MODE_SETTING": GoSub AO
+A$ = "JSR": B$ = "SendToCoCoMP3": C$ = "Send the command to the CoCoMP3": GoSub AO
+Return
+
+' End combination play
+' I=COCOMP3_END_COMBINATION_PLAY(0)
+DoCOCOMP3_END_COMBINATION_PLAY:
+If ExpressionCount > 0 Then ' Check if we are in the middle of an expression
+    ' Yes we are in an existing expression
+    GoSub ParseExpression0FlagErase ' Recursively check the next value
+    resultP30(PE30Count) = Parse00_Term ' this will return with the next value in D
+Else
+    ' Get the numeric value before a Close bracket
+    v = Array(x): x = x + 1 ' skip the open bracket
+    ' Get first number in D
+    GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+    ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
+End If
+A$ = "LDA": B$ = "#$1C": C$ = "Command for END_COMBINATION_PLAY": GoSub AO
+A$ = "JSR": B$ = "SendToCoCoMP3": C$ = "Send the command to the CoCoMP3": GoSub AO
+Return
+
+' End playing the current track and skip to the next track similar to Next
+' I=COCOMP3_END_PLAYING(0)
+DoCOCOMP3_END_PLAYING:
+If ExpressionCount > 0 Then ' Check if we are in the middle of an expression
+    ' Yes we are in an existing expression
+    GoSub ParseExpression0FlagErase ' Recursively check the next value
+    resultP30(PE30Count) = Parse00_Term ' this will return with the next value in D
+Else
+    ' Get the numeric value before a Close bracket
+    v = Array(x): x = x + 1 ' skip the open bracket
+    ' Get first number in D
+    GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+    ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
+End If
+A$ = "LDA": B$ = "#$10": C$ = "Command for END_PLAYING": GoSub AO
+A$ = "JSR": B$ = "SendToCoCoMP3": C$ = "Send the command to the CoCoMP3": GoSub AO
+Return
+
+' Returns current track number
+' I=COCOMP3_GET_CURRENT_TRACK(0)
+DoCOCOMP3_GET_CURRENT_TRACK:
+If ExpressionCount > 0 Then ' Check if we are in the middle of an expression
+    ' Yes we are in an existing expression
+    GoSub ParseExpression0FlagErase ' Recursively check the next value
+    resultP30(PE30Count) = Parse00_Term ' this will return with the next value in D
+Else
+    ' Get the numeric value before a Close bracket
+    v = Array(x): x = x + 1 ' skip the open bracket
+    ' Get first number in D
+    GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+    ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
+End If
+A$ = "LDA": B$ = "#$0D": C$ = "Command for GET_CURRENT_TRACK": GoSub AO
+A$ = "JSR": B$ = "SendToCoCoMP3": C$ = "Send the command to the CoCoMP3": GoSub AO
+Return
+
+' Returns with the first Track number in the current folder
+' I=COCOMP3_GET_FOLDER_DIR_TRACK(0)
+DoCOCOMP3_GET_FOLDER_DIR_TRACK:
+If ExpressionCount > 0 Then ' Check if we are in the middle of an expression
+    ' Yes we are in an existing expression
+    GoSub ParseExpression0FlagErase ' Recursively check the next value
+    resultP30(PE30Count) = Parse00_Term ' this will return with the next value in D
+Else
+    ' Get the numeric value before a Close bracket
+    v = Array(x): x = x + 1 ' skip the open bracket
+    ' Get first number in D
+    GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+    ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
+End If
+A$ = "LDA": B$ = "#$11": C$ = "Command for GET_FOLDER_DIR_TRACK": GoSub AO
+A$ = "JSR": B$ = "SendToCoCoMP3": C$ = "Send the command to the CoCoMP3": GoSub AO
+Return
+
+' Returns with the number of tracks in the current folder
+' I=COCOMP3_GET_TRACKS_IN_FOLDER(0)
+DoCOCOMP3_GET_TRACKS_IN_FOLDER:
+If ExpressionCount > 0 Then ' Check if we are in the middle of an expression
+    ' Yes we are in an existing expression
+    GoSub ParseExpression0FlagErase ' Recursively check the next value
+    resultP30(PE30Count) = Parse00_Term ' this will return with the next value in D
+Else
+    ' Get the numeric value before a Close bracket
+    v = Array(x): x = x + 1 ' skip the open bracket
+    ' Get first number in D
+    GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+    ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
+End If
+A$ = "LDA": B$ = "#$12": C$ = "Command for GET_TRACKS_IN_FOLDER": GoSub AO
+A$ = "JSR": B$ = "SendToCoCoMP3": C$ = "Send the command to the CoCoMP3": GoSub AO
+Return
+
+' Returns with the total number of tracks on the microSD
+' I=COCOMP3_GET_NUMBER_OF_TRACKS(0)
+DoCOCOMP3_GET_NUMBER_OF_TRACKS:
+If ExpressionCount > 0 Then ' Check if we are in the middle of an expression
+    ' Yes we are in an existing expression
+    GoSub ParseExpression0FlagErase ' Recursively check the next value
+    resultP30(PE30Count) = Parse00_Term ' this will return with the next value in D
+Else
+    ' Get the numeric value before a Close bracket
+    v = Array(x): x = x + 1 ' skip the open bracket
+    ' Get first number in D
+    GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+    ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
+End If
+A$ = "LDA": B$ = "#$0C": C$ = "Command for GET_NUMBER_OF_TRACKS": GoSub AO
+A$ = "JSR": B$ = "SendToCoCoMP3": C$ = "Send the command to the CoCoMP3": GoSub AO
+Return
+
+' Get the current drive status
+' I=COCOMP3_GET_DRIVE_STATUS(0)
+DoCOCOMP3_GET_DRIVE_STATUS:
+If ExpressionCount > 0 Then ' Check if we are in the middle of an expression
+    ' Yes we are in an existing expression
+    GoSub ParseExpression0FlagErase ' Recursively check the next value
+    resultP30(PE30Count) = Parse00_Term ' this will return with the next value in D
+Else
+    ' Get the numeric value before a Close bracket
+    v = Array(x): x = x + 1 ' skip the open bracket
+    ' Get first number in D
+    GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+    ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
+End If
+A$ = "LDA": B$ = "#$09": C$ = "Command for GET_DRIVE_STATUS": GoSub AO
+A$ = "JSR": B$ = "SendToCoCoMP3": C$ = "Send the command to the CoCoMP3": GoSub AO
+Return
+
+' Get the play status of the CoCoMP3
+' I=COCOMP3_GET_PLAY_STATUS(0)
+DoCOCOMP3_GET_PLAY_STATUS:
+If ExpressionCount > 0 Then ' Check if we are in the middle of an expression
+    ' Yes we are in an existing expression
+    GoSub ParseExpression0FlagErase ' Recursively check the next value
+    resultP30(PE30Count) = Parse00_Term ' this will return with the next value in D
+Else
+    ' Get the numeric value before a Close bracket
+    v = Array(x): x = x + 1 ' skip the open bracket
+    ' Get first number in D
+    GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+    ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
+End If
+A$ = "LDA": B$ = "#$01": C$ = "Command for GET_PLAY_STATUS": GoSub AO
+A$ = "JSR": B$ = "SendToCoCoMP3": C$ = "Send the command to the CoCoMP3": GoSub AO
+Return
+
+' Play the next track
+' I=COCOMP3_NEXT(0)
+DoCOCOMP3_NEXT:
+If ExpressionCount > 0 Then ' Check if we are in the middle of an expression
+    ' Yes we are in an existing expression
+    GoSub ParseExpression0FlagErase ' Recursively check the next value
+    resultP30(PE30Count) = Parse00_Term ' this will return with the next value in D
+Else
+    ' Get the numeric value before a Close bracket
+    v = Array(x): x = x + 1 ' skip the open bracket
+    ' Get first number in D
+    GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+    ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
+End If
+A$ = "LDA": B$ = "#$06": C$ = "Command for COCOMP3_NEXT": GoSub AO
+A$ = "JSR": B$ = "SendToCoCoMP3": C$ = "Send the command to the CoCoMP3": GoSub AO
+Return
+
+' Pauses playback of the track
+' I=COCOMP3_PAUSE(0)
+DoCOCOMP3_PAUSE:
+If ExpressionCount > 0 Then ' Check if we are in the middle of an expression
+    ' Yes we are in an existing expression
+    GoSub ParseExpression0FlagErase ' Recursively check the next value
+    resultP30(PE30Count) = Parse00_Term ' this will return with the next value in D
+Else
+    ' Get the numeric value before a Close bracket
+    v = Array(x): x = x + 1 ' skip the open bracket
+    ' Get first number in D
+    GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+    ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
+End If
+A$ = "LDA": B$ = "#$03": C$ = "Command for COCOMP3_PAUSE": GoSub AO
+A$ = "JSR": B$ = "SendToCoCoMP3": C$ = "Send the command to the CoCoMP3": GoSub AO
+Return
+
+' Play the current track, or the first track on the microSD after power on.
+' I=COCOMP3_PLAY(0)
+DoCOCOMP3_PLAY:
+If ExpressionCount > 0 Then ' Check if we are in the middle of an expression
+    ' Yes we are in an existing expression
+    GoSub ParseExpression0FlagErase ' Recursively check the next value
+    resultP30(PE30Count) = Parse00_Term ' this will return with the next value in D
+Else
+    ' Get the numeric value before a Close bracket
+    v = Array(x): x = x + 1 ' skip the open bracket
+    ' Get first number in D
+    GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+    ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
+End If
+A$ = "LDA": B$ = "#$02": C$ = "Command for COCOMP3_PLAY": GoSub AO
+A$ = "JSR": B$ = "SendToCoCoMP3": C$ = "Send the command to the CoCoMP3": GoSub AO
+Return
+
+' Advances to the next folder
+' I=COCOMP3_PLAY_NEXT_FOLDER(0)
+DoCOCOMP3_PLAY_NEXT_FOLDER:
+If ExpressionCount > 0 Then ' Check if we are in the middle of an expression
+    ' Yes we are in an existing expression
+    GoSub ParseExpression0FlagErase ' Recursively check the next value
+    resultP30(PE30Count) = Parse00_Term ' this will return with the next value in D
+Else
+    ' Get the numeric value before a Close bracket
+    v = Array(x): x = x + 1 ' skip the open bracket
+    ' Get first number in D
+    GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+    ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
+End If
+A$ = "LDA": B$ = "#$0F": C$ = "Command for COCOMP3_PLAY_NEXT_FOLDER": GoSub AO
+A$ = "JSR": B$ = "SendToCoCoMP3": C$ = "Send the command to the CoCoMP3": GoSub AO
+Return
+
+' Moves the play pointer to the previous folder
+' I=COCOMP3_PLAY_PREVIOUS_FOLDER(0)
+DoCOCOMP3_PLAY_PREVIOUS_FOLDER:
+If ExpressionCount > 0 Then ' Check if we are in the middle of an expression
+    ' Yes we are in an existing expression
+    GoSub ParseExpression0FlagErase ' Recursively check the next value
+    resultP30(PE30Count) = Parse00_Term ' this will return with the next value in D
+Else
+    ' Get the numeric value before a Close bracket
+    v = Array(x): x = x + 1 ' skip the open bracket
+    ' Get first number in D
+    GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+    ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
+End If
+A$ = "LDA": B$ = "#$0E": C$ = "Command for COCOMP3_PLAY_PREVIOUS_FOLDER": GoSub AO
+A$ = "JSR": B$ = "SendToCoCoMP3": C$ = "Send the command to the CoCoMP3": GoSub AO
+Return
+
+' Play a specific track number on the microSD
+' I=COCOMP3_PLAY_TRACK_NUMBER(x)
+' Where x is the track number on the microSD to play
+DoCOCOMP3_PLAY_TRACK_NUMBER:
+If ExpressionCount > 0 Then ' Check if we are in the middle of an expression
+    ' Yes we are in an existing expression
+    GoSub ParseExpression0FlagErase ' Recursively check the next value
+    resultP30(PE30Count) = Parse00_Term ' this will return with the next value in D
+Else
+    ' Get the numeric value before a Close bracket
+    v = Array(x): x = x + 1 ' skip the open bracket
+    ' Get first number in D
+    GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+    ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
+End If
+A$ = "TFR": B$ = "D,X": C$ = "X is the primary value for the CoCoMP3": GoSub AO
+A$ = "LDA": B$ = "#$07": C$ = "Command for COCOMP3_PLAY_TRACK_NUMBER": GoSub AO
+A$ = "JSR": B$ = "SendToCoCoMP3": C$ = "Send the command to the CoCoMP3": GoSub AO
+Return
+
+' Play a specific track number on the microSD
+' I=COCOMP3_PLAY_TRACK(O$)
+' Where O$ is the full path to the TRACK to PLAY as /FOLDER02/00001.MP3
+DoCOCOMP3_PLAY_TRACK:
+' Get the string value after the first open bracket
+GoSub ParseStringExpression0 ' Recursively get the next string value
+Num = StrParseCount: GoSub NumAsString: x = x + 2 'Convert number in Num to a string without spaces as Num$, move past close bracket
+If Num < 10 Then Num$ = "0" + Num$
+StringPointerTemp$ = "_StrVar_PF" + Num$ 'StringPointerTemp$ = the Temp string pointer to use
+A$ = "LDX": B$ = "#" + StringPointerTemp$: C$ = "X points at the string to send to the CoCoMP3": GoSub AO
+A$ = "LDB": B$ = ",X+": C$ = "B = the length of the string and X now points at the first byte of the string": GoSub AO
+A$ = "LDA": B$ = "#$08": C$ = "Command for COCOMP3_PLAY_TRACK": GoSub AO
+A$ = "JSR": B$ = "SendToCoCoMP3": C$ = "Send the command to the CoCoMP3": GoSub AO
+Return
+
+' Play the previous track
+' I=COCOMP3_PREVIOUS(0)
+DoCOCOMP3_PREVIOUS:
+If ExpressionCount > 0 Then ' Check if we are in the middle of an expression
+    ' Yes we are in an existing expression
+    GoSub ParseExpression0FlagErase ' Recursively check the next value
+    resultP30(PE30Count) = Parse00_Term ' this will return with the next value in D
+Else
+    ' Get the numeric value before a Close bracket
+    v = Array(x): x = x + 1 ' skip the open bracket
+    ' Get first number in D
+    GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+    ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
+End If
+A$ = "LDA": B$ = "#$05": C$ = "Command for COCOMP3_PREVIOUS": GoSub AO
+A$ = "JSR": B$ = "SendToCoCoMP3": C$ = "Send the command to the CoCoMP3": GoSub AO
+Return
+
+' Stop playing the current track, queue up a specific track number
+' I=COCOMP3_SELECT_BUT_NO_PLAY(x)
+' Where x is the track number to queue up
+DoCOCOMP3_SELECT_BUT_NO_PLAY:
+If ExpressionCount > 0 Then ' Check if we are in the middle of an expression
+    ' Yes we are in an existing expression
+    GoSub ParseExpression0FlagErase ' Recursively check the next value
+    resultP30(PE30Count) = Parse00_Term ' this will return with the next value in D
+Else
+    ' Get the numeric value before a Close bracket
+    v = Array(x): x = x + 1 ' skip the open bracket
+    ' Get first number in D
+    GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+    ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
+End If
+A$ = "TFR": B$ = "D,X": C$ = "X is the primary value for the CoCoMP3": GoSub AO
+A$ = "LDA": B$ = "#$1F": C$ = "Command for COCOMP3_SELECT_BUT_NO_PLAY": GoSub AO
+A$ = "JSR": B$ = "SendToCoCoMP3": C$ = "Send the command to the CoCoMP3": GoSub AO
+Return
+
+' The number of times a track will be played or a folder of songs will be played over and over
+' I=COCOMP3_SET_CYCLE_TIMES(x)
+' Where x is the number of cycles to do
+DoCOCOMP3_SET_CYCLE_TIMES:
+If ExpressionCount > 0 Then ' Check if we are in the middle of an expression
+    ' Yes we are in an existing expression
+    GoSub ParseExpression0FlagErase ' Recursively check the next value
+    resultP30(PE30Count) = Parse00_Term ' this will return with the next value in D
+Else
+    ' Get the numeric value before a Close bracket
+    v = Array(x): x = x + 1 ' skip the open bracket
+    ' Get first number in D
+    GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+    ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
+End If
+A$ = "TFR": B$ = "D,X": C$ = "X is the primary value for the CoCoMP3": GoSub AO
+A$ = "LDA": B$ = "#$19": C$ = "Command for COCOMP3_SET_CYCLE_TIMES": GoSub AO
+A$ = "JSR": B$ = "SendToCoCoMP3": C$ = "Send the command to the CoCoMP3": GoSub AO
+Return
+
+' Set the equaliser setting inside the CoCoMP3 to a specific type
+' I=COCOMP3_SET_EQ(x)
+' Where x is the EQ value 0 to 4
+DoCOCOMP3_SET_EQ:
+If ExpressionCount > 0 Then ' Check if we are in the middle of an expression
+    ' Yes we are in an existing expression
+    GoSub ParseExpression0FlagErase ' Recursively check the next value
+    resultP30(PE30Count) = Parse00_Term ' this will return with the next value in D
+Else
+    ' Get the numeric value before a Close bracket
+    v = Array(x): x = x + 1 ' skip the open bracket
+    ' Get first number in D
+    GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+    ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
+End If
+A$ = "TFR": B$ = "D,X": C$ = "X is the primary value for the CoCoMP3": GoSub AO
+A$ = "LDA": B$ = "#$1A": C$ = "Command for COCOMP3_SET_EQ": GoSub AO
+A$ = "JSR": B$ = "SendToCoCoMP3": C$ = "Send the command to the CoCoMP3": GoSub AO
+Return
+
+' This will interrupt the currently playing track and play a specific folder
+' I=COCOMP3_SET_PATH_INTERLUDE(O$)
+' Where O$ is the full path to the folder example /FOLDER02/*MP3
+DoCOCOMP3_SET_PATH_INTERLUDE:
+' Get the string value after the first open bracket
+GoSub ParseStringExpression0 ' Recursively get the next string value
+Num = StrParseCount: GoSub NumAsString: x = x + 2 'Convert number in Num to a string without spaces as Num$, move past close bracket
+If Num < 10 Then Num$ = "0" + Num$
+StringPointerTemp$ = "_StrVar_PF" + Num$ 'StringPointerTemp$ = the Temp string pointer to use
+A$ = "LDX": B$ = "#" + StringPointerTemp$: C$ = "X points at the string to send to the CoCoMP3": GoSub AO
+A$ = "LDB": B$ = ",X+": C$ = "B = the length of the string and X now points at the first byte of the string": GoSub AO
+A$ = "LDA": B$ = "#$17": C$ = "Command for COCOMP3_SET_PATH_INTERLUDE": GoSub AO
+A$ = "JSR": B$ = "SendToCoCoMP3": C$ = "Send the command to the CoCoMP3": GoSub AO
+Return
+
+' This will interrupt the currently playing track and play a specific track number
+' I=COCOMP3_SET_TRACK_INTERLUDE(x)
+' Where x is the track number
+DoCOCOMP3_SET_TRACK_INTERLUDE:
+If ExpressionCount > 0 Then ' Check if we are in the middle of an expression
+    ' Yes we are in an existing expression
+    GoSub ParseExpression0FlagErase ' Recursively check the next value
+    resultP30(PE30Count) = Parse00_Term ' this will return with the next value in D
+Else
+    ' Get the numeric value before a Close bracket
+    v = Array(x): x = x + 1 ' skip the open bracket
+    ' Get first number in D
+    GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+    ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
+End If
+A$ = "TFR": B$ = "D,X": C$ = "X is the primary value for the CoCoMP3": GoSub AO
+A$ = "LDA": B$ = "#$16": C$ = "Command for COCOMP3_SET_TRACK_INTERLUDE": GoSub AO
+A$ = "JSR": B$ = "SendToCoCoMP3": C$ = "Send the command to the CoCoMP3": GoSub AO
+Return
+
+' Set the volume level from 0 to 30
+' I=COCOMP3_SET_VOL(x)
+' Where x is the volume level 0 to 30
+DoCOCOMP3_SET_VOL:
+If ExpressionCount > 0 Then ' Check if we are in the middle of an expression
+    ' Yes we are in an existing expression
+    GoSub ParseExpression0FlagErase ' Recursively check the next value
+    resultP30(PE30Count) = Parse00_Term ' this will return with the next value in D
+Else
+    ' Get the numeric value before a Close bracket
+    v = Array(x): x = x + 1 ' skip the open bracket
+    ' Get first number in D
+    GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+    ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
+End If
+A$ = "TFR": B$ = "D,X": C$ = "X is the primary value for the CoCoMP3": GoSub AO
+A$ = "LDA": B$ = "#$13": C$ = "Command for COCOMP3_SET_VOL": GoSub AO
+A$ = "JSR": B$ = "SendToCoCoMP3": C$ = "Send the command to the CoCoMP3": GoSub AO
+Return
+
+' Stop playback of the currently playing track
+' I=COCOMP3_STOP(0)
+DoCOCOMP3_STOP:
+If ExpressionCount > 0 Then ' Check if we are in the middle of an expression
+    ' Yes we are in an existing expression
+    GoSub ParseExpression0FlagErase ' Recursively check the next value
+    resultP30(PE30Count) = Parse00_Term ' this will return with the next value in D
+Else
+    ' Get the numeric value before a Close bracket
+    v = Array(x): x = x + 1 ' skip the open bracket
+    ' Get first number in D
+    GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+    ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
+End If
+A$ = "LDA": B$ = "#$04": C$ = "Command for COCOMP3_STOP": GoSub AO
+A$ = "JSR": B$ = "SendToCoCoMP3": C$ = "Send the command to the CoCoMP3": GoSub AO
+Return
+
+' Verify the CoCoMP3 is set up and ready to use
+' I=COCOMP3_TEST(0)
+' It will respond with:
+'  0 = All good
+' -1 = CoCoMP3 is not powered on or plugged in
+' -2 = microSD card not detected
+' -3 = no Tracks on microSD
+DoCOCOMP3_TEST:
+If ExpressionCount > 0 Then ' Check if we are in the middle of an expression
+    ' Yes we are in an existing expression
+    GoSub ParseExpression0FlagErase ' Recursively check the next value
+    resultP30(PE30Count) = Parse00_Term ' this will return with the next value in D
+Else
+    ' Get the numeric value before a Close bracket
+    v = Array(x): x = x + 1 ' skip the open bracket
+    ' Get first number in D
+    GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+    ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
+End If
+A$ = "LDA": B$ = "#$80": C$ = "Command for COCOMP3_TEST": GoSub AO
+A$ = "JSR": B$ = "SendToCoCoMP3": C$ = "Send the command to the CoCoMP3": GoSub AO
+Return
+
+' Decreases the volume level by 1
+' I=COCOMP3_VOL_DOWN(0)
+DoCOCOMP3_VOL_DOWN:
+If ExpressionCount > 0 Then ' Check if we are in the middle of an expression
+    ' Yes we are in an existing expression
+    GoSub ParseExpression0FlagErase ' Recursively check the next value
+    resultP30(PE30Count) = Parse00_Term ' this will return with the next value in D
+Else
+    ' Get the numeric value before a Close bracket
+    v = Array(x): x = x + 1 ' skip the open bracket
+    ' Get first number in D
+    GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+    ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
+End If
+A$ = "LDA": B$ = "#$15": C$ = "Command for COCOMP3_VOL_DOWN": GoSub AO
+A$ = "JSR": B$ = "SendToCoCoMP3": C$ = "Send the command to the CoCoMP3": GoSub AO
+Return
+
+' Fade the volume of the playing track to volume level of zero over a set number of milliseconds then stop playback
+' I=COCOMP3_VOL_FADE(x)
+' Where x is the fade time in milliseconds
+DoCOCOMP3_VOL_FADE:
+If ExpressionCount > 0 Then ' Check if we are in the middle of an expression
+    ' Yes we are in an existing expression
+    GoSub ParseExpression0FlagErase ' Recursively check the next value
+    resultP30(PE30Count) = Parse00_Term ' this will return with the next value in D
+Else
+    ' Get the numeric value before a Close bracket
+    v = Array(x): x = x + 1 ' skip the open bracket
+    ' Get first number in D
+    GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+    ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
+End If
+A$ = "TFR": B$ = "D,X": C$ = "X is the primary value for the CoCoMP3": GoSub AO
+A$ = "LDA": B$ = "#$83": C$ = "Command for COCOMP3_VOL_FADE": GoSub AO
+A$ = "JSR": B$ = "SendToCoCoMP3": C$ = "Send the command to the CoCoMP3": GoSub AO
+Return
+
+' Sets the volume level to 30
+' I=COCOMP3_VOL_MAX(0)
+DoCOCOMP3_VOL_MAX:
+If ExpressionCount > 0 Then ' Check if we are in the middle of an expression
+    ' Yes we are in an existing expression
+    GoSub ParseExpression0FlagErase ' Recursively check the next value
+    resultP30(PE30Count) = Parse00_Term ' this will return with the next value in D
+Else
+    ' Get the numeric value before a Close bracket
+    v = Array(x): x = x + 1 ' skip the open bracket
+    ' Get first number in D
+    GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+    ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
+End If
+A$ = "LDA": B$ = "#$81": C$ = "Command for COCOMP3_VOL_MAX": GoSub AO
+A$ = "JSR": B$ = "SendToCoCoMP3": C$ = "Send the command to the CoCoMP3": GoSub AO
+Return
+
+' Increases the volume level by 1
+' I=COCOMP3_VOL_UP(0)
+DoCOCOMP3_VOL_UP:
+If ExpressionCount > 0 Then ' Check if we are in the middle of an expression
+    ' Yes we are in an existing expression
+    GoSub ParseExpression0FlagErase ' Recursively check the next value
+    resultP30(PE30Count) = Parse00_Term ' this will return with the next value in D
+Else
+    ' Get the numeric value before a Close bracket
+    v = Array(x): x = x + 1 ' skip the open bracket
+    ' Get first number in D
+    GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+    ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression
+End If
+A$ = "LDA": B$ = "#$14": C$ = "Command for COCOMP3_VOL_UP": GoSub AO
+A$ = "JSR": B$ = "SendToCoCoMP3": C$ = "Send the command to the CoCoMP3": GoSub AO
+Return
+
 ' Remove spaces at the start and end of a string
 DoTRIM:
 ' Get the string value after the first open bracket
@@ -9006,9 +9612,9 @@ Z$ = "@StoreB"
 A$ = "STB": B$ = StringPointerTemp$: C$ = "Update the new size as B": GoSub AO
 Z$ = "@Done"
 A$ = "PULS": B$ = "D": C$ = "Fix the Stack": GoSub AO
-Print #1, "!"
 Print #1,
 Return
+
 DoMID:
 ' Get the string value after the first open bracket
 GoSub ParseStringExpression0 ' Recursively get the next string value
@@ -9507,6 +10113,71 @@ Select Case NumericCommands$(v)
         GoTo DoSDC_CLOSE
     Case "SDC_INITDIR"
         GoTo DoSDC_INITDIR
+
+    Case "COCOMP3_RAW"
+        GoTo DoCOCOMP3_RAW
+    Case "COCOMP3_AUDIO_MODE"
+        GoTo DoCOCOMP3_AUDIO_MODE
+    Case "COCOMP3_COMBINATION_PLAY_SETTING"
+        GoTo DoCOCOMP3_COMBINATION_PLAY_SETTING
+    Case "COCOMP3_CYCLE_MODE_SETTING"
+        GoTo DoCOCOMP3_CYCLE_MODE_SETTING
+    Case "COCOMP3_END_COMBINATION_PLAY"
+        GoTo DoCOCOMP3_END_COMBINATION_PLAY
+    Case "COCOMP3_END_PLAYING"
+        GoTo DoCOCOMP3_END_PLAYING
+    Case "COCOMP3_GET_CURRENT_TRACK"
+        GoTo DoCOCOMP3_GET_CURRENT_TRACK
+    Case "COCOMP3_GET_FOLDER_DIR_TRACK"
+        GoTo DoCOCOMP3_GET_FOLDER_DIR_TRACK
+    Case "COCOMP3_GET_TRACKS_IN_FOLDER"
+        GoTo DoCOCOMP3_GET_TRACKS_IN_FOLDER
+    Case "COCOMP3_GET_NUMBER_OF_TRACKS"
+        GoTo DoCOCOMP3_GET_NUMBER_OF_TRACKS
+    Case "COCOMP3_GET_DRIVE_STATUS"
+        GoTo DoCOCOMP3_GET_DRIVE_STATUS
+    Case "COCOMP3_GET_PLAY_STATUS"
+        GoTo DoCOCOMP3_GET_PLAY_STATUS
+    Case "COCOMP3_NEXT"
+        GoTo DoCOCOMP3_NEXT
+    Case "COCOMP3_PAUSE"
+        GoTo DoCOCOMP3_PAUSE
+    Case "COCOMP3_PLAY"
+        GoTo DoCOCOMP3_PLAY
+    Case "COCOMP3_PLAY_NEXT_FOLDER"
+        GoTo DoCOCOMP3_PLAY_NEXT_FOLDER
+    Case "COCOMP3_PLAY_PREVIOUS_FOLDER"
+        GoTo DoCOCOMP3_PLAY_PREVIOUS_FOLDER
+    Case "COCOMP3_PLAY_TRACK_NUMBER"
+        GoTo DoCOCOMP3_PLAY_TRACK_NUMBER
+    Case "COCOMP3_PLAY_TRACK"
+        GoTo DoCOCOMP3_PLAY_TRACK
+    Case "COCOMP3_PREVIOUS"
+        GoTo DoCOCOMP3_PREVIOUS
+    Case "COCOMP3_SELECT_BUT_NO_PLAY"
+        GoTo DoCOCOMP3_SELECT_BUT_NO_PLAY
+    Case "COCOMP3_SET_CYCLE_TIMES"
+        GoTo DoCOCOMP3_SET_CYCLE_TIMES
+    Case "COCOMP3_SET_EQ"
+        GoTo DoCOCOMP3_SET_EQ
+    Case "COCOMP3_SET_PATH_INTERLUDE"
+        GoTo DoCOCOMP3_SET_PATH_INTERLUDE
+    Case "COCOMP3_SET_TRACK_INTERLUDE"
+        GoTo DoCOCOMP3_SET_TRACK_INTERLUDE
+    Case "COCOMP3_SET_VOL"
+        GoTo DoCOCOMP3_SET_VOL
+    Case "COCOMP3_STOP"
+        GoTo DoCOCOMP3_STOP
+    Case "COCOMP3_TEST"
+        GoTo DoCOCOMP3_TEST
+    Case "COCOMP3_VOL_DOWN"
+        GoTo DoCOCOMP3_VOL_DOWN
+    Case "COCOMP3_VOL_FADE"
+        GoTo DoCOCOMP3_VOL_FADE
+    Case "COCOMP3_VOL_MAX"
+        GoTo DoCOCOMP3_VOL_MAX
+    Case "COCOMP3_VOL_UP"
+        GoTo DoCOCOMP3_VOL_UP
 
     Case Else
         Print "Unknown Numeric command on";: GoTo FoundError

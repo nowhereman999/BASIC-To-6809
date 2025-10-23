@@ -12,6 +12,12 @@ https://github.com/nowhereman999/BASIC-To-6809/blob/main/Manual.pdf
 For more info check out the blog post here:
 https://wordpress.com/post/nowhereman999.wordpress.com/5054
 
+V 4.43
+- Added support for the CoCoMP3 hardware (many commands, read the manual for more info)
+
+V 4.42
+- Added support for AUDIO ON|OFF and MOTOR ON|OFF
+
 V 4.41
 - Added the DRAW command for all graphics modes including the semi-graphics modes
 - Improved the handling of single line IF commands that have THEN or ELSE with a line number and not a GOTO line number 
