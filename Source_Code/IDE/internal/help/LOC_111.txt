@@ -1,0 +1,67 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:44:25}}
+The '''LOC''' function returns the status of a serial (COM) port received buffer or the last read/written byte or record position in an open file.
+
+
+{{PageSyntax}}
+: {{Parameter|bytes%}} = [[LOC]]({{Parameter|fileOrPortNumber%}})
+
+
+{{PageParameters}}
+* {{Parameter|fileOrPortNumber%}} is the number used in the port or file [[OPEN]] AS statement.
+* Returns 0 if the buffer is empty. Any value above 0 indicates the COM port has received data.
+* Use it in conjunction with [[INPUT$]] to get the data bytes received.
+* Can also be used to get the last read/written byte or record position in a file. See also [[SEEK (function)|SEEK]].
+
+=== Notes ===
+* Don't confuse the [[LOC]] position with the [[SEEK (function)|SEEK]] position !!
+** '''LOC''' is the {{Text|last|red}} read or written byte or record prosition.
+** '''SEEK''' is the byte or record prosition to read or write {{Text|next|red}}.
+
+
+{{PageExamples}}
+;Example 1:Reading and writing from a COM port opened in Basic.
+{{CodeStart}}
+{{Cl|OPEN}} "{{Cl|OPEN_COM|COM}}1: 9600,N,8,1,OP0" {{Cl|FOR (file statement)|FOR}} {{Cl|RANDOM}} {{Cl|AS}} #1 {{Cl|LEN}} = 2048 ' random mode = input and output
+  {{Cl|DO}}: t$ = {{Cl|INKEY$}} ' get any transmit keypresses from user
+    {{Cl|IF}} {{Cl|LEN}}(t$) {{Cl|THEN}} {{Cl|PRINT (file statement)|PRINT}} #1, t$ ' send keyboard byte to transmit buffer
+    bytes% = {{Cl|LOC}}(1) ' bytes in buffer
+    {{Cl|IF}} bytes% {{Cl|THEN}} ' check receive buffer for data"
+      r$ = {{Cl|INPUT$}}(bytes%, 1)          ' get bytes in the receive buffer
+      {{Cl|PRINT}} r$; ' print byte strings consecutively to screen"
+    {{Cl|END IF}}
+  {{Cl|LOOP}} {{Cl|UNTIL}} t$ = {{Cl|CHR$}}(27) 'escape key exit
+{{Cl|CLOSE}} #
+{{CodeEnd}}
+
+----
+
+;Example 2:Demonstrate the difference between '''LOC''' and '''SEEK''' positions in a file.
+{{CodeStart}}
+OPEN "readme.md" FOR BINARY AS #1
+
+PRINT LOC(1) 'LOC returns 0, as we didn't read something yet
+PRINT SEEK(1) 'SEEK otherwise returns 1, as it's the first byte to read
+
+GET #1, , a& 'now let's read a LONG (4 bytes)
+
+PRINT LOC(1) 'now LOC returns 4, the last read byte
+PRINT SEEK(1) 'and SEEK returns 5 now, the next byte to read
+
+CLOSE #1
+END
+{{CodeEnd}}
+{{OutputStart}}
+0
+1
+4
+5
+{{OutputEnd}}
+
+
+{{PageSeeAlso}}
+* [[PRINT]], [[OPEN COM]], [[PRINT (file statement)]]
+* [[SEEK]], [[SEEK (function)]]
+
+
+{{PageNavigation}}

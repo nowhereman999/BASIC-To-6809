@@ -1,0 +1,51 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:40:45}}
+{{DISPLAYTITLE:_CLIP}}
+The [[_CLIP]] option is used in a QB64 graphics [[PUT (graphics statement)|PUT]] to allow placement of an image partially off of the screen.
+
+
+{{PageSyntax}}
+:[[PUT (graphics statement)|PUT]] [[[STEP]]]({{Parameter|column, row}}), {{Parameter|image_array(start)}}[, [[_CLIP]]] [{XOR|PSET|AND|OR|PRESET}][, {{Parameter|omitcolor}}]
+
+
+{{PageDescription}}
+* _CLIP should be placed immediately before the PUT action if used. XOR is default when not used.
+* The offscreen portions of the image will be the omit color.
+* [[GET (graphics statement)|GET]] can get portions of the images off screen in '''QB64'''.
+
+
+{{PageExamples}}
+''Example:'' Placing an image partially or fully offscreen.
+{{CodeStart}}
+{{Cl|DIM}} mypic({{Text|500|#F580B1}})
+{{Cl|SCREEN}} {{Text|13|#F580B1}}
+
+{{Cl|CLS}}
+{{Cl|CIRCLE}} ({{Text|10|#F580B1}}, {{Text|10|#F580B1}}), {{Text|10|#F580B1}}
+{{Cl|GET (general)|GET}} ({{Text|0|#F580B1}}, {{Text|0|#F580B1}})-({{Text|20|#F580B1}}, {{Text|20|#F580B1}}), mypic({{Text|0|#F580B1}})
+
+{{Cl|PRINT}} {{Text|<nowiki>"This program puts an image off screen."</nowiki>|#FFB100}}
+{{Cl|PRINT}} {{Text|<nowiki>"Select which option you'd like to try."</nowiki>|#FFB100}}
+{{Cl|PRINT}} {{Text|<nowiki>"1 will produce an illegal function call."</nowiki>|#FFB100}}
+{{Cl|PRINT}} {{Text|<nowiki>"1 is putting without _CLIP."</nowiki>|#FFB100}}
+{{Cl|PRINT}} {{Text|<nowiki>"2 is putting with _CLIP PSET."</nowiki>|#FFB100}}
+{{Cl|PRINT}} {{Text|<nowiki>"3 is putting with _CLIP XOR."</nowiki>|#FFB100}}
+{{Cl|PRINT}} {{Text|<nowiki>"4 is putting with _CLIP PSET, 4."</nowiki>|#FFB100}}
+
+{{Cl|INPUT}} sel
+{{Cl|IF}} sel = {{Text|1|#F580B1}} {{Cl|THEN}} {{Cl|PUT (general)|PUT}} ({{Text|-10|#F580B1}}, {{Text|10|#F580B1}}), mypic({{Text|0|#F580B1}}), {{Cl|PSET}} {{Text|<nowiki>' this causes an illegal function call</nowiki>|#919191}}
+{{Cl|IF}} sel = {{Text|2|#F580B1}} {{Cl|THEN}} {{Cl|PUT (general)|PUT}} ({{Text|-10|#F580B1}}, {{Text|10|#F580B1}}), mypic({{Text|0|#F580B1}}), {{Cl|_CLIP}} {{Cl|PSET}} {{Text|<nowiki>' allows graphic to be drawn off-screen</nowiki>|#919191}}
+{{Cl|IF}} sel = {{Text|3|#F580B1}} {{Cl|THEN}} {{Cl|PUT (general)|PUT}} ({{Text|-10|#F580B1}}, {{Text|10|#F580B1}}), mypic({{Text|0|#F580B1}}), {{Cl|_CLIP}} {{Text|<nowiki>' uses the default PUT XOR operation</nowiki>|#919191}}
+{{Cl|IF}} sel = {{Text|4|#F580B1}} {{Cl|THEN}} {{Cl|PUT (general)|PUT}} ({{Text|-10|#F580B1}}, {{Text|10|#F580B1}}), mypic({{Text|0|#F580B1}}), {{Cl|_CLIP}} {{Cl|PSET}}, {{Text|4|#F580B1}} {{Text|<nowiki>' doesn't draw red pixels</nowiki>|#919191}}
+
+{{Cl|END}}
+{{CodeEnd}}
+
+
+{{PageSeeAlso}}
+* [[PUT (graphics statement)]]
+* [[GET (graphics statement)]]
+* [[STEP]]
+
+
+{{PageNavigation}}

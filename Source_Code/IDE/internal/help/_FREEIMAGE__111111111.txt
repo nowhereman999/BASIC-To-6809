@@ -1,0 +1,43 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:41:28}}
+{{DISPLAYTITLE:_FREEIMAGE}}
+The '''_FREEIMAGE''' statement releases the designated file image created by the [[_LOADIMAGE]], [[_NEWIMAGE]] or [[_COPYIMAGE]] functions from memory when they are no longer needed.
+
+
+{{PageSyntax}}
+: [[_FREEIMAGE]] [{{Parameter|handle&}}]
+
+
+{{PageDescription}}
+*If {{Parameter|handle&}} is omitted, the current destination image is freed from memory.
+*Freeing the destination image or source image will result in the display page being selected instead.
+*'''Invalid image handle values of -1 or 0 cannot be freed or an [[ERROR Codes|"Illegal Function" error]] will occur.''' Check the handle value first.
+* '''[[SCREEN]] modes in use cannot be freed or an [[ERROR Codes|"Illegal Function" error]] will occur.''' Change SCREEN modes before freeing.
+*Once a specific image handle is no longer used or referenced by your program, it can be freed with [[_FREEIMAGE]].
+*  '''Images are not deallocated when the [[SUB]] or [[FUNCTION]] they are created in ends. Free them with [[_FREEIMAGE]].'''
+* '''It is important to free unused or unneeded images with [[_FREEIMAGE]] to prevent memory overflow errors.'''
+* '''Do not try to free image handles currently being used as the active [[SCREEN]]. Change screen modes first.'''
+* '''Note that calling _FREEIMAGE only frees the handle.  It does NOT reset the variable used to store the handle back to 0.  (This is because 0 is often used as a short cut value for the current display, such as with _DEST 0.)'''
+
+{{PageExamples}}
+''Example:'' Loading a program splash screen and freeing image when no longer necessary:
+{{CodeStart}}
+s& = {{Cl|_LOADIMAGE}}({{Text|<nowiki>"SPLASH.BMP"</nowiki>|#FFB100}}, {{Text|32|#F580B1}}) {{Text|<nowiki>'load 32 bit(24 BPP) image</nowiki>|#919191}}
+{{Cl|IF}} s& < {{Text|-1|#F580B1}} {{Cl|THEN}} {{Cl|SCREEN}} s& {{Text|<nowiki>'use image as a 32 bit SCREEN</nowiki>|#919191}}
+{{Cl|_DELAY}} {{Text|6|#F580B1}} {{Text|<nowiki>'display splash screen for 6 seconds</nowiki>|#919191}}
+{{Cl|SCREEN}} {{Text|0|#F580B1}} {{Text|<nowiki>'MUST change screen mode before freeing a SCREEN image!</nowiki>|#919191}}
+{{Cl|IF}} s& < {{Text|-1|#F580B1}} {{Cl|THEN}} {{Cl|_FREEIMAGE}} s& {{Text|<nowiki>'handle value MUST be less than -1 or error!</nowiki>|#919191}}
+{{Cl|CLS}}
+{{CodeEnd}}
+: ''Note:'' A valid image file name must be used by [[_LOADIMAGE]] or the invalid handle memory value will not need to be freed.
+
+
+{{PageSeeAlso}}
+* [[_NEWIMAGE]]
+* [[_LOADIMAGE]]
+* [[_SCREENIMAGE]]
+* [[_COPYIMAGE]]
+* [[_SAVEIMAGE]]
+
+
+{{PageNavigation}}

@@ -1,0 +1,20 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:45:03}}
+The '''RESET''' statement closes all files and writes the directory information to a diskette before it is removed from a disk drive.
+
+
+{{PageSyntax}}
+:: RESET
+
+
+* Always execute a RESET command before removing a diskette from a disk drive. Otherwise, when the diskette is used again, it will not have the current directory information written on the directory track.
+* RESET closes all open files on all drives and writes the directory track to every diskette with open files.
+
+
+{{PageSeeAlso}}
+* [https://qb64phoenix.com/forum/showthread.php?tid=1357 Featured in our "Keyword of the Day" series]
+* [[OPEN]]
+* [[CLOSE]]
+
+
+{{PageNavigation}}

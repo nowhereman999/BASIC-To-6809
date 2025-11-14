@@ -1,0 +1,43 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:41:01}}
+{{DISPLAYTITLE:_DEFAULTCOLOR}}
+The '''_DEFAULTCOLOR''' function returns the current default (text/drawing) color for an image handle or page.
+
+
+{{PageSyntax}}
+:{{Parameter|col~&}} = [[_DEFAULTCOLOR]] [({{Parameter|imageHandle&}})]
+
+
+{{PageParameters}}
+* If {{Parameter|imageHandle&}} is omitted, it is assumed to be the current write page or image designated by [[_DEST]].
+* If {{Parameter|imageHandle&}} is an invalid handle, an [[ERROR Codes|Invalid handle]] error occurs. Check handle values first. Zero designates the current screen.
+
+
+{{PageDescription}}
+* Use it to get the current default (foreground) color to restore it later in a program.
+* In legacy [[SCREEN]] modes and in [[_NEWIMAGE]] 256 colors mode the color attribute/palette index is returned.
+* In [[_NEWIMAGE]] 32-bit mode the [[_RGBA32]] value ('''&H00{{Text|00|red}}{{Text|00|green}}{{Text|00|blue}}''' to '''&HFF{{Text|FF|red}}{{Text|FF|green}}{{Text|FF|blue}}''') is returend, make sure to store it in an [[_UNSIGNED]] [[LONG]] variable (as seen in the syntax above with the '''~&''' suffix), otherwise the blue component may be lost.
+
+
+{{PageExamples}}
+;Example:Storing the default color for later use. The default color is the color set as foreground.
+{{CodeStart}}
+{{Cl|SCREEN}} {{Text|0|#F580B1}}
+{{Cl|COLOR}} {{Text|4|#F580B1}}, {{Text|7|#F580B1}} {{Text|<nowiki>'set color 4 as foreground, color 7 as background</nowiki>|#919191}}
+{{Cl|CLS}}
+col~& = {{Cl|_DEFAULTCOLOR}}
+{{Cl|PRINT}} col~&
+{{CodeEnd}}
+{{OutputStartBG7}}
+{{Text|4|#aa0000}}
+{{OutputEnd}}
+
+
+{{PageSeeAlso}}
+* [[_BACKGROUNDCOLOR]]
+* [[COLOR]], [[_DEST]]
+* [[SCREEN]], [[SCREEN (function)]]
+* [[Windows Libraries#Color_Dialog_Box|Color Dialog Box]]
+
+
+{{PageNavigation}}

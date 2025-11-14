@@ -1,0 +1,77 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:44:08}}
+'''GET''' reads the response of an HTTP request that was opened using [[_OPENCLIENT]].
+
+{{Text|'''HTTP functionality is current unstable, and requires [[$UNSTABLE]]:HTTP to be able to use.'''|red}}
+
+
+{{PageSyntax}}
+: [[GET (HTTP statement)|GET]] #{{Parameter|Handle}}, , {{Parameter|String}}
+: [[GET (HTTP statement)|GET]] #{{Parameter|Handle}}, , {{Parameter|Fixed-Length-Variable}}
+
+
+{{PageParameters}}
+* {{Parameter|Handle}} is the handle returned from [[_OPENCLIENT]] when making an HTTP request.
+* {{Parameter|String}} is a regular [[STRING]] variable.
+* {{Parameter|Fixed-Length-Variable}} is any variable with a type that has a fixed size.
+
+
+{{PageDescription}}
+'''GET''' is used to read the HTTP response data from an HTTP request opened using [[_OPENCLIENT]]. The preferred way to use this is by passing '''GET''' a variable-length [[STRING]] variable. The [[STRING]] variable will be resized to fit all the data currently available from the HTTP connection. '''GET''' should be called multiple times to receive all the data from the HTTP request. [[EOF]] should be used to check if there is more data left to '''GET''', when [[EOF]] returns true then the request is complete and all the data in the request response has been read via '''GET'''.
+
+Another option is to use fixed-length variables with '''GET'''. This is not recommended as the behavior becomes more complex due to QB64-PE being unable to resize the provided variable to match the amount of data currently available from the connection. When using this version, the behavior of [[EOF]] will change to report an [[EOF]] if there is not enough data available from the connection to completely fill the variable provided to '''GET'''. You should make use of [[_CONNECTED]] to determine whether the [[EOF]] indicates the actual end of the HTTP response, as if the connection is no longer up then you can be sure no new data may be coming.
+
+
+{{PageAvailability}}
+* '''QB64-PE v3.5.0 and up'''
+
+
+{{PageExamples}}
+{{CodeStart}}
+{{Cl|$UNSTABLE}}:HTTP
+
+' This URL simply returns a fake JSON response
+h& = {{Cl|_OPENCLIENT}}("HTTP:<nowiki>https://httpbin.org/json</nowiki>")
+
+{{Cl|WHILE}} {{Cl|NOT}} {{Cl|EOF}}(h&)
+    {{Cl|_LIMIT}} 100 ' Hitting GET too fast will simply slow down the download
+
+    {{Cl|GET (HTTP statement)|GET}} #h&, , s$
+
+    ' Combine all the data we get from 'GET' into a single string containing the full response
+    Content$ = Content$ + s$
+{{Cl|WEND}}
+
+{{Cl|CLOSE}} h&
+
+' Prints out the full response from that HTTP request
+{{Cl|PRINT}} Content$
+{{CodeEnd}}
+{{Small|Code by Matthew Kilgore}}
+
+{{OutputStartBG0}}
+{
+  "slideshow": {
+    "author": "Yours Truly",
+    "date": "date of publication",
+    "slides": [
+      {
+        "title": "Wake up to WonderWidgets!",
+        "type": "all"
+      },
+      {
+        "items": [
+          "Why WonderWidgets are great",
+          "Who buys WonderWidgets"
+        ],
+        "title": "Overview",
+        "type": "all"
+      }
+    ],
+    "title": "Sample Slide Show"
+  }
+}
+{{OutputEnd}}
+
+
+{{PageNavigation}}

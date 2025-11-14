@@ -1,0 +1,26 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:42:47}}
+{{DISPLAYTITLE:_SCREENICON}}
+The [[_SCREENICON]] statement can be used to minimize the main program window to the taskbar.
+
+
+{{PageSyntax}}
+: [[_SCREENICON]]
+
+
+{{PageDescription}}
+* Use [[_SCREENICON]] to minimize the main program window to the taskbar.
+
+
+{{PageAvailability}}
+* '''QB64 v1.0 and up'''
+* '''QB64-PE all versions'''
+
+
+{{PageSeeAlso}}
+* [[$SCREENHIDE]], [[$SCREENSHOW]], [[$CONSOLE]]
+* [[_SCREENHIDE]], [[_SCREENSHOW]], [[_CONSOLE]]
+* [[_SCREENICON (function)]]
+
+
+{{PageNavigation}}

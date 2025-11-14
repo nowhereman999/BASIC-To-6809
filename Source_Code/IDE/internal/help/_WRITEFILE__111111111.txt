@@ -1,0 +1,86 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:43:23}}
+{{DISPLAYTITLE: _WRITEFILE}}
+The '''_WRITEFILE''' statement writes a string into a new file, overwriting an existing file of the same name. It does [[OPEN]], [[PUT]] and [[CLOSE]] the file in one run. It's the counterpart to the [[_READFILE$]] function.
+
+
+{{PageSyntax}}
+: [[_WRITEFILE]] {{Parameter|fileSpec$}}, {{Parameter|contents$}}
+
+
+{{PageParameters}}
+* {{Parameter|fileSpec$}} is the name of the file to write as literal or variable [[STRING]], if required inclusive a full or relative path.
+** To avoid errors you should use [[_DIREXISTS]] before using this statement to make sure a desired path exists.
+* {{Parameter|contents$}} is the literal or variable [[STRING]] which its contents shall be written into the file.
+
+
+{{PageDescription}}
+* Sometimes you may be in need to quickly dump a huge amount of data into a file without much fuss, e.g. the results of the pack/unpack functions [[_DEFLATE$]] and [[_INFLATE$]] or when copying a file in conjunction with the [[_READFILE$]] function.
+* In earlier versions of QB64(PE) you had to implement that saving process manually all the time or create a reusable custom [[FUNCTION]] for it.
+* Now '''_WRITEFILE''' will simplify this, it's mainly for convenience to wrap the following code sequence into one handy statement:
+{{TextStart}}
+fh = {{Cb|FREEFILE}}
+{{Cb|OPEN}} fileSpec$ {{Cb|FOR}} {{Cb|OUTPUT}} {{Cb|AS}} #fh: {{Cb|CLOSE}} #fh
+{{Cb|OPEN}} fileSpec$ {{Cb|FOR}} {{Cb|BINARY}} {{Cb|AS}} #fh
+{{Cb|PUT}} #fh, , contents$
+{{Cb|CLOSE}} #fh
+{{TextEnd}}
+
+
+{{PageAvailability}}
+<!-- QB64 = a version or none, QBPE = a version or all, Platforms = yes or no -->
+<gallery widths="48px" heights="48px" mode="nolines">
+File:Qb64.png|'''none'''
+File:Qbpe.png|'''v3.12.0'''
+File:Apix.png
+File:Win.png|'''yes'''
+File:Lnx.png|'''yes'''
+File:Osx.png|'''yes'''
+</gallery>
+<!-- additional availability notes go below here -->
+
+
+{{PageExamples}}
+;Example: Implementing a simple file copy routine using '''_READFILE$''' and '''_WRITEFILE'''.
+{{CodeStart}}
+s$ = {{Text|<nowiki>"Makefile"</nowiki>|#FFB100}}
+d$ = {{Text|<nowiki>"Makefile - Copy"</nowiki>|#FFB100}}
+
+r$ = {{Text|CopyFile$|#55FF55}}(s$, d$)
+
+{{Cl|IF}} r$ = {{Text|<nowiki>""</nowiki>|#FFB100}} {{Cl|THEN}}
+    {{Cl|PRINT}} {{Text|<nowiki>"Sucessfully copied '"</nowiki>|#FFB100}}; s$; {{Text|<nowiki>"' to '"</nowiki>|#FFB100}}; d$; {{Text|<nowiki>"'."</nowiki>|#FFB100}}
+{{Cl|ELSE}}
+    {{Cl|PRINT}} r$
+{{Cl|END IF}}
+
+{{Cl|END}}
+
+{{Cl|FUNCTION}} {{Text|CopyFile$|#55FF55}} (src$, dst$)
+    {{Text|CopyFile$|#55FF55}} = {{Text|<nowiki>""</nowiki>|#FFB100}} {{Text|<nowiki>'empty = success, otherwise error message</nowiki>|#919191}}
+    buffer$ = {{Cl|_READFILE$}}(src$)
+    {{Cl|IF}} buffer$ = {{Text|<nowiki>""</nowiki>|#FFB100}} {{Cl|AND (boolean)|AND}} {{Cl|_FILEEXISTS}}(src$) = {{Text|0|#F580B1}} {{Cl|THEN}}
+        {{Text|CopyFile$|#55FF55}} = {{Text|<nowiki>"ERROR: Source file not found."</nowiki>|#FFB100}}
+    {{Cl|ELSE}}
+        slp% = {{Cl|_INSTRREV}}(dst$, {{Text|<nowiki>"\"</nowiki>|#FFB100}})
+        {{Cl|IF}} slp% = {{Text|0|#F580B1}} {{Cl|THEN}} slp% = {{Cl|_INSTRREV}}(dst$, {{Text|<nowiki>"/"</nowiki>|#FFB100}})
+        {{Cl|IF}} slp% > {{Text|0|#F580B1}} {{Cl|THEN}}
+            {{Cl|IF}} {{Cl|NOT}} {{Cl|_DIREXISTS}}({{Cl|LEFT$}}(dst$, slp% - {{Text|1|#F580B1}})) {{Cl|THEN}}
+                {{Text|CopyFile$|#55FF55}} = {{Text|<nowiki>"ERROR: Destination path not found."</nowiki>|#FFB100}}
+                {{Cl|EXIT FUNCTION}}
+            {{Cl|END IF}}
+        {{Cl|END IF}}
+        {{Cl|_WRITEFILE}} dst$, buffer$
+    {{Cl|END IF}}
+{{Cl|END FUNCTION}}
+{{CodeEnd}}
+{{Small|Example by RhoSigma}}
+
+
+{{PageSeeAlso}}
+* [https://qb64phoenix.com/forum/showthread.php?tid=2713 Featured in our "Keyword of the Day" series]
+* [[_READFILE$]], [[BLOAD]], [[BSAVE]]
+* [[_DEFLATE$]], [[_INFLATE$]]
+
+
+{{PageNavigation}}

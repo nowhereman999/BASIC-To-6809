@@ -1,0 +1,74 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:42:07}}
+{{DISPLAYTITLE:_MIDISOUNDBANK}}
+The '''_MIDISOUNDBANK''' command enables [[_SNDOPEN]] to use an external FM Bank or SoundFont when playing MIDI files.
+
+
+{{PageSyntax}}
+:[[_MIDISOUNDBANK]]: {{Parameter|fileName$}}[, {{Parameter|capabilities$}}]
+
+
+{{PageParameters}}
+* {{Parameter|fileName}} is literal or variable [[STRING]] file name value.
+* The literal or variable STRING {{Parameter|capabilities$}} is optional, but it can be set to '''MEMORY''' and one of the following formats:
+** '''MEMORY''': This will treat {{Parameter|fileName}} as a memory buffer containing the sound file instead of a file name.
+** '''AD''': Global Timbre Library format for Audio Interface Library.
+** '''OP2''': DMX OPL-2 format.
+** '''OPL''': Global Timbre Library format for Audio Interface Library.
+** '''SF2''': Creative's SoundFont 2.0 format.
+** '''SF3''': MuseScore's Ogg compressed Creative SoundFont 2.0 format.
+** '''SFO''': Bernhard Schelling's Ogg compressed Creative SoundFont 2.0 format.
+** '''TMB''': Apogee Sound System timbre format.
+** '''WOPL''': Vitaly Novichkov's OPL3BankEditor format.
+
+
+{{PageDescription}}
+* The selected sound bank is what is used to play all MIDI files.
+* If {{Parameter|fileName}} is an empty string ('''""'''), the sound bank will default to the internal sound bank.
+* If {{Parameter|fileName}} is missing, corrupted, or inaccessible, the command will not produce any errors. However, subsequent attempts to open a MIDI file with [[_SNDOPEN]] will fail.
+* The command supports AD, OP2, OPL, SF2, SF3, SFO, TMB, WOPL formats on all supported platforms.
+* It also supports VSTi (Virtual Studio Technology Instruments) 2.x (DLL) on Windows. However, a VST host, such as the one utilized by foo_midi, is required.
+* [[_EMBEDDED$]] sound banks can be used directly with '''_MIDISOUNDBANK'''.
+
+
+{{PageAvailability}}
+<!-- QB64 = a version or none, QBPE = a version or all, Platforms = yes or no -->
+<gallery widths="48px" heights="48px" mode="nolines">
+File:Qb64.png|'''none'''
+File:Qbpe.png|'''v3.14.0'''
+File:Apix.png
+File:Win.png|'''yes'''
+File:Lnx.png|'''yes'''
+File:Osx.png|'''yes'''
+</gallery>
+<!-- additional availability notes go below here -->
+
+
+{{PageExamples}}
+;Example 1:Loading a MIDI sound bank and play a song.
+{{CodeStart}}
+{{Cl|_MIDISOUNDBANK}} {{Text|<nowiki>"awesome.sf3"</nowiki>|#FFB100}}
+
+handle = {{Cl|_SNDOPEN}}({{Text|<nowiki>"onestop.mid"</nowiki>|#FFB100}})
+{{Cl|_SNDPLAY}} handle
+{{CodeEnd}}
+
+----
+
+;Example 2:Instead of loading a MIDI sound bank, it can also be embedded and used with the MEMORY capabilitiy.
+{{CodeStart}}
+{{Cm|$EMBED}}:{{Text|<nowiki>'./tiny.sf2','mysf2'</nowiki>|#919191}}
+
+{{Cl|_MIDISOUNDBANK}} {{Cl|_EMBEDDED$}}({{Text|<nowiki>"mysf2"</nowiki>|#FFB100}}), {{Text|<nowiki>"memory, sf2"</nowiki>|#FFB100}}
+
+handle = {{Cl|_SNDOPEN}}({{Text|<nowiki>"canyon.xmi"</nowiki>|#FFB100}})
+{{Cl|_SNDPLAY}} handle
+{{CodeEnd}}
+
+
+{{PageSeeAlso}}
+* [https://qb64phoenix.com/forum/showthread.php?tid=2979 Featured in our "Keyword of the Day" series]
+* [[_SNDOPEN]]
+
+
+{{PageNavigation}}

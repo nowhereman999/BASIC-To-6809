@@ -1,0 +1,35 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:41:14}}
+{{DISPLAYTITLE:_ECHO}}
+The [[_ECHO]] statement allows outputting text to a [[$CONSOLE]] window without having to alternate between [[_DEST]] pages.
+
+
+{{PageSyntax}}
+: [[_ECHO]] {''"text to output"'' | {{Parameter|textVariable$}}}
+
+
+{{PageDescription}}
+* [[_ECHO]] is a shorthand to saving current [[_DEST]], switching to [[_DEST]] [[_CONSOLE]], [[PRINT]]ing, then switching back to the previous [[_DEST]].
+* To output numbers, use the [[STR$]] function.
+
+
+{{PageAvailability}}
+* '''QB64 v1.3 and up'''
+* '''QB64-PE all versions'''
+
+
+{{PageExamples}}
+{{CodeStart}}
+{{Cm|$CONSOLE}}
+{{Cl|PRINT}} {{Text|<nowiki>"this will show in the main window"</nowiki>|#FFB100}}
+{{Cl|_ECHO}} {{Text|<nowiki>"this will show in the console"</nowiki>|#FFB100}}
+{{CodeEnd}}
+
+
+{{PageSeeAlso}}
+* [[_DEST]]
+* [[$CONSOLE]], [[_CONSOLE]]
+* [[STR$]]
+
+
+{{PageNavigation}}

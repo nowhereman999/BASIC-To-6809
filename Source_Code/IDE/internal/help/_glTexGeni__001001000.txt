@@ -1,0 +1,29 @@
+{{QBDLDATE:01-28-2023}}
+{{QBDLTIME:11:52:32}}
+{{DISPLAYTITLE:_glTexGeni}}
+The '''_glTexGeni''' statement controls the generation of texture coordinates.
+
+
+{{PageSyntax}}
+: [[_glTexGeni]] GLenum {{Parameter|coord}}, GLenum {{Parameter|pname}}, GLint {{Parameter|param}}
+
+
+{{PageParameters}}
+* OpenGL is using its own set of variable types to describe its command parameters.
+* Use the following table to find the respective QB64 [[Variable Types]].
+{{OpenGLTypesPlugin}}
+
+
+{{PageDescription}}
+* OpenGL's documentation is available in several places, so we won't reproduce it here for another time.
+* The full description for this command can be found at [https://learn.microsoft.com/en-us/windows/win32/opengl/gltexgeni Microsoft Docs] and is also valid for QB64 usage.
+
+
+{{PageSeeAlso}}
+* [[_GL|SUB _GL]]
+* [[_glBegin]], [[_glEnd]], [[_glCopyTexImage2D]], [[_glCopyTexSubImage2D]]
+* [https://learn.microsoft.com/en-us/windows/win32/opengl/glgettexgen _glGetTexGen], [[_glIsEnabled]], [https://learn.microsoft.com/en-us/windows/win32/opengl/gltexenv-functions _glTexEnv], [[_glTexImage1D]]
+* [https://learn.microsoft.com/en-us/windows/win32/opengl/gltexparameter-functions _glTexParameter], [[_glTexSubImage1D]], [[_glTexSubImage2D]]
+
+
+{{PageNavigation}}

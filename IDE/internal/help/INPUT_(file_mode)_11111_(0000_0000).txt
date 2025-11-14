@@ -1,3 +1,0 @@
-{{QBDLDATE:02-23-2025}}
-{{QBDLTIME:17:44:14}}
-See page [[OPEN#File Access Modes]]

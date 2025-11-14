@@ -1,0 +1,67 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:43:03}}
+{{DISPLAYTITLE:_SNDPLAYCOPY}}
+The [[_SNDPLAYCOPY]] statement copies a sound, plays it, and automatically closes the copy using a handle parameter passed from [[_SNDOPEN]] or [[_SNDCOPY]]
+
+
+{{PageSyntax}}
+: [[_SNDPLAYCOPY]] {{Parameter|handle&}}[, [{{Parameter|volume!}}][, {{Parameter|x!}}][, {{Parameter|y!}}][, {{Parameter|z!}}]]
+
+
+{{PageParameters}}
+* The [[LONG]] {{Parameter|handle&}} value is returned by [[_SNDOPEN]] using a specific sound file.
+* The {{Parameter|volume!}} parameter can be any [[SINGLE]] value from 0 (no volume) to 1 (full volume).
+* {{Parameter|x!}} distance values go from left (negative) to right (positive) (beginning with '''v3.3.x''').
+* {{Parameter|y!}} distance values go from below (negative) to above (positive) (beginning with '''v3.3.x''').
+* {{Parameter|z!}} distance values go from behind (negative) to in front (positive) (beginning with '''v3.3.x''').
+
+
+{{PageDescription}}
+*Makes coding easier by doing all of the following automatically:
+:#Copies/duplicates the source handle (see [[_SNDCOPY]]).
+:#Changes the volume of the copy if volume is passed.
+:#Applies stereo panning or a 3D position if x, y, z is passed.
+:#Plays the copy.
+:#Closes the copy.
+* This statement is a better choice than [[_SNDPLAYFILE]] if the sound will be played often, reducing the burden on the computer.
+*By setting the x! value to -1 or 1 it plays the sound at full volume from the appropriate speaker.
+*Omitted x!, y! or z! values are set to 0.
+
+
+{{PageExamples}}
+''Example 1:'' Playing a previously opened sound from left and right speakers.
+{{CodeStart}}
+{{Cl|DIM}} {{Cl|AS}} {{Cl|LONG}} h, i
+
+h = {{Cl|_SNDOPEN}}("explosion.wav")
+
+{{Cl|IF}} h > 0 {{Cl|THEN}}
+    {{Cl|FOR}} i = 0 {{Cl|TO}} 9
+        {{Cl|_LIMIT}} 1
+
+        {{Cl|IF}} i {{Cl|MOD}} 2 = 0 {{Cl|THEN}}
+            {{Cl|PRINT}} "Playing from right"
+            {{Cl|_SNDPLAYCOPY}} h, , 1
+        {{Cl|ELSE}}
+            {{Cl|PRINT}} "Playing from left"
+            {{Cl|_SNDPLAYCOPY}} h, , -1
+        {{Cl|END IF}}
+    {{Cl|NEXT}}
+{{Cl|END IF}}
+{{CodeEnd}}
+
+
+''Example 2:'' Playing a sound at random volumes.
+{{CodeStart}}
+chomp& = {{Cl|_SNDOPEN}}("chomp.wav")
+{{Cl|IF}} chomp& > 0 {{Cl|THEN}} {{Cl|_SNDPLAYCOPY}} chomp&, 0.5 + {{Cl|RND}} * 0.49
+{{CodeEnd}}
+
+
+{{PageSeeAlso}}
+* [[_SNDOPEN]]
+* [[_SNDCOPY]]
+* [[_SNDPLAYFILE]]
+
+
+{{PageNavigation}}

@@ -1,0 +1,140 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:41:30}}
+{{DISPLAYTITLE:_FULLSCREEN}}
+The [[_FULLSCREEN]] statement attempts to make the program window fullscreen.
+
+
+{{PageSyntax}}
+:[[_FULLSCREEN]] [''_STRETCH|_SQUAREPIXELS|_OFF''][, ''_SMOOTH'']
+
+
+{{PageParameters}}
+* {{Parameter|_STRETCH}} default first choice attempts to mimic QBasic's full screens if possible. [[_FULLSCREEN (function)]] returns 1.
+* {{Parameter|_SQUAREPIXELS}} alternate choice enlarges the pixels into squares on some monitors. [[_FULLSCREEN (function)|_FULLSCREEN]] returns 2
+* {{Parameter|_OFF}} turns _FULLSCREEN off after full screen has been enabled. [[_FULLSCREEN (function)]] returns 0.
+* Second optional parameter ''_SMOOTH'' applies antialiasing to the stretched screen.
+
+
+{{PageDescription}}
+* '''Set the [[SCREEN]] mode and text [[WIDTH]] when necessary first.''' Otherwise there may be desktop view issues.
+* _FULLSCREEN with no parameters chooses {{Parameter|_STRETCH}} or {{Parameter|_SQUAREPIXELS}} (prioritizes _STRETCH to mimic QBasic if possible)
+* '''Check the fullscreen mode with the [[_FULLSCREEN (function)|_FULLSCREEN]] function in your programs when a method is required.
+* It is advisable to get [[INPUT|input]] from the user to confirm that fullscreen was completed or there were possible monitor incompatibilities.
+* If fullscreen is '''not confirmed''' with a [[_FULLSCREEN (function)]] return '''greater than 0''', then disable with '''_FULLSCREEN _OFF'''.
+* '''NOTE:''' _FULLSCREEN can also be affected by custom [[_FONT]] size settings and make program screens too large.
+
+
+{{PageExamples}}
+''Example 1:'' Setting the screen mode first prevents enlargement of the desktop before the program window is set:
+{{CodeStart}}
+{{Cl|SCREEN}} {{Text|12|#F580B1}}
+{{Cl|_FULLSCREEN}}
+{{Cl|IF}} {{Cl|_FULLSCREEN (function)|_FULLSCREEN}} = {{Text|0|#F580B1}} {{Cl|THEN}} {{Cl|_FULLSCREEN}} {{Cl|_OFF}} {{Text|<nowiki>'check that a full screen mode initialized</nowiki>|#919191}}
+
+{{Cl|LINE}} ({{Text|100|#F580B1}}, {{Text|100|#F580B1}})-({{Text|500|#F580B1}}, {{Text|400|#F580B1}}), {{Text|13|#F580B1}}, BF
+{{CodeEnd}}
+
+----
+
+''Example 2:'' How fonts and _FULLSCREEN affect the program's window size.
+{{CodeStart}}
+{{Cl|SCREEN}} {{Text|0|#F580B1}}
+{{Cl|DO}}
+    {{Cl|PRINT}}
+    {{Cl|LINE INPUT}} {{Text|<nowiki>"Enter MODE 1) ENLARGE WINDOW  2) FULL _SQUAREPIXELS  3) FULL _STRETCH: "</nowiki>|#FFB100}}, WMODE$
+    {{Cl|PRINT}}
+    {{Cl|IF}} WMODE$ = {{Text|<nowiki>"1"</nowiki>|#FFB100}} {{Cl|THEN}} {{Cl|INPUT}} {{Text|<nowiki>"SIZE 1 TO 9: "</nowiki>|#FFB100}}, ENLARGE%
+
+    {{Cl|SELECT CASE}} ENLARGE%
+        {{Cl|CASE}} {{Text|1|#F580B1}}, {{Text|2|#F580B1}}, {{Text|3|#F580B1}}, {{Text|4|#F580B1}}, {{Text|5|#F580B1}}: STYLE$ = {{Text|<nowiki>"MONOSPACE, BOLD"</nowiki>|#FFB100}}
+        {{Cl|CASE}} {{Text|6|#F580B1}}, {{Text|7|#F580B1}}, {{Text|8|#F580B1}}, {{Text|9|#F580B1}}: STYLE$ = {{Text|<nowiki>"MONOSPACE"</nowiki>|#FFB100}}
+        {{Cl|CASE ELSE}}: STYLE$ = {{Text|<nowiki>"MONOSPACE"</nowiki>|#FFB100}}
+    {{Cl|END SELECT}}
+
+    {{Cl|SELECT CASE}} WMODE$
+        {{Cl|CASE}} {{Text|<nowiki>"1"</nowiki>|#FFB100}}
+            full = {{Cl|_FULLSCREEN (function)|_FULLSCREEN}}
+            {{Cl|IF}} full > {{Text|0|#F580B1}} {{Cl|THEN}} {{Cl|_FULLSCREEN}} {{Cl|_OFF}}
+            f& = {{Cl|_LOADFONT}}({{Text|<nowiki>"c:\windows\fonts\lucon.ttf"</nowiki>|#FFB100}}, {{Text|13|#F580B1}} + ENLARGE%, STYLE$)
+            {{Cl|_FONT}} f&
+        {{Cl|CASE}} {{Text|<nowiki>"2"</nowiki>|#FFB100}}
+            {{Cl|_FULLSCREEN}} {{Cl|_SQUAREPIXELS}}
+            full = {{Cl|_FULLSCREEN (function)|_FULLSCREEN}}
+            {{Cl|IF}} full = {{Text|0|#F580B1}} {{Cl|THEN}} {{Cl|GOSUB}} FCHECK
+        {{Cl|CASE}} {{Text|<nowiki>"3"</nowiki>|#FFB100}}
+            {{Cl|_FULLSCREEN}} {{Cl|_STRETCH}}
+            full = {{Cl|_FULLSCREEN (function)|_FULLSCREEN}}
+            {{Cl|IF}} full = {{Text|0|#F580B1}} {{Cl|THEN}} {{Cl|GOSUB}} FCHECK
+    {{Cl|END SELECT}}
+
+    mode = {{Cl|_FULLSCREEN (function)|_FULLSCREEN}}
+    {{Cl|PRINT}}
+    {{Cl|PRINT}} {{Text|<nowiki>"_FULLSCREEN mode ="</nowiki>|#FFB100}}; mode,
+    {{Cl|PRINT}} {{Text|<nowiki>"PRESS ESC TO END OR ENTER TO CONTINUE..."</nowiki>|#FFB100}}
+
+    {{Cl|DO}}: {{Cl|SLEEP}}: B$ = {{Cl|INKEY$}}: {{Cl|DO...LOOP|LOOP UNTIL}} B$ = {{Cl|CHR$}}({{Text|13|#F580B1}}) {{Cl|OR (boolean)|OR}} B$ = {{Cl|CHR$}}({{Text|27|#F580B1}})
+
+    {{Cl|GOSUB}} ClearFont
+
+{{Cl|DO...LOOP|LOOP UNTIL}} B$ = {{Cl|CHR$}}({{Text|27|#F580B1}})
+{{Cl|GOSUB}} ClearFont
+{{Cl|END}}
+
+FCHECK:
+Z3 = {{Cl|TIMER (function)|TIMER}}
+{{Cl|DO}}
+    {{Cl|IF}} {{Cl|TIMER (function)|TIMER}} < Z3 {{Cl|THEN}} Z3 = Z3 - {{Cl|TIMER (function)|TIMER}}
+    {{Cl|IF}} {{Cl|TIMER (function)|TIMER}} - Z3 > {{Text|4|#F580B1}} {{Cl|THEN}} {{Cl|EXIT DO}}
+{{Cl|LOOP}}
+full = {{Cl|_FULLSCREEN (function)|_FULLSCREEN}}
+{{Cl|IF}} full = {{Text|0|#F580B1}} {{Cl|THEN}} {{Cl|_FULLSCREEN}} {{Cl|_OFF}}: {{Cl|SOUND}} {{Text|100|#F580B1}}, {{Text|.75|#F580B1}}
+{{Cl|RETURN}}
+
+ClearFont:
+{{Cl|IF}} f& > {{Text|0|#F580B1}} {{Cl|THEN}}
+    {{Cl|_FONT}} {{Text|16|#F580B1}} {{Text|<nowiki>'select inbuilt 8x16 default font</nowiki>|#919191}}
+    {{Cl|_FREEFONT}} f&
+{{Cl|END IF}}
+{{Cl|RETURN}}
+{{CodeEnd}}
+
+----
+
+''Example 3:'' Testing all fullscreen methods.
+{{CodeStart}}
+{{Cl|PRINT}} {{Text|<nowiki>"Hello, world!"</nowiki>|#FFB100}}
+{{Cl|PRINT}} {{Text|<nowiki>"Hit 1 for windowed mode;"</nowiki>|#FFB100}}
+{{Cl|PRINT}} {{Text|<nowiki>"    2 for _STRETCH"</nowiki>|#FFB100}}
+{{Cl|PRINT}} {{Text|<nowiki>"    3 for _SQUAREPIXELS"</nowiki>|#FFB100}}
+{{Cl|PRINT}} {{Text|<nowiki>"    4 for _STRETCH, _SMOOTH"</nowiki>|#FFB100}}
+{{Cl|PRINT}} {{Text|<nowiki>"    5 for _SQUAREPIXELS, _SMOOTH"</nowiki>|#FFB100}}
+{{Cl|DO}}
+    k$ = {{Cl|INKEY$}}
+    {{Cl|SELECT CASE}} {{Cl|VAL}}(k$)
+        {{Cl|CASE}} {{Text|1|#F580B1}}
+            {{Cl|_FULLSCREEN}} {{Cl|_OFF}}
+        {{Cl|CASE}} {{Text|2|#F580B1}}
+            {{Cl|_FULLSCREEN}} {{Cl|_STRETCH}}
+        {{Cl|CASE}} {{Text|3|#F580B1}}
+            {{Cl|_FULLSCREEN}} {{Cl|_SQUAREPIXELS}}
+        {{Cl|CASE}} {{Text|4|#F580B1}}
+            {{Cl|_FULLSCREEN}} {{Cl|_STRETCH}} , {{Cl|_SMOOTH (function)|_SMOOTH}}
+        {{Cl|CASE}} {{Text|5|#F580B1}}
+            {{Cl|_FULLSCREEN}} {{Cl|_SQUAREPIXELS}} , {{Cl|_SMOOTH (function)|_SMOOTH}}
+    {{Cl|END SELECT}}
+    {{Cl|_LIMIT}} {{Text|30|#F580B1}}
+{{Cl|DO...LOOP|LOOP UNTIL}} {{Cl|_EXIT (function)|_EXIT}}
+{{Cl|SYSTEM}}
+{{CodeEnd}}
+
+
+{{PageSeeAlso}}
+* [[_FULLSCREEN (function)]]
+* [[_SMOOTH (function)]]
+* [[_ALLOWFULLSCREEN]]
+* [[_FONT]], [[SCREEN]]
+* [[_SCREENIMAGE]]
+* [[_SCREENMOVE]], [[_SCREENX]], [[_SCREENY]]
+
+
+{{PageNavigation}}

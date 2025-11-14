@@ -1,0 +1,152 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:41:49}}
+{{DISPLAYTITLE:_LOADFONT}}
+The '''_LOADFONT''' function loads a FreeType supported font file in a specific size and style and returns a [[LONG]] font handle.
+
+
+{{PageSyntax}}
+: {{Parameter|handle&}} = [[_LOADFONT]]({{Parameter|fontFileName$}}, {{Parameter|size&}}[, "{MONOSPACE|, BOLD|, ITALIC|, UNDERLINE|, UNICODE|, DONTBLEND|, MEMORY|, AUTOMONO}"][, {{Parameter|fontIndex&}}])
+
+
+{{PageDescription}}
+* The assigned [[LONG]] font {{Parameter|handle&}} variable return value designates a font style to be used somewhere in a program. Valid handle values are greater than 0 ('''{{Parameter|handle&}} > 0''').
+* {{Parameter|fontFileName$}} is the filename of a font. It can include the path to the font file. '''TTF, TTC, OTF, FNT, FON, PCF and BDF''' font file formats are supported. Best practice is to include font files with a program.
+* If no path is specified for {{Parameter|fontFileName$}} and the font file isn't in the same folder as the resulting binary, QB64 attempts to load from the default ''%SystemRoot%\Fonts'' path. Similar known locations are searched in other operating systems.
+* {{Parameter|size&}} is the [[INTEGER]] height of the font. If the size is too large or small an [[ERROR Codes|error]] will occur.
+* Optional comma separated ''style'' parameter(s) used are literal [[STRING]]s (in quotes) or can be contained in variable(s).
+** '''MONOSPACE''' loads a font with all characters occupying the same width. Results may be too spaced out for fonts that aren't designed for monospace use.
+** '''BOLD, ITALIC''' or '''UNDERLINE''' create bold, italic or underlined fonts when available in font (only valid before '''QB64 v0.960''', later you must specify the proper file name according to the desired attributes, e.g. ''cour.ttf'' for normal, ''courbd.ttf'' for bold etc.).
+** '''UNICODE''' loads Unicode fonts such as ''cyberbit.ttf'' which is included in the QB64 downloads.
+** '''DONTBLEND''' turns off [[_ALPHA]] blending of fonts. This can also be done with the [[_DONTBLEND]] statement.
+**'''MEMORY''' will treat {{Parameter|fontFileName$}} as a memory buffer containing the font file instead of a file name.
+**'''AUTOMONO''' will automatically detect monospace fonts and set the '''MONOSPACE''' flag if {{Parameter|fontFileName$}} is monospaced.
+:* You can pass different font styles using different predefined [[STRING]] variable lists. You '''can''' include an empty style string.
+* {{Parameter|fontIndex&}} is the index of a font in a font collection (usually '''.ttc''' files). When this is negative the first font from the collection is loaded.
+* '''Always check that font handle values are greater than 0 ('''{{Parameter|handle&}} > 0''') before using them or [[ERROR Codes|illegal function errors]] may occur.'''
+* '''NOTE: SCREEN 0 can only use ONE font on a screen page. Thus a style like underline would affect the entire page.'''
+* Font sizes can be found using the [[_FONTHEIGHT]] function. Font ''size''s can also affect [[SCREEN]] sizes.
+* [[_FONTWIDTH]] can only measure monospaced fonts. '''MONOSPACE''' can be used to load a variable width font as a monospace font.
+* [[_PRINTWIDTH]] can measure the width of a string of text in '''graphics modes only'''. Use one character to get the font's width.
+
+
+<center>'''Font Handles'''</center>
+* Multiple fonts will require multiple font variable handles unless used and freed consecutively.
+* Font handles with values greater than 0 that are '''no longer used''' should be freed using [[_FREEFONT]].
+* '''Predefined QB64''' font handle numbers can be substituted before freeing a font handle:
+**'''_FONT 8 ''' - default font for [[SCREEN]] 1, 2, 7, 8 or 13
+**'''_FONT 14''' - default font for [[SCREEN]] 9 or 10
+**'''_FONT 16''' - default font for [[SCREEN]] 0 ([[WIDTH]] 80, 25 text only), 11 or 12
+**'''_FONT 9, 15''' and '''17''' are the double width versions of 8, 14 and 16 respectively in text '''SCREEN 0 only'''.
+* Once the font is changed to a predefined value, the font handle value can be freed using [[_FREEFONT]] for another font type.
+* Font handle values of -1 (load failure) '''do not''' need to be freed. '''An [[ERROR Codes|error]] will occur if you try to free invalid handles.'''
+
+
+<center>'''Font File Specs'''</center>
+* Windows users should find '''TTF''' font files in the C:\WINDOWS\FONTS folder, but don't depend on unusual ones being there.
+* '''Check the font file name. The name in the "viewer" is not necessarily the file's name. Use the name in properties (right click a font listed and choose Properties in the contextual menu)'''
+* If a program is on a different drive than Windows, [[ENVIRON$]]("SYSTEMROOT") will return the path to the "WINDOWS" folder. Normally "C:\WINDOWS". Then add the "\FONTS\" folder and the font '''.TTF''' filename to the path [[STRING]].
+
+
+{{PageAvailability}}
+<!-- QB64 = a version or none, QBPE = a version or all, Platforms = yes or no -->
+<gallery widths="48px" heights="48px" mode="nolines">
+File:Qb64.png|'''v0.800'''
+File:Qbpe.png|'''all'''
+File:Apix.png
+File:Win.png|'''yes'''
+File:Lnx.png|'''yes'''
+File:Osx.png|'''yes'''
+</gallery>
+<!-- additional availability notes go below here -->
+* The capability to load from ''memory'' and loading a font from a ''font collection'' was introduced in '''QB64-PE v3.7.0'''.
+* The capability to auto-detect monospaced fonts was introduced in '''QB64-PE v3.13.1'''.
+
+
+{{PageExamples}}
+;Example 1:You need to know that if you are in a text mode (such as SCREEN 0 - the default) then you will only be able to use mono-spaced (fixed width) fonts.
+{{CodeStart}}
+rootpath$ = {{Cl|ENVIRON$}}({{Text|<nowiki>"SYSTEMROOT"</nowiki>|#FFB100}}) {{Text|<nowiki>'normally "C:\WINDOWS"</nowiki>|#919191}}
+fontfile$ = rootpath$ + {{Text|<nowiki>"\Fonts\cour.ttf"</nowiki>|#FFB100}} {{Text|<nowiki>'TTF file in Windows</nowiki>|#919191}}
+style$ = {{Text|<nowiki>"monospace"</nowiki>|#FFB100}} {{Text|<nowiki>'font style is not case sensitive</nowiki>|#919191}}
+f& = {{Cl|_LOADFONT}}(fontfile$, {{Text|30|#F580B1}}, style$)
+{{Cl|_FONT}} f&
+{{Cl|PRINT}} {{Text|<nowiki>"Hello!"</nowiki>|#FFB100}}
+{{CodeEnd}}
+{{OutputStart}}
+Hello!
+{{OutputEnd}}
+
+'''Note:''' 30 means each row of text (including vertical spacing) will be exactly 30 pixels high. This may make some program screens larger. If you don't want a style listed just use style$ = "" if using a [[STRING]] variable for different calls.
+
+----
+
+;Example 2:In a 32-bit graphics mode you can alpha blend onto the background.
+{{CodeStart}}
+i& = {{Cl|_NEWIMAGE}}({{Text|800|#F580B1}}, {{Text|600|#F580B1}}, {{Text|32|#F580B1}})
+{{Cl|SCREEN}} i&
+{{Cl|COLOR}} {{Text|&HC0FFFF00|#F580B1}}, {{Text|&H200000FF|#F580B1}}
+f& = {{Cl|_LOADFONT}}({{Text|<nowiki>"C:\Windows\Fonts\times.ttf"</nowiki>|#FFB100}}, {{Text|25|#F580B1}}) {{Text|<nowiki>'normal style</nowiki>|#919191}}
+{{Cl|_FONT}} f&
+{{Cl|PRINT}} {{Text|<nowiki>"Hello!"</nowiki>|#FFB100}}
+{{CodeEnd}}
+{{OutputStart}}
+Hello!
+{{OutputEnd}}
+
+'''Note:''' You can load a fixed width font file without using the "monospace" option and it will be treated as variable width. This can be useful because LOCATE treats the horizontal position as an offset in pixels for variable width fonts.
+
+----
+
+;Example 3:Loading a [[Unicode]] font, ''cyberbit.ttf'', which was downloaded with QB64.
+{{CodeStart}}
+{{Cl|SCREEN}} {{Text|12|#F580B1}}
+
+{{Cl|DECLARE}} {{Cl|CUSTOMTYPE}} {{Cl|LIBRARY}} {{Text|<nowiki>'Directory Information using KERNEL32 provided by Dav</nowiki>|#919191}}
+    {{Cl|FUNCTION}} {{Text|GetModuleFileNameA&|#55FF55}} ({{Cl|BYVAL}} hModule {{Cl|AS}} {{Cl|LONG}}, lpFileName {{Cl|AS}} {{Cl|STRING}}, {{Cl|BYVAL}} nSize {{Cl|AS}} {{Cl|LONG}})
+    {{Cl|FUNCTION}} {{Text|GetModuleFileNameW&|#55FF55}} ({{Cl|BYVAL}} hModule {{Cl|AS}} {{Cl|LONG}}, lpFileName {{Cl|AS}} {{Cl|STRING}}, {{Cl|BYVAL}} nSize {{Cl|AS}} {{Cl|LONG}})
+{{Cl|END DECLARE}}
+
+{{Text|<nowiki>'=== SHOW CURRENT PROGRAM</nowiki>|#919191}}
+FileName$ = {{Cl|SPACE$}}({{Text|512|#F580B1}})
+
+Result = {{Text|GetModuleFileNameA|#55FF55}}({{Text|0|#F580B1}}, FileName$, {{Cl|LEN}}(FileName$))
+{{Cl|IF}} Result {{Cl|THEN}} {{Cl|PRINT}} {{Text|<nowiki>"CURRENT PROGRAM (ASCII): "</nowiki>|#FFB100}}; {{Cl|LEFT$}}(FileName$, Result)
+
+{{Text|<nowiki>'load a unicode font</nowiki>|#919191}}
+f = {{Cl|_LOADFONT}}({{Text|<nowiki>"cyberbit.ttf"</nowiki>|#FFB100}}, {{Text|24|#F580B1}}, {{Text|<nowiki>"UNICODE"</nowiki>|#FFB100}})
+{{Cl|_FONT}} f
+Result = {{Text|GetModuleFileNameW|#55FF55}}({{Text|0|#F580B1}}, FileName$, {{Cl|LEN}}(FileName$) \ {{Text|2|#F580B1}})
+{{Cl|LOCATE}} {{Text|2|#F580B1}}, {{Text|1|#F580B1}}
+{{Cl|PRINT}} {{Text|QuickCP437toUTF32$|#55FF55}}({{Text|<nowiki>"CURRENT PROGRAM (UTF): "</nowiki>|#FFB100}}) + {{Text|QuickUTF16toUTF32$|#55FF55}}({{Cl|LEFT$}}(FileName$, Result * {{Text|2|#F580B1}}))
+{{Cl|_FONT}} {{Text|16|#F580B1}} {{Text|<nowiki>'restore CP437 font</nowiki>|#919191}}
+
+{{Cl|FUNCTION}} {{Text|QuickCP437toUTF32$|#55FF55}} (a$)
+    b$ = {{Cl|STRING$}}({{Cl|LEN}}(a$) * {{Text|4|#F580B1}}, {{Text|0|#F580B1}})
+    {{Cl|FOR}} i = {{Text|1|#F580B1}} {{Cl|TO}} {{Cl|LEN}}(a$)
+        {{Cl|ASC}}(b$, i * {{Text|4|#F580B1}} - {{Text|3|#F580B1}}) = {{Cl|ASC (function)|ASC}}(a$, i)
+    {{Cl|NEXT}}
+    {{Text|QuickCP437toUTF32$|#55FF55}} = b$
+{{Cl|END FUNCTION}}
+
+{{Cl|FUNCTION}} {{Text|QuickUTF16toUTF32$|#55FF55}} (a$)
+    b$ = {{Cl|STRING$}}({{Cl|LEN}}(a$) * {{Text|2|#F580B1}}, {{Text|0|#F580B1}})
+    {{Cl|FOR}} i = {{Text|1|#F580B1}} {{Cl|TO}} {{Cl|LEN}}(a$) \ {{Text|2|#F580B1}}
+        {{Cl|ASC}}(b$, i * {{Text|4|#F580B1}} - {{Text|3|#F580B1}}) = {{Cl|ASC (function)|ASC}}(a$, i * {{Text|2|#F580B1}} - {{Text|1|#F580B1}})
+        {{Cl|ASC}}(b$, i * {{Text|4|#F580B1}} - {{Text|2|#F580B1}}) = {{Cl|ASC (function)|ASC}}(a$, i * {{Text|2|#F580B1}})
+    {{Cl|NEXT}}
+    {{Text|QuickUTF16toUTF32$|#55FF55}} = b$
+{{Cl|END FUNCTION}}
+{{CodeEnd}}
+
+
+{{PageSeeAlso}}
+* [[_FONT]], [[_FONT (function)]]
+* [[_FREEFONT]]
+* [[_PRINTSTRING]], [[_PRINTWIDTH]]
+* [[_PRINTMODE]], [[_PRINTMODE (function)]]
+* [[_FONTHEIGHT]], [[_FONTWIDTH]]
+* [[Text Using Graphics]] {{Text|(Demo)}}
+* [[Windows Libraries#Font_Dialog_Box|Windows Font Dialog Box]]
+
+
+{{PageNavigation}}

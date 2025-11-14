@@ -1,0 +1,57 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:43:18}}
+The [[$UNSTABLE]] metacommand is used to enable the use of features that have not yet been made a permanent part of the language. Features hidden behind this metacommand may have breaking changes or be removed between releases.
+
+
+{{PageSyntax}}
+:[[$UNSTABLE]]: {MIDI, HTTP}
+
+
+{{PageParameters}}
+* The current unstable features are as follows:
+** '''MIDI''' allows usage of the [[$MIDISOUNDFONT]] metacommand ({{Text|no longer required|red}}, see Availability below)
+** '''HTTP''' allows opening HTTP connections using [[_OPENCLIENT]] ({{Text|no longer required|red}}, see Availability below)
+
+
+{{PageDescription}}
+* [[$UNSTABLE]] exists as a way to allow usage of new language features before they are finalized as part of the language.
+* Any languages features hidden behind [[$UNSTABLE]] may be changed in breaking ways in the next version of QB64-PE.
+* Language features that become a permanent part of the language will no longer require [[$UNSTABLE]] to be used.
+* More than one [[$UNSTABLE]] can be used in a program.
+
+
+{{PageAvailability}}
+<!-- QB64 = a version or none, QBPE = a version or all, Platforms = yes or no -->
+<gallery widths="48px" heights="48px" mode="nolines">
+File:Qb64.png|'''none'''
+File:Qbpe.png|'''v3.2.0'''
+File:Apix.png
+File:Win.png|'''yes'''
+File:Lnx.png|'''yes'''
+File:Osx.png|'''yes'''
+</gallery>
+<!-- additional availability notes go below here -->
+* '''MIDI''' keyword added in '''QB64-PE v3.2.0'''
+* '''HTTP''' keyword added in '''QB64-PE v3.5.0'''
+* '''MIDI''' keyword {{Text|no longer required|red}}, MIDI support is stable since '''QB64-PE v3.14.0'''. See [[_MIDISOUNDBANK]].
+* '''HTTP''' keyword {{Text|no longer required|red}}, HTTP support is stable since '''QB64-PE v4.0.0'''. The [[_OPENCLIENT]] HTTP syntax is usable at any time now.
+
+
+{{PageExamples}}
+{{CodeStart}}
+{{Cl|$UNSTABLE}}:MIDI
+
+' This line is only allowed when {{Cl|$UNSTABLE}}:MIDI is used
+{{Cl|$MIDISOUNDFONT}}: Default
+
+{{Cl|_SNDPLAYFILE}} "example.mid"
+{{CodeEnd}}
+
+
+{{PageSeeAlso}}
+* [[$MIDISOUNDFONT]] ({{Text|deprecated|red}})
+* [[_MIDISOUNDBANK]]
+* [[_OPENCLIENT]]
+
+
+{{PageNavigation}}

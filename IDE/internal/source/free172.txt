@@ -1,5 +1,0 @@
-if(oldstr4077){
-if(oldstr4077->fixed)qbs_set(oldstr4077,_FUNC_COMMAEXPRESSION_STRING_EXP);
-qbs_free(_FUNC_COMMAEXPRESSION_STRING_EXP);
-}
-qbs_free(_FUNC_COMMAEXPRESSION_STRING_ELE);

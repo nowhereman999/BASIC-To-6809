@@ -1,0 +1,64 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:41:45}}
+[[$LET]] is a precompiler [[Metacommand|metacommand]]. It is used to define or redefine precompiler variables for use in the [[$IF]]...[[$ELSE]]...[[$END IF]] block statements.
+
+
+{{PageSyntax}}
+: [[$LET]] variable = value
+
+
+{{PageDescription}}
+* Unlike [[LET]], [[$LET]] is not optional.
+* $LET a = 12 sets a precompiler variable "a" to the value of 12. This variable is only valid for the precompiler itself and does nothing to affect the values of any variable/constant which might also be called "a" in the program.
+* Variable names must follow QB64's variable naming conventions. They will be capitalized automatically.
+* Values may contain any number of periods to separate numbers or words in a string, e.g. in version numbers such as '''3.14.1''' or strings like '''MARY.HAD.A.LITTLE.LAMB''' etc..
+** Note that strings may not contain spaces and therefore may be given without leading/trailing quotes.
+* You can check a precompiler variable against special values '''DEFINED''' and '''UNDEFINED''', in order to assess whether the variable has already been assigned a value. Useful for code in libraries which may be repeated.
+* The precompiler comes with some preset values which can be used to help determine which code blocks to include/exclude.  These are:
+** '''WIN''' or '''WINDOWS''' is ''true(-1)'' if the user is running QB64 in a Windows environment, it is ''false(0)'' otherwise.
+** '''LINUX''' is ''true(-1)'' if the user is running QB64 in a Linux environment, it is ''false(0)'' otherwise.
+** '''MAC''' or '''MACOSX''' is ''true(-1)'' if the user is running QB64 in a macOS environment, it is ''false(0)'' otherwise.
+** '''32BIT''' is ''true(-1)'' if the user is running a 32-bit version of QB64., it is ''false(0)'' otherwise.
+** '''64BIT''' is ''true(-1)'' if the user is running a 64-bit version of QB64., it is ''false(0)'' otherwise.
+** '''VERSION''', which is set to the version of the QB64 compiler.
+* Some new presets have been introduced with QB64-PE v4.0.0, these are:
+** '''_QB64PE_''' is always ''true(-1)'', it indicates the use of the QB64 Phoenix Edition compiler at least v4.0.0
+** '''_ASSERTS_''' is ''one(1)'' if [[$ASSERTS]] or [[$ASSERTS|$ASSERTS:CONSOLE]] is used, it is ''zero(0)'' otherwise.
+** '''_CONSOLE_''' is ''one(1)'' if a console is active either by using [[$CONSOLE]] directly or implied by [[$ASSERTS|$ASSERTS:CONSOLE]], it is ''two(2)'' if [[$CONSOLE|$CONSOLE:ONLY]] is set, it is ''zero(0)'' if no console is available (both console variants may appear multiple times in a program, the last found one determines the final state).
+** '''_DEBUG_''' is ''one(1)'' if [[$DEBUG]] is used, it is ''zero(0)'' otherwise.
+** '''_EXPLICIT_''' is ''one(1)'' if the program uses [[OPTION EXPLICIT|OPTION _EXPLICIT]], it is ''zero(0)'' otherwise (note OE also implies '''OPTION _EXPLICITARRAY''').
+** '''_EXPLICITARRAY_''' is ''one(1)'' if the program uses [[OPTION EXPLICITARRAY|OPTION _EXPLICITARRAY]] or [[OPTION EXPLICIT|OPTION _EXPLICIT]], it is ''zero(0)'' otherwise.
+; Important notes regarding the preset values
+:* All presets are {{Text|'''read-only'''|red}} values and cannot be redefined by using [[$LET]] on it.
+:* The presets shall just serve the ability, for library makers, to easily check what features are active in a program, they shall otherwise not be {{Text|'''misused to enforce'''|red}} certain features, e.g.
+::* don't check for '''_CONSOLE_''' and force one to open, if none is there,
+::* don't check for '''_EXPLICIT_''' and force it, if it's not in effect, etc.
+:* Think of it like checking for '''WINDOWS''' and if it's not forcing the user to buy a Windows system or checking for '''32BIT''' and if it's not forcing the user to downgrade his 64-bit system. You wouldn't do that, right? And by that means you also should not enforce things, which the user did not already use in his program.
+
+
+{{PageAvailability}}
+<!-- QB64 = a version or none, QBPE = a version or all, Platforms = yes or no -->
+<gallery widths="48px" heights="48px" mode="nolines">
+File:Qb64.png|'''v1.0'''
+File:Qbpe.png|'''all'''
+File:Apix.png
+File:Win.png|'''yes'''
+File:Lnx.png|'''yes'''
+File:Osx.png|'''yes'''
+</gallery>
+<!-- additional availability notes go below here -->
+* In '''QB64-PE v4.0.0''' several new presets got added into the precompiler (see above).
+
+
+{{PageExamples}}
+* See example 1 in [[$IF]].
+
+
+{{PageSeeAlso}}
+* [[$IF]]
+* [[$ELSE]]
+* [[$ELSEIF]]
+* [[$END IF]]
+
+
+{{PageNavigation}}

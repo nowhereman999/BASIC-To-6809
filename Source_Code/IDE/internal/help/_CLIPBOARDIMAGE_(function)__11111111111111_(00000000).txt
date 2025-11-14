@@ -1,0 +1,63 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:40:46}}
+{{DISPLAYTITLE:_CLIPBOARDIMAGE (function)}}
+The [[_CLIPBOARDIMAGE (function)|_CLIPBOARDIMAGE]] function pastes an image from the clipboard into a new 32-bit image in memory.
+
+
+{{PageSyntax}}
+: {{Parameter|newImageHandle&}} = [[_CLIPBOARDIMAGE (function)|_CLIPBOARDIMAGE]]
+
+
+{{PageDescription}}
+* When the paste operation is successful, {{Parameter|newImageHandle&}} will be < -1. Handle values of -1 or 0 indicate that there wasn't an image in the clipboard or that the format wasn't accepted.
+* Use [[_FREEIMAGE]] to free the memory used by {{Parameter|newImageHandle&}} when it's no longer needed by your program.
+
+
+{{PageAvailability}}
+<!-- QB64 = a version or none, QBPE = a version or all, Platforms = yes or no -->
+<gallery widths="48px" heights="48px" mode="nolines">
+File:Qb64.png|'''v1.2'''
+File:Qbpe.png|'''all'''
+File:Apix.png
+File:Win.png|'''yes'''
+File:Lnx.png|'''yes'''
+File:Osx.png|'''yes'''
+</gallery>
+<!-- additional availability notes go below here -->
+* Available for ''macOS'' and ''Linux'' since '''QB64-PE v3.13.0'''
+
+
+{{PageExamples}}
+;Example: Monitoring the clipboard for new images copied from other programs:
+{{CodeStart}}
+{{Cl|SCREEN}} {{Cl|_NEWIMAGE}}({{Text|800|#F580B1}}, {{Text|600|#F580B1}}, {{Text|32|#F580B1}})
+{{Cl|DO}}
+    {{Cl|CLS}}
+    {{Cl|COLOR}} {{Cl|_RGB32}}({{Text|177|#F580B1}}, {{Text|177|#F580B1}}, {{Text|177|#F580B1}})
+    {{Cl|PRINT}} {{Text|<nowiki>"Monitoring clipboard..."</nowiki>|#FFB100}}
+    {{Cl|IF}} img& < {{Text|-1|#F580B1}} {{Cl|THEN}} {{Cl|_FREEIMAGE}} img&
+    img& = {{Cl|_CLIPBOARDIMAGE (function)|_CLIPBOARDIMAGE}}
+    {{Cl|IF}} img& < {{Text|-1|#F580B1}} {{Cl|THEN}}
+        {{Cl|PRINT}} {{Text|<nowiki>"Image found:"</nowiki>|#FFB100}}
+        {{Cl|COLOR}} {{Cl|_RGB32}}({{Text|255|#F580B1}}, {{Text|255|#F580B1}}, {{Text|255|#F580B1}})
+        {{Cl|PRINT}} {{Text|<nowiki>"Width :"</nowiki>|#FFB100}}; {{Cl|_WIDTH (function)|_WIDTH}}(img&)
+        {{Cl|PRINT}} {{Text|<nowiki>"Height:"</nowiki>|#FFB100}}; {{Cl|_HEIGHT}}(img&)
+        w = {{Cl|_WIDTH (function)|_WIDTH}} / {{Text|2|#F580B1}} - {{Cl|_WIDTH (function)|_WIDTH}}(img&) / {{Text|2|#F580B1}}
+        {{Cl|IF}} w < {{Text|0|#F580B1}} {{Cl|THEN}} w = {{Text|0|#F580B1}}
+        {{Cl|_PUTIMAGE}} (w, {{Cl|CSRLIN}} * {{Cl|_FONTHEIGHT}}), img&
+    {{Cl|ELSE}}
+        {{Cl|PRINT}} {{Text|<nowiki>"No image found."</nowiki>|#FFB100}}
+    {{Cl|END IF}}
+    {{Cl|_DISPLAY}}
+    {{Cl|_LIMIT}} {{Text|10|#F580B1}}
+{{Cl|LOOP}}
+{{CodeEnd}}
+{{Small|Example by Fellippe Heitor}}
+
+
+{{PageSeeAlso}}
+* [[_CLIPBOARDIMAGE]] {{Text|(statement - used to copy an image to the clipboard)}}
+* [[_CLIPBOARD$]], [[_CLIPBOARD$ (function)]] {{Text|(used to copy/paste text)}}
+
+
+{{PageNavigation}}

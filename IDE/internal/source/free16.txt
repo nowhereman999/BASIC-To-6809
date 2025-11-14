@@ -1,5 +1,0 @@
-if(oldstr2511){
-if(oldstr2511->fixed)qbs_set(oldstr2511,_FUNC_COUNTELEMENTS_STRING_A);
-qbs_free(_FUNC_COUNTELEMENTS_STRING_A);
-}
-qbs_free(_FUNC_COUNTELEMENTS_STRING_E);

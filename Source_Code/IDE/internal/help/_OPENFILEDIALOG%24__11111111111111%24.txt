@@ -1,0 +1,47 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:42:22}}
+{{DISPLAYTITLE:_OPENFILEDIALOG$}}
+The '''_OPENFILEDIALOG$''' function displays a standard dialog box that prompts the user to open a file. The returned string is an empty string ('''""''') if the user cancelled. The returned string will contain file paths delimited using '''"|"''' if allowMultipleSelects& is passed as ''true(-1)'' and multiple files are selected by the user.
+
+
+{{PageSyntax}}
+:{{Parameter|result$}} = [[_OPENFILEDIALOG$]]([{{Parameter|title$}}][, {{Parameter|defaultPathAndFile$}}][, {{parameter|filterPatterns$}}][, {{Parameter|singleFilterDescription$}}][, {{Parameter|allowMultipleSelects&}}])
+
+
+{{PageParameters}}
+* {{Parameter|title$}} is the dialog box title
+* {{Parameter|defaultPathAndFile$}} is the default path that will be used by the dialog box if not changed by the user
+* {{parameter|filterPatterns$}} are the file filters separated using '''"|"''' (e.g., "*.png|*.jpg|*.gif")
+* {{Parameter|singleFilterDescription$}} is the single filter description (e.g., "Image files")
+* {{Parameter|allowMultipleSelects&}} can be ''false(0)'' or ''true(-1)'' if multiple file selection is to be allowed. If omitted, then this defaults to ''false(0)''
+
+
+{{PageDescription}}
+* All parameters accept an empty string ('''""''') in which case system defaults are used
+* If {{Parameter|singleFilterDescription$}} is an empty string ('''""'''), then {{parameter|filterPatterns$}} will be shown in it's place
+* The dialog box automatically becomes a modal window if the application window is visible
+
+
+{{PageAvailability}}
+* '''QB64-PE v3.4.0 and up'''
+
+
+{{PageExamples}}
+; Example : Simple open file dialog example
+{{CodeStart}}
+audiofiles$ = {{Cl|_OPENFILEDIALOG$}}("Open File", "", "*.mp3|*.ogg|*.wav|*.flac", "Audio files", -1)
+{{Cl|IF}} audiofiles$ <> "" {{Cl|THEN}} {{Cl|_MESSAGEBOX}} "Information", "You selected " + audiofiles$
+{{CodeEnd}}
+
+
+{{PageSeeAlso}}
+* [[_NOTIFYPOPUP]]
+* [[_MESSAGEBOX]]
+* [[_MESSAGEBOX (function)]]
+* [[_INPUTBOX$]]
+* [[_SELECTFOLDERDIALOG$]]
+* [[_COLORCHOOSERDIALOG]]
+* [[_SAVEFILEDIALOG$]]
+
+
+{{PageNavigation}}
