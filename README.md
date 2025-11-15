@@ -12,10 +12,6 @@ https://github.com/nowhereman999/BASIC-To-6809/blob/main/Manual.pdf
 For more info check out the blog post here:
 https://wordpress.com/post/nowhereman999.wordpress.com/5054
 
-V 5.00
-- Fully supports all Variable Types, Variable default to float, so to max speed you must assign variable types to
-  there minimum size and accuracy needed. 
-
 V 4.43
 - Added support for the CoCoMP3 hardware (many commands, read the manual for more info)
 
