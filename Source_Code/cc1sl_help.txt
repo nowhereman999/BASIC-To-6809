@@ -1,4 +1,4 @@
-cc1sl - CoCo 1 Super Loader
+cc1sl - CoCo 1 Super Loader v1.1
 
 This is a program that takes the headaches out of writing large programs for the CoCo 1.
 

@@ -1,3 +1,4 @@
+' Version 1.1 fixes a bug to make sure the flag address is set to $FFFF
 $ScreenHide
 $Console
 _Dest _Console
@@ -27,7 +28,7 @@ scns = 0
 count = _CommandCount
 If count > 0 Then GoTo 100
 80
-Print "cc1sl - CoCo 1 Super Loader v1.03 by Glen Hewlett"
+Print "cc1sl - CoCo 1 Super Loader v1.1 by Glen Hewlett"
 Print "Usage: cc1sl [-l] [-vx] FILENAME.BIN -oOUTNAME.BIN [*.scn] or [*.csv]..."
 Print "Turns a CoCo 1 Machine Language program into a loadable program no matter if it over writes BASIC ROM locations and more"
 Print "See the cc1sl_help.txt for more info"
@@ -322,11 +323,12 @@ array(x) = LSB: x = x + 1 ' Loader program address + $18 LSB
 
 array(x) = &H00: x = x + 1 ' Pre-amble Flag
 array(x) = &H00: x = x + 1 ' Length of Block MSB
-If flag = 1 Then
-    array(x) = &H04: x = x + 1 ' Length of Block LSB
-Else
-    array(x) = &H02: x = x + 1 ' Length of Block LSB
-End If
+'If flag = 1 Then
+array(x) = &H04: x = x + 1 ' Length of Block LSB
+'Else
+'array(x) = &H02: x = x + 1 ' Length of Block LSB
+'End If
+
 temp = Loader_Program
 MSB = Int((temp) / 256): LSB = temp - MSB * 256
 array(x) = MSB: x = x + 1 ' Loader program address MSB
@@ -338,10 +340,13 @@ array(x) = LSB: x = x + 1 ' Divisor LSB
 
 If flag = 1 Then
     temp = Low_Program_Data
-    MSB = Int((temp) / 256): LSB = temp - MSB * 256
-    array(x) = MSB: x = x + 1 ' MSB address to copy low RAM data from
-    array(x) = LSB: x = x + 1 ' LSB address to copy low RAM data from
+Else
+    temp = &HFFFF
 End If
+MSB = Int((temp) / 256): LSB = temp - MSB * 256
+array(x) = MSB: x = x + 1 ' MSB address to copy low RAM data from
+array(x) = LSB: x = x + 1 ' LSB address to copy low RAM data from
+
 array(x) = &H00: x = x + 1 ' Pre-amble Flag
 array(x) = &H00: x = x + 1 ' Length of Block MSB
 array(x) = &HAB: x = x + 1 ' Length of Block LSB
