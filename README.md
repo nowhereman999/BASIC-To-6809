@@ -12,6 +12,9 @@ https://github.com/nowhereman999/BASIC-To-6809/blob/main/Manual.pdf
 For more info check out the blog post here:
 https://wordpress.com/post/nowhereman999.wordpress.com/5054
 
+V 4.43b
+- Fixed a bug in the cc1sl program
+
 V 4.43
 - Added support for the CoCoMP3 hardware (many commands, read the manual for more info)
 
