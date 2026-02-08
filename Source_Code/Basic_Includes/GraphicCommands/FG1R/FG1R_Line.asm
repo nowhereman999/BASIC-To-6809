@@ -28,12 +28,12 @@ DoLINE_FG1R:
 
 ; Test for a horizontal line
         CMPB    startY+1        ; Compare the starting y coordinate with the ending y coordinate
-        BNE     LineNotHorizontal_FG1R  ; If they aren't the same then go draw a line normally
+        LBNE    LineNotHorizontal_FG1R  ; If they aren't the same then go draw a line normally
 ; Get the number of bytes between pixels
         LDB     endX+1          ; B = ending x coordinate
         CMPB    startX+1        ; Compare with starting x coordinate
         BHI     >               ; If A is positive then go draw a line normally
-        BEQ     LineDrawDot1_FG1R    ; If A is zero then go PSET one single pixel
+        LBEQ    LineDrawDot1_FG1R    ; If A is zero then go PSET one single pixel
         LDA     startX+1          ; Otherwise flip the startx and endx coordinates
         LDB     endX+1          ; and store them in the variables
         STA     endX+1          ;
@@ -42,7 +42,7 @@ DoLINE_FG1R:
 !       LDB     endX+1
         SUBB    startX+1        ;
         CMPB    #$10            ; If we have less then 17 pixels to draw then go draw the line normally
-        BLS     LineNotHorizontal_FG1R  ; If the size is <= 16 then go draw the line normally
+        LBLS    LineNotHorizontal_FG1R  ; If the size is <= 16 then go draw the line normally
 ; 22 / 8 = 2
 ; 2 - 1 = 1
 ; Turn pixels into bytes

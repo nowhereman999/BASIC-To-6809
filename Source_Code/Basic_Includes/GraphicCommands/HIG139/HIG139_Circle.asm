@@ -134,8 +134,9 @@ SelfModC4_HIG139:
         LDX     x0
         LDD     #CircleScale_HIG139     ; Scale factor
         PSHS    D,X
-        JSR     MUL16           ; D = D * X
-        LEAS    4,S             ; Fix the stack
+        JSR     MUL16           ; Do D * X, D has the High 16 bits of the product and X has the Low 16 bits of the product
+        PULS    D               ; get low 16 bit number in D and fix the stack
+        TFR     X,D
         ADDA    y_Center+1
         PULS    X               ; restore x value
 SelfModC5_HIG139:
@@ -147,8 +148,9 @@ SelfModC5_HIG139:
         LDX     x0
         LDD     #CircleScale_HIG139     ; Scale factor
         PSHS    D,X
-        JSR     MUL16           ; D = D * X
-        LEAS    4,S             ; Fix the stack
+        JSR     MUL16           ; Do D * X, D has the High 16 bits of the product and X has the Low 16 bits of the product
+        PULS    D               ; get low 16 bit number in D and fix the stack
+        TFR     X,D
         ADDA    y_Center+1
         PULS    X               ; restore x value
 SelfModC6_HIG139:
@@ -160,8 +162,9 @@ SelfModC6_HIG139:
         LDX     x0
         LDD     #CircleScale_HIG139     ; Scale factor
         PSHS    D,X
-        JSR     MUL16           ; D = D * X
-        LEAS    4,S             ; Fix the stack
+        JSR     MUL16           ; Do D * X, D has the High 16 bits of the product and X has the Low 16 bits of the product
+        PULS    D               ; get low 16 bit number in D and fix the stack
+        TFR     X,D
         NEGA
         ADDA    y_Center+1
         PULS    X               ; restore x value
@@ -174,8 +177,8 @@ SelfModC7_HIG139:
         LDX     x0
         LDD     #CircleScale_HIG139     ; Scale factor
         PSHS    D,X
-        JSR     MUL16           ; D = D * X
-        LEAS    4,S             ; Fix the stack
+        JSR     MUL16           ; Do D * X, D has the High 16 bits of the product and X has the Low 16 bits of the product
+        PULS    D               ; get low 16 bit number in D and fix the stack
         NEGA
         ADDA    y_Center+1
         PULS    X               ; restore x value

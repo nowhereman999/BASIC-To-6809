@@ -12,7 +12,14 @@ AnalogMuxOn:
                 ORA         ,S+             ; OR IN BIT 3 OF ACCA (SAVED ON STACK)
                 STA         $FF23           ; SET/RESET CB2 OF U4
                 RTS
-
+;
+; Enter with Value in B
+;       SEL2 ($FF03 b3) SEL1 ($FF01 b3) Value   Sound source selected
+;       0               0               0       6-bit DAC
+;       0               1               1       Cassette audio
+;       1               0               2       Cartridge audio
+;       1               1               3       No sound / not used
+;
 ; THIS ROUTINE WILL TRANSFER BIT 0 OF ACCB TO SEL 1 OF
 ; THE ANALOG MULTIPLEXER AND BIT 1 OF ACCB TO SEL 2.
 Select_AnalogMuxer:

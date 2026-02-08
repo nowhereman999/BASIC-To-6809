@@ -73,7 +73,7 @@ RetryCount      EQU 20              ; # of retries until we give up getting a go
 ; A = Command # (Ignored if you string starts with $AA - Sending all raw codes)
 ; B = Number of bytes to send to the CoCoMP3
 ; X = Pointer to the data to send to the CoCoMP3
-; U = (Optional only for somce commands) - Secondary value
+; U = (Optional only for some commands) - Secondary value
 SendToCoCoMP3:
 ; Check for raw bytes
     PSHS    A                       ; Save A

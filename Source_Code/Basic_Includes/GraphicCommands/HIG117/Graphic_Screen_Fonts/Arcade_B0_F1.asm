@@ -6,7 +6,7 @@
 ; Only ASCII codes from $20 to $7F are supported
 FontWidth       EQU     8
 FontHeight      EQU     8
-CharJumpTable_HIG116:
+CharJumpTable_HIG117:
         FDB     Character_Blank         ; $20
         FDB     Character_Exclamation   ; $21 !
         FDB     Character_Quote         ; $22 "
@@ -117,14 +117,14 @@ CharJumpTable_HIG116:
 Character_Blank:
         LDD     #%0000000000000000
         STD     ,U     * 0
-        LEAU    BytesPerRow_HIG116*4,U
-        STD     -BytesPerRow_HIG116*3,U  * 1
-        STD     -BytesPerRow_HIG116*2,U  * 2
-        STD     -BytesPerRow_HIG116,U  * 3
+        LEAU    BytesPerRow_HIG117*4,U
+        STD     -BytesPerRow_HIG117*3,U  * 1
+        STD     -BytesPerRow_HIG117*2,U  * 2
+        STD     -BytesPerRow_HIG117,U  * 3
         STD     ,U     * 4
-        STD     BytesPerRow_HIG116,U   * 5
-        STD     BytesPerRow_HIG116*2,U   * 6
-        STD     BytesPerRow_HIG116*3,U   * 7
+        STD     BytesPerRow_HIG117,U   * 5
+        STD     BytesPerRow_HIG117*2,U   * 6
+        STD     BytesPerRow_HIG117*3,U   * 7
         RTS
 ; **************************************
 ;  !
@@ -139,19 +139,19 @@ Character_Blank:
 Character_Exclamation:
         LDD     #%0000000000000000
         STD     ,U     * 0
-        LEAU    BytesPerRow_HIG116*4,U
-        STD     BytesPerRow_HIG116*2,U   * 6
+        LEAU    BytesPerRow_HIG117*4,U
+        STD     BytesPerRow_HIG117*2,U   * 6
         LDD     #%0000000001010100
-        STD     -BytesPerRow_HIG116*3,U  * 1
-        STD     -BytesPerRow_HIG116*2,U  * 2
+        STD     -BytesPerRow_HIG117*3,U  * 1
+        STD     -BytesPerRow_HIG117*2,U  * 2
         LDD     #%0000000101010000
-        STD     -BytesPerRow_HIG116,U  * 3
+        STD     -BytesPerRow_HIG117,U  * 3
         LDD     #%0000000101000000
         STD     ,U     * 4
         LDD     #%0000000101000000
-        STD     BytesPerRow_HIG116,U   * 5
+        STD     BytesPerRow_HIG117,U   * 5
         LDD     #%0000000100000000
-        STD     BytesPerRow_HIG116*3,U   * 7
+        STD     BytesPerRow_HIG117*3,U   * 7
         RTS
 ; **************************************
 ;  "
@@ -166,15 +166,15 @@ Character_Exclamation:
 Character_Quote:
         LDD     #%0000000000000000
         STD     ,U     * 0
-        LEAU    BytesPerRow_HIG116*4,U
-        STD     BytesPerRow_HIG116,U   * 5
-        STD     BytesPerRow_HIG116*2,U   * 6
-        STD     BytesPerRow_HIG116*3,U   * 7
+        LEAU    BytesPerRow_HIG117*4,U
+        STD     BytesPerRow_HIG117,U   * 5
+        STD     BytesPerRow_HIG117*2,U   * 6
+        STD     BytesPerRow_HIG117*3,U   * 7
         LDD     #%0000010100010100
-        STD     -BytesPerRow_HIG116*3,U  * 1
-        STD     -BytesPerRow_HIG116*2,U  * 2
+        STD     -BytesPerRow_HIG117*3,U  * 1
+        STD     -BytesPerRow_HIG117*2,U  * 2
         LDD     #%0000000100000100
-        STD     -BytesPerRow_HIG116,U  * 3
+        STD     -BytesPerRow_HIG117,U  * 3
         LDD     #%0000010000010000
         STD     ,U     * 4
         RTS
@@ -191,17 +191,17 @@ Character_Quote:
 Character_Asterisk:
         LDD     #%0000000000000000
         STD     ,U     * 0
-        LEAU    BytesPerRow_HIG116*4,U
+        LEAU    BytesPerRow_HIG117*4,U
         LDD     #%0000000100000000
-        STD     -BytesPerRow_HIG116*3,U  * 1
+        STD     -BytesPerRow_HIG117*3,U  * 1
         STD     ,U     * 4
-        STD     BytesPerRow_HIG116*3,U   * 7
+        STD     BytesPerRow_HIG117*3,U   * 7
         LDD     #%0001000100010000
-        STD     -BytesPerRow_HIG116*2,U  * 2
-        STD     BytesPerRow_HIG116*2,U   * 6
+        STD     -BytesPerRow_HIG117*2,U  * 2
+        STD     BytesPerRow_HIG117*2,U   * 6
         LDD     #%0000010101000000
-        STD     -BytesPerRow_HIG116,U  * 3
-        STD     BytesPerRow_HIG116,U   * 5
+        STD     -BytesPerRow_HIG117,U  * 3
+        STD     BytesPerRow_HIG117,U   * 5
         RTS
 ; **************************************
 ; Hyphen
@@ -216,13 +216,13 @@ Character_Asterisk:
 Character_Hyphen:
         LDD     #%0000000000000000
         STD     ,U     * 0
-        LEAU    BytesPerRow_HIG116*4,U
-        STD     -BytesPerRow_HIG116*3,U  * 1
-        STD     -BytesPerRow_HIG116*2,U  * 2
-        STD     -BytesPerRow_HIG116,U  * 3
-        STD     BytesPerRow_HIG116,U   * 5
-        STD     BytesPerRow_HIG116*2,U   * 6
-        STD     BytesPerRow_HIG116*3,U   * 7
+        LEAU    BytesPerRow_HIG117*4,U
+        STD     -BytesPerRow_HIG117*3,U  * 1
+        STD     -BytesPerRow_HIG117*2,U  * 2
+        STD     -BytesPerRow_HIG117,U  * 3
+        STD     BytesPerRow_HIG117,U   * 5
+        STD     BytesPerRow_HIG117*2,U   * 6
+        STD     BytesPerRow_HIG117*3,U   * 7
         LDD     #%0000010101010000
         STD     ,U     * 4
         RTS
@@ -239,21 +239,21 @@ Character_Hyphen:
 Character_Slash:
         LDD     #%0000000000000000
         STD     ,U     * 0
-        LEAU    BytesPerRow_HIG116*4,U
+        LEAU    BytesPerRow_HIG117*4,U
         LDD     #%0000000000000001
-        STD     -BytesPerRow_HIG116*3,U  * 1
+        STD     -BytesPerRow_HIG117*3,U  * 1
         LDD     #%0000000000000100
-        STD     -BytesPerRow_HIG116*2,U  * 2
+        STD     -BytesPerRow_HIG117*2,U  * 2
         LDD     #%0000000000010000
-        STD     -BytesPerRow_HIG116,U  * 3
+        STD     -BytesPerRow_HIG117,U  * 3
         LDD     #%0000000001000000
         STD     ,U     * 4
         LDD     #%0000000100000000
-        STD     BytesPerRow_HIG116,U   * 5
+        STD     BytesPerRow_HIG117,U   * 5
         LDD     #%0000010000000000
-        STD     BytesPerRow_HIG116*2,U   * 6
+        STD     BytesPerRow_HIG117*2,U   * 6
         LDD     #%0001000000000000
-        STD     BytesPerRow_HIG116*3,U   * 7
+        STD     BytesPerRow_HIG117*3,U   * 7
         RTS
 ; **************************************
 ; 0
@@ -268,19 +268,19 @@ Character_Slash:
 Character_0:
         LDD     #%0000000000000000
         STD     ,U     * 0
-        LEAU    BytesPerRow_HIG116*4,U
+        LEAU    BytesPerRow_HIG117*4,U
         LDD     #%0000000101010000
-        STD     -BytesPerRow_HIG116*3,U  * 1
+        STD     -BytesPerRow_HIG117*3,U  * 1
         LDD     #%0000010000010100
-        STD     -BytesPerRow_HIG116*2,U  * 2
+        STD     -BytesPerRow_HIG117*2,U  * 2
         LDD     #%0001010000000101
-        STD     -BytesPerRow_HIG116,U  * 3
+        STD     -BytesPerRow_HIG117,U  * 3
         STD     ,U     * 4
-        STD     BytesPerRow_HIG116,U   * 5
+        STD     BytesPerRow_HIG117,U   * 5
         LDD     #%0000010100000100
-        STD     BytesPerRow_HIG116*2,U   * 6
+        STD     BytesPerRow_HIG117*2,U   * 6
         LDD     #%0000000101010000
-        STD     BytesPerRow_HIG116*3,U   * 7
+        STD     BytesPerRow_HIG117*3,U   * 7
         RTS
 ; **************************************
 ; 1
@@ -295,17 +295,17 @@ Character_0:
 Character_1:
         LDD     #%0000000000000000
         STD     ,U     * 0
-        LEAU    BytesPerRow_HIG116*4,U
+        LEAU    BytesPerRow_HIG117*4,U
         LDD     #%0000000001010000
-        STD     -BytesPerRow_HIG116*3,U  * 1
-        STD     -BytesPerRow_HIG116,U  * 3
+        STD     -BytesPerRow_HIG117*3,U  * 1
+        STD     -BytesPerRow_HIG117,U  * 3
         STD     ,U     * 4
-        STD     BytesPerRow_HIG116,U   * 5
-        STD     BytesPerRow_HIG116*2,U   * 6
+        STD     BytesPerRow_HIG117,U   * 5
+        STD     BytesPerRow_HIG117*2,U   * 6
         LDD     #%0000000101010000
-        STD     -BytesPerRow_HIG116*2,U  * 2
+        STD     -BytesPerRow_HIG117*2,U  * 2
         LDD     #%0000010101010101
-        STD     BytesPerRow_HIG116*3,U   * 7
+        STD     BytesPerRow_HIG117*3,U   * 7
         RTS
 ; **************************************
 ; 2
@@ -320,21 +320,21 @@ Character_1:
 Character_2:
         LDD     #%0000000000000000
         STD     ,U     * 0
-        LEAU    BytesPerRow_HIG116*4,U
+        LEAU    BytesPerRow_HIG117*4,U
         LDD     #%0000010101010100
-        STD     -BytesPerRow_HIG116*3,U  * 1
+        STD     -BytesPerRow_HIG117*3,U  * 1
         LDD     #%0001010000000101
-        STD     -BytesPerRow_HIG116*2,U  * 2
+        STD     -BytesPerRow_HIG117*2,U  * 2
         LDD     #%0000000000010101
-        STD     -BytesPerRow_HIG116,U  * 3
+        STD     -BytesPerRow_HIG117,U  * 3
         LDD     #%0000000101010100
         STD     ,U     * 4
         LDD     #%0000010101010000
-        STD     BytesPerRow_HIG116,U   * 5
+        STD     BytesPerRow_HIG117,U   * 5
         LDD     #%0001010100000000
-        STD     BytesPerRow_HIG116*2,U   * 6
+        STD     BytesPerRow_HIG117*2,U   * 6
         LDD     #%0001010101010101
-        STD     BytesPerRow_HIG116*3,U   * 7
+        STD     BytesPerRow_HIG117*3,U   * 7
         RTS
 ; **************************************
 ; 3
@@ -349,21 +349,21 @@ Character_2:
 Character_3:
         LDD     #%0000000000000000
         STD     ,U     * 0
-        LEAU    BytesPerRow_HIG116*4,U
+        LEAU    BytesPerRow_HIG117*4,U
         LDD     #%0000010101010101
-        STD     -BytesPerRow_HIG116*3,U  * 1
+        STD     -BytesPerRow_HIG117*3,U  * 1
         LDD     #%0000000000010100
-        STD     -BytesPerRow_HIG116*2,U  * 2
+        STD     -BytesPerRow_HIG117*2,U  * 2
         LDD     #%0000000001010000
-        STD     -BytesPerRow_HIG116,U  * 3
+        STD     -BytesPerRow_HIG117,U  * 3
         LDD     #%0000000101010100
         STD     ,U     * 4
         LDD     #%0000000000000101
-        STD     BytesPerRow_HIG116,U   * 5
+        STD     BytesPerRow_HIG117,U   * 5
         LDD     #%0001010000000101
-        STD     BytesPerRow_HIG116*2,U   * 6
+        STD     BytesPerRow_HIG117*2,U   * 6
         LDD     #%0000010101010100
-        STD     BytesPerRow_HIG116*3,U   * 7
+        STD     BytesPerRow_HIG117*3,U   * 7
         RTS
 ; **************************************
 ; 4
@@ -378,20 +378,20 @@ Character_3:
 Character_4:
         LDD     #%0000000000000000
         STD     ,U     * 0
-        LEAU    BytesPerRow_HIG116*4,U
+        LEAU    BytesPerRow_HIG117*4,U
         LDD     #%0000000001010100
-        STD     -BytesPerRow_HIG116*3,U  * 1
+        STD     -BytesPerRow_HIG117*3,U  * 1
         LDD     #%0000000101010100
-        STD     -BytesPerRow_HIG116*2,U  * 2
+        STD     -BytesPerRow_HIG117*2,U  * 2
         LDD     #%0000010100010100
-        STD     -BytesPerRow_HIG116,U  * 3
+        STD     -BytesPerRow_HIG117,U  * 3
         LDD     #%0001010000010100
         STD     ,U     * 4
         LDD     #%0001010101010101
-        STD     BytesPerRow_HIG116,U   * 5
+        STD     BytesPerRow_HIG117,U   * 5
         LDD     #%0000000000010100
-        STD     BytesPerRow_HIG116*2,U   * 6
-        STD     BytesPerRow_HIG116*3,U   * 7
+        STD     BytesPerRow_HIG117*2,U   * 6
+        STD     BytesPerRow_HIG117*3,U   * 7
         RTS
 ; **************************************
 ; 5
@@ -406,19 +406,19 @@ Character_4:
 Character_5:
         LDD     #%0000000000000000
         STD     ,U     * 0
-        LEAU    BytesPerRow_HIG116*4,U
+        LEAU    BytesPerRow_HIG117*4,U
         LDD     #%0001010101010100
-        STD     -BytesPerRow_HIG116*3,U  * 1
-        STD     -BytesPerRow_HIG116,U  * 3
+        STD     -BytesPerRow_HIG117*3,U  * 1
+        STD     -BytesPerRow_HIG117,U  * 3
         LDD     #%0001010000000000
-        STD     -BytesPerRow_HIG116*2,U  * 2
+        STD     -BytesPerRow_HIG117*2,U  * 2
         LDD     #%0000000000000101
         STD     ,U     * 4
-        STD     BytesPerRow_HIG116,U   * 5
+        STD     BytesPerRow_HIG117,U   * 5
         LDD     #%0001010000000101
-        STD     BytesPerRow_HIG116*2,U   * 6
+        STD     BytesPerRow_HIG117*2,U   * 6
         LDD     #%0000010101010100
-        STD     BytesPerRow_HIG116*3,U   * 7
+        STD     BytesPerRow_HIG117*3,U   * 7
         RTS
 ; **************************************
 ; 6
@@ -433,20 +433,20 @@ Character_5:
 Character_6:
         LDD     #%0000000000000000
         STD     ,U     * 0
-        LEAU    BytesPerRow_HIG116*4,U
+        LEAU    BytesPerRow_HIG117*4,U
         LDD     #%0000000101010100
-        STD     -BytesPerRow_HIG116*3,U  * 1
+        STD     -BytesPerRow_HIG117*3,U  * 1
         LDD     #%0000010100000000
-        STD     -BytesPerRow_HIG116*2,U  * 2
+        STD     -BytesPerRow_HIG117*2,U  * 2
         LDD     #%0001010000000000
-        STD     -BytesPerRow_HIG116,U  * 3
+        STD     -BytesPerRow_HIG117,U  * 3
         LDD     #%0001010101010100
         STD     ,U     * 4
         LDD     #%0001010000000101
-        STD     BytesPerRow_HIG116,U   * 5
-        STD     BytesPerRow_HIG116*2,U   * 6
+        STD     BytesPerRow_HIG117,U   * 5
+        STD     BytesPerRow_HIG117*2,U   * 6
         LDD     #%0000010101010100
-        STD     BytesPerRow_HIG116*3,U   * 7
+        STD     BytesPerRow_HIG117*3,U   * 7
         RTS
 ; **************************************
 ; 7
@@ -461,19 +461,19 @@ Character_6:
 Character_7:
         LDD     #%0000000000000000
         STD     ,U     * 0
-        LEAU    BytesPerRow_HIG116*4,U
+        LEAU    BytesPerRow_HIG117*4,U
         LDD     #%0001010101010101
-        STD     -BytesPerRow_HIG116*3,U  * 1
+        STD     -BytesPerRow_HIG117*3,U  * 1
         LDD     #%0001010000000101
-        STD     -BytesPerRow_HIG116*2,U  * 2
+        STD     -BytesPerRow_HIG117*2,U  * 2
         LDD     #%0000000000010100
-        STD     -BytesPerRow_HIG116,U  * 3
+        STD     -BytesPerRow_HIG117,U  * 3
         LDD     #%0000000001010000
         STD     ,U     * 4
         LDD     #%0000000101000000
-        STD     BytesPerRow_HIG116,U   * 5
-        STD     BytesPerRow_HIG116*2,U   * 6
-        STD     BytesPerRow_HIG116*3,U   * 7
+        STD     BytesPerRow_HIG117,U   * 5
+        STD     BytesPerRow_HIG117*2,U   * 6
+        STD     BytesPerRow_HIG117*3,U   * 7
         RTS
 ; **************************************
 ; 8
@@ -488,20 +488,20 @@ Character_7:
 Character_8:
         LDD     #%0000000000000000
         STD     ,U     * 0
-        LEAU    BytesPerRow_HIG116*4,U
+        LEAU    BytesPerRow_HIG117*4,U
         LDD     #%0000010101010000
-        STD     -BytesPerRow_HIG116*3,U  * 1
+        STD     -BytesPerRow_HIG117*3,U  * 1
         STD     ,U     * 4
         LDD     #%0001010000000100
-        STD     -BytesPerRow_HIG116*2,U  * 2
+        STD     -BytesPerRow_HIG117*2,U  * 2
         LDD     #%0001010100000100
-        STD     -BytesPerRow_HIG116,U  * 3
+        STD     -BytesPerRow_HIG117,U  * 3
         LDD     #%0001000001010101
-        STD     BytesPerRow_HIG116,U   * 5
+        STD     BytesPerRow_HIG117,U   * 5
         LDD     #%0001000000000101
-        STD     BytesPerRow_HIG116*2,U   * 6
+        STD     BytesPerRow_HIG117*2,U   * 6
         LDD     #%0000010101010100
-        STD     BytesPerRow_HIG116*3,U   * 7
+        STD     BytesPerRow_HIG117*3,U   * 7
         RTS
 ; **************************************
 ; 9
@@ -516,20 +516,20 @@ Character_8:
 Character_9:
         LDD     #%0000000000000000
         STD     ,U     * 0
-        LEAU    BytesPerRow_HIG116*4,U
+        LEAU    BytesPerRow_HIG117*4,U
         LDD     #%0000010101010100
-        STD     -BytesPerRow_HIG116*3,U  * 1
+        STD     -BytesPerRow_HIG117*3,U  * 1
         LDD     #%0001010000000101
-        STD     -BytesPerRow_HIG116*2,U  * 2
-        STD     -BytesPerRow_HIG116,U  * 3
+        STD     -BytesPerRow_HIG117*2,U  * 2
+        STD     -BytesPerRow_HIG117,U  * 3
         LDD     #%0000010101010101
         STD     ,U     * 4
         LDD     #%0000000000000101
-        STD     BytesPerRow_HIG116,U   * 5
+        STD     BytesPerRow_HIG117,U   * 5
         LDD     #%0000000000010100
-        STD     BytesPerRow_HIG116*2,U   * 6
+        STD     BytesPerRow_HIG117*2,U   * 6
         LDD     #%0000010101010000
-        STD     BytesPerRow_HIG116*3,U   * 7
+        STD     BytesPerRow_HIG117*3,U   * 7
         RTS
 ; **************************************
 ; :
@@ -544,15 +544,15 @@ Character_9:
 Character_Colon:
         LDD     #%0000000000000000
         STD     ,U     * 0
-        LEAU    BytesPerRow_HIG116*4,U
-        STD     -BytesPerRow_HIG116*3,U  * 1
+        LEAU    BytesPerRow_HIG117*4,U
+        STD     -BytesPerRow_HIG117*3,U  * 1
         STD     ,U     * 4
-        STD     BytesPerRow_HIG116*3,U   * 7
+        STD     BytesPerRow_HIG117*3,U   * 7
         LDD     #%0000000101000000
-        STD     -BytesPerRow_HIG116*2,U  * 2
-        STD     -BytesPerRow_HIG116,U  * 3
-        STD     BytesPerRow_HIG116,U   * 5
-        STD     BytesPerRow_HIG116*2,U   * 6
+        STD     -BytesPerRow_HIG117*2,U  * 2
+        STD     -BytesPerRow_HIG117,U  * 3
+        STD     BytesPerRow_HIG117,U   * 5
+        STD     BytesPerRow_HIG117*2,U   * 6
         RTS
 ; **************************************
 ; <
@@ -567,16 +567,16 @@ Character_Colon:
 Character_Less:
         LDD     #%0000000000000000
         STD     ,U     * 0
-        LEAU    BytesPerRow_HIG116*4,U
+        LEAU    BytesPerRow_HIG117*4,U
         LDD     #%0000000001000000
-        STD     -BytesPerRow_HIG116*3,U  * 1
-        STD     BytesPerRow_HIG116*3,U   * 7
+        STD     -BytesPerRow_HIG117*3,U  * 1
+        STD     BytesPerRow_HIG117*3,U   * 7
         LDD     #%0000000100000000
-        STD     -BytesPerRow_HIG116*2,U  * 2
-        STD     BytesPerRow_HIG116*2,U   * 6
+        STD     -BytesPerRow_HIG117*2,U  * 2
+        STD     BytesPerRow_HIG117*2,U   * 6
         LDD     #%0000010000000000
-        STD     -BytesPerRow_HIG116,U  * 3
-        STD     BytesPerRow_HIG116,U   * 5
+        STD     -BytesPerRow_HIG117,U  * 3
+        STD     BytesPerRow_HIG117,U   * 5
         LDD     #%0001000000000000
         STD     ,U     * 4
         RTS
@@ -593,15 +593,15 @@ Character_Less:
 Character_Equal:
         LDD     #%0000000000000000
         STD     ,U     * 0
-        LEAU    BytesPerRow_HIG116*4,U
-        STD     -BytesPerRow_HIG116*3,U  * 1
-        STD     -BytesPerRow_HIG116*2,U  * 2
+        LEAU    BytesPerRow_HIG117*4,U
+        STD     -BytesPerRow_HIG117*3,U  * 1
+        STD     -BytesPerRow_HIG117*2,U  * 2
         STD     ,U     * 4
-        STD     BytesPerRow_HIG116*2,U   * 6
-        STD     BytesPerRow_HIG116*3,U   * 7
+        STD     BytesPerRow_HIG117*2,U   * 6
+        STD     BytesPerRow_HIG117*3,U   * 7
         LDD     #%0001010101010000
-        STD     -BytesPerRow_HIG116,U  * 3
-        STD     BytesPerRow_HIG116,U   * 5
+        STD     -BytesPerRow_HIG117,U  * 3
+        STD     BytesPerRow_HIG117,U   * 5
         RTS
 ; **************************************
 ; >
@@ -616,16 +616,16 @@ Character_Equal:
 Character_Great:
         LDD     #%0000000000000000
         STD     ,U     * 0
-        LEAU    BytesPerRow_HIG116*4,U
+        LEAU    BytesPerRow_HIG117*4,U
         LDD     #%0000010000000000
-        STD     -BytesPerRow_HIG116*3,U  * 1
-        STD     BytesPerRow_HIG116*3,U   * 7
+        STD     -BytesPerRow_HIG117*3,U  * 1
+        STD     BytesPerRow_HIG117*3,U   * 7
         LDD     #%0000000100000000
-        STD     -BytesPerRow_HIG116*2,U  * 2
-        STD     BytesPerRow_HIG116*2,U   * 6
+        STD     -BytesPerRow_HIG117*2,U  * 2
+        STD     BytesPerRow_HIG117*2,U   * 6
         LDD     #%0000000001000000
-        STD     -BytesPerRow_HIG116,U  * 3
-        STD     BytesPerRow_HIG116,U   * 5
+        STD     -BytesPerRow_HIG117,U  * 3
+        STD     BytesPerRow_HIG117,U   * 5
         LDD     #%0000000000010000
         STD     ,U     * 4
         RTS
@@ -642,18 +642,18 @@ Character_Great:
 Character_A:
         LDD     #%0000000000000000
         STD     ,U     * 0
-        LEAU    BytesPerRow_HIG116*4,U
+        LEAU    BytesPerRow_HIG117*4,U
         LDD     #%0000000101010000
-        STD     -BytesPerRow_HIG116*3,U  * 1
+        STD     -BytesPerRow_HIG117*3,U  * 1
         LDD     #%0000010100010100
-        STD     -BytesPerRow_HIG116*2,U  * 2
+        STD     -BytesPerRow_HIG117*2,U  * 2
         LDD     #%0001010000000101
-        STD     -BytesPerRow_HIG116,U  * 3
+        STD     -BytesPerRow_HIG117,U  * 3
         STD     ,U     * 4
-        STD     BytesPerRow_HIG116*2,U   * 6
-        STD     BytesPerRow_HIG116*3,U   * 7
+        STD     BytesPerRow_HIG117*2,U   * 6
+        STD     BytesPerRow_HIG117*3,U   * 7
         LDD     #%0001010101010101
-        STD     BytesPerRow_HIG116,U   * 5
+        STD     BytesPerRow_HIG117,U   * 5
         RTS
 ; **************************************
 ; B
@@ -668,16 +668,16 @@ Character_A:
 Character_B:
         LDD     #%0000000000000000
         STD     ,U     * 0
-        LEAU    BytesPerRow_HIG116*4,U
+        LEAU    BytesPerRow_HIG117*4,U
         LDD     #%0001010101010100
-        STD     -BytesPerRow_HIG116*3,U  * 1
+        STD     -BytesPerRow_HIG117*3,U  * 1
         STD     ,U     * 4
-        STD     BytesPerRow_HIG116*3,U   * 7
+        STD     BytesPerRow_HIG117*3,U   * 7
         LDD     #%0001010000000101
-        STD     -BytesPerRow_HIG116*2,U  * 2
-        STD     -BytesPerRow_HIG116,U  * 3
-        STD     BytesPerRow_HIG116,U   * 5
-        STD     BytesPerRow_HIG116*2,U   * 6
+        STD     -BytesPerRow_HIG117*2,U  * 2
+        STD     -BytesPerRow_HIG117,U  * 3
+        STD     BytesPerRow_HIG117,U   * 5
+        STD     BytesPerRow_HIG117*2,U   * 6
         RTS
 ; **************************************
 ; C
@@ -692,17 +692,17 @@ Character_B:
 Character_C:
         LDD     #%0000000000000000
         STD     ,U     * 0
-        LEAU    BytesPerRow_HIG116*4,U
+        LEAU    BytesPerRow_HIG117*4,U
         LDD     #%0000000101010100
-        STD     -BytesPerRow_HIG116*3,U  * 1
-        STD     BytesPerRow_HIG116*3,U   * 7
+        STD     -BytesPerRow_HIG117*3,U  * 1
+        STD     BytesPerRow_HIG117*3,U   * 7
         LDD     #%0000010100000101
-        STD     -BytesPerRow_HIG116*2,U  * 2
-        STD     BytesPerRow_HIG116*2,U   * 6
+        STD     -BytesPerRow_HIG117*2,U  * 2
+        STD     BytesPerRow_HIG117*2,U   * 6
         LDD     #%0001010000000000
-        STD     -BytesPerRow_HIG116,U  * 3
+        STD     -BytesPerRow_HIG117,U  * 3
         STD     ,U     * 4
-        STD     BytesPerRow_HIG116,U   * 5
+        STD     BytesPerRow_HIG117,U   * 5
         RTS
 ; **************************************
 ; D
@@ -717,17 +717,17 @@ Character_C:
 Character_D:
         LDD     #%0000000000000000
         STD     ,U  * 0
-        LEAU    BytesPerRow_HIG116*4,U
+        LEAU    BytesPerRow_HIG117*4,U
         LDD     #%0001010101010000
-        STD     -BytesPerRow_HIG116*3,U  * 1
-        STD     BytesPerRow_HIG116*3,U   * 7
+        STD     -BytesPerRow_HIG117*3,U  * 1
+        STD     BytesPerRow_HIG117*3,U   * 7
         LDD     #%0001010000010100
-        STD     -BytesPerRow_HIG116*2,U  * 2
-        STD     BytesPerRow_HIG116*2,U   * 6
+        STD     -BytesPerRow_HIG117*2,U  * 2
+        STD     BytesPerRow_HIG117*2,U   * 6
         LDD     #%0001010000000101
-        STD     -BytesPerRow_HIG116,U  * 3
+        STD     -BytesPerRow_HIG117,U  * 3
         STD     ,U     * 4
-        STD     BytesPerRow_HIG116,U   * 5
+        STD     BytesPerRow_HIG117,U   * 5
         RTS
 ; **************************************
 ; E
@@ -742,15 +742,15 @@ Character_D:
 Character_E:
         LDD     #%0000000000000000
         STD     ,U  * 0
-        LEAU    BytesPerRow_HIG116*4,U
+        LEAU    BytesPerRow_HIG117*4,U
         LDD     #%0000010101010101
-        STD     -BytesPerRow_HIG116*3,U  * 1
-        STD     BytesPerRow_HIG116*3,U   * 7
+        STD     -BytesPerRow_HIG117*3,U  * 1
+        STD     BytesPerRow_HIG117*3,U   * 7
         LDD     #%0000010100000000
-        STD     -BytesPerRow_HIG116*2,U  * 2
-        STD     -BytesPerRow_HIG116,U  * 3
-        STD     BytesPerRow_HIG116,U   * 5
-        STD     BytesPerRow_HIG116*2,U   * 6
+        STD     -BytesPerRow_HIG117*2,U  * 2
+        STD     -BytesPerRow_HIG117,U  * 3
+        STD     BytesPerRow_HIG117,U   * 5
+        STD     BytesPerRow_HIG117*2,U   * 6
         LDD     #%0000010101010100
         STD     ,U     * 4
         RTS
@@ -767,15 +767,15 @@ Character_E:
 Character_F:
         LDD     #%0000000000000000
         STD     ,U  * 0
-        LEAU    BytesPerRow_HIG116*4,U
+        LEAU    BytesPerRow_HIG117*4,U
         LDD     #%0001010101010101
-        STD     -BytesPerRow_HIG116*3,U  * 1
+        STD     -BytesPerRow_HIG117*3,U  * 1
         LDD     #%0001010000000000
-        STD     -BytesPerRow_HIG116*2,U  * 2
-        STD     -BytesPerRow_HIG116,U  * 3
-        STD     BytesPerRow_HIG116,U   * 5
-        STD     BytesPerRow_HIG116*2,U   * 6
-        STD     BytesPerRow_HIG116*3,U   * 7
+        STD     -BytesPerRow_HIG117*2,U  * 2
+        STD     -BytesPerRow_HIG117,U  * 3
+        STD     BytesPerRow_HIG117,U   * 5
+        STD     BytesPerRow_HIG117*2,U   * 6
+        STD     BytesPerRow_HIG117*3,U   * 7
         LDD     #%0001010101010100
         STD     ,U     * 4
         RTS
@@ -792,20 +792,20 @@ Character_F:
 Character_G:
         LDD     #%0000000000000000
         STD     ,U  * 0
-        LEAU    BytesPerRow_HIG116*4,U
+        LEAU    BytesPerRow_HIG117*4,U
         LDD     #%0000000101010101
-        STD     -BytesPerRow_HIG116*3,U  * 1
-        STD     BytesPerRow_HIG116*3,U   * 7
+        STD     -BytesPerRow_HIG117*3,U  * 1
+        STD     BytesPerRow_HIG117*3,U   * 7
         LDD     #%0000010100000000
-        STD     -BytesPerRow_HIG116*2,U  * 2
+        STD     -BytesPerRow_HIG117*2,U  * 2
         LDD     #%0001010000000000
-        STD     -BytesPerRow_HIG116,U  * 3
+        STD     -BytesPerRow_HIG117,U  * 3
         LDD     #%0001010000010101
         STD     ,U     * 4
         LDD     #%0001010000000101
-        STD     BytesPerRow_HIG116,U   * 5
+        STD     BytesPerRow_HIG117,U   * 5
         LDD     #%0000010100000101
-        STD     BytesPerRow_HIG116*2,U   * 6
+        STD     BytesPerRow_HIG117*2,U   * 6
         RTS
 ; **************************************
 ; H
@@ -820,14 +820,14 @@ Character_G:
 Character_H:
         LDD     #%0000000000000000
         STD     ,U     * 0
-        LEAU    BytesPerRow_HIG116*4,U
+        LEAU    BytesPerRow_HIG117*4,U
         LDD     #%0001010000000101
-        STD     -BytesPerRow_HIG116*3,U  * 1
-        STD     -BytesPerRow_HIG116*2,U  * 2
-        STD     -BytesPerRow_HIG116,U  * 3
-        STD     BytesPerRow_HIG116,U   * 5
-        STD     BytesPerRow_HIG116*2,U   * 6
-        STD     BytesPerRow_HIG116*3,U   * 7
+        STD     -BytesPerRow_HIG117*3,U  * 1
+        STD     -BytesPerRow_HIG117*2,U  * 2
+        STD     -BytesPerRow_HIG117,U  * 3
+        STD     BytesPerRow_HIG117,U   * 5
+        STD     BytesPerRow_HIG117*2,U   * 6
+        STD     BytesPerRow_HIG117*3,U   * 7
         LDD     #%0001010101010101
         STD     ,U     * 4
         RTS
@@ -844,16 +844,16 @@ Character_H:
 Character_I:
         LDD     #%0000000000000000
         STD     ,U     * 0
-        LEAU    BytesPerRow_HIG116*4,U
+        LEAU    BytesPerRow_HIG117*4,U
         LDD     #%0000010101010101
-        STD     -BytesPerRow_HIG116*3,U  * 1
-        STD     BytesPerRow_HIG116*3,U   * 7
+        STD     -BytesPerRow_HIG117*3,U  * 1
+        STD     BytesPerRow_HIG117*3,U   * 7
         LDD     #%0000000001010000
-        STD     -BytesPerRow_HIG116*2,U  * 2
-        STD     -BytesPerRow_HIG116,U  * 3
+        STD     -BytesPerRow_HIG117*2,U  * 2
+        STD     -BytesPerRow_HIG117,U  * 3
         STD     ,U     * 4
-        STD     BytesPerRow_HIG116,U   * 5
-        STD     BytesPerRow_HIG116*2,U   * 6
+        STD     BytesPerRow_HIG117,U   * 5
+        STD     BytesPerRow_HIG117*2,U   * 6
         RTS
 ; **************************************
 ; J
@@ -868,17 +868,17 @@ Character_I:
 Character_J:
         LDD     #%0000000000000000
         STD     ,U     * 0
-        LEAU    BytesPerRow_HIG116*4,U
+        LEAU    BytesPerRow_HIG117*4,U
         LDD     #%0000000000000101
-        STD     -BytesPerRow_HIG116*3,U  * 1
-        STD     -BytesPerRow_HIG116*2,U  * 2
-        STD     -BytesPerRow_HIG116,U  * 3
+        STD     -BytesPerRow_HIG117*3,U  * 1
+        STD     -BytesPerRow_HIG117*2,U  * 2
+        STD     -BytesPerRow_HIG117,U  * 3
         STD     ,U     * 4
-        STD     BytesPerRow_HIG116,U   * 5
+        STD     BytesPerRow_HIG117,U   * 5
         LDD     #%0001010000000101
-        STD     BytesPerRow_HIG116*2,U   * 6
+        STD     BytesPerRow_HIG117*2,U   * 6
         LDD     #%0000010101010100
-        STD     BytesPerRow_HIG116*3,U   * 7
+        STD     BytesPerRow_HIG117*3,U   * 7
         RTS
 ; **************************************
 ; K
@@ -893,21 +893,21 @@ Character_J:
 Character_K:
         LDD     #%0000000000000000
         STD     ,U     * 0
-        LEAU    BytesPerRow_HIG116*4,U
+        LEAU    BytesPerRow_HIG117*4,U
         LDD     #%0001010000000101
-        STD     -BytesPerRow_HIG116*3,U  * 1
+        STD     -BytesPerRow_HIG117*3,U  * 1
         LDD     #%0001010000010100
-        STD     -BytesPerRow_HIG116*2,U  * 2
+        STD     -BytesPerRow_HIG117*2,U  * 2
         LDD     #%0001010001010000
-        STD     -BytesPerRow_HIG116,U  * 3
+        STD     -BytesPerRow_HIG117,U  * 3
         LDD     #%0001010101000000
         STD     ,U     * 4
         LDD     #%0001010101010000
-        STD     BytesPerRow_HIG116,U   * 5
+        STD     BytesPerRow_HIG117,U   * 5
         LDD     #%0001010001010100
-        STD     BytesPerRow_HIG116*2,U   * 6
+        STD     BytesPerRow_HIG117*2,U   * 6
         LDD     #%0001010000010101
-        STD     BytesPerRow_HIG116*3,U   * 7
+        STD     BytesPerRow_HIG117*3,U   * 7
         RTS
 ; **************************************
 ; L
@@ -922,16 +922,16 @@ Character_K:
 Character_L:
         LDD     #%0000000000000000
         STD     ,U     * 0
-        LEAU    BytesPerRow_HIG116*4,U
+        LEAU    BytesPerRow_HIG117*4,U
         LDD     #%0000010100000000
-        STD     -BytesPerRow_HIG116*3,U  * 1
-        STD     -BytesPerRow_HIG116*2,U  * 2
-        STD     -BytesPerRow_HIG116,U  * 3
+        STD     -BytesPerRow_HIG117*3,U  * 1
+        STD     -BytesPerRow_HIG117*2,U  * 2
+        STD     -BytesPerRow_HIG117,U  * 3
         STD     ,U     * 4
-        STD     BytesPerRow_HIG116,U   * 5
-        STD     BytesPerRow_HIG116*2,U   * 6
+        STD     BytesPerRow_HIG117,U   * 5
+        STD     BytesPerRow_HIG117*2,U   * 6
         LDD     #%0000010101010101
-        STD     BytesPerRow_HIG116*3,U   * 7
+        STD     BytesPerRow_HIG117*3,U   * 7
         RTS
 ; **************************************
 ; M
@@ -946,18 +946,18 @@ Character_L:
 Character_M:
         LDD     #%0000000000000000
         STD     ,U     * 0
-        LEAU    BytesPerRow_HIG116*4,U
+        LEAU    BytesPerRow_HIG117*4,U
         LDD     #%0001010000000101
-        STD     -BytesPerRow_HIG116*3,U  * 1
-        STD     BytesPerRow_HIG116*2,U   * 6
-        STD     BytesPerRow_HIG116*3,U   * 7
+        STD     -BytesPerRow_HIG117*3,U  * 1
+        STD     BytesPerRow_HIG117*2,U   * 6
+        STD     BytesPerRow_HIG117*3,U   * 7
         LDD     #%0001010100010101
-        STD     -BytesPerRow_HIG116*2,U  * 2
+        STD     -BytesPerRow_HIG117*2,U  * 2
         LDD     #%0001010101010101
-        STD     -BytesPerRow_HIG116,U  * 3
+        STD     -BytesPerRow_HIG117,U  * 3
         STD     ,U     * 4
         LDD     #%0001010001000101
-        STD     BytesPerRow_HIG116,U   * 5
+        STD     BytesPerRow_HIG117,U   * 5
         RTS
 ; **************************************
 ; N
@@ -972,20 +972,20 @@ Character_M:
 Character_N:
         LDD     #%0000000000000000
         STD     ,U     * 0
-        LEAU    BytesPerRow_HIG116*4,U
+        LEAU    BytesPerRow_HIG117*4,U
         LDD     #%0001010000000101
-        STD     -BytesPerRow_HIG116*3,U  * 1
-        STD     BytesPerRow_HIG116*3,U   * 7
+        STD     -BytesPerRow_HIG117*3,U  * 1
+        STD     BytesPerRow_HIG117*3,U   * 7
         LDD     #%0001010100000101
-        STD     -BytesPerRow_HIG116*2,U  * 2
+        STD     -BytesPerRow_HIG117*2,U  * 2
         LDD     #%0001010101000101
-        STD     -BytesPerRow_HIG116,U  * 3
+        STD     -BytesPerRow_HIG117,U  * 3
         LDD     #%0001010101010101
         STD     ,U     * 4
         LDD     #%0001010001010101
-        STD     BytesPerRow_HIG116,U   * 5
+        STD     BytesPerRow_HIG117,U   * 5
         LDD     #%0001010000010101
-        STD     BytesPerRow_HIG116*2,U   * 6
+        STD     BytesPerRow_HIG117*2,U   * 6
         RTS
 ; **************************************
 ; O
@@ -1000,16 +1000,16 @@ Character_N:
 Character_O:
         LDD     #%0000000000000000
         STD     ,U     * 0
-        LEAU    BytesPerRow_HIG116*4,U
+        LEAU    BytesPerRow_HIG117*4,U
         LDD     #%0000010101010100
-        STD     -BytesPerRow_HIG116*3,U  * 1
-        STD     BytesPerRow_HIG116*3,U   * 7
+        STD     -BytesPerRow_HIG117*3,U  * 1
+        STD     BytesPerRow_HIG117*3,U   * 7
         LDD     #%0001010000000101
-        STD     -BytesPerRow_HIG116*2,U  * 2
-        STD     -BytesPerRow_HIG116,U  * 3
+        STD     -BytesPerRow_HIG117*2,U  * 2
+        STD     -BytesPerRow_HIG117,U  * 3
         STD     ,U     * 4
-        STD     BytesPerRow_HIG116,U   * 5
-        STD     BytesPerRow_HIG116*2,U   * 6
+        STD     BytesPerRow_HIG117,U   * 5
+        STD     BytesPerRow_HIG117*2,U   * 6
         RTS
 ; **************************************
 ; P
@@ -1024,17 +1024,17 @@ Character_O:
 Character_P:
         LDD     #%0000000000000000
         STD     ,U     * 0
-        LEAU    BytesPerRow_HIG116*4,U
+        LEAU    BytesPerRow_HIG117*4,U
         LDD     #%0001010101010100
-        STD     -BytesPerRow_HIG116*3,U  * 1
-        STD     BytesPerRow_HIG116,U   * 5
+        STD     -BytesPerRow_HIG117*3,U  * 1
+        STD     BytesPerRow_HIG117,U   * 5
         LDD     #%0001010000000101
-        STD     -BytesPerRow_HIG116*2,U  * 2
-        STD     -BytesPerRow_HIG116,U  * 3
+        STD     -BytesPerRow_HIG117*2,U  * 2
+        STD     -BytesPerRow_HIG117,U  * 3
         STD     ,U     * 4
         LDD     #%0001010000000000
-        STD     BytesPerRow_HIG116*2,U   * 6
-        STD     BytesPerRow_HIG116*3,U   * 7
+        STD     BytesPerRow_HIG117*2,U   * 6
+        STD     BytesPerRow_HIG117*3,U   * 7
         RTS
 ; **************************************
 ; Q
@@ -1049,19 +1049,19 @@ Character_P:
 Character_Q:
         LDD     #%0000000000000000
         STD     ,U     * 0
-        LEAU    BytesPerRow_HIG116*4,U
+        LEAU    BytesPerRow_HIG117*4,U
         LDD     #%0000010101010100
-        STD     -BytesPerRow_HIG116*3,U  * 1
+        STD     -BytesPerRow_HIG117*3,U  * 1
         LDD     #%0001010000000101
-        STD     -BytesPerRow_HIG116*2,U  * 2
-        STD     -BytesPerRow_HIG116,U  * 3
+        STD     -BytesPerRow_HIG117*2,U  * 2
+        STD     -BytesPerRow_HIG117,U  * 3
         STD     ,U     * 4
         LDD     #%0001010001010101
-        STD     BytesPerRow_HIG116,U   * 5
+        STD     BytesPerRow_HIG117,U   * 5
         LDD     #%0001010000010100
-        STD     BytesPerRow_HIG116*2,U   * 6
+        STD     BytesPerRow_HIG117*2,U   * 6
         LDD     #%0000010101010001
-        STD     BytesPerRow_HIG116*3,U   * 7
+        STD     BytesPerRow_HIG117*3,U   * 7
         RTS
 ; **************************************
 ; R
@@ -1076,19 +1076,19 @@ Character_Q:
 Character_R:
         LDD     #%0000000000000000
         STD     ,U     * 0
-        LEAU    BytesPerRow_HIG116*4,U
+        LEAU    BytesPerRow_HIG117*4,U
         LDD     #%0001010101010100
-        STD     -BytesPerRow_HIG116*3,U  * 1
+        STD     -BytesPerRow_HIG117*3,U  * 1
         LDD     #%0001010000000101
-        STD     -BytesPerRow_HIG116*2,U  * 2
-        STD     -BytesPerRow_HIG116,U  * 3
+        STD     -BytesPerRow_HIG117*2,U  * 2
+        STD     -BytesPerRow_HIG117,U  * 3
         LDD     #%0001010000010101
         STD     ,U     * 4
-        STD     BytesPerRow_HIG116*3,U   * 7
+        STD     BytesPerRow_HIG117*3,U   * 7
         LDD     #%0001010101010000
-        STD     BytesPerRow_HIG116,U   * 5
+        STD     BytesPerRow_HIG117,U   * 5
         LDD     #%0001010001010100
-        STD     BytesPerRow_HIG116*2,U   * 6
+        STD     BytesPerRow_HIG117*2,U   * 6
         RTS
 ; **************************************
 ; S
@@ -1103,20 +1103,20 @@ Character_R:
 Character_S:
         LDD     #%0000000000000000
         STD     ,U     * 0
-        LEAU    BytesPerRow_HIG116*4,U
+        LEAU    BytesPerRow_HIG117*4,U
         LDD     #%0000010101010000
-        STD     -BytesPerRow_HIG116*3,U  * 1
+        STD     -BytesPerRow_HIG117*3,U  * 1
         LDD     #%0001010000010100
-        STD     -BytesPerRow_HIG116*2,U  * 2
+        STD     -BytesPerRow_HIG117*2,U  * 2
         LDD     #%0001010000000000
-        STD     -BytesPerRow_HIG116,U  * 3
+        STD     -BytesPerRow_HIG117,U  * 3
         LDD     #%0000010101010100
         STD     ,U     * 4
-        STD     BytesPerRow_HIG116*3,U   * 7
+        STD     BytesPerRow_HIG117*3,U   * 7
         LDD     #%0000000000000101
-        STD     BytesPerRow_HIG116,U   * 5
+        STD     BytesPerRow_HIG117,U   * 5
         LDD     #%0001010000000101
-        STD     BytesPerRow_HIG116*2,U   * 6
+        STD     BytesPerRow_HIG117*2,U   * 6
         RTS
 ; **************************************
 ; T
@@ -1131,16 +1131,16 @@ Character_S:
 Character_T:
         LDD     #%0000000000000000
         STD     ,U     * 0
-        LEAU    BytesPerRow_HIG116*4,U
+        LEAU    BytesPerRow_HIG117*4,U
         LDD     #%0000010101010101
-        STD     -BytesPerRow_HIG116*3,U  * 1
+        STD     -BytesPerRow_HIG117*3,U  * 1
         LDD     #%0000000001010000
-        STD     -BytesPerRow_HIG116*2,U  * 2
-        STD     -BytesPerRow_HIG116,U  * 3
+        STD     -BytesPerRow_HIG117*2,U  * 2
+        STD     -BytesPerRow_HIG117,U  * 3
         STD     ,U     * 4
-        STD     BytesPerRow_HIG116,U   * 5
-        STD     BytesPerRow_HIG116*2,U   * 6
-        STD     BytesPerRow_HIG116*3,U   * 7
+        STD     BytesPerRow_HIG117,U   * 5
+        STD     BytesPerRow_HIG117*2,U   * 6
+        STD     BytesPerRow_HIG117*3,U   * 7
         RTS
 ; **************************************
 ; U
@@ -1155,16 +1155,16 @@ Character_T:
 Character_U:
         LDD     #%0000000000000000
         STD     ,U     * 0
-        LEAU    BytesPerRow_HIG116*4,U
+        LEAU    BytesPerRow_HIG117*4,U
         LDD     #%0001010000000101
-        STD     -BytesPerRow_HIG116*3,U  * 1
-        STD     -BytesPerRow_HIG116*2,U  * 2
-        STD     -BytesPerRow_HIG116,U  * 3
+        STD     -BytesPerRow_HIG117*3,U  * 1
+        STD     -BytesPerRow_HIG117*2,U  * 2
+        STD     -BytesPerRow_HIG117,U  * 3
         STD     ,U     * 4
-        STD     BytesPerRow_HIG116,U   * 5
-        STD     BytesPerRow_HIG116*2,U   * 6
+        STD     BytesPerRow_HIG117,U   * 5
+        STD     BytesPerRow_HIG117*2,U   * 6
         LDD     #%0000010101010100
-        STD     BytesPerRow_HIG116*3,U   * 7
+        STD     BytesPerRow_HIG117*3,U   * 7
         RTS
 ; **************************************
 ; V
@@ -1179,19 +1179,19 @@ Character_U:
 Character_V:
         LDD     #%0000000000000000
         STD     ,U     * 0
-        LEAU    BytesPerRow_HIG116*4,U
+        LEAU    BytesPerRow_HIG117*4,U
         LDD     #%0001010000000101
-        STD     -BytesPerRow_HIG116*3,U  * 1
-        STD     -BytesPerRow_HIG116*2,U  * 2
-        STD     -BytesPerRow_HIG116,U  * 3
+        STD     -BytesPerRow_HIG117*3,U  * 1
+        STD     -BytesPerRow_HIG117*2,U  * 2
+        STD     -BytesPerRow_HIG117,U  * 3
         LDD     #%0001010100010101
         STD     ,U     * 4
         LDD     #%0000010101010100
-        STD     BytesPerRow_HIG116,U   * 5
+        STD     BytesPerRow_HIG117,U   * 5
         LDD     #%0000000101010000
-        STD     BytesPerRow_HIG116*2,U   * 6
+        STD     BytesPerRow_HIG117*2,U   * 6
         LDD     #%0000000001000000
-        STD     BytesPerRow_HIG116*3,U   * 7
+        STD     BytesPerRow_HIG117*3,U   * 7
         RTS
 ; **************************************
 ; W
@@ -1206,18 +1206,18 @@ Character_V:
 Character_W:
         LDD     #%0000000000000000
         STD     ,U     * 0
-        LEAU    BytesPerRow_HIG116*4,U
+        LEAU    BytesPerRow_HIG117*4,U
         LDD     #%0001010000000101
-        STD     -BytesPerRow_HIG116*3,U  * 1
-        STD     -BytesPerRow_HIG116*2,U  * 2
-        STD     -BytesPerRow_HIG116,U  * 3
+        STD     -BytesPerRow_HIG117*3,U  * 1
+        STD     -BytesPerRow_HIG117*2,U  * 2
+        STD     -BytesPerRow_HIG117,U  * 3
         LDD     #%0001010101010101
         STD     ,U     * 4
-        STD     BytesPerRow_HIG116,U   * 5
+        STD     BytesPerRow_HIG117,U   * 5
         LDD     #%0001010100010101
-        STD     BytesPerRow_HIG116*2,U   * 6
+        STD     BytesPerRow_HIG117*2,U   * 6
         LDD     #%0001010000000101
-        STD     BytesPerRow_HIG116*3,U   * 7
+        STD     BytesPerRow_HIG117*3,U   * 7
         RTS
 ; **************************************
 ; X
@@ -1232,16 +1232,16 @@ Character_W:
 Character_X:
         LDD     #%0000000000000000
         STD     ,U     * 0
-        LEAU    BytesPerRow_HIG116*4,U
+        LEAU    BytesPerRow_HIG117*4,U
         LDD     #%0001010000000101
-        STD     -BytesPerRow_HIG116*3,U  * 1
-        STD     BytesPerRow_HIG116*3,U   * 7
+        STD     -BytesPerRow_HIG117*3,U  * 1
+        STD     BytesPerRow_HIG117*3,U   * 7
         LDD     #%0001010100010101
-        STD     -BytesPerRow_HIG116*2,U  * 2
-        STD     BytesPerRow_HIG116*2,U   * 6
+        STD     -BytesPerRow_HIG117*2,U  * 2
+        STD     BytesPerRow_HIG117*2,U   * 6
         LDD     #%0000010101010100
-        STD     -BytesPerRow_HIG116,U  * 3
-        STD     BytesPerRow_HIG116,U   * 5
+        STD     -BytesPerRow_HIG117,U  * 3
+        STD     BytesPerRow_HIG117,U   * 5
         LDD     #%0000000101010000
         STD     ,U     * 4
         RTS
@@ -1258,17 +1258,17 @@ Character_X:
 Character_Y:
         LDD     #%0000000000000000
         STD     ,U     * 0
-        LEAU    BytesPerRow_HIG116*4,U
+        LEAU    BytesPerRow_HIG117*4,U
         LDD     #%0000010100000101
-        STD     -BytesPerRow_HIG116*3,U  * 1
-        STD     -BytesPerRow_HIG116*2,U  * 2
-        STD     -BytesPerRow_HIG116,U  * 3
+        STD     -BytesPerRow_HIG117*3,U  * 1
+        STD     -BytesPerRow_HIG117*2,U  * 2
+        STD     -BytesPerRow_HIG117,U  * 3
         LDD     #%0000000101010100
         STD     ,U     * 4
         LDD     #%0000000001010000
-        STD     BytesPerRow_HIG116,U   * 5
-        STD     BytesPerRow_HIG116*2,U   * 6
-        STD     BytesPerRow_HIG116*3,U   * 7
+        STD     BytesPerRow_HIG117,U   * 5
+        STD     BytesPerRow_HIG117*2,U   * 6
+        STD     BytesPerRow_HIG117*3,U   * 7
         RTS
 ; **************************************
 ; Z
@@ -1283,18 +1283,18 @@ Character_Y:
 Character_Z:
         LDD     #%0000000000000000
         STD     ,U     * 0
-        LEAU    BytesPerRow_HIG116*4,U
+        LEAU    BytesPerRow_HIG117*4,U
         LDD     #%0001010101010101
-        STD     -BytesPerRow_HIG116*3,U  * 1
-        STD     BytesPerRow_HIG116*3,U   * 7
+        STD     -BytesPerRow_HIG117*3,U  * 1
+        STD     BytesPerRow_HIG117*3,U   * 7
         LDD     #%0000000000010101
-        STD     -BytesPerRow_HIG116*2,U  * 2
+        STD     -BytesPerRow_HIG117*2,U  * 2
         LDD     #%0000000001010100
-        STD     -BytesPerRow_HIG116,U  * 3
+        STD     -BytesPerRow_HIG117,U  * 3
         LDD     #%0000000101010000
         STD     ,U     * 4
         LDD     #%0000010101000000
-        STD     BytesPerRow_HIG116,U   * 5
+        STD     BytesPerRow_HIG117,U   * 5
         LDD     #%0001010100000000
-        STD     BytesPerRow_HIG116*2,U   * 6
+        STD     BytesPerRow_HIG117*2,U   * 6
         RTS

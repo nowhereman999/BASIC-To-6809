@@ -2,6 +2,18 @@ DEBDEL       EQU    $045E          CURSOR BLINK DELAY
 DEBVAL       EQU    DEBDEL         KEYBOARD DEBOUNCE TIME
 KEYBUF       EQU    $0152          KEYBOARD MEMORY BUFFER
 
+; If a key is pressed the string is on the stack, otherwise a zero is on the stack
+StrCommandInkey:
+        PULS    D
+        STD     @Return+1
+        BSR     KEYIN     ; This routine Polls the keyboard to see if a key is pressed, returns with value in A, A=0 if no key is pressed
+        STA     ,-S       ; Save A on the stack
+        BEQ     @Return   ; if A is zero, then that is the size of the string, return
+        LDB     #1        ; We have a keypress so set the string length to 1
+        STB     ,-S       ; Save 1 for the size on the stack
+@Return:
+        JMP     >$FFFF
+
 * INKEY$
 *
 * THIS ROUTINE GETS A KEYSTROKE FROM THE KEYBOARD

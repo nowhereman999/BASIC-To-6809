@@ -1,3 +1,4 @@
+
 ; To setup the graphics mode and screen location use the following:
 ;
 ; Example:  LDA   #Semi_graphic_4       ; A = the graphics mode requested (see list below)
@@ -214,14 +215,15 @@ PageSize	RMB  1		* MSB of the Size of the screen page
 GModePage       FCB  0		* Graphics mode page # (zero based, although BASIC uses 1 based)
 FORCOL		FCB  1		* Foreground color (default to 1)
 BAKCOL		FCB  0		* Background color
-BEGGRP		RMB  2		* Start address of the screen page
 ;ENDGRP		RMB  2		* End address of the screen page
 CSSVAL		RMB  1		* CSS value
 LineColour      FCB  3          * Colour value for the Line command
 
+BEGGRP		RMB  2		* Start address of the screen page
 ; Variables
 x0              RMB 2
 y0              RMB 2
+; Variables
 decision        RMB 2
 x_Center        RMB 2
 y_Center        RMB 2

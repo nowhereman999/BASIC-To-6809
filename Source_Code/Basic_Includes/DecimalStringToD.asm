@@ -14,21 +14,21 @@ DecToD:
         LDU     #DecNumber      ; Point U to the decimal number buffer
 !       INCB
         CMPB    #7              ; Check the number of decimal places
-        BHI     @NotANumber     ; If more than 7 then we have a problem
+        LBHI     @NotANumber    ; If more than 7 then we have a problem
         LDA     ,U+             ; Get a character
         PSHS    A
         BNE     <               ; Copy string backwards onto the stack
         DECB                    ; Fix the counter
-        BEQ     @DisZero        ; Null string then number = 0
+        LBEQ     @DisZero       ; Null string then number = 0
 !       LEAS    1,S             ; Fix the stack pointer
         STB     DecCounter      ; Save the number of decimal places
         LDB     ,S+             ; Get the Ones value
         CMPB    #'-             ; Is it a minus?
-        BEQ     @DisZero        ; If it's just a - then number = 0
+        LBEQ     @DisZero       ; If it's just a - then number = 0
         CMPB    #'0           
-        BLO     @NotANumber      
+        LBLO     @NotANumber      
         CMPB    #'9           
-        BHI     @NotANumber      
+        LBHI     @NotANumber      
         SUBB    #'0             ; Make B a value from 0 to 9
         LDX     #$0000          ; Starting value
         ABX                     ; Add B to X
@@ -38,7 +38,7 @@ DecToD:
         CMPB    #'-             ; Is it a minus?
         BEQ     @DisNegative  
         CMPB    #'0           
-        BLO     @NotANumber      
+        LBLO     @NotANumber      
         CMPB    #'9           
         BHI     @NotANumber      
         SUBB    #'0             ; Make B a value from 0 to 9

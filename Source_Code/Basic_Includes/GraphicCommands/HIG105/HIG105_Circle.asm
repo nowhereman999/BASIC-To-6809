@@ -89,7 +89,7 @@ PlotPoints_HIG105:
         ADDB    x_Center+1
         LDA     y0+1
         ADDA    y_Center+1
-        BSR     DoSetYXCheck_HIG105        ; Plot the pixel
+        JSR     DoSetYXCheck_HIG105        ; Plot the pixel
 ; Plot (-x + x_Center, y + y_Center)
         LDB     x0+1
         LDA     #CircleScale_HIG105 ; seems to scale better

@@ -28,7 +28,7 @@ PAINT_FG3C:
 ; WHILE StackPointer > 0
 PaintWhileLoop1_FG3C:           ; Start of WHILE/WEND loop
         CMPS    PaintStack      ; Compare the stack pointer with the stack address
-        BEQ     PaintWend_01_FG3C    ; If Equal, then jump to the end of the WHILE/WEND loop
+        LBEQ    PaintWend_01_FG3C    ; If Equal, then jump to the end of the WHILE/WEND loop
 
         PULS    X,U             ; Restore the X co-ordinates & the Y co-ordinate starting point on screen
         STU     PaintY          ; Save Numeric variable
@@ -73,13 +73,13 @@ PaintWend_02_FG3C                   ; End of WHILE/WEND loop
 PaintWhileLoop3_FG3C                ; Start of WHILE/WEND loop
         LDX     currentX
         CMPX    #ScreenWidth_FG3C   ; Check if X is less than ScreenWidth
-        BHS     PaintWend_03_FG3C   ; If the result is a false then goto the end of the WHILE/WEND loop
+        LBHS    PaintWend_03_FG3C   ; If the result is a false then goto the end of the WHILE/WEND loop
 
         LDA     PaintY+1
         LDB     currentX+1
         JSR     POINT_FG3C     ; Return with the colour value of the PPoint on screen in B
         CMPB    SourceColour       ; Compare the old color with the new color
-        BNE     PaintWend_03_FG3C  ; If they are not equal then goto the end of the WHILE/WEND loop
+        LBNE    PaintWend_03_FG3C  ; If they are not equal then goto the end of the WHILE/WEND loop
 
 ; SET(currentX , y , FillColour)
         LDA     PaintY+1

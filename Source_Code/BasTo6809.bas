@@ -1,8 +1,17 @@
-V$ = "4.43"
-'       - Add supported for the CoCoMP3
+V$ = "5.00"
+'       - Tons of changes internally
+'       - Fully supports all Variable Types, Variable default to Single (Fast floating point format), to maximize speed and size
+'         of your program you must assign variable types to their minimum size and accuracy needed.
+'       - Added WIDTH 40, WIDTH 64, WIDTH 80
+
+' V 4.43b
+'       - Fixed a bug in the cc1sl program
+
+' V 4.43
+'       - Added support for the CoCoMP3 hardware (many commands, read the manual for more info)
 
 ' V 4.42
-'       - Added AUDIO ON/OFF and MOTOR ON/OFF work from the IDE
+'       - Added support for AUDIO ON|OFF and MOTOR ON|OFF
 
 ' V 4.41
 '       - Added the DRAW command for all graphics modes including the semi-graphics modes
@@ -363,7 +372,7 @@ If count = 0 Then
     Print "See Manual.pdf file for more help"
     System
 End If
-nt = 0: newp = 0: endp = 0: BranchCheck = 0: StringArraySize = 255: KeepTempFiles = 0: AutoStart = 0
+nt = 0: newp = 0: endp = 0: StringArraySize = 16: KeepTempFiles = 0: AutoStart = 0
 Optimize = 2 ' Default to optimize level 2
 Font$ = "Arcade_B0_F1" ' Default font to use for graphics screen
 
@@ -374,7 +383,6 @@ For check = 1 To count
     If LCase$(Left$(N$, 7)) = "-dragon" Then Dragon = 1: GoTo CheckNextCMDOption
     If LCase$(Left$(N$, 2)) = "-s" Then StringArraySize = Val(Right$(N$, Len(N$) - 2)): GoTo CheckNextCMDOption
     If LCase$(Left$(N$, 2)) = "-o" Then Optimize = Val(Right$(N$, Len(N$) - 2)): GoTo CheckNextCMDOption
-    If LCase$(Left$(N$, 2)) = "-b" Then BranchCheck = Val(Right$(N$, Len(N$) - 2)): GoTo CheckNextCMDOption
     If Left$(N$, 2) = "-V" Then Verbose = Val(Right$(N$, Len(N$) - 2)): GoTo CheckNextCMDOption
     If LCase$(Left$(N$, 2)) = "-p" Then ProgramStart$ = Right$(N$, Len(N$) - 2): GoTo CheckNextCMDOption
     If LCase$(Left$(N$, 2)) = "-k" Then KeepTempFiles = 1: GoTo CheckNextCMDOption
@@ -435,7 +443,6 @@ If InStr(LCase$(I$), "compileoptions") > 0 Then
         If LCase$(Left$(N$, 6)) = "-ascii" Then BASICMode = 3
         If LCase$(Left$(N$, 2)) = "-s" Then StringArraySize = Val(Right$(N$, Len(N$) - 2))
         If LCase$(Left$(N$, 2)) = "-o" Then Optimize = Val(Right$(N$, Len(N$) - 2))
-        If LCase$(Left$(N$, 2)) = "-b" Then BranchCheck = Val(Right$(N$, Len(N$) - 2))
         If Left$(N$, 2) = "-V" Then Verbose = Val(Right$(N$, Len(N$) - 2))
         If LCase$(Left$(N$, 2)) = "-p" Then ProgramStart$ = Right$(N$, Len(N$) - 2)
         If LCase$(Left$(N$, 2)) = "-k" Then KeepTempFiles = 1
@@ -851,8 +858,6 @@ num = StringArraySize: GoSub NumAsString 'Convert number in Num to a string with
 s$ = " -s" + Num$ + " "
 num = Optimize: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
 o$ = " -o" + Num$ + " "
-num = BranchCheck: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-b$ = " -b" + Num$ + " "
 num = Verbose: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
 Verbose$ = " -v" + Num$ + " "
 p$ = " -p" + ProgramStart$ + " "

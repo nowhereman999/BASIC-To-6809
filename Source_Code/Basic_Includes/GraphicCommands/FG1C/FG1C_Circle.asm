@@ -79,7 +79,7 @@ PlotPoints_FG1C:
         ADDB    x_Center+1
         LDA     y0+1
         ADDA    y_Center+1
-        BSR     DoSetYXCheck_FG1C        ; Plot the pixel
+        JSR     DoSetYXCheck_FG1C        ; Plot the pixel
 ; Plot (-x + x_Center, y + y_Center)
         LDB     x0+1
         LDA     #CircleScale_FG1C ; seems to scale better

@@ -79,7 +79,7 @@ PlotPoints_HIG144:
         LDB     #CircleScale_HIG144
         MUL
         ADDA    y_Center+1
-        BSR     DoSetYXCheck_HIG144              ; Plot the pixel
+        JSR     DoSetYXCheck_HIG144              ; Plot the pixel
 ; Plot (-x + x_Center, y + y_Center)
         LDD     x_Center
         SUBD    x0
@@ -88,7 +88,7 @@ PlotPoints_HIG144:
         LDB     #CircleScale_HIG144
         MUL
         ADDA    y_Center+1
-        BSR     DoSetYXCheck_HIG144              ; Plot the pixel
+        JSR     DoSetYXCheck_HIG144              ; Plot the pixel
 ; Plot (x + x_Center, -y + y_Center)
         LDD     x0
         ADDD    x_Center
@@ -98,7 +98,7 @@ PlotPoints_HIG144:
         MUL
         NEGA
         ADDA    y_Center+1
-        BSR     DoSetYXCheck_HIG144              ; Plot the pixel
+        JSR     DoSetYXCheck_HIG144              ; Plot the pixel
 ; Plot (-x + x_Center, -y + y_Center)
         LDD     x_Center
         SUBD    x0
@@ -116,8 +116,8 @@ PlotPoints_HIG144:
         LDX     x0
         LDD     #CircleScale_HIG144     ; Scale factor
         PSHS    D,X
-        JSR     MUL16           ; D = D * X
-        LEAS    4,S             ; Fix the stack
+        JSR     MUL16           ; Do D * X, D has the High 16 bits of the product and X has the Low 16 bits of the product
+        PULS    D               ; get low 16 bit number in D and fix the stack
         ADDA    y_Center+1
         PULS    X               ; restore x value
         BSR     DoSetYXCheck_HIG144              ; Plot the pixel
@@ -128,8 +128,8 @@ PlotPoints_HIG144:
         LDX     x0
         LDD     #CircleScale_HIG144     ; Scale factor
         PSHS    D,X
-        JSR     MUL16           ; D = D * X
-        LEAS    4,S             ; Fix the stack
+        JSR     MUL16           ; Do D * X, D has the High 16 bits of the product and X has the Low 16 bits of the product
+        PULS    D               ; get low 16 bit number in D and fix the stack
         ADDA    y_Center+1
         PULS    X               ; restore x value
         JSR     DoSetYXCheck_HIG144      ; Plot the pixel
@@ -140,8 +140,8 @@ PlotPoints_HIG144:
         LDX     x0
         LDD     #CircleScale_HIG144     ; Scale factor
         PSHS    D,X
-        JSR     MUL16           ; D = D * X
-        LEAS    4,S             ; Fix the stack
+        JSR     MUL16           ; Do D * X, D has the High 16 bits of the product and X has the Low 16 bits of the product
+        PULS    D               ; get low 16 bit number in D and fix the stack
         NEGA
         ADDA    y_Center+1
         PULS    X               ; restore x value
@@ -153,8 +153,8 @@ PlotPoints_HIG144:
         LDX     x0
         LDD     #CircleScale_HIG144     ; Scale factor
         PSHS    D,X
-        JSR     MUL16           ; D = D * X
-        LEAS    4,S             ; Fix the stack
+        JSR     MUL16           ; Do D * X, D has the High 16 bits of the product and X has the Low 16 bits of the product
+        PULS    D               ; get low 16 bit number in D and fix the stack
         NEGA
         ADDA    y_Center+1
         PULS    X               ; restore x value

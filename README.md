@@ -12,6 +12,12 @@ https://github.com/nowhereman999/BASIC-To-6809/blob/main/Manual.pdf
 For more info check out the blog post here:
 https://wordpress.com/post/nowhereman999.wordpress.com/5054
 
+V 5.00
+- Tons of changes internally     
+- Fully supports all Variable Types, Variables default to Single (Fast floating point format), to maximize speed and size
+  of your program you must assign variable types to their minimum size and accuracy needed. 
+- Added CoCo 3 commands WIDTH 40, WIDTH 64, WIDTH 80
+
 V 4.43b
 - Fixed a bug in the cc1sl program
 

@@ -21,12 +21,12 @@ LINE_HIG157:
 
 ; Test for a horizontal line
         CMPB    startY+1        ; Compare the starting y coordinate with the ending y coordinate
-        BNE     LineNotHorizontal_HIG157  ; If they aren't the same then go draw a line normally
+        LBNE    LineNotHorizontal_HIG157  ; If they aren't the same then go draw a line normally
 ; Get the number of bytes between pixels
         LDX     endX            ; B = ending x coordinate
         CMPX    startX          ; Compare with starting x coordinate
         BHI     >               ; If positive then go draw a line normally
-        BEQ     LineDrawDot1_HIG157    ; If zero then go SET one single pixel
+        LBEQ    LineDrawDot1_HIG157    ; If zero then go SET one single pixel
         LDU     startX          ; Otherwise flip the startx and endx coordinates
         STU     endX            ;
         STX     startX          ;
@@ -36,7 +36,7 @@ ReadyToDoHorizontalLine_HIG157:
 !       LDD     endX
         SUBD    startX          ;
         CMPD    #8             
-        BLS     LineNotHorizontal_HIG157  ; If the size is <= 8 then go draw the line normally
+        LBLS    LineNotHorizontal_HIG157  ; If the size is <= 8 then go draw the line normally
         PSHS    D               ; Save the length of the line
 ; Draw a horizontal Line
         CLRA
@@ -55,8 +55,9 @@ ReadyToDoHorizontalLine_HIG157:
         LEAS    4,S             ; Fix the stack
 ; Turn pixels into bytes
         LSRA
-        RORB                    ; B=B/2
-        LSRB                    ; B=B/4, we now have the number of bytes to draw
+        RORB                    ; B=D/2
+        LSRA
+        RORB                    ; B=B/4, we now have the number of bytes to draw
         DECB
         PSHS    B               ; Save the # of bytes to draw for this horizontal line
         LDA     startY+1        ; A=Y value

@@ -81,7 +81,7 @@ PlotPoints_SG12:
         ADDB    x_Center+1
         LDA     y0+1
         ADDA    y_Center+1
-        BSR     DoSetYXCheck_SG12        ; Plot the pixel
+        JSR     DoSetYXCheck_SG12        ; Plot the pixel
 ; Plot (-x + x_Center, y + y_Center)
         LDB     x0+1
         LDA     #CircleScale_SG12 ; seems to scale better

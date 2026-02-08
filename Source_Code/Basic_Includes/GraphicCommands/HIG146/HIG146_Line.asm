@@ -32,7 +32,7 @@ LINE_HIG146:
 
 ; Test for a horizontal line
         CMPB    startY+1        ; Compare the starting y coordinate with the ending y coordinate
-        BNE     LineNotHorizontal_HIG146  ; If they aren't the same then go draw a line normally
+        LBNE    LineNotHorizontal_HIG146  ; If they aren't the same then go draw a line normally
 ; Get the number of bytes between pixels
         LDX     endX            ; B = ending x coordinate
         CMPX    startX          ; Compare with starting x coordinate

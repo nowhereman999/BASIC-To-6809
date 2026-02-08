@@ -31,27 +31,28 @@ EndPlayCommand:
 
         LDD     #BASIC_IRQ      ; Get Regular IRQ address
         STD     [IRQAddress]    ; Restore address of IRQ JMP location back to normal
-        BRA     AnalogMuxOff    ; DISABLE ANA MUX AND RETURN
+        JMP     AnalogMuxOff    ; DISABLE ANA MUX AND RETURN
 
 Play:
 * Check and disable any high speed options
+        PULS    Y               ; Get the return address
         LDA     >CoCoHardware           ; Get the CoCo Hardware info byte
         BPL     >                       ; If bit 7 is clear then skip forward it's a 6809
         FCB     $11,$3D,%00000000       ; otherwise, put the 6309 in emulation mode.  This is LDMD  #%00000000
 !       RORA                            ; Move bit 0 to the Carry bit
         BCC     >                       ; if the Carry bit is clear, then not a CoCo 3, skip ahead
         STA     >$FFD8                  ; Put CoCo 3 in Regular speed mode
-! 
-        STA     >$FFD6                  ; Put CoCo in Regular speed mode
-
-        LDX     #_StrVar_PF00+1 ; Get the start of the play command string
+!       STA     >$FFD6                  ; Put CoCo in Regular speed mode
+; S = the start of the play command string
+;        LDX     #_StrVar_PF00+1 ; Get the start of the play command string
         LDU     #_StrVar_IFRight+1 ; Set the start of the play command string
-        LDB     _StrVar_PF00    ; Get the string length in B
+        LDB     ,S+             ; Get the string length in B
         STB     _StrVar_IFRight ; Save the string length
-!       LDA     ,X+             ; Get the next character
+!       LDA     ,S+             ; Get the next character
         STA     ,U+             ; Save the byte
 @Skip:  DECB                    ; Decrement the string length
         BNE     <
+        PSHS    Y               ; Put the return address back on the stack
         CMPA    #';'            ; check if last value is a semi colon
         BEQ     >               ; Skip ahead if so
         LDA     #';'            ; A= ;
@@ -101,7 +102,7 @@ L9A5C   CMPA    #'O'            ; ADJUST OCTAVE?
         BSR     L9AC0           ; MODIFIER CHECK
         DECB                    ;  COMPENSATE FOR INCB ABOVE
         CMPB    #$04            ; MAXIMUM VALUE OF 4
-        BHI     L9ACD           ; FC ERROR
+        LBHI    L9ACD           ; FC ERROR
         STB     OCTAVE          ; SAVE NEW VALUE OF OCTAVE
         RTS
 ; VOLUME
@@ -113,7 +114,7 @@ L9A6D   CMPA    #'V'            ; ADJUST VOLUME?
         SUBB    #31             ; SUBTRACT OUT MID VALUE OFFSET
         BSR     L9AC0           ; MODIFIER CHECK
         CMPB    #31             ; MAXIMUM ALLOWED RANGE IS 31
-        BHI     L9ACD           ; FC ERROR
+        LBHI    L9ACD           ; FC ERROR
         ASLB                    ;
         ASLB                    ;  MOVE NEW VALUE BACK TO BITS 2-7
         PSHS    B               ; SAVE NEW VOLUME ON THE STACK
@@ -339,7 +340,7 @@ L9BAC   BSR     L9B98           ; GET A COMMAND CHARACTER
         BEQ     L9BF7           ; YES
 L9BBE   CMPA    #'='            ; CHECK FOR VARIABLE EQUATE - BRANCH IF SO; ACCB WILL BE
 ;        BEQ     L9C01           ; SET TO THE VALUE OF THE BASIC VARIABLE IN THE COMMAND
-        BEQ     PlayDecimalToD
+        LBEQ    PlayDecimalToD
 
 
 ; STRING WHICH MUST BE NUMERIC, LESS THAN 256

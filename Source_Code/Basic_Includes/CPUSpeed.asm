@@ -33,7 +33,7 @@ SetSpeedMax:
         BCC     >                       ; if the Carry bit is clear, then not a CoCo 3, skip ahead
 MaxCPUSpeed:
         LDB     #$5A                    ; Command for GIME-X & GIME-Z for triple speed mode
-        STB     >$FFD9                  ; Put CoCo 3 in doouble speed mode
+        STB     >$FFD9                  ; Put CoCo 3 in double speed mode
 SetSpeed2:
         STB     >$FFD9                  ; Try CoCo 3 in 2.89 speed mode
 !       RTS

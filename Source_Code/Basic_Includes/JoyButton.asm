@@ -1,5 +1,5 @@
 
-; Get the joystic kbutton values
+; Get the joystick button values
 ; Enter with B = Button # (0-3)
 ; Where:
 ; B = 0   Right Button 1 (or single-button joystick)
@@ -21,18 +21,18 @@ BUTTON:         TFR         B,A             ; SAVE BUTTON NUMBER IN ACCA
                 JMP         A,X             ; JUMP TO THE APPROPRIATE MASKING ROUTINE
 ; MASK OFF ALL BUT BUTTON 1, RIGHT JOYSTICK
 Button1R:       ANDB        #$01
-                BRA         <ButtonSet
+                BRA         ButtonSet
 ; MASK OFF ALL BUT BUTTON 1, LEFT JOYSTICK
                 ANDB        #$04
-                BRA         <ButtonSet
+                BRA         ButtonSet
 ; MASK OFF ALL BUT BUTTON 2, RIGHT JOYSTICK
                 ANDB        #$02
-                BRA         <ButtonSet
+                BRA         ButtonSet
 ; MASK OFF ALL BUT BUTTON 2, LEFT JOYSTICK
                 ANDB        #$08
-ButtonSet:      BNE         <NoButtons       ; BRANCH IF MASKED BUTTON NOT DOWN
+ButtonSet:      BNE         NoButtons       ; BRANCH IF MASKED BUTTON NOT DOWN
                 LDD         #1              ; IF BUTTON DOWN, RETURN A VALUE OF ONE
-                BRA         <ButtonDone
+                BRA         ButtonDone
 NoButtons       CLRA                        ;
                 CLRB                        ;  RETURN A ZERO IF BUTTON IS NOT DOWN
 ButtonDone      RTS

@@ -1,4 +1,4 @@
-SUB reginternal
+Sub reginternal
     reginternalsubfunc = 1
 
     'special argument codes:
@@ -3225,16 +3225,6 @@ SUB reginternal
     regid
 
     clearid
-    id.n = "Palette"
-    id.subfunc = 2
-    id.callname = "qbg_palette"
-    id.args = 2
-    id.arg = MKL$(LONGTYPE - ISPOINTER) + MKL$(LONGTYPE - ISPOINTER)
-    id.specialformat = "[?,?]"
-    id.hr_syntax = "PALETTE [attribute%, red% + (green% * 256) + (blue% * 65536)] or PALETTE [existingAttribute%, newAttribute%]"
-    regid
-
-    clearid
     id.n = "Width"
     id.subfunc = 2
     id.callname = "qbsub_width"
@@ -4256,186 +4246,6 @@ SUB reginternal
     regid
 
     clearid
-    id.n = "CmpEQ"
-    id.subfunc = 1
-    id.callname = "sub_coco"
-    id.args = 2
-    id.arg = MKL$(SINGLETYPE - ISPOINTER) + MKL$(SINGLETYPE - ISPOINTER)
-    id.specialformat = "?[,?]"
-    id.ret = DOUBLETYPE - ISPOINTER
-    id.hr_syntax = "CMPEQ(x, y)"
-    regid
-
-    clearid
-    id.n = "CmpGE"
-    id.subfunc = 1
-    id.callname = "sub_coco"
-    id.args = 2
-    id.arg = MKL$(SINGLETYPE - ISPOINTER) + MKL$(SINGLETYPE - ISPOINTER)
-    id.specialformat = "?[,?]"
-    id.ret = DOUBLETYPE - ISPOINTER
-    id.hr_syntax = "CMPGE(x, y)"
-    regid
-
-    clearid
-    id.n = "CmpGT"
-    id.subfunc = 1
-    id.callname = "sub_coco"
-    id.args = 2
-    id.arg = MKL$(SINGLETYPE - ISPOINTER) + MKL$(SINGLETYPE - ISPOINTER)
-    id.specialformat = "?[,?]"
-    id.ret = DOUBLETYPE - ISPOINTER
-    id.hr_syntax = "CMPGT(x, y)"
-    regid
-    
-    clearid
-    id.n = "CmpLE"
-    id.subfunc = 1
-    id.callname = "sub_coco"
-    id.args = 2
-    id.arg = MKL$(SINGLETYPE - ISPOINTER) + MKL$(SINGLETYPE - ISPOINTER)
-    id.specialformat = "?[,?]"
-    id.ret = DOUBLETYPE - ISPOINTER
-    id.hr_syntax = "CMPLE(x, y)"
-    regid
-    
-    clearid
-    id.n = "CmpLT"
-    id.subfunc = 1
-    id.callname = "sub_coco"
-    id.args = 2
-    id.arg = MKL$(SINGLETYPE - ISPOINTER) + MKL$(SINGLETYPE - ISPOINTER)
-    id.specialformat = "?[,?]"
-    id.ret = DOUBLETYPE - ISPOINTER
-    id.hr_syntax = "CMPLT(x, y)"
-    regid
-    
-    clearid
-    id.n = "CmpNE"
-    id.subfunc = 1
-    id.callname = "sub_coco"
-    id.args = 2
-    id.arg = MKL$(SINGLETYPE - ISPOINTER) + MKL$(SINGLETYPE - ISPOINTER)
-    id.specialformat = "?[,?]"
-    id.ret = DOUBLETYPE - ISPOINTER
-    id.hr_syntax = "CMPNE(x, y)"
-    regid
-
-    clearid
-    id.n = "FloatADD"
-    id.subfunc = 1
-    id.callname = "sub_coco"
-    id.args = 2
-    id.arg = MKL$(SINGLETYPE - ISPOINTER) + MKL$(SINGLETYPE - ISPOINTER)
-    id.specialformat = "?[,?]"
-    id.ret = DOUBLETYPE - ISPOINTER
-    id.hr_syntax = "FLOATADD(x, y)"
-    regid
-
-    clearid
-    id.n = "FloatATAN"
-    id.subfunc = 1
-    id.callname = "sub_coco"
-    id.args = 1
-    id.arg = MKL$(LONGTYPE - ISPOINTER)
-    id.ret = LONGTYPE - ISPOINTER
-    id.hr_syntax = "FLOATATAN(segment_offset)"
-    regid
-
-    clearid
-    id.n = "FloatCOS"
-    id.subfunc = 1
-    id.callname = "sub_coco"
-    id.args = 1
-    id.arg = MKL$(LONGTYPE - ISPOINTER)
-    id.ret = LONGTYPE - ISPOINTER
-    id.hr_syntax = "FLOATCOS(segment_offset)"
-    regid
-
-    clearid
-    id.n = "FloatDIV"
-    id.subfunc = 1
-    id.callname = "sub_coco"
-    id.args = 2
-    id.arg = MKL$(SINGLETYPE - ISPOINTER) + MKL$(SINGLETYPE - ISPOINTER)
-    id.specialformat = "?[,?]"
-    id.ret = DOUBLETYPE - ISPOINTER
-    id.hr_syntax = "FLOATDIV(x, y)"
-    regid
-    
-    clearid
-    id.n = "FloatEXP"
-    id.subfunc = 1
-    id.callname = "sub_coco"
-    id.args = 1
-    id.arg = MKL$(LONGTYPE - ISPOINTER)
-    id.ret = LONGTYPE - ISPOINTER
-    id.hr_syntax = "FLOATEXP(segment_offset)"
-    regid
-
-    clearid
-    id.n = "FloatLOG"
-    id.subfunc = 1
-    id.callname = "sub_coco"
-    id.args = 1
-    id.arg = MKL$(LONGTYPE - ISPOINTER)
-    id.ret = LONGTYPE - ISPOINTER
-    id.hr_syntax = "FLOATLOG(segment_offset)"
-    regid
-
-    clearid
-    id.n = "FloatMUL"
-    id.subfunc = 1
-    id.callname = "sub_coco"
-    id.args = 2
-    id.arg = MKL$(SINGLETYPE - ISPOINTER) + MKL$(SINGLETYPE - ISPOINTER)
-    id.specialformat = "?[,?]"
-    id.ret = DOUBLETYPE - ISPOINTER
-    id.hr_syntax = "FLOATMUL(x, y)"
-    regid
-
-    clearid
-    id.n = "FloatSIN"
-    id.subfunc = 1
-    id.callname = "sub_coco"
-    id.args = 1
-    id.arg = MKL$(LONGTYPE - ISPOINTER)
-    id.ret = LONGTYPE - ISPOINTER
-    id.hr_syntax = "FLOATSIN(segment_offset)"
-    regid
-    
-    clearid
-    id.n = "FloatSQR"
-    id.subfunc = 1
-    id.callname = "sub_coco"
-    id.args = 1
-    id.arg = MKL$(LONGTYPE - ISPOINTER)
-    id.ret = LONGTYPE - ISPOINTER
-    id.hr_syntax = "FLOATSQR(segment_offset)"
-    regid
-
-    clearid
-    id.n = "FloatSUB"
-    id.subfunc = 1
-    id.callname = "sub_coco"
-    id.args = 2
-    id.arg = MKL$(SINGLETYPE - ISPOINTER) + MKL$(SINGLETYPE - ISPOINTER)
-    id.specialformat = "?[,?]"
-    id.ret = DOUBLETYPE - ISPOINTER
-    id.hr_syntax = "FLOATSUB(x, y)"
-    regid
-
-    clearid
-    id.n = "FloatTAN"
-    id.subfunc = 1
-    id.callname = "sub_coco"
-    id.args = 1
-    id.arg = MKL$(LONGTYPE - ISPOINTER)
-    id.ret = LONGTYPE - ISPOINTER
-    id.hr_syntax = "FLOATTAN(segment_offset)"
-    regid
-
-    clearid
     id.n = "GCls"
     id.subfunc = 2
     id.callname = "sub_coco"
@@ -4443,16 +4253,6 @@ SUB reginternal
     id.arg = MKL$(LONGTYPE - ISPOINTER)
     id.specialformat = "[?]"
     id.hr_syntax = "GCLS [bgColor]"
-    regid
-
-    clearid
-    id.n = "CPUSpeed"
-    id.subfunc = 2
-    id.callname = "sub_coco"
-    id.args = 1
-    id.arg = MKL$(LONGTYPE - ISPOINTER)
-    id.specialformat = "?"
-    id.hr_syntax = "CPUSPEED [Speed Setting]"
     regid
 
     clearid
@@ -4527,28 +4327,6 @@ SUB reginternal
     regid
 
     clearid
-    id.n = "RndL"
-    id.subfunc = 1
-    id.callname = "sub_coco"
-    id.args = 1
-    id.arg = MKL$(FLOATTYPE - ISPOINTER)
-    id.ret = SINGLETYPE - ISPOINTER
-    id.specialformat = "[?]" 'checked!
-    id.hr_syntax = "RNDL[(behavior)]"
-    regid
-
-    clearid
-    id.n = "RndZ"
-    id.subfunc = 1
-    id.callname = "sub_coco"
-    id.args = 1
-    id.arg = MKL$(FLOATTYPE - ISPOINTER)
-    id.ret = SINGLETYPE - ISPOINTER
-    id.specialformat = "[?]" 'checked!
-    id.hr_syntax = "RNDZ[(behavior)]"
-    regid
-
-    clearid
     id.n = "Sample_Load"
     id.subfunc = 2
     id.callname = "sub_coco"
@@ -4570,11 +4348,11 @@ SUB reginternal
 
     clearid
     id.n = "SDC_Close"
-    id.subfunc = 1
+    id.subfunc = 2
     id.callname = "sub_coco"
     id.args = 1
     id.arg = MKL$(LONGTYPE - ISPOINTER)
-    id.ret = LONGTYPE - ISPOINTER
+    id.specialformat = "(?)"
     id.hr_syntax = "SDC_CLOSE(File # 0 or 1)"
     regid
 
@@ -4584,18 +4362,29 @@ SUB reginternal
     id.callname = "sub_coco"
     id.args = 1
     id.arg = MKL$(STRINGTYPE - ISPOINTER)
-    id.ret = FLOATTYPE - ISPOINTER
+    id.ret = LONGTYPE - ISPOINTER
     id.hr_syntax = "SDC_DELETE(fileName$)"
     regid
 
     clearid
     id.n = "SDC_DirPage"
-    id.subfunc = 2
+    id.subfunc = 1 ' 1 = function (returns a value), 2 = sub
     id.callname = "sub_coco"
-    id.args = 3
-    id.arg = MKL$(STRINGTYPE - ISPOINTER) + MKL$(STRINGTYPE - ISPOINTER) + MKL$(LONGTYPE - ISPOINTER)
-    id.specialformat = "?,?,?"
-    id.hr_syntax = "SDC_DIRPAGE String1$, String2$, results stored in this variable"
+    id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER
+    id.hr_syntax = "SDC_DirPage(File # 0 or 1)"
+    regid
+
+    clearid
+    id.n = "SDC_DirList"
+    id.musthave = "$"
+    id.subfunc = 1 ' 1 = function (returns a value), 2 = sub
+    id.callname = "sub_coco"
+    id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER)
+    id.ret = STRINGTYPE - ISPOINTER
+    id.hr_syntax = "SDC_DirList$(Dir Entry 0 to 15)"
     regid
 
     clearid
@@ -4604,7 +4393,7 @@ SUB reginternal
     id.subfunc = 1
     id.callname = "sub_coco"
     id.args = 1
-    id.arg = MKL$(-1)
+    id.arg = MKL$(LONGTYPE - ISPOINTER)
     id.ret = STRINGTYPE - ISPOINTER
     id.hr_syntax = "SDC_FILEINFO$(file number 0 or 1)"
     regid
@@ -4667,7 +4456,7 @@ SUB reginternal
     id.args = 3
     id.arg = MKL$(STRINGTYPE - ISPOINTER) + MKL$(STRINGTYPE - ISPOINTER) + MKL$(LONGTYPE - ISPOINTER)
     id.specialformat = "?,?,?"
-    id.hr_syntax = "SDC_OPEN fileName$, R or W in quotes, File # 0 or 1"
+    id.hr_syntax = "SDC_OPEN fileName$, "+CHR$(34)+"R"+CHR$(34)+" or "+CHR$(34)+"W"+CHR$(34)+", File # 0 or 1"
     regid
 
     clearid
@@ -4751,13 +4540,23 @@ SUB reginternal
     regid
 
     clearid
-    id.n = "SDC_SetPos"
+    id.n = "SDC_SetPos0"
     id.subfunc = 2
     id.callname = "sub_coco"
-    id.args = 5
-    id.arg = MKL$(LONGTYPE - ISPOINTER) + MKL$(LONGTYPE - ISPOINTER) + MKL$(LONGTYPE - ISPOINTER) + MKL$(LONGTYPE - ISPOINTER) + MKL$(LONGTYPE - ISPOINTER)
-    id.specialformat = "(?,?,?,?,?)"
-    id.hr_syntax = "SDC_SETPOS (#,a,b,c,d)"
+    id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER)
+    id.specialformat = "(?)"
+    id.hr_syntax = "SDC_SETPOS0(x)"
+    regid
+
+    clearid
+    id.n = "SDC_SetPos1"
+    id.subfunc = 2
+    id.callname = "sub_coco"
+    id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER)
+    id.specialformat = "(?)"
+    id.hr_syntax = "SDC_SETPOS1(x)"
     regid
 
     clearid
@@ -4791,16 +4590,6 @@ SUB reginternal
     regid
 
     clearid
-    id.n = "StrToFloat"
-    id.subfunc = 1
-    id.callname = "sub_coco"
-    id.args = 1
-    id.arg = MKL$(STRINGTYPE - ISPOINTER)
-    id.ret = FLOATTYPE - ISPOINTER
-    id.hr_syntax = "STRTOFLOAT(String$)"
-    regid
-
-    clearid
     id.n = "View"
     id.subfunc = 2
     id.callname = "sub_coco"
@@ -4831,22 +4620,32 @@ SUB reginternal
     regid
 
     clearid
-    id.n = "WPoke"
+    id.n = "LPoke"
     id.subfunc = 2
     id.callname = "sub_coco"
     id.args = 2
     id.arg = MKL$(LONGTYPE - ISPOINTER) + MKL$(LONGTYPE - ISPOINTER)
-    id.hr_syntax = "WPOKE segment_offset, offset_value"
+    id.hr_syntax = "WPOKE Big Memory Location, value"
     regid
 
     clearid
-    id.n = "WPeek"
+    id.n = "LPeek"
     id.subfunc = 1
     id.callname = "sub_coco"
     id.args = 1
     id.arg = MKL$(LONGTYPE - ISPOINTER)
     id.ret = LONGTYPE - ISPOINTER
-    id.hr_syntax = "WPEEK(segment_offset)"
+    id.hr_syntax = "WPEEK(Big Memory location)"
+    regid
+
+    clearid
+    id.n = "CoCoHardware"
+    id.subfunc = 1
+    id.callname = "sub_coco"
+    id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER
+    id.hr_syntax = "COCOHARDWARE(0)"
     regid
 
     clearid
@@ -5242,15 +5041,66 @@ SUB reginternal
     regid
 
     clearid
-    id.n = "Exec"
+    id.n = "CPUSpeed"
     id.subfunc = 2
     id.callname = "sub_coco"
     id.args = 1
     id.arg = MKL$(LONGTYPE - ISPOINTER)
-    id.hr_syntax = "EXEC segment_offset"
+    id.specialformat = "[?]"
+    id.hr_syntax = "CPUSPEED [Speed Setting]"
     regid
 
-    reginternalsubfunc = 0
+    clearid
+    id.n = "Exec"
+    id.subfunc = 2 ' 1 = function, 2 = sub
+    id.callname = "sub_coco"
+    id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER)
+    id.specialformat = "[?]"
+    id.hr_syntax = "EXEC [Mem Address]"
+    regid
+
+    clearid
+    id.n = "Attr"
+    id.subfunc = 2
+    id.callname = "sub_coco"
+    id.args = 2
+    id.arg = MKL$(FLOATTYPE - ISPOINTER) + MKL$(FLOATTYPE - ISPOINTER) 
+    id.specialformat = "?,?[,{U}[,{B}]][,{B}[,{U}]]"
+    id.hr_syntax = "ATTR Foreground, Background [,{U|B}[,{U|B}]]"
+    regid
+
+    clearid
+    id.n = "CMP"
+    id.subfunc = 2 ' 1 = function, 2 = sub
+    id.callname = "sub_coco"
+    id.args = 0
+    id.arg = MKL$(LONGTYPE - ISPOINTER)
+    id.hr_syntax = "CMP"
+    regid
+
+    clearid
+    id.n = "RGB"
+    id.subfunc = 2 ' 1 = function, 2 = sub
+    id.callname = "sub_coco"
+    id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER)
+    id.specialformat = "[?]"
+    id.hr_syntax = "RGB"
+    regid
+
+    clearid
+    id.n = "Palette"
+    id.subfunc = 2
+    id.callname = "sub_coco"
+    id.args = 2
+    id.arg = MKL$(LONGTYPE - ISPOINTER) + MKL$(LONGTYPE - ISPOINTER)
+    id.specialformat = "[?,?]"
+    id.hr_syntax = "PALETTE Slot,Value"
+    regid
+
+reginternalsubfunc = 0
 
 END SUB
+
 

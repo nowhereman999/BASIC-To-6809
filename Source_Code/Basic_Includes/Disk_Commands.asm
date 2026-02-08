@@ -243,6 +243,15 @@ DFLBUF  EQU ATTCTR+1        ; INITIALIZED TO SECLEN BY DISKBAS
 ;
 ; Format _StrVar_PF00 to proper disk filename in DNAMBF (Disk name buffer)
 FixFileName:
+        PULS    Y       ; Get the return address off the stack
+        LDX     #_StrVar_PF00
+        LDB     ,S+
+        STB     ,X+
+!       LDA     ,S+
+        STA     ,X+
+        DECB
+        BNE     <
+        PSHS    Y       ; Save Return address on the stack
         LDX     #_StrVar_PF00+1
         LDU     #DNAMBF
         LDB     #8
@@ -499,7 +508,7 @@ DiskReadByteA:
 GranuleEnd:
         CMPB    #$FF            ; Have we reached end of a granule? (Value will be self modded to value of last sector)
         BNE     GetSector       ; Skip ahead if not
-        BSR     GetNextGranule  ; If so get the next granule and load the buffer
+        JSR     GetNextGranule  ; If so get the next granule and load the buffer
         LDD     DCTRK           ; Get the current track and sector
 GetSector:
         LDX     #DBUF0          ; Point to the start of the buffer

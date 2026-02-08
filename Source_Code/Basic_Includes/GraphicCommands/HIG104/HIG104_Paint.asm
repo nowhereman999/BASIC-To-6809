@@ -44,7 +44,7 @@ PAINT_HIG104:
 ; WHILE StackPointer > 0
 PaintWhileLoop1_HIG104:           ; Start of WHILE/WEND loop
         CMPS    PaintStack      ; Compare the stack pointer with the stack address
-        BEQ     PaintWend_01_HIG104    ; If Equal, then jump to the end of the WHILE/WEND loop
+        LBEQ    PaintWend_01_HIG104    ; If Equal, then jump to the end of the WHILE/WEND loop
 
         PULS    X,U             ; Restore the X co-ordinates & the Y co-ordinate starting point on screen
         STU     PaintY          ; Save Numeric variable
@@ -89,13 +89,13 @@ PaintWend_02_HIG104                   ; End of WHILE/WEND loop
 PaintWhileLoop3_HIG104                ; Start of WHILE/WEND loop
         LDX     currentX
         CMPX    #ScreenWidth_HIG104   ; Check if X is less than ScreenWidth
-        BHS     PaintWend_03_HIG104   ; If the result is a false then goto the end of the WHILE/WEND loop
+        LBHS    PaintWend_03_HIG104   ; If the result is a false then goto the end of the WHILE/WEND loop
 
         LDA     PaintY+1
         LDB     currentX+1
         JSR     POINT_HIG104     ; Return with the colour value of the PPoint on screen in B
         CMPB    SourceColour       ; Compare the old color with the new color
-        BNE     PaintWend_03_HIG104  ; If they are not equal then goto the end of the WHILE/WEND loop
+        LBNE    PaintWend_03_HIG104  ; If they are not equal then goto the end of the WHILE/WEND loop
 
 ; SET(currentX , y , FillColour)
         LDA     PaintY+1

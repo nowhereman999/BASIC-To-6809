@@ -7,14 +7,17 @@ Dim Array(270000) As _Unsigned _Byte
 Dim INArray(270000) As _Unsigned _Byte
 
 Dim LabelName$(100000)
+
 Dim NumericVariable$(100000)
 Dim NumericVariableCount As Integer
+Dim NumericVarType(65535) As _Byte ' Holds the type of every variable
 
 Dim FloatVariable$(100000)
 Dim FloatVariableCount As Integer
 
 Dim NumericArrayBits(100000) As Integer
 Dim NumericArrayVariables$(100000), NumericArrayDimensions(100000) As Integer, NumericArrayDimensionsVal$(100000)
+Dim NumericArrayType(65535) As _Byte ' Holds the type of every Numeric Array
 Dim StringArrayBits(100000) As Integer
 Dim StringArrayVariables$(100000), StringArrayDimensions(100000) As Integer, StringArrayDimensionsVal$(100000)
 Dim StringVariable$(100000)
@@ -53,6 +56,21 @@ Dim DefVar(1000) As Integer
 Dim GModeLib(200) As Integer
 Dim GModePageLib(200) As Integer
 
+Dim DimType As _Unsigned _Byte
+
+' Variable Type Constants
+Const NT_Bit = 1
+Const NT_UBit = 2
+Const NT_Byte = 3
+Const NT_UByte = 4
+Const NT_Int16 = 5
+Const NT_UInt16 = 6
+Const NT_Int32 = 7
+Const NT_UInt32 = 8
+Const NT_Int64 = 9
+Const NT_UInt64 = 10
+Const NT_Single = 11
+Const NT_Double = 12
 
 ' For Graphics Modes
 Dim GMode$(200), GModeName$(200), GModeMaxX$(200), GModeMaxY$(200), GModeStartAddress$(200), GModeScreenSize$(200), GModeColours$(200)
@@ -284,6 +302,8 @@ Check$ = "END": GoSub FindGenCommandNumber ' Gets the General Command number of 
 C_END = ii
 Check$ = "DIM": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
 C_DIM = ii
+Check$ = "AS": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+C_AS = ii
 Check$ = "DATA": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
 C_DATA = ii
 Check$ = "REM": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
@@ -310,6 +330,44 @@ Check$ = "SAMPLE_LOAD": GoSub FindGenCommandNumber ' Gets the General Command nu
 C_SAMPLE_LOAD = ii
 Check$ = "PLAYFIELD": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
 C_PLAYFIELD = ii
+
+
+Check$ = "_BIT": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+C_UBIT = ii
+Check$ = "_UNSIGNED": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+C_UNSIGNED = ii
+Check$ = "_BYTE": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+C_UBYTE = ii
+Check$ = "INTEGER": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+C_INTEGER = ii
+Check$ = "LONG": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+C_LONG = ii
+Check$ = "_INTEGER64": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+C_INTEGER64 = ii
+Check$ = "SINGLE": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+C_SINGLE = ii
+Check$ = "DOUBLE": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+C_DOUBLE = ii
+Check$ = "_FLOAT": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+C_UFLOAT = ii
+Check$ = "_SHORT": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+C_USHORT = ii
+Check$ = "_SHORT512": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+C_USHORT512 = ii
+Check$ = "_SHORT1024": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+C_USHORT1024 = ii
+Check$ = "_SHORT2048": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+C_USHORT2048 = ii
+Check$ = "_SHORT4096": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+C_USHORT4096 = ii
+Check$ = "_SHORT8192": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+C_USHORT8192 = ii
+Check$ = "_SHORT16384": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+C_USHORT16384 = ii
+Check$ = "_SHORT32768": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+C_USHORT32768 = ii
+
+WidthVal$ = "" ' default no width command
 ' Handle command line options
 FI = 0
 count = _CommandCount
@@ -317,14 +375,13 @@ If count = 0 Then
     Print "Compiler has no options given to it"
     System
 End If
-nt = 0: newp = 0: endp = 0: BranchCheck = 0: StringArraySize = 255: AutoStart = 0
+nt = 0: newp = 0: endp = 0: StringArraySize = 16: AutoStart = 0
 Optimize = 2 ' Default to optimize level 2
 For check = 1 To count
     N$ = Command$(check)
     If LCase$(Left$(N$, 2)) = "-c" Then BASICMode = Val(Right$(N$, Len(N$) - 2)): GoTo CheckNextCMDOption
     If LCase$(Left$(N$, 2)) = "-s" Then StringArraySize = Val(Right$(N$, Len(N$) - 2)): GoTo CheckNextCMDOption
     If LCase$(Left$(N$, 2)) = "-o" Then Optimize = Val(Right$(N$, Len(N$) - 2)): GoTo CheckNextCMDOption
-    If LCase$(Left$(N$, 2)) = "-b" Then BranchCheck = Val(Right$(N$, Len(N$) - 2)): GoTo CheckNextCMDOption
     If LCase$(Left$(N$, 2)) = "-v" Then Verbose = Val(Right$(N$, Len(N$) - 2)): GoTo CheckNextCMDOption
     If LCase$(Left$(N$, 2)) = "-p" Then ProgramStart$ = Right$(N$, Len(N$) - 2): GoTo CheckNextCMDOption
     If LCase$(Left$(N$, 2)) = "-f" Then Font$ = Right$(N$, Len(N$) - 2): GoTo CheckNextCMDOption
@@ -345,11 +402,17 @@ If Verbose > 0 Then Print "Length of Input file in bytes:"; length
 Open Fname$ For Binary As #1
 Get #1, , Array()
 Close #1
+' --- Normalize line endings: convert LF (0A) to CR (0D) ---
+For ii = 0 To length - 1
+    If Array(ii) = &H0A Then Array(ii) = &H0D
+Next ii
+
 Array(length) = &H0D: length = length + 1 ' add one last EOL
 
 ' Get the line Labels first so we can recognize them if there is a forward reference to a Label we haven't come across yet
 NumericVariableCount = 0 ' Numeric variable name count
 NumericVariable$(NumericVariableCount) = "Timer" ' Make the first variable the TIMER
+NumericVarType(NumericVariableCount) = NT_UInt16
 NumericVariableCount = NumericVariableCount + 1 ' Numeric variable name count
 
 x = 0
@@ -428,14 +491,14 @@ While x < length - 1 ' Loop until we've processed the entire BASIC program
                 'Could be a label or a general command with a colon after it
                 ' Check for a General command
                 Found = 0
-                For C = 1 To GeneralCommandsCount
-                    Temp$ = UCase$(GeneralCommands$(C))
+                For c = 1 To GeneralCommandsCount
+                    Temp$ = UCase$(GeneralCommands$(c))
                     Check$ = UCase$(Check$)
                     If Temp$ = Check$ Then
                         'Found a General Command
                         Found = 1: Exit For
                     End If
-                Next C
+                Next c
                 If Found = 0 Then
                     ' It is a label
                     LineCount = LineCount + 1
@@ -556,14 +619,14 @@ While x < length - 1 ' Loop until we've processed the entire BASIC program
                 'Could be a label or a general command with a colon after it
                 ' Check for a General command
                 Found = 0
-                For C = 1 To GeneralCommandsCount
-                    Temp$ = UCase$(GeneralCommands$(C))
+                For c = 1 To GeneralCommandsCount
+                    Temp$ = UCase$(GeneralCommands$(c))
                     Check$ = UCase$(Check$)
                     If Temp$ = Check$ Then
                         'Found a General Command
                         Found = 1
                     End If
-                Next C
+                Next c
                 If Found = 0 Then
                     ' It is a label
                     LineCountB = LineCountB + 1
@@ -678,16 +741,16 @@ End If
 ' Copy array to output file first byte of the array is 0
 ' Example: array(0),array(1),array(2),...,array(length)
 filesize = INx - 1
-C = 0
+c = 0
 For OP = 0 To filesize
-    Array(C) = INArray(OP): C = C + 1
+    Array(c) = INArray(OP): c = c + 1
 Next OP
 
 
 ReDim LastOutArray(filesize) As _Unsigned _Byte
-C = 0
+c = 0
 For OP = 0 To filesize
-    LastOutArray(C) = Array(OP): C = C + 1
+    LastOutArray(c) = Array(OP): c = c + 1
 Next OP
 If _FileExists("BasicTokenizedB4Pass2.bin") Then Kill "BasicTokenizedB4Pass2.bin"
 If Verbose > 0 Then Print "Writing to file "; "BasicTokenizedB4Pass2.bin"
@@ -697,17 +760,17 @@ Close #1
 
 ' Re-format IF statements that are only one line and don't end with an ENDIF just an EOL to end with and ENDIF (so all IF's can be handled the same)
 If Verbose > 0 Then Print "Doing Pass 2 - Changing single line IF commands to IF/THEN/ELSE/END IF, multiple lines"
-C = 0
+c = 0
 x = 0
 While x <= filesize
     V = Array(x): x = x + 1 ' get a byte
-    INArray(C) = V: C = C + 1 'write byte to ouput array
+    INArray(c) = V: c = c + 1 'write byte to ouput array
     If V = &HFF And Array(x) * 256 + Array(x + 1) = C_IF Then
         'It is an IF command
         V = Array(x): x = x + 1 ' get the command to do
-        INArray(C) = V: C = C + 1 ' write byte to ouput array
+        INArray(c) = V: c = c + 1 ' write byte to ouput array
         V = Array(x): x = x + 1 ' get the command to do
-        INArray(C) = V: C = C + 1 ' write byte to ouput array
+        INArray(c) = V: c = c + 1 ' write byte to ouput array
         'Make sure it wasn't part of an END IF
         'END IF = FF xx xx FF xx xx F5 0D
         If x > 6 Then
@@ -721,12 +784,12 @@ While x <= filesize
         ' Find the THEN command for this IF
         Do Until V = &HFF And (Array(x) * 256 + Array(x + 1) = C_THEN Or Array(x) * 256 + Array(x + 1) = C_GOTO) ' If we come across a GOTO instead of a THEN, make it a THEN
             V = Array(x): x = x + 1 ' get a byte
-            INArray(C) = V: C = C + 1 ' write byte to ouput array
+            INArray(c) = V: c = c + 1 ' write byte to ouput array
         Loop 'loop until we find a THEN or GOTO command
         ' Just in case we found a GOTO instead of a THEN, change it to a THEN
         ' Make it a THEN even if it was a GOTO
         Num = C_THEN: GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSB
-        INArray(C) = MSB: C = C + 1: INArray(C) = LSB: C = C + 1 ' write command to ouput array
+        INArray(c) = MSB: c = c + 1: INArray(c) = LSB: c = c + 1 ' write command to ouput array
         x = x + 2 ' skip forward past command number
         ' Print "Checking for stuff after the THEN"
         V = Array(x) ' get a byte
@@ -738,8 +801,8 @@ While x <= filesize
         End If
         If V = (&HF5 And Array(x) = &H0D) Or (V = &HFF And Array(x) * 256 + Array(x + 1) = C_REM) Or (V = &HFF And Array(x) * 256 + Array(x + 1) = C_REMApostrophe) Then ' After THEN do we have an EOL, or REMarks?
             ' if so this is already an IF/THEN/ELSE/ELSEIF/ENDIF so don't need to change it to be a multi line IF
-            INArray(C) = V: C = C + 1 ' write byte to ouput array
-            If V = &HF5 And Array(x) = &H0D Then INArray(C) = &H0D: C = C + 1: x = x + 1
+            INArray(c) = V: c = c + 1 ' write byte to ouput array
+            If V = &HF5 And Array(x) = &H0D Then INArray(c) = &H0D: c = c + 1: x = x + 1
         Else
             ' Print "not a multi line IF "; Hex$(V)
             ' This is a one line IF/THEN/ELSE command that ends with a $F5 $0D
@@ -747,40 +810,40 @@ While x <= filesize
             ' We've copied everything upto and including the THEN
             ' Make the byte after the THEN an EOL
             IfCounter = 1
-            INArray(C) = &HF5: C = C + 1 ' Add EOL
-            INArray(C) = &H0D: C = C + 1 ' Add EOL
-            INArray(C) = 0: C = C + 1 ' start of next line - line label length of zero
+            INArray(c) = &HF5: c = c + 1 ' Add EOL
+            INArray(c) = &H0D: c = c + 1 ' Add EOL
+            INArray(c) = 0: c = c + 1 ' start of next line - line label length of zero
             'Check for a number could be IF THEN 50
             If V >= Asc("0") And V <= Asc("9") Then
                 ' Found first line number, change it to a new line with GOTO linenumber
-                INArray(C) = &HFF: C = C + 1 ' General command
+                INArray(c) = &HFF: c = c + 1 ' General command
                 Num = C_GOTO: GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSB
-                INArray(C) = MSB: C = C + 1: INArray(C) = LSB: C = C + 1 ' write command to ouput array
+                INArray(c) = MSB: c = c + 1: INArray(c) = LSB: c = c + 1 ' write command to ouput array
                 While V >= Asc("0") And V <= Asc("9")
-                    INArray(C) = V: C = C + 1 ' write line number
+                    INArray(c) = V: c = c + 1 ' write line number
                     V = Array(x): x = x + 1 ' copy the line number
                 Wend
-                INArray(C) = &HF5: C = C + 1 ' Add EOL
-                INArray(C) = &H0D: C = C + 1 ' Add EOL
-                INArray(C) = 0: C = C + 1 ' line label length of zero
+                INArray(c) = &HF5: c = c + 1 ' Add EOL
+                INArray(c) = &H0D: c = c + 1 ' Add EOL
+                INArray(c) = 0: c = c + 1 ' line label length of zero
             Else
                 ' Could already be a GOTO, add and EOL after if so
                 If V = &HFF And Array(x) * 256 + Array(x + 1) = C_GOTO Then
                     ' Found a GOTO
-                    INArray(C) = V: C = C + 1 ' write byte to ouput array
+                    INArray(c) = V: c = c + 1 ' write byte to ouput array
                     V = Array(x): x = x + 1 ' get the GOTO command # MSB
-                    INArray(C) = V: C = C + 1 ' write byte to ouput array
+                    INArray(c) = V: c = c + 1 ' write byte to ouput array
                     V = Array(x): x = x + 1 ' get the GOTO command # LSB
-                    INArray(C) = V: C = C + 1 ' write byte to ouput array
+                    INArray(c) = V: c = c + 1 ' write byte to ouput array
                     ' Copy the line number
                     V = Array(x): x = x + 1 ' copy the line number
                     While V < &HF0
-                        INArray(C) = V: C = C + 1 ' write line number
+                        INArray(c) = V: c = c + 1 ' write line number
                         V = Array(x): x = x + 1 ' copy the line number
                     Wend
-                    INArray(C) = &HF5: C = C + 1 ' Add EOL
-                    INArray(C) = &H0D: C = C + 1 ' Add EOL
-                    INArray(C) = 0: C = C + 1 ' line label length of zero
+                    INArray(c) = &HF5: c = c + 1 ' Add EOL
+                    INArray(c) = &H0D: c = c + 1 ' Add EOL
+                    INArray(c) = 0: c = c + 1 ' line label length of zero
                 End If
             End If
             x = x - 1: V = Array(x)
@@ -790,76 +853,76 @@ While x <= filesize
                     ' We have a colon, remove duplicates & turn it into an EOL
                     x = x - 1
                     While Array(x) = &HF5 And Array(x + 1) = &H3A: x = x + 2: Wend ' consume any colons
-                    INArray(C) = &HF5: C = C + 1 ' add EOL instead of the colon(s)
-                    INArray(C) = &H0D: C = C + 1 ' add EOL
-                    INArray(C) = &H00: C = C + 1 ' line label length of zero
+                    INArray(c) = &HF5: c = c + 1 ' add EOL instead of the colon(s)
+                    INArray(c) = &H0D: c = c + 1 ' add EOL
+                    INArray(c) = &H00: c = c + 1 ' line label length of zero
                     V = Array(x): x = x + 1 ' get the next byte
                 End If
-                INArray(C) = V: C = C + 1 ' write byte to ouput array
+                INArray(c) = V: c = c + 1 ' write byte to ouput array
                 If V = &HFF Then
                     If Array(x) * 256 + Array(x + 1) = C_IF Then
                         ' Found another IF
                         IfCounter = IfCounter + 1
-                        C = C - 1 ' Don't keep the &HFF it just wrote
-                        INArray(C) = &HF5: C = C + 1 ' add EOL instead of the IF Command
-                        INArray(C) = &H0D: C = C + 1 ' add EOL
-                        INArray(C) = &H00: C = C + 1 ' line label length of zero
-                        INArray(C) = &HFF: C = C + 1 ' Add the command Token
+                        c = c - 1 ' Don't keep the &HFF it just wrote
+                        INArray(c) = &HF5: c = c + 1 ' add EOL instead of the IF Command
+                        INArray(c) = &H0D: c = c + 1 ' add EOL
+                        INArray(c) = &H00: c = c + 1 ' line label length of zero
+                        INArray(c) = &HFF: c = c + 1 ' Add the command Token
                         V = Array(x): x = x + 1 ' Get the IF Command #MSB
-                        INArray(C) = V: C = C + 1 ' Write the IF Command #MSB
+                        INArray(c) = V: c = c + 1 ' Write the IF Command #MSB
                         V = Array(x): x = x + 1 ' Get the IF Command #LSB
-                        INArray(C) = V: C = C + 1 ' Write the IF Command #LSB
+                        INArray(c) = V: c = c + 1 ' Write the IF Command #LSB
                     End If
                     If Array(x) * 256 + Array(x + 1) = C_THEN Or Array(x) * 256 + Array(x + 1) = C_ELSE Then
                         ' Found THEN or ELSE
-                        C = C - 1
-                        INArray(C) = &HF5: C = C + 1 ' add EOL
-                        INArray(C) = &H0D: C = C + 1 ' add EOL
-                        INArray(C) = 0: C = C + 1 ' line label length
-                        INArray(C) = &HFF: C = C + 1 ' add Command
+                        c = c - 1
+                        INArray(c) = &HF5: c = c + 1 ' add EOL
+                        INArray(c) = &H0D: c = c + 1 ' add EOL
+                        INArray(c) = 0: c = c + 1 ' line label length
+                        INArray(c) = &HFF: c = c + 1 ' add Command
                         V = Array(x): x = x + 1 ' get the THEN or ELSE command # MSB
-                        INArray(C) = V: C = C + 1 ' write byte to ouput array
+                        INArray(c) = V: c = c + 1 ' write byte to ouput array
                         V = Array(x): x = x + 1 ' get the THEN or ELSE command # LSB
-                        INArray(C) = V: C = C + 1 ' write byte to ouput array
-                        INArray(C) = &HF5: C = C + 1 ' add EOL
-                        INArray(C) = &H0D: C = C + 1 ' add EOL
-                        INArray(C) = 0: C = C + 1 ' line label length
+                        INArray(c) = V: c = c + 1 ' write byte to ouput array
+                        INArray(c) = &HF5: c = c + 1 ' add EOL
+                        INArray(c) = &H0D: c = c + 1 ' add EOL
+                        INArray(c) = 0: c = c + 1 ' line label length
                         'Check for a number could be IF THEN 50
                         If Array(x) >= Asc("0") And Array(x) <= Asc("9") Then
                             ' Found a line number, change it to a new line with GOTO linenumber
-                            INArray(C) = &HFF: C = C + 1 ' General command
+                            INArray(c) = &HFF: c = c + 1 ' General command
                             Num = C_GOTO: GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSB
-                            INArray(C) = MSB: C = C + 1: INArray(C) = LSB: C = C + 1 ' write command to ouput array
+                            INArray(c) = MSB: c = c + 1: INArray(c) = LSB: c = c + 1 ' write command to ouput array
                             V = Array(x): x = x + 1 ' copy the line number
                             While V >= Asc("0") And V <= Asc("9")
-                                INArray(C) = V: C = C + 1 ' write line number
+                                INArray(c) = V: c = c + 1 ' write line number
                                 V = Array(x): x = x + 1 ' copy the line number
                             Wend
                             x = x - 1
-                            INArray(C) = &HF5: C = C + 1 ' Add EOL
-                            INArray(C) = &H0D: C = C + 1 ' Add EOL
-                            INArray(C) = 0: C = C + 1 ' line label length of zero
+                            INArray(c) = &HF5: c = c + 1 ' Add EOL
+                            INArray(c) = &H0D: c = c + 1 ' Add EOL
+                            INArray(c) = 0: c = c + 1 ' line label length of zero
                         Else
                             V = Array(x)
                             ' Could already be a GOTO, add and EOL after if so
                             If Array(x) = &HFF And Array(x + 1) * 256 + Array(x + 2) = C_GOTO Then
                                 ' Found a GOTO
                                 V = Array(x): x = x + 1 ' get the &HFF
-                                INArray(C) = V: C = C + 1 ' write byte to ouput array
+                                INArray(c) = V: c = c + 1 ' write byte to ouput array
                                 V = Array(x): x = x + 1 ' get the GOTO command # MSB
-                                INArray(C) = V: C = C + 1 ' write byte to ouput array
+                                INArray(c) = V: c = c + 1 ' write byte to ouput array
                                 V = Array(x): x = x + 1 ' get the GOTO command # LSB
-                                INArray(C) = V: C = C + 1 ' write byte to ouput array
+                                INArray(c) = V: c = c + 1 ' write byte to ouput array
                                 ' Copy the line number
                                 V = Array(x): x = x + 1 ' copy the line number
                                 While V < &HF0
-                                    INArray(C) = V: C = C + 1 ' write line number
+                                    INArray(c) = V: c = c + 1 ' write line number
                                     V = Array(x): x = x + 1 ' copy the line number
                                 Wend
                                 x = x - 1
-                                INArray(C) = &HF5: C = C + 1 ' Add EOL
-                                INArray(C) = &H0D: C = C + 1 ' Add EOL
-                                INArray(C) = 0: C = C + 1 ' line label length of zero
+                                INArray(c) = &HF5: c = c + 1 ' Add EOL
+                                INArray(c) = &H0D: c = c + 1 ' Add EOL
+                                INArray(c) = 0: c = c + 1 ' line label length of zero
                             End If
                         End If
                     End If
@@ -867,37 +930,36 @@ While x <= filesize
             Loop
             FixedGoto:
             V = Array(x): x = x + 1 ' get a byte the $0D
-            INArray(C) = V: C = C + 1 ' write byte to ouput array
-            For I = 1 To IfCounter
+            INArray(c) = V: c = c + 1 ' write byte to ouput array
+            For i = 1 To IfCounter
                 'END IF = FF xx xx FF xx xx F5 0D
-                INArray(C) = 0: C = C + 1 ' line label length of zero
-                INArray(C) = &HFF: C = C + 1
+                INArray(c) = 0: c = c + 1 ' line label length of zero
+                INArray(c) = &HFF: c = c + 1
                 Num = C_END: GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSB
-                INArray(C) = MSB: C = C + 1: INArray(C) = LSB: C = C + 1 ' write command to ouput array
-                INArray(C) = &HFF: C = C + 1
+                INArray(c) = MSB: c = c + 1: INArray(c) = LSB: c = c + 1 ' write command to ouput array
+                INArray(c) = &HFF: c = c + 1
                 Num = C_IF: GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSB
-                INArray(C) = MSB: C = C + 1: INArray(C) = LSB: C = C + 1 ' write command to ouput array
-                INArray(C) = &HF5: C = C + 1 ' Add EOL
-                INArray(C) = &H0D: C = C + 1 ' EOL
-            Next I
+                INArray(c) = MSB: c = c + 1: INArray(c) = LSB: c = c + 1 ' write command to ouput array
+                INArray(c) = &HF5: c = c + 1 ' Add EOL
+                INArray(c) = &H0D: c = c + 1 ' EOL
+            Next i
         End If
     End If
     PartOfENDIF:
 Wend
 
 ' Tokens for variables type:
-' &HF0 = Numeric Arrays           (4 Bytes)
-' &HF1 = String Arrays            (3 Bytes)
-' &HF2 = Regular Numeric Variable (3 Bytes)
+' &HF0 = Numeric Arrays           (5 Bytes)
+' &HF1 = String Arrays            (4 Bytes)
+' &HF2 = Regular Numeric Variable (4 Bytes)
 ' &HF3 = Regular String Variable  (3 Bytes)
-' &HF4 = Floating Point Variable
 ' &HF5 = Special characters like a EOL, colon, comma, semi colon, quote, brackets    (2 Bytes)
 
-' &HFB = DEF FN Function
-' &HFC = Operator Command (2 Bytes)
-' &HFD = String Command  (3 Bytes)
-' &HFE = Numeric Command (3 Bytes)
-' &HFF = General Command (3 Bytes)
+' &HFB = DEF FN Function          (3 bytes)
+' &HFC = Operator Command         (2 Bytes)
+' &HFD = String Command           (3 Bytes)
+' &HFE = Numeric Command          (3 Bytes)
+' &HFF = General Command          (3 Bytes)
 
 ' Change Variable _Var_Timer = to command TIMER =
 
@@ -937,16 +999,16 @@ While OP <= filesize
 Wend
 
 ' Copy array INArray() to Array()
-filesize = C - 1
-C = 0
+filesize = c - 1
+c = 0
 For OP = 0 To filesize
-    Array(C) = INArray(OP): C = C + 1
+    Array(c) = INArray(OP): c = c + 1
 Next OP
 
 ReDim LastOutArray(filesize) As _Unsigned _Byte
-C = 0
+c = 0
 For OP = 0 To filesize
-    LastOutArray(C) = Array(OP): C = C + 1
+    LastOutArray(c) = Array(OP): c = c + 1
 Next OP
 If _FileExists("BasicTokenizedB4Pass3.bin") Then Kill "BasicTokenizedB4Pass3.bin"
 If Verbose > 0 Then Print "Writing to file "; "BasicTokenizedB4Pass3.bin"
@@ -958,69 +1020,75 @@ Close #1
 'If BASICMode = 1 Then GoTo SkipCheckingForElseIF ' CoCo BASIC won't have ELSEIF
 
 ' Change any ElseIf to ELSE/IF
-C = 0
+c = 0
 x = 0
 AddENDIF = 0
 ElseIfCheckPartOfENDIF:
 While x <= filesize
     V = Array(x): x = x + 1 ' get a byte
-    INArray(C) = V: C = C + 1 'write byte to ouput array
+    INArray(c) = V: c = c + 1 'write byte to ouput array
     If V > &HEF Then
         'We have a Token
         Select Case V
             Case &HF0, &HF1: ' Found a Numeric or String array
                 V = Array(x): x = x + 1 ' get a byte
-                INArray(C) = V: C = C + 1 'write byte to ouput array
+                INArray(c) = V: c = c + 1 'write byte to ouput array
                 V = Array(x): x = x + 1 ' get a byte
-                INArray(C) = V: C = C + 1 'write byte to ouput array
+                INArray(c) = V: c = c + 1 'write byte to ouput array
                 V = Array(x): x = x + 1 ' get a byte
-                INArray(C) = V: C = C + 1 'write byte to ouput array
+                INArray(c) = V: c = c + 1 'write byte to ouput array
             Case &HF2, &HF3, &HF4: ' Found a numeric or string or Floating point variable
                 V = Array(x): x = x + 1 ' get a byte
-                INArray(C) = V: C = C + 1 'write byte to ouput array
+                INArray(c) = V: c = c + 1 'write byte to ouput array
                 V = Array(x): x = x + 1 ' get a byte
-                INArray(C) = V: C = C + 1 'write byte to ouput array
+                INArray(c) = V: c = c + 1 'write byte to ouput array
             Case &HF5 ' Found a special character
                 V = Array(x): x = x + 1 ' get a byte
-                INArray(C) = V: C = C + 1 'write byte to ouput array
+                INArray(c) = V: c = c + 1 'write byte to ouput array
             Case &HFB: ' Found a DEF FN Function
                 V = Array(x): x = x + 1 ' get a byte
-                INArray(C) = V: C = C + 1 'write byte to ouput array
+                INArray(c) = V: c = c + 1 'write byte to ouput array
                 V = Array(x): x = x + 1 ' get a byte
-                INArray(C) = V: C = C + 1 'write byte to ouput array
+                INArray(c) = V: c = c + 1 'write byte to ouput array
             Case &HFC: ' Found an Operator
                 V = Array(x): x = x + 1 ' get a byte
-                INArray(C) = V: C = C + 1 'write byte to ouput array
+                INArray(c) = V: c = c + 1 'write byte to ouput array
             Case &HFD, &HFE: 'Found String or Numeric command
                 V = Array(x): x = x + 1 ' get a byte
-                INArray(C) = V: C = C + 1 'write byte to ouput array
+                INArray(c) = V: c = c + 1 'write byte to ouput array
                 V = Array(x): x = x + 1 ' get a byte
-                INArray(C) = V: C = C + 1 'write byte to ouput array
+                INArray(c) = V: c = c + 1 'write byte to ouput array
             Case &HFF: ' Found a General command
                 Temp1 = Array(x): x = x + 1 ' get a byte
-                INArray(C) = Temp1: C = C + 1 'write byte to ouput array
+                INArray(c) = Temp1: c = c + 1 'write byte to ouput array
                 Temp2 = Array(x): x = x + 1 ' get a byte
-                INArray(C) = Temp2: C = C + 1 'write byte to ouput array
+                INArray(c) = Temp2: c = c + 1 'write byte to ouput array
                 V = Temp1 * 256 + Temp2
                 If V = C_ELSE Then
                     ' Found an Else, check for IF
                     If Array(x) = &HFF And Array(x + 1) * 256 + Array(x + 2) = C_IF Then
                         ' We found an ELSE IF
                         ' Change ELSEIF to ELSE - EOL
-                        INArray(C) = &HF5: C = C + 1: INArray(C) = &H0D: C = C + 1 ' EOL
-                        INArray(C) = 0: C = C + 1 ' line label length of zero
+                        INArray(c) = &HF5: c = c + 1: INArray(c) = &H0D: c = c + 1 ' EOL
+                        INArray(c) = 0: c = c + 1 ' line label length of zero
                     End If
                 End If
         End Select
     End If
 Wend
 
-filesize = C - 1
-ReDim LastOutArray(filesize) As _Unsigned _Byte
-C = 0
+' Copy array INArray() to Array()
+filesize = c - 1
+c = 0
 For OP = 0 To filesize
-    Array(C) = INArray(OP)
-    LastOutArray(C) = INArray(OP): C = C + 1
+    Array(c) = INArray(OP): c = c + 1
+Next OP
+
+ReDim LastOutArray(filesize) As _Unsigned _Byte
+c = 0
+For OP = 0 To filesize
+    Array(c) = INArray(OP)
+    LastOutArray(c) = INArray(OP): c = c + 1
 Next OP
 If _FileExists("BasicTokenized.bin") Then Kill "BasicTokenized.bin"
 If Verbose > 0 Then Print "Writing to file "; "BasicTokenized.bin"
@@ -1028,20 +1096,199 @@ Open "BasicTokenized.bin" For Binary As #1
 Put #1, , LastOutArray()
 Close #1
 
-If Verbose > 0 Then Print "Doing Pass 3 - Figuring out Arrays sizes, within the DIM commands..."
+If Verbose > 0 Then Print "Doing Pass 3 - Figuring out Array sizes, within the DIM commands..."
 x = 0
 While x < filesize
     V = Array(x): x = x + 1 ' get the command to do
     If V = &HFF Then ' Found a command
         V = Array(x) * 256 + Array(x + 1): x = x + 2
         If V = C_DIM Then ' Is it the DIM command?
-            ' Found a DIM command, go setup the array sizes
+            ' Found a DIM command, go setup the array sizes and variable types
             GoSub DoDim
         End If
     End If
 Wend
+If Verbose > 0 Then Print "Doing Pass 4 - Assigning Numeric Variable & Numeric Array variable types"
+' DIM command is used to assign variables types and space for arrays:
+' Variable types are:
+'   1 Dim a As _Bit '                 Min -1, Max 0
+'   2 Dim b As _Unsigned _Bit '       Min 0 , Max 1
+'   3 Dim c As _Byte '                Min -128, Max 127
+'   4 Dim d As _Unsigned _Byte '      Min 0, Max 255
+'   5 Dim e As Integer '              Min -32,768, Max 32,767
+'   6 Dim f As _Unsigned Integer '    Min 0, Max 65,535
+'   7 Dim g As Long '                 Min -2 Gig, +2 Gig
+'   8 Dim h As _Unsigned Long '       Min 0, Max 4 Gig
+'   9 Dim i As _Integer64 '           Min -(8 byte value), Max +(8 byte value)
+'  10 Dim j As _Unsigned _Integer64 ' Min 0, Max (8 byte value)
+'  11 Dim k As Single '(Default size) Min E-38, Max E+38 (New 3 byte FFP format)
+'  12 Dim l As Double '               Min E-308, Max E+308
+'  13 Dim m As _Float '               Min E-4932, Max E+4932
+'  14 Dim n As _Short                 Min -128.996,  Max 127.996  (16 bit, fast float format, MSB is left of the decimal LSB is right of the decimal)
+'  15 Dim o As _Unsigned _Short       Min 0,         Max 255.996  (16 bit, fast float format, MSB is left of the decimal LSB is right of the decimal)
+'  16 Dim n As _Short512              Min -256.992,  Max 255.992  (16 bit, fast float format, 9  bits represent left of deciaml, 7 bits for the value right of the decimal)
+'  17 Dim o As _Unsigned _Short512    Min 0,         Max 511.992  (16 bit, fast float format, 9  bits represent left of deciaml, 7 bits for the value right of the decimal)
+'  18 Dim n As _Short1024             Min -512.984,  Max 511.984  (16 bit, fast float format, 10 bits represent left of deciaml, 6 bits for the value right of the decimal)
+'  19 Dim o As _Unsigned _Short1024   Min 0,         Max 1023.984 (16 bit, fast float format, 10 bits represent left of deciaml, 6 bits for the value right of the decimal)
+'  20 Dim n As _Short2048             Min -1024.968, Max 1023.968 (16 bit, fast float format, 11 bits represent left of deciaml, 5 bits for the value right of the decimal)
+'  21 Dim o As _Unsigned _Short2048   Min 0,         Max 2047.968 (16 bit, fast float format, 11 bits represent left of deciaml, 5 bits for the value right of the decimal)
+'  22 Dim n As _Short4096             Min -2048.938, Max 2047.938 (16 bit, fast float format, 12 bits represent left of deciaml, 4 bits for the value right of the decimal)
+'  23 Dim o As _Unsigned _Short4096   Min 0,         Max 4095.938 (16 bit, fast float format, 12 bits represent left of deciaml, 4 bits for the value right of the decimal)
+'  24 Dim n As _Short8192             Min -4096.875, Max 4095.875 (16 bit, fast float format, 13 bits represent left of deciaml, 3 bits for the value right of the decimal)
+'  25 Dim o As _Unsigned _Short8192   Min 0,         Max 8191.875 (16 bit, fast float format, 13 bits represent left of deciaml, 3 bits for the value right of the decimal)
+'  26 Dim n As _Short16384            Min -8192.75,  Max 8193.75  (16 bit, fast float format, 14 bits represent left of deciaml, 2 bits for the value right of the decimal)
+'  27 Dim o As _Unsigned _Short16384  Min 0,         Max 16383.75 (16 bit, fast float format, 14 bits represent left of deciaml, 2 bits for the value right of the decimal)
+'  28 Dim n As _Short32768            Min -16384.5,  Max 16383.5  (16 bit, fast float format, 15 bits represent left of deciaml, 1 bit  for the value right of the decimal)
+'  29 Dim o As _Unsigned _Short32768  Min 0,         Max 32767.5  (16 bit, fast float format, 15 bits represent left of deciaml, 1 bit  for the value right of the decimal)
 
-If Verbose > 0 Then Print "Doing Pass 4 - Finding special cases that will need other files to be included..."
+' Since at this point the commands & variables in the program have already been identified we need to change the numeric variable format from
+' Numeric array    &HF0, MSB,LSB,# of Elements in the Array to &HF0, MSB,LSB,Type,# of Elements in the Array
+' Numeric Variable &HF2, MSB,LSB to &HF2, MSB,LSB,Type
+
+c = 0
+x = 0
+While x <= filesize
+    V = Array(x): x = x + 1 ' get a byte
+    INArray(c) = V: c = c + 1 'write byte to ouput array
+    Select Case V
+        Case &HF0
+            'We found a numeric array variable, lets add the type
+            MSB = Array(x): x = x + 1 ' get a MSB byte
+            INArray(c) = MSB: c = c + 1 'write byte to ouput array
+            LSB = Array(x): x = x + 1 ' get a LSB byte
+            INArray(c) = LSB: c = c + 1 'write byte to ouput array
+            ' COPY the # of Elements (dimensions)
+            V = Array(x): x = x + 1 ' get a byte
+            INArray(c) = V: c = c + 1 'write byte to ouput array
+            ' Add the type
+            If NumericArrayType(MSB * 256 + LSB) = 0 Then
+                ' This variable hasn't been assigned a value, so we make it a Single which is the default
+                INArray(c) = 11: c = c + 1 'write byte to ouput array
+            Else
+                ' Set the value type of this variable
+                INArray(c) = NumericArrayType(MSB * 256 + LSB): c = c + 1 'write byte to ouput array
+            End If
+        Case &HF2
+            'We found a numeric variable, lets add the type
+            MSB = Array(x): x = x + 1 ' get a MSB byte
+            INArray(c) = MSB: c = c + 1 'write byte to ouput array
+            LSB = Array(x): x = x + 1 ' get a LSB byte
+            INArray(c) = LSB: c = c + 1 'write byte to ouput array
+            If NumericVarType(MSB * 256 + LSB) = 0 Then
+                ' This variable hasn't been assigned a value, so we make it a Single which is the default
+                INArray(c) = 11: c = c + 1 'write byte to ouput array
+            Else
+                ' Set the value type of this variable
+                INArray(c) = NumericVarType(MSB * 256 + LSB): c = c + 1 'write byte to ouput array
+            End If
+    End Select
+Wend
+
+' Copy array INArray() to Array()
+filesize = c - 1
+c = 0
+For OP = 0 To filesize
+    Array(c) = INArray(OP): c = c + 1
+Next OP
+
+ReDim LastOutArray(filesize) As _Unsigned _Byte
+c = 0
+For OP = 0 To filesize
+    Array(c) = INArray(OP)
+    LastOutArray(c) = INArray(OP): c = c + 1
+Next OP
+If _FileExists("BasicTokenized.bin") Then Kill "BasicTokenized.bin"
+If Verbose > 0 Then Print "Writing to file "; "BasicTokenized.bin"
+Open "BasicTokenized.bin" For Binary As #1
+Put #1, , LastOutArray()
+Close #1
+
+' Find any direct variable or literal # types are used, if so make sure the library to handle these types are included
+x = 0
+While x <= filesize
+    V = Array(x): x = x + 1 ' get a byte
+    If V > &HEF Then
+        'We have a Token
+        Select Case V
+            Case &HF0: ' Found a Numeric  array
+                V = Array(x): x = x + 1 ' Skip MSB
+                V = Array(x): x = x + 1 ' Skip LSB
+                V = Array(x): x = x + 1 ' Skip # of Elements
+                V = Array(x): x = x + 1 ' Skip Type
+                ' Check for a special chars afterwards that indicate a Numeric Type change so we include necessary librarys
+                GoSub CheckType
+            Case &HF1: ' Found a String array
+                V = Array(x): x = x + 1 ' Skip MSB
+                V = Array(x): x = x + 1 ' Skip LSB
+                V = Array(x): x = x + 1 ' Skip # of Elements
+            Case &HF2: ' Found a Regular Numeric Variable
+                V = Array(x): x = x + 1 ' Skip MSB
+                V = Array(x): x = x + 1 ' Skip LSB
+                V = Array(x): x = x + 1 ' Skip Type
+                ' Check for a special chars afterwards that indicate a Numeric Type change so we include necessary librarys
+                GoSub CheckType
+            Case &HF3: ' Found a string Variable
+                V = Array(x): x = x + 1 ' get a byte
+                V = Array(x): x = x + 1 ' get a byte
+            Case &HF5 ' Found a special character
+                V = Array(x): x = x + 1 ' get a byte
+                ' Find and ignore special characters in a quote
+                If V = &H22 Then
+                    ' We found a quote, ignore until an EOL/COLON or another quote
+                    Do Until Array(x) = &HF5 And (Array(x + 1) = &H0D Or Array(x + 1) = &H3A Or Array(x + 1) = &H22)
+                        x = x + 1
+                    Loop
+                Else
+                    ' Not a quote
+                    Select Case V
+                        Case &H0D, &H3A ' Ignore CR or Colons
+                        Case &H23 ' Found a #
+                            If Array(x) = &HF5 And Array(x + 1) = Asc("#") Then ' #   _Float use Double
+                                Temp$ = "Math_IEEE_754_Double_64bit": GoSub AddIncludeTemp ' Add code for Selecting the audio muxer and to turn it on or off
+                                Temp$ = "Math_Integer64": GoSub AddIncludeTemp ' Add code for 64 bit math, some routines use integer 64 Add/Subtract
+                                x = x + 2
+                            End If
+                        Case Else ' If unknown, probably should add a FFP
+                            Temp$ = "Math_Fast_Floating_Point": GoSub AddIncludeTemp ' Add code for my 3 byte fast floating point math routines
+                    End Select
+                End If
+            Case &HFB: ' Found a DEF FN Function
+                V = Array(x): x = x + 1 ' get a byte
+                V = Array(x): x = x + 1 ' get a byte
+            Case &HFC: ' Found an Operator
+                V = Array(x): x = x + 1 ' get a byte
+            Case &HFD, &HFE: 'Found String or Numeric command
+                V = Array(x): x = x + 1 ' get a byte
+                V = Array(x): x = x + 1 ' get a byte
+            Case &HFF: ' Found a General command
+                Temp1 = Array(x): x = x + 1 ' get a byte
+                Temp2 = Array(x): x = x + 1 ' get a byte
+                If Temp1 * 256 + Temp2 = C_REM Or Temp1 * 256 + Temp2 = C_REMApostrophe Then
+                    ' Found a remark, ignore this part
+                    Do Until Array(x) = &HF5 And (Array(x + 1) = &H0D Or Array(x + 1) = &H3A)
+                        x = x + 1
+                    Loop
+                End If
+        End Select
+    Else
+        ' Might come across a literal number
+        If V >= Asc("0") And V <= Asc("9") Then
+            ' we have a number, find the end
+            While Array(x) >= Asc("0") And Array(x) <= Asc("9"): x = x + 1: Wend
+            ' Check for a special chars afterwards that indicate a Numeric Type change so we include necessary librarys
+            GoSub CheckType
+        End If
+    End If
+Wend
+
+
+
+
+
+
+
+
+If Verbose > 0 Then Print "Doing Pass 5 - Finding special cases that will need other files to be included..."
 x = 0
 Gmode = -1 ' Flag no GMODE command found
 ScollBackground = -1 ' Flag no Scrollable background found
@@ -1185,7 +1432,6 @@ While x < filesize
                         n = Val(N$)
                         If n > 31 Then Print "Error: SAMPLE_LOAD Can't use sample number"; n; " must be 31 or lower";: GoTo FoundError
                         Sample$(n) = Temp$
-                        ' Find the sample's height, needed for when to draw it on screen
                         Open "./" + Temp$ For Append As #1
                         If LOF(1) < 1 Then
                             Print "Error: SAMPLE_LOAD file: "; Temp$; " doesn't exit.": System
@@ -1204,61 +1450,63 @@ While x < filesize
 Wend
 
 Open "NumericVariablesUsed.txt" For Output As #1
-For I = 0 To NumericVariableCount - 1
-    Print #1, NumericVariable$(I)
-Next I
+For i = 0 To NumericVariableCount - 1
+    Print #1, NumericVariable$(i)
+Next i
 Close #1
 Open "FloatingPointVariablesUsed.txt" For Output As #1
-For I = 0 To FloatVariableCount - 1
-    Print #1, FloatVariable$(I)
-Next I
+For i = 0 To FloatVariableCount - 1
+    Print #1, FloatVariable$(i)
+Next i
 Close #1
 Open "StringVariablesUsed.txt" For Output As #1
-For I = 0 To StringVariableCounter - 1
-    Print #1, StringVariable$(I)
-Next I
+For i = 0 To StringVariableCounter - 1
+    Print #1, StringVariable$(i)
+Next i
 Close #1
 Open "GeneralCommandsFound.txt" For Output As #1
-For I = 0 To GeneralCommandsFoundCount - 1
-    Print #1, GeneralCommandsFound$(I)
-Next I
+For i = 0 To GeneralCommandsFoundCount - 1
+    Print #1, GeneralCommandsFound$(i)
+Next i
 Close #1
 Open "StringCommandsFound.txt" For Output As #1
-For I = 0 To StringCommandsFoundCount - 1
-    Print #1, StringCommandsFound$(I)
-Next I
+For i = 0 To StringCommandsFoundCount - 1
+    Print #1, StringCommandsFound$(i)
+Next i
 Close #1
 Open "NumericCommandsFound.txt" For Output As #1
-For I = 0 To NumericCommandsFoundCount - 1
-    Print #1, NumericCommandsFound$(I)
-Next I
+For i = 0 To NumericCommandsFoundCount - 1
+    Print #1, NumericCommandsFound$(i)
+Next i
 Close #1
 Open "NumericArrayVarsUsed.txt" For Output As #1
-For I = 0 To NumArrayVarsUsedCounter - 1
-    Print #1, NumericArrayVariables$(I)
-    Print #1, NumericArrayDimensions(I)
-    Print #1, NumericArrayBits(I)
-Next I
+For i = 0 To NumArrayVarsUsedCounter - 1
+    Print #1, NumericArrayVariables$(i)
+    Print #1, NumericArrayDimensions(i)
+    Print #1, NumericArrayBits(i)
+Next i
 Close #1
 Open "StringArrayVarsUsed.txt" For Output As #1
-For I = 0 To StringArrayVarsUsedCounter - 1
-    Print #1, StringArrayVariables$(I)
-    Print #1, StringArrayDimensions(I)
-    Print #1, StringArrayBits(I)
-Next I
+For i = 0 To StringArrayVarsUsedCounter - 1
+    Print #1, StringArrayVariables$(i)
+    Print #1, StringArrayDimensions(i)
+    If StringArrayBits(i) = 0 Then StringArrayBits = 16
+    Print #1, StringArrayBits(i)
+Next i
 Close #1
 Open "DefFNUsed.txt" For Output As #1
-For I = 0 To DefLabelCount - 1
-    Print #1, DefLabel$(I)
-Next I
+For i = 0 To DefLabelCount - 1
+    Print #1, DefLabel$(i)
+Next i
 Close #1
 Open "DefVarUsed.txt" For Output As #1
-For I = 0 To DefVarCount - 1
-    Print #1, DefVar(I)
-Next I
+For i = 0 To DefVarCount - 1
+    Print #1, DefVar(i)
+Next i
 Close #1
 
 CoCo3 = 0
+If WidthVal$ <> "" Then CoCo3 = 1
 For ii = 0 To 171
     If GModeLib(ii) = 1 Then
         If ii >= 100 Then
@@ -1268,42 +1516,42 @@ For ii = 0 To 171
 Next ii
 
 ' Sprite setup stuff
-For I = 0 To 31
-    If Sprite$(I) <> "" Then Sprites = 1
-Next I
+For i = 0 To 31
+    If Sprite$(i) <> "" Then Sprites = 1
+Next i
 
 Open "SpritesUsed.txt" For Output As #1
 Print #1, CoCo3
 Print #1, Sprites
-For I = 0 To 31
-    Print #1, Sprite$(I)
-    Print #1, SpriteNumberOfFrames(I) ' Record the sprite height
-    Print #1, SpriteHeight(I) ' Record the sprite height
-Next I
+For i = 0 To 31
+    Print #1, Sprite$(i)
+    Print #1, SpriteNumberOfFrames(i) ' Record the sprite height
+    Print #1, SpriteHeight(i) ' Record the sprite height
+Next i
 Close #1
 
 ' Audio Sample setup stuff
 Samples = 0
-For I = 0 To 31
-    If Sample$(I) <> "" Then Samples = 1
-Next I
+For i = 0 To 31
+    If Sample$(i) <> "" Then Samples = 1
+Next i
 
 Open "SamplesUsed.txt" For Output As #1
 Print #1, CoCo3
 Print #1, Samples
 Sample8KBlock = 0 ' First 8 k block to be used for audio samples
-For I = 0 To 31
-    If Sample$(I) <> "" Then
-        SampleNumberOfBLKs(I) = Int(SampleLength(I) / &H2000) + 1
-        SampleStartBlock(I) = Sample8KBlock
-        Sample8KBlock = Sample8KBlock + SampleNumberOfBLKs(I)
+For i = 0 To 31
+    If Sample$(i) <> "" Then
+        SampleNumberOfBLKs(i) = Int(SampleLength(i) / &H2000) + 1
+        SampleStartBlock(i) = Sample8KBlock
+        Sample8KBlock = Sample8KBlock + SampleNumberOfBLKs(i)
     End If
-    Print #1, Sample$(I)
-    Print #1, SampleStart(I)
-    Print #1, SampleStartBlock(I)
-    Print #1, SampleNumberOfBLKs(I)
-    Print #1, SampleLength(I)
-Next I
+    Print #1, Sample$(i)
+    Print #1, SampleStart(i)
+    Print #1, SampleStartBlock(i)
+    Print #1, SampleNumberOfBLKs(i)
+    Print #1, SampleLength(i)
+Next i
 Close #1
 
 'See if we should need to use Disk access and Background sound
@@ -1329,11 +1577,6 @@ Next ii
 ' *** Start writing to the .asm file ***
 T1$ = "    ": T2$ = T1$ + T1$
 Open OutName$ For Output As #1
-If BranchCheck > 0 Then
-    ' User wants all branches checked for minimum size
-    A$ = "PRAGMA": B$ = "noforwardrefmax": C$ = "This option is necessary for auto branch size feature to work properly, makes lwasm REALLY slow, but code will be smaller and faster": GoSub AO
-End If
-A$ = "PRAGMA": B$ = "autobranchlength": C$ = "Tell LWASM to automatically use long branches if the short branch is too small, see compiler docs for option -b1 to make this work properly": GoSub AO
 
 For ii = 0 To 171
     If GModeLib(ii) = 1 Then
@@ -1384,13 +1627,13 @@ If CoCo3 = 1 And Sprites = 1 Then
 
     ' add code to save in the correct block for $FFA1 & $FFA2...  ($2000 & $4000)
     SpritePointer = -1
-    I = 0
-    While I <= 31
-        If Sprite$(I) <> "" Then
-            SpritePointer = I
+    i = 0
+    While i <= 31
+        If Sprite$(i) <> "" Then
+            SpritePointer = i
             Exit While
         End If
-        I = I + 1
+        i = i + 1
     Wend
     If SpritePointer <> -1 Then
         Print #1, "; Loading Sprites into RAM"
@@ -1400,8 +1643,8 @@ If CoCo3 = 1 And Sprites = 1 Then
         SpritePointerBlk$ = "Sprite" + Num$ + "Blk"
         Z$ = SpritePointerBlk$ + "     EQU     $40   ; First block used for sprites (CoCo 3 needs to have 2 Megs for sprites)": GoSub AO
         FirstBlk$ = SpritePointerBlk$
-        For I = 0 To 31
-            If Sprite$(I) <> "" Then
+        For i = 0 To 31
+            If Sprite$(i) <> "" Then
                 ' Get the location after the last GMODE screen will be used
                 A$ = "ORG": B$ = "$FFA1": C$ = "Address to control $2000 block": GoSub AO
                 A$ = "FCB": B$ = FirstBlk$: C$ = "Block to use for this compiled sprite code, $2000-$3FFF": GoSub AO
@@ -1412,11 +1655,11 @@ If CoCo3 = 1 And Sprites = 1 Then
                 A$ = "FCB": B$ = FirstBlk$ + "+5": C$ = "Block to use for this compiled sprite code, $C000-$DFFF": GoSub AO
                 A$ = "FCB": B$ = FirstBlk$ + "+6": C$ = "Block to use for this compiled sprite code, $E000-$FDFF": GoSub AO
                 A$ = "ORG": B$ = "$2000": C$ = "Add the sprite at $2000": GoSub AO
-                Print #1, T2$; "INCLUDE     ./"; Sprite$(I)
+                Print #1, T2$; "INCLUDE     ./"; Sprite$(i)
                 SpriteEnd$ = "Sprite" + Num$ + "End"
                 Z$ = SpriteEnd$ + "     EQU       *": GoSub AO
                 ' Get next sprite #
-                I2 = I + 1
+                I2 = i + 1
                 While I2 <= 31
                     If Sprite$(I2) <> "" Then
                         Exit While
@@ -1432,41 +1675,41 @@ If CoCo3 = 1 And Sprites = 1 Then
                     FirstBlk$ = NextBlk$
                 End If
             End If
-        Next I
+        Next i
     End If
 End If
 If CoCo3 = 1 And Samples = 1 Then
     ' add code to save in the correct block for $FFA1 & $FFA2...  ($2000 & $4000)
     SamplePointer = -1
-    I = 0
-    While I <= 31
-        If Sample$(I) <> "" Then
-            SamplePointer = I
+    i = 0
+    While i <= 31
+        If Sample$(i) <> "" Then
+            SamplePointer = i
             Exit While
         End If
-        I = I + 1
+        i = i + 1
     Wend
     If SamplePointer <> -1 Then
         ' We have at least one sample to handle
         Print #1, "; Loading Audio Samples into RAM"
-        For I = 0 To 31
-            If Sample$(I) <> "" Then
-                Num = I: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+        For i = 0 To 31
+            If Sample$(i) <> "" Then
+                Num = i: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
                 Num$ = Right$("00" + Num$, 2)
                 SamplePointerBlk$ = "Sample" + Num$ + "Blk"
-                Num = SampleStartBlock(I): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-                Z$ = SamplePointerBlk$ + "     EQU     $" + Hex$(Val(Num$)) + "  ; First block used for Sample" + Str$(I): GoSub AO
+                Num = SampleStartBlock(i): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+                Z$ = SamplePointerBlk$ + "     EQU     $" + Hex$(Val(Num$)) + "  ; First block used for Sample" + Str$(i): GoSub AO
                 A$ = "ORG": B$ = "$FFA1": C$ = "Address to control $0000 block": GoSub AO
-                padding = 3 - SampleNumberOfBLKs(I)
-                For BLK = SampleStartBlock(I) + SampleNumberOfBLKs(I) - 1 - padding To SampleStartBlock(I) + SampleNumberOfBLKs(I) - 1
+                padding = 3 - SampleNumberOfBLKs(i)
+                For BLK = SampleStartBlock(i) + SampleNumberOfBLKs(i) - 1 - padding To SampleStartBlock(i) + SampleNumberOfBLKs(i) - 1
                     V = BLK: If V < 0 Then V = 0
-                    A$ = "FCB": B$ = "$" + Right$("00" + Hex$(V), 2): C$ = "Block to use for audio sample " + Sample$(I): GoSub AO
+                    A$ = "FCB": B$ = "$" + Right$("00" + Hex$(V), 2): C$ = "Block to use for audio sample " + Sample$(i): GoSub AO
                 Next BLK
-                Num = SampleStart(I): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+                Num = SampleStart(i): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
                 A$ = "ORG": B$ = "$" + Hex$(Val(Num$)): C$ = "Sample starting at $" + Hex$(Val(Num$)): GoSub AO
-                Print #1, T2$; "INCLUDEBIN  ./"; Sample$(I)
+                Print #1, T2$; "INCLUDEBIN  ./"; Sample$(i)
             End If
-        Next I
+        Next i
     End If
 End If
 If CoCo3 = 1 And (SpritePointer <> -1 Or SamplePointer <> -1) Then
@@ -1478,10 +1721,24 @@ If CoCo3 = 1 And (SpritePointer <> -1 Or SamplePointer <> -1) Then
 End If
 
 If Gmode > 99 Then
-    '    If CoCo3 = 1 Then
     ProgramStart$ = "E00" ' Force the CoCo 3 to start at $E00
-    '    End If
 End If
+
+If WidthVal$ <> "" And WidthVal$ <> "32" Then
+    TextRows = 28
+    Select Case WidthVal$
+        Case "40"
+            ProgramStart$ = Hex$(Val("&H0E00") + 40 * 2 * (TextRows + 1)) ' 40 characters per line * 2 (attribute byte) * TextRows rows
+            CC3Width$ = "0"
+        Case "64"
+            ProgramStart$ = Hex$(Val("&H0E00") + 64 * 2 * (TextRows + 1)) ' 64 characters per line * 2 (attribute byte) * TextRows rows
+            CC3Width$ = "1"
+        Case "80"
+            ProgramStart$ = Hex$(Val("&H0E00") + 80 * 2 * (TextRows + 1)) ' 80 characters per line * 2 (attribute byte) * TextRows rows
+            CC3Width$ = "2"
+    End Select
+End If
+
 DirectPage$ = ProgramStart$
 DirectPage = Val("&H" + DirectPage$)
 DirectPage = DirectPage / 256
@@ -1494,13 +1751,17 @@ Print #1, "; Bit 0 is the Computer Type, 0 = CoCo 1 or CoCo 2, 1 = CoCo 3"
 Print #1, "; Bit 7 is the CPU type,      0 = 6809, 1 = 6309"
 Print #1, "Seed1           RMB     1     ; Random number seed location"
 Print #1, "Seed2           RMB     1     ; Random number seed location"
-Print #1, "RNDC            RMB     1     ; Used by Random number generator"
-Print #1, "RNDX            RMB     1     ; Used by Random number generator"
+Print #1, "Seed3           RMB     1     ; Used by Random number generator"
+Print #1, "Seed4           RMB     1     ; Used by Random number generator"
+If WidthVal$ <> "" And WidthVal$ <> "32" Then
+    Z$ = "CC3Width:": GoSub AO
+    A$ = "FCB": B$ = CC3Width$: C$ = "0=Width 40, 1=Width 64, 2=Width 80": GoSub AO
+End If
 If PrintGraphicsText = 1 Then
     ' Found program uses PRINT #-3, to print to the graphics screen
     Print #1, "GraphicCURPOS   RMB     2     ; Reserve RAM for the Graphics Cursor"
 End If
-Print #1, "CASFLG          FCB     $FF   ; Case flag for keyboard output $FF=UPPER (normal), 0=LOWER"
+
 Print #1, "_Var_Timer      RMB     2     ; TIMER value"
 Print #1, "StartClearHere:" ' This is the start address of variables that will all be cleared to zero when the program starts
 ' Save space for 10 temporary 16 bit numbers
@@ -1517,21 +1778,47 @@ Print #1, "Temp4           RMB     1     ; Temporary byte used for many routines
 Print #1, "Denominator     RMB     2     ; Denominator, used in division"
 Print #1, "Numerator       RMB     2     ; Numerator, used in division"
 Print #1, "DATAPointer     RMB     2     ; Variable that points to the current DATA location"
-Print #1, "_NumVar_IFRight RMB     2     ; Temp bytes for IF Compares"
+'Print #1, "_NumVar_IFRight RMB     2     ; Temp bytes for IF Compares"
 
-' Reserve space for Floating Point variables
-Print #1, "; Floating Point Variables Used:"; FloatVariableCount
-For ii = 0 To FloatVariableCount - 1
-    Print #1, "_FPVar_"; FloatVariable$(ii); T1$; "RMB "; T1$; "5"
-Next ii
-Print #1, "; Numeric Variables Used:"; NumericVariableCount
+Print #1, "SwapTypes       RMB     8     ; Temp bytes for Numeric conversions"
+
+' Reserve space for Numeric variables
+Print #1, "; Numeric Variables Used:"; NumericVariableCount - 1
 For ii = 1 To NumericVariableCount - 1 ' 0 is the Timer Variable, but we don't want to clear it so we mannually enter it above
-    Print #1, "_Var_"; NumericVariable$(ii); T1$; "RMB "; T1$; "2"
+    Select Case NumericVarType(ii)
+        Case 0
+            VSize = 3
+            Temp$ = "Default size as a FastFloat"
+            NumericVarType(ii) = 11
+        Case 1 To 4 ' Variable size is 1 byte
+            VSize = 1
+            Temp$ = "Bit or Byte"
+        Case 5, 6 ' Variable is 2 bytes
+            VSize = 2
+            Temp$ = "Integer"
+        Case 7, 8 ' Variable is 4 bytes
+            VSize = 4
+            Temp$ = "Long"
+        Case 9, 10 ' Variable is 8 bytes
+            VSize = 8
+            Temp$ = "Integer64"
+        Case 11 ' Variable is 3 bytes
+            VSize = 3
+            Temp$ = "FastFloat"
+        Case 12 ' Variable is 10 bytes
+            VSize = 10
+            Temp$ = "Double"
+        Case 14 To 29 ' Variable is 2 bytes
+            VSize = 2
+            Temp$ = "Short"
+    End Select
+    Print #1, "_Var_"; NumericVariable$(ii); T1$; "RMB "; T1$; VSize; T1$; "Type of variable is: "; Temp$
 Next ii
 Print #1, "EveryCasePointer  RMB   2     ; Pointer at the table to keep track of the CASE/EVERYCASE Flags"
 Print #1, "EveryCaseStack  RMB     10*2  ; Space Used for nested Cases"
 Print #1, "SoundTone       RMB     1     ; SOUND Tone value"
 Print #1, "SoundDuration   RMB     2     ; SOUND Command duration value"
+Print #1, "CASFLG          RMB     1     ; Case flag for keyboard output $FF=UPPER (normal), 0=LOWER"
 Print #1, "OriginalIRQ     RMB     3     ; We save the original branch and location of the IRQ here, restored before we exit"
 Print #1, "EndClearHere:" ' This is the end address of variables that will all be cleared to zero when the program starts
 Num = Playfield: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
@@ -1554,6 +1841,7 @@ Else
 End If
 Z$ = "VerticalPosition        FDB     $0000           ; Offset": GoSub AO
 Z$ = "HorizontalPosition      FCB     %00000000       ; Bit 7 set = Horizontal scrolling enabled": GoSub AO
+
 If CoCo3 = 1 Then
     Print #1, T2$; "INCLUDE        ./Basic_Includes/CoCo3_Equates.asm" ' Include the CoCo 3 Equates
     If Disk = 1 Then
@@ -1762,7 +2050,7 @@ If PlayCommand = 1 Then
 End If
 Print #1, "ClearHere2nd:" ' This is the start address of variables that will all be cleared to zero when the program starts
 ' Add temp string space
-For Num = 0 To 2
+For Num = 0 To 1
     GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
     If Num < 10 Then Num$ = "0" + Num$
     Print #1, "_StrVar_PF"; Num$; T1$; "RMB "; T1$; "256     ; Temp String Variable"
@@ -1784,31 +2072,46 @@ Next ii
 Print #1, "; Numeric Arrays Used:"; NumArrayVarsUsedCounter
 If NumArrayVarsUsedCounter > 0 Then
     For ii = 0 To NumArrayVarsUsedCounter - 1
-        Temp$ = "2*" 'Two bytes (16 bits) per element
+        Print #1, "_ArrayNum_"; NumericArrayVariables$(ii)
+        Print #1, "; Reserve bytes per element size, set with the DIM command, Type:"; NumericArrayType(ii); "Dimensions:"; NumericArrayDimensions(ii);
+        Print #1, "Size of each Dimension:";
+        For D1 = 0 To NumericArrayDimensions(ii) - 1
+            Print #1, Val("&H" + Mid$(NumericArrayDimensionsVal$(ii), 1 + D1 * 4, 4)) + 1; ","; ' + 1 because it is zero based
+        Next D1
+        Print #1,
+        If NumericArrayBits(ii) = 8 Then StoreAs$ = "FCB" Else StoreAs$ = "FDB"
+        Select Case NumericArrayType(ii)
+            Case 0 ' Arraysize is 3 bytes - Default is FFP 3 byte fast floating point
+                NumericArrayType(ii) = 11 ' force the type to FFP format
+                Temp$ = "3*" ' Default is three bytes per element FFP
+                Bytes$ = "3 bytes": Format$ = "Fast Floating Point"
+            Case 1 To 4 ' Arraysize is 1 byte
+                Temp$ = "" ' 1 byte per element
+                Bytes$ = "1 byte": Format$ = "8 Bit Integer"
+            Case 5, 6 ' Arraysize is 2 bytes
+                Temp$ = "2*" ' Two bytes per element
+                Bytes$ = "2 bytes": Format$ = "16 bit Integer"
+            Case 7, 8 ' Arraysize is 4 bytes
+                Temp$ = "4*" ' Four bytes per element
+                Bytes$ = "4 bytes": Format$ = "32 bit Integer"
+            Case 9, 10 ' Arraysize is 8 bytes
+                Temp$ = "8*" ' Eight bytes per element
+                Bytes$ = "8 bytes": Format$ = "64 bit Integer"
+            Case 11 ' Arraysize is 3 bytes -  FFP 3 byte fast floating point
+                Temp$ = "3*" ' Three bytes per element
+                Bytes$ = "3 bytes": Format$ = "Fast Floating Point"
+            Case 12 ' Arraysize is 8 bytes
+                Temp$ = "8*" ' Eight bytes per element
+                Bytes$ = "10 bytes": Format$ = "Double Floating Point"
+        End Select
         For D1 = 0 To NumericArrayDimensions(ii) - 1
             Num = Val("&H" + Mid$(NumericArrayDimensionsVal$(ii), 1 + D1 * 4, 4)) + 1 ' + 1 because it is zero based
             GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
             Temp$ = Temp$ + Num$ + "*"
+            A$ = StoreAs$: B$ = Num$: C$ = "Size of each array element, set with the DIM command, Default is 10 zero based": GoSub AO
         Next D1
         Temp$ = Left$(Temp$, Len(Temp$) - 1) ' Remove the extra '*'
-        Print #1, "_ArrayNum_"; NumericArrayVariables$(ii)
-        Print #1, "; Reserve bytes per element size, set with the DIM command"
-        If NumericArrayBits(ii) = 8 Then
-            ' Arraysize is 8 bits
-            For D1 = 0 To NumericArrayDimensions(ii) - 1
-                Num = Val("&H" + Mid$(NumericArrayDimensionsVal$(ii), 1 + D1 * 4, 4)) + 1 ' + 1 because it is zero based
-                GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-                A$ = "FCB": B$ = Num$: C$ = "Default size of each array element is 11 (0 to 10), changed with the DIM command": GoSub AO
-            Next D1
-        Else
-            ' Arraysize is 16 bits
-            For D1 = 0 To NumericArrayDimensions(ii) - 1
-                Num = Val("&H" + Mid$(NumericArrayDimensionsVal$(ii), 1 + D1 * 4, 4)) + 1 ' + 1 because it is zero based
-                GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-                A$ = "FDB": B$ = Num$: C$ = "Use 16 bit values, changed with the DIM command": GoSub AO
-            Next D1
-        End If
-        A$ = "RMB": B$ = Temp$: C$ = "Two bytes (16 bits) per element": GoSub AO
+        A$ = "RMB": B$ = Temp$: C$ = "Reserve Space for the Array, " + Bytes$ + " per element, " + Format$: GoSub AO
     Next ii
 End If
 
@@ -1856,6 +2159,10 @@ Next ii
 Print #1, "; Numeric Commands Used:"; NumericCommandsFoundCount
 For ii = 0 To NumericCommandsFoundCount - 1
     Print #1, "; " + NumericCommandsFound$(ii)
+    If NumericCommandsFound$(ii) = "POS" Then
+        POSCommand = 1
+        Print "Found a POS command"
+    End If
 Next ii
 
 Print #1, "; String Commands Used:"; StringCommandsFoundCount
@@ -1863,16 +2170,16 @@ For ii = 0 To StringCommandsFoundCount - 1
     Print #1, "; " + StringCommandsFound$(ii)
 Next ii
 
-For C = 0 To vc - 1
-    If Right$(var$(C), 3) <> "Str" Then Print #1, "_Var_"; var$(C); T1$; "FDB "; T1$; "$0000"
-Next C
+For c = 0 To vc - 1
+    If Right$(var$(c), 3) <> "Str" Then Print #1, "_Var_"; var$(c); T1$; "FDB "; T1$; "$0000"
+Next c
 
-For C = 0 To vc - 1
-    If Right$(var$(C), 3) = "Str" Then
-        Print #1, "_StrVar_"; var$(C); T1$; "FCB "; T1$; "$00     ; String Variable "; var$(C); " length (0 to 255) initialized to 0"
-        A$ = "RMB": B$ = "255": C$ = "255 bytes available for string variable " + var$(C): GoSub AO
+For c = 0 To vc - 1
+    If Right$(var$(c), 3) = "Str" Then
+        Print #1, "_StrVar_"; var$(c); T1$; "FCB "; T1$; "$00     ; String Variable "; var$(c); " length (0 to 255) initialized to 0"
+        A$ = "RMB": B$ = "255": C$ = "255 bytes available for string variable " + var$(c): GoSub AO
     End If
-Next C
+Next c
 
 If CoCo3 = 1 And Sprites = 1 Then
     ' include the CoCo3 Palette file:
@@ -1887,44 +2194,48 @@ If CoCo3 = 1 And Sprites = 1 Then
         End If
     Next ii
     Print #1, "CC3SpritesStartBLKTable:"
-    For C = 0 To 31
-        If Sprite$(C) <> "" Then
-            Num = C: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+    For c = 0 To 31
+        If Sprite$(c) <> "" Then
+            Num = c: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
             Num$ = Right$("00" + Num$, 2)
             SpritePointerBlk$ = "Sprite" + Num$ + "Blk"
-            Num = SpriteLivesAt(C): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+            Num = SpriteLivesAt(c): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
             If Num$ = "" Then Num$ = "00"
-            A$ = "FCB": B$ = SpritePointerBlk$: C$ = "8k block # where Sprite #" + Str$(C) + " begins": GoSub AO
+            A$ = "FCB": B$ = SpritePointerBlk$: C$ = "8k block # where Sprite #" + Str$(c) + " begins": GoSub AO
         Else
             A$ = "FCB": B$ = "$00": C$ = "No sprite, this will be ignored": GoSub AO
         End If
-    Next C
+    Next c
 End If
 If CoCo3 = 1 And Samples = 1 Then
     Print #1, "CC3SamplesStartBLKTable:"
-    For I = 0 To 31
-        If Sample$(I) <> "" Then
-            Num = SampleNumberOfBLKs(I) - 3 + SampleStartBlock(I)
+    For i = 0 To 31
+        If Sample$(i) <> "" Then
+            Num = SampleNumberOfBLKs(i) - 3 + SampleStartBlock(i)
             BlockZero$ = Right$(Hex$(Num), 2)
             If Len(BlockZero$) < 2 Then BlockZero$ = Right$("00" + BlockZero$, 2)
-            Num = SampleNumberOfBLKs(I) - 3 + SampleStartBlock(I) + 1
+            Num = SampleNumberOfBLKs(i) - 3 + SampleStartBlock(i) + 1
             BlockOne$ = Right$(Hex$(Num), 2)
             If Len(BlockOne$) < 2 Then BlockOne$ = Right$("00" + BlockOne$, 2)
             A$ = "FDB": B$ = "$" + BlockZero$ + BlockOne$: C$ = "First & second of 4, 8k blocks with the audio sample data": GoSub AO
-            Num = SampleStart(I): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+            Num = SampleStart(i): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
             A$ = "FDB": B$ = "$" + Hex$(Val(Num$)): C$ = "Sample Start address": GoSub AO
         Else
             A$ = "FQB": B$ = "$00": C$ = "No Sample, this will be ignored": GoSub AO
         End If
-    Next I
+    Next i
+End If
+If CoCo3 = 1 Then
+    GraphicVars = 1
+    Temp$ = "GraphicCommands/GraphicVariables": GoSub AddIncludeTemp ' Add code for graphics variables
 End If
 
 If Verbose > 0 Then Print "Adding the required Libraries..."
-' Need to tweak code so we only include code that we need in our program
 ' Add includes that are necessary
 ' Add graphics libraries that are needed depending on the GMODE used
 For ii = 0 To 171
     If GModeLib(ii) = 1 Then
+        GraphicVars = 1
         Temp$ = "GraphicCommands/GraphicVariables": GoSub AddIncludeTemp ' Add code for graphics variables
         If ii > 99 Then
             Temp$ = "GraphicCommands/CoCo3_Graphic_CodeJump": GoSub AddIncludeTemp ' Add code for CoCo3 graphics handling
@@ -1933,6 +2244,16 @@ For ii = 0 To 171
     End If
 Next ii
 ' Make sure Grpahics commands are first to be included
+If PrintGraphicsText = 1 Then
+    ' Found program uses PRINT #-3, to print to the graphics screen
+    For i3 = 0 To 171
+        If GModeLib(i3) = 1 Then
+            Temp$ = "GraphicCommands/" + GModeName$(i3) + "/" + GModeName$(i3) + "_Print_Graphic_Screen": GoSub AddIncludeTemp
+            Temp$ = "GraphicCommands/" + GModeName$(i3) + "/" + GModeName$(i3) + "_Locate": GoSub AddIncludeTemp
+            Temp$ = "GraphicCommands/" + GModeName$(i3) + "/Graphic_Screen_Fonts/" + Font$: GoSub AddIncludeTemp
+        End If
+    Next i3
+End If
 For ii = 0 To GeneralCommandsFoundCount - 1
     Temp$ = UCase$(GeneralCommandsFound$(ii))
     If Temp$ = "SET" Then
@@ -1981,30 +2302,72 @@ For ii = 0 To GeneralCommandsFoundCount - 1
         If PUTXOR = 1 Then Temp$ = "GraphicCommandsPut_XOR": GoSub AddIncludeTemp ' Add code to handle Put XOR command
     End If
 Next ii
-If PrintGraphicsText = 1 Then
-    ' Found program uses PRINT #-3, to print to the graphics screen
-    For i3 = 0 To 171
-        If GModeLib(i3) = 1 Then
-            Temp$ = "GraphicCommands/" + GModeName$(i3) + "/" + GModeName$(i3) + "_Print_Graphic_Screen": GoSub AddIncludeTemp
-            Temp$ = "GraphicCommands/" + GModeName$(i3) + "/" + GModeName$(i3) + "_Locate": GoSub AddIncludeTemp
-            Temp$ = "GraphicCommands/" + GModeName$(i3) + "/Graphic_Screen_Fonts/" + Font$: GoSub AddIncludeTemp
-        End If
-    Next i3
-End If
-
 ' List of includes needing to be added, only if it's not already in the list
+' Add numeric libraries based on the needed formats
+For ii = 1 To NumericVariableCount - 1 ' 0 is the Timer Variable, but we don't want to clear it so we mannually enter it above
+    Select Case NumericVarType(ii)
+        Case 0 ' Deafult size is Single
+            Temp$ = "Math_Fast_Floating_Point": GoSub AddIncludeTemp ' Add code for my 3 byte fast floating point math routines
+        Case 1 To 4 ' Variable size is 1 byte
+            ' 6809 can handle these pretty much directly
+        Case 5, 6 ' Variable is 2 bytes
+            Temp$ = "Math_Integer16": GoSub AddIncludeTemp ' Add code for 16 bit Mul, Div
+        Case 7, 8 ' Variable is 4 bytes
+            Temp$ = "Math_Integer32": GoSub AddIncludeTemp ' Add code for 32 bit math
+        Case 9, 10 ' Variable is 8 bytes
+            Temp$ = "Math_Integer64": GoSub AddIncludeTemp ' Add code for 64 bit math
+        Case 11 ' Variable is 3 bytes
+            Temp$ = "Math_Fast_Floating_Point": GoSub AddIncludeTemp ' Add code for my 3 byte fast floating point math routines
+        Case 12 ' Variable is 8 bytes
+            Temp$ = "Math_IEEE_754_Double_64bit": GoSub AddIncludeTemp ' Add code for Selecting the audio muxer and to turn it on or off
+            Temp$ = "Math_Integer64": GoSub AddIncludeTemp ' Add code for 64 bit math, some routines use integer 64 Add/Subtract
+        Case 14 To 29 ' Variable is 2 bytes
+            ' Add library for these special short floats
+    End Select
+Next ii
+
+' Add types that are assigned to numeric arrays
+For ii = 0 To NumArrayVarsUsedCounter - 1
+    Select Case NumericArrayType(ii)
+        Case 0 ' Deafult size is Single
+            Temp$ = "Math_Fast_Floating_Point": GoSub AddIncludeTemp ' Add code for my 3 byte fast floating point math routines
+        Case 1 To 4 ' Variable size is 1 byte
+            ' 6809 can handle these pretty much directly
+        Case 5, 6 ' Variable is 2 bytes
+            Temp$ = "Math_Integer16": GoSub AddIncludeTemp ' Add code for 16 bit Mul, Div
+        Case 7, 8 ' Variable is 4 bytes
+            Temp$ = "Math_Integer32": GoSub AddIncludeTemp ' Add code for 32 bit math
+        Case 9, 10 ' Variable is 8 bytes
+            Temp$ = "Math_Integer64": GoSub AddIncludeTemp ' Add code for 64 bit math
+        Case 11 ' Variable is 3 bytes
+            Temp$ = "Math_Fast_Floating_Point": GoSub AddIncludeTemp ' Add code for my 3 byte fast floating point math routines
+        Case 12 ' Variable is 8 bytes
+            Temp$ = "Math_IEEE_754_Double_64bit": GoSub AddIncludeTemp ' Add code for Selecting the audio muxer and to turn it on or off
+            Temp$ = "Math_Integer64": GoSub AddIncludeTemp ' Add code for 64 bit math, some routines use integer 64 Add/Subtract
+        Case 14 To 29 ' Variable is 2 bytes
+            ' Add library for these special short floats
+    End Select
+Next ii
+
+
 Print #1, "; Section of necessary included code:"
 For ii = 0 To GeneralCommandsFoundCount - 1
     Temp$ = UCase$(GeneralCommandsFound$(ii))
 
+    If Temp$ = "CMP" Or Temp$ = "RGB" Then
+        Temp$ = "CoCo3_CMP_RGB": GoSub AddIncludeTemp ' The CMP & RGB routines
+    End If
+    If Temp$ = "LPOKE" Then
+        Temp$ = "LPEEK_LPOKE": GoSub AddIncludeTemp ' The LPEEK & LPOKE routines
+    End If
     If Temp$ = "AUDIO" Then
         Temp$ = "Audio_Muxer": GoSub AddIncludeTemp ' Add code for Selecting the audio muxer and to turn it on or off
     End If
-    If Temp$ = "CLS" Then
-        Temp$ = "CLS": GoSub AddIncludeTemp ' Add code for clearing the screen
-    End If
     If Temp$ = "GETJOYD" Then
         Temp$ = "GetJoyD": GoSub AddIncludeTemp ' Add code to quickly get the Joystick values and set the values of 0,31 or 63
+    End If
+    If Temp$ = "DATA" Then
+        Temp$ = "ASCIIToNumbers": GoSub AddIncludeTemp ' Inlcude code to convert ASCII numbers to other formats (Integer/ FFP...)
     End If
     If Temp$ = "INPUT" Then
         '        Temp$ = "KeyboardInput": GoSub AddIncludeTemp
@@ -2014,6 +2377,7 @@ For ii = 0 To GeneralCommandsFoundCount - 1
             Temp$ = "Inkey": GoSub AddIncludeTemp ' Add the CoCo Inkey library
         End If
         Temp$ = "INPUTCode": GoSub AddIncludeTemp
+        Temp$ = "ASCIIToNumbers": GoSub AddIncludeTemp ' Inlcude code to convert ASCII numbers to other formats (Integer/ FFP...)
         Temp$ = "DecimalStringToD": GoSub AddIncludeTemp ' Add commands for converting decimal numbers to D
     End If
     If Temp$ = "LOADM" Then
@@ -2025,34 +2389,39 @@ For ii = 0 To GeneralCommandsFoundCount - 1
         Temp$ = "DecimalStringToD": GoSub AddIncludeTemp ' Add commands for converting decimal numbers to D
     End If
     If Temp$ = "SCREEN" Then
+        GraphicVars = 1
         Temp$ = "GraphicCommands/GraphicVariables": GoSub AddIncludeTemp ' Add code for graphics variables
     End If
     If Temp$ = "SDC_PLAY" Or Temp$ = "SDC_PLAYORCL" Or Temp$ = "SDC_PLAYORCR" Or Temp$ = "SDC_PLAYORCS" Then
         If Temp$ = "SDC_PLAY" Then
-            Temp$ = "SDCPlay": GoSub AddIncludeTemp
+            Temp$ = "SDC_Play": GoSub AddIncludeTemp
             Temp$ = "Audio_Muxer": GoSub AddIncludeTemp ' Add code for Selecting the audio muxer and to turn it on or off
         End If
-        If Temp$ = "SDC_PLAYORCL" Then Temp$ = "SDCPlayOrc90Left": GoSub AddIncludeTemp
-        If Temp$ = "SDC_PLAYORCR" Then Temp$ = "SDCPlayOrc90Right": GoSub AddIncludeTemp
-        If Temp$ = "SDC_PLAYORCS" Then Temp$ = "SDCPlayOrc90Stereo": GoSub AddIncludeTemp
-        Temp$ = "CommSDC": GoSub AddIncludeTemp
-        Temp$ = "SDCFileAccess": GoSub AddIncludeTemp
-        Temp$ = "StreamFile_Library": GoSub AddIncludeTemp
+        If Temp$ = "SDC_PLAYORCL" Then Temp$ = "SDC_PlayOrc90Left": GoSub AddIncludeTemp
+        If Temp$ = "SDC_PLAYORCR" Then Temp$ = "SDC_PlayOrc90Right": GoSub AddIncludeTemp
+        If Temp$ = "SDC_PLAYORCS" Then Temp$ = "SDC_PlayOrc90Stereo": GoSub AddIncludeTemp
+        Temp$ = "SDC_Comm": GoSub AddIncludeTemp
+        Temp$ = "SDC_CompilerCode": GoSub AddIncludeTemp
+        Temp$ = "SDC_FileAccess": GoSub AddIncludeTemp
+        Temp$ = "SDC_StreamFile_Library": GoSub AddIncludeTemp
     End If
     If Temp$ = "SDC_GETBYTE0" Or Temp$ = "SDC_GETBYTE1" Or Temp$ = "SDC_PUTBYTE0" Or Temp$ = "SDC_PUTBYTE1" Or Temp$ = "SDC_DIRPAGE" Or Temp$ = "SDC_SETPOS" Or Temp$ = "SDC_CLOSE" Or Temp$ = "SDC_OPEN" Then
-        Temp$ = "CommSDC": GoSub AddIncludeTemp
-        Temp$ = "SDCFileAccess": GoSub AddIncludeTemp
+        Temp$ = "SDC_Comm": GoSub AddIncludeTemp
+        Temp$ = "SDC_CompilerCode": GoSub AddIncludeTemp
+        Temp$ = "SDC_FileAccess": GoSub AddIncludeTemp
         '
     End If
     If Temp$ = "SDC_LOADM" Or Temp$ = "SDC_SAVEM" Then
-        Temp$ = "CommSDC": GoSub AddIncludeTemp
-        Temp$ = "SDCFileAccess": GoSub AddIncludeTemp
-        Temp$ = "SDCLoadmSavem": GoSub AddIncludeTemp
+        Temp$ = "SDC_Comm": GoSub AddIncludeTemp
+        Temp$ = "SDC_CompilerCode": GoSub AddIncludeTemp
+        Temp$ = "SDC_FileAccess": GoSub AddIncludeTemp
+        Temp$ = "SDC_LoadmSavem": GoSub AddIncludeTemp
     End If
     If Temp$ = "SDC_BIGLOADM" Then
-        Temp$ = "CommSDC": GoSub AddIncludeTemp
-        Temp$ = "StreamFile_Library": GoSub AddIncludeTemp
-        Temp$ = "SDCBigLoadm": GoSub AddIncludeTemp
+        Temp$ = "SDC_Comm": GoSub AddIncludeTemp
+        Temp$ = "SDC_CompilerCode": GoSub AddIncludeTemp
+        Temp$ = "SDC_StreamFile_Library": GoSub AddIncludeTemp
+        Temp$ = "SDC_BigLoadm": GoSub AddIncludeTemp
     End If
 
     If Temp$ = "SOUND" Then
@@ -2073,61 +2442,59 @@ For ii = 0 To StringCommandsFoundCount - 1
             Temp$ = "Inkey": GoSub AddIncludeTemp ' Add the CoCo Inkey library
         End If
     End If
-    If Temp$ = "STR$" Then
-        Temp$ = "D_to_String": GoSub AddIncludeTemp ' Add the D_to_String library
-    End If
     If Temp$ = "SDC_FILEINFO$" Or Temp$ = "SDC_GETCURDIR$" Then
-        Temp$ = "CommSDC": GoSub AddIncludeTemp
-        Temp$ = "SDCFileAccess": GoSub AddIncludeTemp
+        Temp$ = "SDC_Comm": GoSub AddIncludeTemp
+        Temp$ = "SDC_CompilerCode": GoSub AddIncludeTemp
+        Temp$ = "SDC_FileAccess": GoSub AddIncludeTemp
         '        Temp$ = "SDCVersionCheck": GoSub AddIncludeTemp
-    End If
-    If Temp$ = "COCOMP3$" Then
-        Temp$ = "CoCoMP3": GoSub AddIncludeTemp
     End If
 Next ii
 For ii = 0 To NumericCommandsFoundCount - 1
     Temp$ = UCase$(NumericCommandsFound$(ii))
+
+    If Temp$ = "LPEEK" Then
+        Temp$ = "LPEEK_LPOKE": GoSub AddIncludeTemp ' The LPEEK & LPOKE routines
+    End If
     If Temp$ = "BUTTON" Then
         Temp$ = "JoyButton": GoSub AddIncludeTemp 'Add code to handle reading the joystick buttons
     End If
     If Left$(Temp$, 8) = "COCOMP3_" Then
-        Temp$ = "CoCoMP3_Compiler_Library": GoSub AddIncludeTemp ' Add code for clearing the screen
+        Temp$ = "CoCoMP3_Compiler_Library": GoSub AddIncludeTemp ' Add code for handling the CoCoMP3
     End If
     If Temp$ = "SDC_GETBYTE" Or Temp$ = "SDC_MKDIR" Or Temp$ = "SDC_SETDIR" Or Temp$ = "SDC_INITDIR" Or Temp$ = "SDC_DELETE" Then
-        Temp$ = "CommSDC": GoSub AddIncludeTemp
-        Temp$ = "SDCFileAccess": GoSub AddIncludeTemp
+        Temp$ = "SDC_Comm": GoSub AddIncludeTemp
+        Temp$ = "SDC_CompilerCode": GoSub AddIncludeTemp
+        Temp$ = "SDC_FileAccess": GoSub AddIncludeTemp
         '        Temp$ = "SDCVersionCheck": GoSub AddIncludeTemp
     End If
     If Temp$ = "JOYSTK" Then
         Temp$ = "Joystick": GoSub AddIncludeTemp 'Add code to handle analog Joystick input
         Temp$ = "Audio_Muxer": GoSub AddIncludeTemp 'Joystick routine also requires the Muxer to be turned off
     End If
-    '    If Temp$ = "POINT" Then
-    '        Temp$ = "SetResetPoint": GoSub AddIncludeTemp
-    '    End If
-    If Temp$ = "RND" Or Temp$ = "RNDZ" Or Temp$ = "RNDL" Then
-        Temp$ = "Random": GoSub AddIncludeTemp ' Add the code to do a Random number
-    End If
     If Temp$ = "VAL" Then
         Temp$ = "DecimalStringToD": GoSub AddIncludeTemp
         Temp$ = "HexStringToD": GoSub AddIncludeTemp
     End If
-    if temp$="FLOATADD" or temp$="FLOATSUB" or temp$="FLOATMUL" or temp$="FLOATDIV" or temp$="FLOATSQR" or temp$="FLOATSIN" or temp$="FLOATCOS" or temp$="FLOATTAN" _
-       or temp$="FLOATATAN" or temp$="FLOATEXP" or temp$="FLOATLOG" then
-        Temp$ = "FloatingPointMath": GoSub AddIncludeTemp 'Add floating point math routines
-    End If
 Next ii
-If FloatVariableCount > 0 Then Temp$ = "FloatingPointMath": GoSub AddIncludeTemp 'Add floating point math routines
+If NumArrayVarsUsedCounter > 0 Or StringArrayVarsUsedCounter > 0 Then Temp$ = "ArrayHandler": GoSub AddIncludeTemp 'Add routines to handle Arrays
+
 ' Libraries always included, other libraries use them, so they are required
 Temp$ = "Equates": GoSub AddIncludeTemp
 Temp$ = "Print": GoSub AddIncludeTemp
+
+If WidthVal$ <> "" And WidthVal$ <> "32" Then
+    Temp$ = "CoCo3_PrintA_Width_" + WidthVal$: GoSub AddIncludeTemp ' Include the CoCo 3 TextMode print routines
+    Temp$ = "CoCo3_TextMode": GoSub AddIncludeTemp ' Include the CoCo 3 TextMode data
+Else
+    Temp$ = "PrintA": GoSub AddIncludeTemp ' Include for printing A to the normal 32 width screen
+End If
 Temp$ = "Print_Serial": GoSub AddIncludeTemp
-Temp$ = "D_to_String": GoSub AddIncludeTemp
-Temp$ = "DHex_to_String": GoSub AddIncludeTemp
-Temp$ = "Mulitply16x16": GoSub AddIncludeTemp
-Temp$ = "Divide16with16": GoSub AddIncludeTemp
+Temp$ = "Math_Integer16": GoSub AddIncludeTemp ' 16 bit MUL and DIV
+Temp$ = "Math_Variables": GoSub AddIncludeTemp ' Math_Integer16 needs this
 Temp$ = "SquareRoot": GoSub AddIncludeTemp
 Temp$ = "CPUSpeed": GoSub AddIncludeTemp
+Temp$ = "StringCommands": GoSub AddIncludeTemp ' Add general command library
+Temp$ = "Random": GoSub AddIncludeTemp ' Add the code to do a Random number
 
 If Sprites = 1 Then
     Print #1, "; Adding the Compiled Sprites and pointers..."
@@ -2155,59 +2522,59 @@ If Sprites = 1 Then
         Else
             Z$ = "Artifacting      EQU     0         ; Not using Artifact colours": GoSub AO
         End If
-        For I = 0 To 31
-            If Sprite$(I) <> "" Then
-                Print #1, T2$; "INCLUDE     ./"; Sprite$(I)
+        For i = 0 To 31
+            If Sprite$(i) <> "" Then
+                Print #1, T2$; "INCLUDE     ./"; Sprite$(i)
             End If
-        Next I
+        Next i
         Temp$ = "GraphicCommands/SpriteHandler": GoSub AddIncludeTemp
 
         Z$ = "SpriteDrawTable:": GoSub AO
-        For I = 0 To 31
-            If Sprite$(I) <> "" Then
+        For i = 0 To 31
+            If Sprite$(i) <> "" Then
                 ' Find the last backslash
-                p = _InStrRev(Sprite$(I), "/")
-                If p = 0 Then p = _InStrRev(Sprite$(I), "\")
+                p = _InStrRev(Sprite$(i), "/")
+                If p = 0 Then p = _InStrRev(Sprite$(i), "\")
                 ' Extract the filename
                 If p > 0 Then
-                    SpriteName$ = Mid$(Sprite$(I), p + 1)
+                    SpriteName$ = Mid$(Sprite$(i), p + 1)
                 Else
-                    SpriteName$ = Sprite$(I) ' No backslash found, assume it's just a filename
+                    SpriteName$ = Sprite$(i) ' No backslash found, assume it's just a filename
                 End If
                 SpriteName$ = Left$(SpriteName$, Len(SpriteName$) - 4) ' remove the .asm
                 A$ = "FDB": B$ = SpriteName$ + "_Draw": C$ = "Points to the Sprite Drawing Table (in the compiled sprite.asm file)": GoSub AO
             End If
-        Next I
+        Next i
     End If
     Z$ = "SpriteBackupTable:": GoSub AO
-    For I = 0 To 31
-        If Sprite$(I) <> "" Then
+    For i = 0 To 31
+        If Sprite$(i) <> "" Then
             ' Find the last backslash
-            p = _InStrRev(Sprite$(I), "/")
-            If p = 0 Then p = _InStrRev(Sprite$(I), "\")
+            p = _InStrRev(Sprite$(i), "/")
+            If p = 0 Then p = _InStrRev(Sprite$(i), "\")
             ' Extract the filename
             If p > 0 Then
-                SpriteName$ = Mid$(Sprite$(I), p + 1)
+                SpriteName$ = Mid$(Sprite$(i), p + 1)
             Else
-                SpriteName$ = Sprite$(I) ' No backslash found, assume it's just a filename
+                SpriteName$ = Sprite$(i) ' No backslash found, assume it's just a filename
             End If
             SpriteName$ = Left$(SpriteName$, Len(SpriteName$) - 4) ' remove the .asm
             A$ = "FDB": B$ = "Backup_" + SpriteName$: C$ = "Address of the Make Backup code": GoSub AO
         Else
             A$ = "FDB": B$ = "$0000": C$ = "No Sprite for this slot": GoSub AO
         End If
-    Next I
+    Next i
     Z$ = "SpriteRestoreTable:": GoSub AO ' For VSYNC 0
-    For I = 0 To 31
-        If Sprite$(I) <> "" Then
+    For i = 0 To 31
+        If Sprite$(i) <> "" Then
             ' Find the last backslash
-            p = _InStrRev(Sprite$(I), "/")
-            If p = 0 Then p = _InStrRev(Sprite$(I), "\")
+            p = _InStrRev(Sprite$(i), "/")
+            If p = 0 Then p = _InStrRev(Sprite$(i), "\")
             ' Extract the filename
             If p > 0 Then
-                SpriteName$ = Mid$(Sprite$(I), p + 1)
+                SpriteName$ = Mid$(Sprite$(i), p + 1)
             Else
-                SpriteName$ = Sprite$(I) ' No backslash found, assume it's just a filename
+                SpriteName$ = Sprite$(i) ' No backslash found, assume it's just a filename
             End If
             SpriteName$ = Left$(SpriteName$, Len(SpriteName$) - 4) ' remove the .asm
             A$ = "FDB": B$ = "Restore_" + SpriteName$ + "_0": C$ = "Address of the restore code Buffer 0": GoSub AO
@@ -2216,10 +2583,17 @@ If Sprites = 1 Then
             A$ = "FDB": B$ = "$0000": C$ = "No Sprite for this slot 0": GoSub AO
             A$ = "FDB": B$ = "$0000": C$ = "No Sprite for this slot 1": GoSub AO
         End If
-    Next I
+    Next i
 End If
 
 GoSub WriteIncludeListToFile ' Write all the INCLUDE files needed to the .ASM file
+GoSub AO
+If GraphicVars = 0 And POSCommand = 1 Then
+    ' We need some variables for the POS command to work properly
+    Z$ = "BEGGRP           FDB     $0400      ; Needed by the POS command": GoSub AO
+    Z$ = "x0               FDB     $0000      ; Needed by the POS command": GoSub AO
+End If
+GoSub AO
 
 Print #1, "* Main Program"
 Print #1, "START:"
@@ -2229,6 +2603,14 @@ A$ = "LDS": B$ = "#$0400": C$ = "Set up the stack pointer": GoSub AO
 A$ = "ORCC": B$ = "#$50": C$ = "Turn off the interrupts": GoSub AO
 A$ = "LDA": B$ = "#$" + DirectPage$: GoSub AO
 A$ = "TFR": B$ = "A,DP": C$ = "Setup the Direct page to use our variable location": GoSub AO
+
+' Extra randomness
+A$ = "TST": B$ = "$FF02": C$ = "Reset the VSYNC flag": GoSub AO
+Z$ = "!": A$ = "ADDD": B$ = "#$0001": C$ = "Increment the counter": GoSub AO
+A$ = "TST": B$ = "$FF03": C$ = "Test for new Vsync": GoSub AO
+A$ = "BPL": B$ = "<": C$ = "If bit 7 is not set (Vsync hasn't happened yet) keep looping": GoSub AO
+A$ = "STD": B$ = ">Seed3": C$ = "Save 16 bit random seed, seed1 & 2 will use the timer": GoSub AO
+'
 If CoCo3 = 1 Then
     A$ = "LDA": B$ = "#$38": C$ = "Normal First Bank": GoSub AO
     A$ = "STA": B$ = "$FFA8": C$ = "Make first block in 2nd bank the same as the first bank, this is where the IRQs are": GoSub AO
@@ -2237,30 +2619,103 @@ If CoCo3 = 1 Then
     A$ = "LDA": B$ = "#%01111100": C$ = "CoCo 3 Mode, MMU Enabled, GIME IRQ Enabled, GIME FIRQ Enabled, Vector RAM at FEXX enabled, Standard SCS Normal, ROM Map 16k Int, 16k Ext": GoSub AO
     A$ = "STA": B$ = "$FF90": C$ = "Make the changes": GoSub AO
     ' Set graphics mode to text
-    A$ = "LDX": B$ = "#$0400": C$ = "Text screen starts here": GoSub AO
-    A$ = "STX": B$ = "BEGGRP": C$ = "Update the Screen starting location": GoSub AO
-    A$ = "LDA": B$ = "#$0F": C$ = "$0F Back to Text Mode for the CoCo 3": GoSub AO
-    A$ = "STA": B$ = "$FF9C": C$ = "Neccesary for CoCo 3 GIME to use this mode": GoSub AO
-    ' Go to CoCo 3 Text mode
-    A$ = "LDA": B$ = "#$CC": GoSub AO
-    A$ = "STA": B$ = "$FF90": GoSub AO
-    A$ = "LDD": B$ = "#$0000": GoSub AO
-    A$ = "STD": B$ = "$FF98": GoSub AO
-    A$ = "STD": B$ = "$FF9A": GoSub AO
-    A$ = "STD": B$ = "$FF9E": GoSub AO
-    A$ = "LDD": B$ = "#$0FE0": GoSub AO
-    A$ = "STD": B$ = "$FF9C": GoSub AO
-    A$ = "LDA": B$ = "#Internal_Alphanumeric": C$ = "A = Text mode requested": GoSub AO
-    ' Update the Graphic mode and the screen viewer location
-    A$ = "JSR": B$ = "SetGraphicModeA": C$ = "Go setup the mode": GoSub AO
-    A$ = "LDA": B$ = "BEGGRP": C$ = "Get the MSB of the Screen starting location": GoSub AO
-    A$ = "LSRA": C$ = "Divide by 2 - 512 bytes per start location": GoSub AO
-    A$ = "JSR": B$ = "SetGraphicsStartA": C$ = "Go set the address of the screen": GoSub AO
+    Select Case WidthVal$
+        Case Is = "32", Is = ""
+            ' Use the regular 32 char text screen
+            A$ = "LDX": B$ = "#$0400": C$ = "Text screen starts here": GoSub AO
+            A$ = "STX": B$ = "BEGGRP": C$ = "Update the Screen starting location": GoSub AO
+            A$ = "LDA": B$ = "#$0F": C$ = "$0F Back to Text Mode for the CoCo 3": GoSub AO
+            A$ = "STA": B$ = "$FF9C": C$ = "Neccesary for CoCo 3 GIME to use this mode": GoSub AO
+            ' Go to CoCo 3 Text mode
+            A$ = "LDA": B$ = "#$CC": GoSub AO
+            A$ = "STA": B$ = "$FF90": GoSub AO
+            A$ = "LDD": B$ = "#$0000": GoSub AO
+            A$ = "STD": B$ = "$FF98": GoSub AO
+            A$ = "STD": B$ = "$FF9A": GoSub AO
+            A$ = "STD": B$ = "$FF9E": GoSub AO
+            A$ = "LDD": B$ = "#$0FE0": GoSub AO
+            A$ = "STD": B$ = "$FF9C": GoSub AO
+            A$ = "LDA": B$ = "#Internal_Alphanumeric": C$ = "A = Text mode requested": GoSub AO
+            ' Update the Graphic mode and the screen viewer location
+            A$ = "JSR": B$ = "SetGraphicModeA": C$ = "Go setup the mode": GoSub AO
+            A$ = "LDA": B$ = "BEGGRP": C$ = "Get the MSB of the Screen starting location": GoSub AO
+            A$ = "LSRA": C$ = "Divide by 2 - 512 bytes per start location": GoSub AO
+            A$ = "JSR": B$ = "SetGraphicsStartA": C$ = "Go set the address of the screen": GoSub AO
+
+            ' $FF98
+            ' 0x00100010 - Text Mode,Extra Descenders,Colour,60 Hz,8 lines per character
+            'WIDTH info:$FF99 (65433) Video resolution register - VRES CoCo 3
+            'Width 32 = 0x01100001
+            'Width 40 = 0x01100101
+            'Width 64 = 0x01110001
+            'Width 80 = 0x01110101
+
+            'Attribute byte:
+            'Bit 7 1 = Blink
+            'Bit 6 1 = Underline
+            'Bits 5-3 Foreground Palette 0-7 from $FFB0-$FFB7
+            'Bits 2-0 Background Palette 0-7 from $FFB8-$FFBF
+
+        Case "40"
+            ' Use the CoCo 3 40 column text screen
+            A$ = "LDX": B$ = "#$0E00": C$ = "Text screen starts here": GoSub AO
+            A$ = "STX": B$ = "BEGGRP": C$ = "Update the Screen starting location": GoSub AO
+            Z$ = "; $FF98 = 0x00100011 - Text Mode,Extra Descenders,Colour,60 Hz,8 lines per character": GoSub AO
+            Z$ = "; $FF99 = 0x01100101 - 40 Column mode": GoSub AO
+            ' A$ = "LDA": B$ = "#%00100011": GoSub AO
+            ' A$ = "LDB": B$ = "#%01100101": GoSub AO
+            A$ = "LDD": B$ = "#$2365": GoSub AO
+            A$ = "STD": B$ = "$FF98": GoSub AO
+            A$ = "LDD": B$ = "#$0000": GoSub AO
+            A$ = "STD": B$ = "W_CURPOS": C$ = "Set the cursor to the top left corner, Width 40, 64 & 80 use x,y screen co-ordinates": GoSub AO
+            A$ = "STD": B$ = "$FF9A": C$ = "Border color register - BRDR & 2 Meg Vertual 512k Bank": GoSub AO
+            A$ = "STA": B$ = "$FF9C": C$ = "Vertical scroll register - VSC": GoSub AO
+            A$ = "STA": B$ = "$FF9F": C$ = "Clear the Horizontal register": GoSub AO
+            '$FF9D-$FF9E Vertical offset register
+            A$ = "LDD": B$ = "#$" + Hex$((&H38 * &H2000 + &HE00) / 8): GoSub AO
+            A$ = "STD": B$ = "$FF9D": C$ = "Vertical offset register": GoSub AO
+        Case "64"
+            ' Use the CoCo 3 64 column text screen
+            A$ = "LDX": B$ = "#$0E00": C$ = "Text screen starts here": GoSub AO
+            A$ = "STX": B$ = "BEGGRP": C$ = "Update the Screen starting location": GoSub AO
+            Z$ = "; $FF98 = 0x00100011 - Text Mode,Extra Descenders,Colour,60 Hz,8 lines per character": GoSub AO
+            Z$ = "; $FF99 = 0x01111001 - 64 Column mode": GoSub AO
+            ' A$ = "LDA": B$ = "#%00100011": GoSub AO
+            ' A$ = "LDB": B$ = "#%01100101": GoSub AO
+            A$ = "LDD": B$ = "#$2371": GoSub AO
+            A$ = "STD": B$ = "$FF98": GoSub AO
+            A$ = "LDD": B$ = "#$0000": GoSub AO
+            A$ = "STD": B$ = "W_CURPOS": C$ = "Set the cursor to the top left corner, Width 40, 64 & 80 use x,y screen co-ordinates": GoSub AO
+            A$ = "STD": B$ = "$FF9A": C$ = "Border color register - BRDR & 2 Meg Vertual 512k Bank": GoSub AO
+            A$ = "STA": B$ = "$FF9C": C$ = "Vertical scroll register - VSC": GoSub AO
+            A$ = "STA": B$ = "$FF9F": C$ = "Clear the Horizontal register": GoSub AO
+            '$FF9D-$FF9E Vertical offset register
+            A$ = "LDD": B$ = "#$" + Hex$((&H38 * &H2000 + &HE00) / 8): GoSub AO
+            A$ = "STD": B$ = "$FF9D": C$ = "Vertical offset register": GoSub AO
+        Case "80"
+            ' Use the CoCo 3 80 column text screen
+            A$ = "LDX": B$ = "#$0E00": C$ = "Text screen starts here": GoSub AO
+            A$ = "STX": B$ = "BEGGRP": C$ = "Update the Screen starting location": GoSub AO
+            Z$ = "; $FF98 = 0x00100011 - Text Mode,Extra Descenders,Colour,60 Hz,8 lines per character": GoSub AO
+            Z$ = "; $FF99 = 0x01110101 - 80 Column mode": GoSub AO
+            ' A$ = "LDA": B$ = "#%00100011": GoSub AO
+            ' A$ = "LDB": B$ = "#%01100101": GoSub AO
+            A$ = "LDD": B$ = "#$2375": GoSub AO
+            A$ = "STD": B$ = "$FF98": GoSub AO
+            A$ = "LDD": B$ = "#$0000": GoSub AO
+            A$ = "STD": B$ = "W_CURPOS": C$ = "Set the cursor to the top left corner, Width 40, 64 & 80 use x,y screen co-ordinates": GoSub AO
+            A$ = "STD": B$ = "$FF9A": C$ = "Border color register - BRDR & 2 Meg Vertual 512k Bank": GoSub AO
+            A$ = "STA": B$ = "$FF9C": C$ = "Vertical scroll register - VSC": GoSub AO
+            A$ = "STA": B$ = "$FF9F": C$ = "Clear the Horizontal register": GoSub AO
+            '$FF9D-$FF9E Vertical offset register
+            A$ = "LDD": B$ = "#$" + Hex$((&H38 * &H2000 + &HE00) / 8): GoSub AO
+            A$ = "STD": B$ = "$FF9D": C$ = "Vertical offset register": GoSub AO
+    End Select
 End If
-'Z$ = "* Enable 6 Bit DAC output": GoSub AO
-'A$ = "LDA": B$ = "$FF23": C$ = "* PIA1_Byte_3_IRQ_Ct_Snd * $FF23 GET PIA": GoSub AO
-'A$ = "ORA": B$ = "#%00001000": C$ = "* SET 6-BIT SOUND ENABLE": GoSub AO
-'A$ = "STA": B$ = "$FF23": C$ = "* PIA1_Byte_3_IRQ_Ct_Snd * $FF23 STORE": GoSub AO
+Z$ = "* Enable 6 Bit DAC output": GoSub AO
+A$ = "LDA": B$ = "$FF23": C$ = "* PIA1_Byte_3_IRQ_Ct_Snd * $FF23 GET PIA": GoSub AO
+A$ = "ORA": B$ = "#%00001000": C$ = "* SET 6-BIT SOUND ENABLE": GoSub AO
+A$ = "STA": B$ = "$FF23": C$ = "* PIA1_Byte_3_IRQ_Ct_Snd * $FF23 STORE": GoSub AO
 
 If LineCommand = 1 Then
     A$ = "LDD": B$ = "#128": C$ = "Set D to the middle of the screen": GoSub AO
@@ -2448,16 +2903,16 @@ End If
 ' Setup Sprite blocks
 If CoCo3 = 1 And Sprites = 1 Then
     Z$ = "* Setup which blocks the sprites are located at in RAM": GoSub AO
-    For I = 0 To 31
-        If Sprite$(I) <> "" Then
+    For i = 0 To 31
+        If Sprite$(i) <> "" Then
             ' This is a sprite
-            Num = SpriteHeight(I): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+            Num = SpriteHeight(i): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
             Num$ = Right$("00" + Num$, 2)
-            A$ = "LDA": B$ = "#" + Num$: C$ = "Get the sprite height for sprite #" + Str$(I): GoSub AO
-            Num = I * 8 + 6: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+            A$ = "LDA": B$ = "#" + Num$: C$ = "Get the sprite height for sprite #" + Str$(i): GoSub AO
+            Num = i * 8 + 6: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
             A$ = "STA": B$ = "SpriteTable+" + Num$: C$ = "Save the height of ths sprite": GoSub AO
         End If
-    Next I
+    Next i
 End If
 
 ' Start the IRQ
@@ -2504,40 +2959,40 @@ TokenizeExpression:
 If Verbose > 1 Then Print "Expression to tokenize is:"; Expression$
 ' Go through command list and see if we match any, replacing any matches with tokens
 Tokenized$ = ""
-I = 1
+i = 1
 GetNextToken:
-While I <= Len(Expression$)
-    i$ = Mid$(Expression$, I, 1)
+While i <= Len(Expression$)
+    i$ = Mid$(Expression$, i, 1)
     ' Check for  Special characters like a comma, semi colon, quote , brackets
     If i$ = Chr$(&H22) Then
         Tokenized$ = Tokenized$ + Chr$(&HF5) + i$ ' Tokenize the first quote
-        I = I + 1 'Move past it
-        i$ = Mid$(Expression$, I, 1)
+        i = i + 1 'Move past it
+        i$ = Mid$(Expression$, i, 1)
         While i$ <> Chr$(&H22) ' keep copying until we get an end quote
             If i$ = Chr$(&H0D) Then Print "Error1: something is wrong getting the charcters in quotes at";: GoTo FoundError
             Tokenized$ = Tokenized$ + i$ ' Copy the data inside the quotes
-            I = I + 1
-            i$ = Mid$(Expression$, I, 1)
+            i = i + 1
+            i$ = Mid$(Expression$, i, 1)
         Wend
         Tokenized$ = Tokenized$ + Chr$(&HF5) + i$ ' make the end quote also tokenized
-        I = I + 1
+        i = i + 1
         GoTo GetNextToken ' go handle stuff in quotes
     End If
     ' Check for a General command
-    For C = 1 To GeneralCommandsCount
-        Temp$ = UCase$(GeneralCommands$(C))
-        BaseString$ = UCase$(Right$(Expression$, Len(Expression$) - I + 1))
+    For c = 1 To GeneralCommandsCount
+        Temp$ = UCase$(GeneralCommands$(c))
+        BaseString$ = UCase$(Right$(Expression$, Len(Expression$) - i + 1))
         If Temp$ = "TIMER" Then Temp$ = "Ignore" ' Don't change TIMER commands to commands here, as they need to be left as variable names, they get fixed as TIMER= afterwards
         If InStr(BaseString$, Temp$) = 1 Then
             'Found a General Command
-            If I > 1 Then
+            If i > 1 Then
                 ' Check for a space before the start of this command
-                If Mid$(Expression$, I - 1, 1) = " " Or Mid$(Expression$, I - 1, 1) = ":" Then LeftSpace = 1 Else LeftSpace = 0
+                If Mid$(Expression$, i - 1, 1) = " " Or Mid$(Expression$, i - 1, 1) = ":" Then LeftSpace = 1 Else LeftSpace = 0
             Else
                 LeftSpace = 1
             End If
             ' It could be a General command, check for a space after the found command
-            If I + Len(Temp$) <= Len(Expression$) Then
+            If i + Len(Temp$) <= Len(Expression$) Then
                 ' check if we have a space or special character or a number after the found command
                 If Mid$(Expression$, i + Len(Temp$), 1) = " " Or Mid$(Expression$, i + Len(Temp$), 1) = chr$(&HF5) or Mid$(Expression$, i + Len(Temp$), 1)=chr$(&H22) _
                 or (asc(Mid$(Expression$, i + Len(Temp$), 1)) >= &H30 and asc(Mid$(Expression$, i + Len(Temp$), 1)) <= &H39) Then
@@ -2636,7 +3091,7 @@ While I <= Len(Expression$)
                 If Temp$ = "GMODE" Then
                     ' Find out which graphics modes the user wants in their program
                     V$ = ""
-                    p = I + 6
+                    p = i + 6
                     GettingGmode:
                     If p <= Len(Expression$) Then
                         If Asc(Mid$(Expression$, p, 1)) >= Asc("0") And Asc(Mid$(Expression$, p, 1)) <= Asc("9") Then
@@ -2668,34 +3123,54 @@ While I <= Len(Expression$)
                         If Temp2 < Val(V1$) Then GModePageLib(Val(V$)) = Val(V1$)
                     End If
                 End If
+                If Temp$ = "WIDTH" Then
+                    ' Find out which Width mode the user wants in their program
+                    V$ = ""
+                    p = i + 6
+                    GettingWidth:
+                    If p <= Len(Expression$) Then
+                        If Asc(Mid$(Expression$, p, 1)) >= Asc("0") And Asc(Mid$(Expression$, p, 1)) <= Asc("9") Then
+                            V$ = V$ + Mid$(Expression$, p, 1)
+                            p = p + 1
+                        Else
+                            GoTo GotWidth
+                        End If
+                        GoTo GettingWidth
+                    End If
+                    GotWidth:
+                    If V$ <> "32" And V$ <> "40" And V$ <> "64" And V$ <> "80" Then
+                        Print "Width size must be 32,40,64 or 80 on";: GoTo FoundError
+                    End If
+                    WidthVal$ = V$
+                End If
                 GoSub AddToGeneralCommandList ' Add General Command Temp$ to the general command list
-                Num = C: GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSB
+                Num = c: GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSB
                 Tokenized$ = Tokenized$ + Chr$(&HFF) + Chr$(MSB) + Chr$(LSB) 'Token &HFF is for General Commands
                 ' Check for a REM or '
-                If C = C_REM Or C = C_REMApostrophe Then
+                If c = C_REM Or c = C_REMApostrophe Then
                     'We found a REM or ' - copy the rest of this line
-                    I = I + Len(Temp$) ' move pointer forward
-                    While I <= Len(Expression$)
-                        i$ = Mid$(Expression$, I, 1)
+                    i = i + Len(Temp$) ' move pointer forward
+                    While i <= Len(Expression$)
+                        i$ = Mid$(Expression$, i, 1)
                         Tokenized$ = Tokenized$ + i$
-                        I = I + 1
+                        i = i + 1
                     Wend
                     GoTo TokenAdded0
                 End If
                 ' Find the DATA Token
                 Check$ = "DATA": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
                 ' Check for a DATA
-                If C = ii Then
+                If c = ii Then
                     'We found a DATA command - copy the rest of this line
-                    I = I + Len(Temp$) ' move pointer forward past "DATA" command
-                    While I <= Len(Expression$) And i$ <> Chr$(&HF5)
-                        i$ = Mid$(Expression$, I, 1): I = I + 1
+                    i = i + Len(Temp$) ' move pointer forward past "DATA" command
+                    While i <= Len(Expression$) And i$ <> Chr$(&HF5)
+                        i$ = Mid$(Expression$, i, 1): i = i + 1
                         If i$ = Chr$(&H22) Then
                             Tokenized$ = Tokenized$ + Chr$(&HF5) + i$ ' Tokenize the first quote
-                            i$ = Mid$(Expression$, I, 1): I = I + 1
+                            i$ = Mid$(Expression$, i, 1): i = i + 1
                             While i$ <> Chr$(&H22) ' keep copying until we get an end quote
                                 Tokenized$ = Tokenized$ + i$ ' Copy the data inside the quotes
-                                i$ = Mid$(Expression$, I, 1): I = I + 1
+                                i$ = Mid$(Expression$, i, 1): i = i + 1
                             Wend
                             Tokenized$ = Tokenized$ + Chr$(&HF5) + i$ ' make the end quote also tokenized
                         Else
@@ -2704,25 +3179,25 @@ While I <= Len(Expression$)
                     Wend
                     If i$ = Chr$(&HF5) Then
                         'Found a control Token, copy the next byte
-                        i$ = Mid$(Expression$, I, 1)
+                        i$ = Mid$(Expression$, i, 1)
                         Tokenized$ = Tokenized$ + i$
-                        I = I + 1
+                        i = i + 1
                     End If
                     GoTo TokenAdded0
                 End If
                 ' Find the DEF Token
                 Check$ = "DEF": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
                 ' Check for a DEF
-                If C = ii Then
+                If c = ii Then
                     'We found a DEF command, we need to handle the FNx()=...  part
-                    I = I + Len(Temp$) + 3 ' move pointer forward so it now points at the FN label
+                    i = i + Len(Temp$) + 3 ' move pointer forward so it now points at the FN label
                     Temp$ = ""
                     ' Get the FN variable name in Temp$
-                    While I <= Len(Expression$)
-                        i$ = Mid$(Expression$, I, 1)
+                    While i <= Len(Expression$)
+                        i$ = Mid$(Expression$, i, 1)
                         If i$ = "(" Then Exit While
                         Temp$ = Temp$ + i$
-                        I = I + 1
+                        i = i + 1
                     Wend
                     DefLabel$(DefLabelCount) = Temp$
                     Num = DefLabelCount: GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSB
@@ -2730,18 +3205,18 @@ While I <= Len(Expression$)
                     DefLabelCount = DefLabelCount + 1
                     GoTo TokenAdded0
                 End If
-                I = I + Len(Temp$) ' move pointer forward
+                i = i + Len(Temp$) ' move pointer forward
                 GoTo TokenAdded0
             End If
         End If
-    Next C
+    Next c
     ' Check for a Numeric command
-    For C = 1 To NumericCommandsCount
-        Temp$ = UCase$(NumericCommands$(C))
-        BaseString$ = UCase$(Right$(Expression$, Len(Expression$) - I + 1))
+    For c = 1 To NumericCommandsCount
+        Temp$ = UCase$(NumericCommands$(c))
+        BaseString$ = UCase$(Right$(Expression$, Len(Expression$) - i + 1))
         If InStr(BaseString$, Temp$) = 1 Then
             'Found a Numeric Command
-            If I > 1 Then
+            If i > 1 Then
                 ' Check for stuff before the start of this command
                 If Mid$(Expression$, I - 1, 1) = " " Or Mid$(Expression$, I - 1, 1) = "(" Or Mid$(Expression$, I - 1, 1) = "=" _
                    Or Mid$(Expression$, I - 1, 1) = "+" _
@@ -2757,9 +3232,9 @@ While I <= Len(Expression$)
                 LeftSpace = 1
             End If
             ' It could be a General command, check for a space after the found command
-            If I + Len(Temp$) < Len(Expression$) Then
+            If i + Len(Temp$) < Len(Expression$) Then
                 ' check if we have a space or ( after the found command
-                If Mid$(Expression$, I + Len(Temp$), 1) = " " Or Mid$(Expression$, I + Len(Temp$), 1) = "(" Then RightSpace = 1 Else RightSpace = 0
+                If Mid$(Expression$, i + Len(Temp$), 1) = " " Or Mid$(Expression$, i + Len(Temp$), 1) = "(" Then RightSpace = 1 Else RightSpace = 0
             Else
                 RightSpace = 1
             End If
@@ -2767,12 +3242,12 @@ While I <= Len(Expression$)
             If Temp$ = "FN" And LeftSpace = 1 Then
                 'We found an FN command, ignore the variablename before the (
                 Temp$ = ""
-                I = I + 2 ' skip past FN
-                While I <= Len(Expression$)
-                    i$ = Mid$(Expression$, I, 1)
+                i = i + 2 ' skip past FN
+                While i <= Len(Expression$)
+                    i$ = Mid$(Expression$, i, 1)
                     If i$ = "(" Then Exit While
                     Temp$ = Temp$ + i$
-                    I = I + 1
+                    i = i + 1
                 Wend
                 'Find the FN Label number that matches and write it to the Tokenized file
                 For ii = 0 To DefLabelCount
@@ -2785,65 +3260,65 @@ While I <= Len(Expression$)
             End If
             If LeftSpace = 1 And RightSpace = 1 Then
                 GoSub AddToNumericCommandList
-                Num = C: GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSB
+                Num = c: GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSB
                 Tokenized$ = Tokenized$ + Chr$(&HFE) + Chr$(MSB) + Chr$(LSB) 'Token $FE is for Numeric Commands
-                I = I + Len(Temp$) ' move pointer forward
+                i = i + Len(Temp$) ' move pointer forward
                 GoTo TokenAdded0
             End If
         End If
-    Next C
+    Next c
     ' Check for a String command
-    For C = 1 To StringCommandsCount
-        Temp$ = UCase$(StringCommands$(C))
-        BaseString$ = UCase$(Right$(Expression$, Len(Expression$) - I + 1))
+    For c = 1 To StringCommandsCount
+        Temp$ = UCase$(StringCommands$(c))
+        BaseString$ = UCase$(Right$(Expression$, Len(Expression$) - i + 1))
         If InStr(BaseString$, Temp$) = 1 Then
             'Found a String Command
             GoSub AddToStringCommandList
-            Num = C: GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSB
+            Num = c: GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSB
             Tokenized$ = Tokenized$ + Chr$(&HFD) + Chr$(MSB) + Chr$(LSB) 'Token $FD is for String Commands
-            I = I + Len(Temp$) ' move pointer forward
+            i = i + Len(Temp$) ' move pointer forward
             GoTo TokenAdded0
         End If
-    Next C
+    Next c
     ' Check for an Operator command
-    For C = 1 To OperatorCommandsCount
-        Temp$ = UCase$(OperatorCommands$(C))
-        BaseString$ = UCase$(Right$(Expression$, Len(Expression$) - I + 1))
+    For c = 1 To OperatorCommandsCount
+        Temp$ = UCase$(OperatorCommands$(c))
+        BaseString$ = UCase$(Right$(Expression$, Len(Expression$) - i + 1))
         If InStr(BaseString$, Temp$) = 1 Then
             'Found an Operator Command
-            If C > &H29 Then
-                Tokenized$ = Tokenized$ + Chr$(&HFC) + Chr$(C) 'Token &HFC is for Operator Commands
-                I = I + Len(Temp$) ' move pointer forward
+            If c > &H29 Then
+                Tokenized$ = Tokenized$ + Chr$(&HFC) + Chr$(c) 'Token &HFC is for Operator Commands
+                i = i + Len(Temp$) ' move pointer forward
                 GoTo TokenAdded0
             Else
-                If I > 1 Then
+                If i > 1 Then
                     ' Check for a stuff before the start of this command
-                    If Mid$(Expression$, I - 1, 1) = " " Then LeftSpace = 1 Else LeftSpace = 0
+                    If Mid$(Expression$, i - 1, 1) = " " Then LeftSpace = 1 Else LeftSpace = 0
                 Else
                     LeftSpace = 1
                 End If
                 ' It could be a General command, check for a space after the found command
-                If I + Len(Temp$) < Len(Expression$) Then
+                If i + Len(Temp$) < Len(Expression$) Then
                     ' check if we have a space after the found command
-                    If Mid$(Expression$, I + Len(Temp$), 1) = " " Then RightSpace = 1 Else RightSpace = 0
+                    If Mid$(Expression$, i + Len(Temp$), 1) = " " Then RightSpace = 1 Else RightSpace = 0
                 Else
                     RightSpace = 1
                 End If
                 If LeftSpace = 1 And RightSpace = 1 Then
-                    Tokenized$ = Tokenized$ + Chr$(&HFC) + Chr$(C) 'Token &HFC is for Operator Commands
-                    I = I + Len(Temp$) ' move pointer forward
+                    Tokenized$ = Tokenized$ + Chr$(&HFC) + Chr$(c) 'Token &HFC is for Operator Commands
+                    i = i + Len(Temp$) ' move pointer forward
                     GoTo TokenAdded0
                 End If
             End If
         End If
-    Next C
+    Next c
     AddTokenAsIs0:
     Tokenized$ = Tokenized$ + i$
-    I = I + 1
+    i = i + 1
     TokenAdded0:
     If Temp$ = "DRAW" Then ' Found a Draw command, change any X inside a quote to ":DRAW (whatever before the next semi colon" : DRAW" the rest
-        Temp$ = Right$(Expression$, Len(Expression$) - I)
-        Expression$ = Left$(Expression$, I)
+        Temp$ = Right$(Expression$, Len(Expression$) - i)
+        Expression$ = Left$(Expression$, i)
         EndString = InStr(Temp$, Chr$(&HF5)) ' Mark end at a Colon
         If EndString = 0 Then
             EndString = Len(Temp$) ' If no colons then end is the end of string
@@ -2916,8 +3391,8 @@ While I <= Len(Expression$)
         Expression$ = Expression$ + Temp1$ + " " + EndPart$
     End If
     If Temp$ = "PLAY" Then ' Found a Play command, change any X inside a quote to ":PLAY (whatever before the next semi colon" : PLAY" the rest
-        Temp$ = Right$(Expression$, Len(Expression$) - I)
-        Expression$ = Left$(Expression$, I)
+        Temp$ = Right$(Expression$, Len(Expression$) - i)
+        Expression$ = Left$(Expression$, i)
         EndString = InStr(Temp$, Chr$(&HF5)) ' Mark end at a Colon
         If EndString = 0 Then
             EndString = Len(Temp$) ' If no colons then end is the end of string
@@ -2976,11 +3451,11 @@ While I <= Len(Expression$)
 Wend
 If Verbose > 1 Then
     Print "1st:"
-    For I = 1 To Len(Tokenized$)
-        a = Asc(Mid$(Tokenized$, I, 1))
+    For i = 1 To Len(Tokenized$)
+        a = Asc(Mid$(Tokenized$, i, 1))
         If a < 16 Then Print "0";
-        Print Hex$(Asc(Mid$(Tokenized$, I, 1)));
-    Next I
+        Print Hex$(Asc(Mid$(Tokenized$, i, 1)));
+    Next i
     Print
 End If
 ' Special commands that need manual tweaking
@@ -3004,34 +3479,42 @@ End If
 ' ,0,0 - No Box or Box Fill
 ' ,1,0 - Draw a Box
 ' ,1,1 - Draw a box and fill it
-
 Check$ = "LINE": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
 GoSub FixLineCommand ' Find the LINE Token and fix the formatting if found
 
+' ATTR may or may not have ,B or ,U at the end which might get turned into variable below
+' Change the Tokenized$ command so it will have
+' ,0,0 - No Blink or Underline
+' ,1,0 - Blink
+' ,0,1 - Underline
+' ,1,1 - Blink & Underline
+Check$ = "ATTR": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+GoSub FixAttrCommand ' Find the ATTR Token and fix the formatting if found
+
 ' GET command, we must have an array pointer after the last last close bracket and comma
 TempCOM$ = ""
-I = 1
+i = 1
 ' Find the GET Token
 Num = C_GET
 GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSBs
-While InStr(I, Tokenized$, Chr$(&HFF) + Chr$(MSB) + Chr$(LSB)) > 0 ' See if we still have any GET commands to deal with
-    Start = I
+While InStr(i, Tokenized$, Chr$(&HFF) + Chr$(MSB) + Chr$(LSB)) > 0 ' See if we still have any GET commands to deal with
+    Start = i
     ' This line of code has the GET command in it
-    I = InStr(I, Tokenized$, Chr$(&H29) + Chr$(&H20) + Chr$(&H2C) + Chr$(&H20)) ' Find the ") , "
-    If I = 0 Then Print "Error: GET command doesn't have Close bracket and comma on";: GoTo FoundError 'Can't find the ),
-    I = I + 4 ' Move past the ), - Now point at the array name
-    ArrayStart = I
+    i = InStr(i, Tokenized$, Chr$(&H29) + Chr$(&H20) + Chr$(&H2C) + Chr$(&H20)) ' Find the ") , "
+    If i = 0 Then Print "Error: GET command doesn't have Close bracket and comma on";: GoTo FoundError 'Can't find the ),
+    i = i + 4 ' Move past the ), - Now point at the array name
+    ArrayStart = i
     Temp$ = ""
-    While I <= Len(Tokenized$)
-        i$ = Mid$(Tokenized$, I, 1): I = I + 1
-        If i$ = Chr$(&H20) Or i$ = Chr$(&HF5) Then I = I - 1: Exit While
+    While i <= Len(Tokenized$)
+        i$ = Mid$(Tokenized$, i, 1): i = i + 1
+        If i$ = Chr$(&H20) Or i$ = Chr$(&HF5) Then i = i - 1: Exit While
         Temp$ = Temp$ + i$
     Wend
     If i$ = Chr$(&H20) Then
         ' Check for a , G after the array
-        ANameEnd = InStr(I, Tokenized$, ", G") ' Find the ", G"
+        ANameEnd = InStr(i, Tokenized$, ", G") ' Find the ", G"
         If ANameEnd > 0 Then
-            I = ANameEnd + 3
+            i = ANameEnd + 3
             i$ = ""
         Else
             Print "Error: GET command ends with something other than a ,G";: GoTo FoundError 'Can't find the PUT action
@@ -3053,26 +3536,26 @@ While InStr(I, Tokenized$, Chr$(&HFF) + Chr$(MSB) + Chr$(LSB)) > 0 ' See if we s
 Wend
 If TempCOM$ <> "" Then
     ' We found a GET command
-    Tokenized$ = TempCOM$ + Right$(Tokenized$, Len(Tokenized$) - I + 1)
+    Tokenized$ = TempCOM$ + Right$(Tokenized$, Len(Tokenized$) - i + 1)
 End If
 
 ' PUT command, we must have an array pointer after the last last close bracket and comma
 TempCOM$ = ""
-I = 1
+i = 1
 ' Find the PUT Token
 Num = C_PUT
 GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSBs
-While InStr(I, Tokenized$, Chr$(&HFF) + Chr$(MSB) + Chr$(LSB)) > 0 ' See if we still have any PUT commands to deal with
-    Start = I
+While InStr(i, Tokenized$, Chr$(&HFF) + Chr$(MSB) + Chr$(LSB)) > 0 ' See if we still have any PUT commands to deal with
+    Start = i
     ' This line of code has the PUT command in it
-    I = InStr(I, Tokenized$, Chr$(&H29) + Chr$(&H20) + Chr$(&H2C) + Chr$(&H20)) ' Find the ") , "
-    If I = 0 Then Print "Error: PUT command doesn't have Close bracket and comma on";: GoTo FoundError 'Can't find the ),
-    I = I + 4 ' Move past the ), - Now point at the array name
-    ArrayStart = I
+    i = InStr(i, Tokenized$, Chr$(&H29) + Chr$(&H20) + Chr$(&H2C) + Chr$(&H20)) ' Find the ") , "
+    If i = 0 Then Print "Error: PUT command doesn't have Close bracket and comma on";: GoTo FoundError 'Can't find the ),
+    i = i + 4 ' Move past the ), - Now point at the array name
+    ArrayStart = i
     Temp$ = ""
-    While I <= Len(Tokenized$)
-        i$ = Mid$(Tokenized$, I, 1): I = I + 1
-        If i$ = Chr$(&H20) Or i$ = Chr$(&HF5) Then I = I - 1: Exit While
+    While i <= Len(Tokenized$)
+        i$ = Mid$(Tokenized$, i, 1): i = i + 1
+        If i$ = Chr$(&H20) Or i$ = Chr$(&HF5) Then i = i - 1: Exit While
         Temp$ = Temp$ + i$
     Wend
     PUTPSET = 1 ' Default to ,PSET
@@ -3082,46 +3565,46 @@ While InStr(I, Tokenized$, Chr$(&HFF) + Chr$(MSB) + Chr$(LSB)) > 0 ' See if we s
         MSByte = Num \ 256 ' Integer division by 256
         ' Extract the low byte (lower 8 bits)
         LSByte = Num And 255 ' Equivalent to num MOD 256
-        ANameEnd = InStr(I, Tokenized$, Chr$(&H2C) + Chr$(&H20) + Chr$(&HFF) + Chr$(MSByte) + Chr$(LSByte)) ' Find the " , PSET"
+        ANameEnd = InStr(i, Tokenized$, Chr$(&H2C) + Chr$(&H20) + Chr$(&HFF) + Chr$(MSByte) + Chr$(LSByte)) ' Find the " , PSET"
         If ANameEnd > 0 Then
             PUTPSET = 1
             PutType = 0
-            I = ANameEnd + 5
+            i = ANameEnd + 5
         Else
             Num = C_PRESET
             ' Extract the high byte (higher 8 bits)
             MSByte = Num \ 256 ' Integer division by 256
             ' Extract the low byte (lower 8 bits)
             LSByte = Num And 255 ' Equivalent to num MOD 256
-            ANameEnd = InStr(I, Tokenized$, Chr$(&H2C) + Chr$(&H20) + Chr$(&HFF) + Chr$(MSByte) + Chr$(LSByte)) ' Find the " , PRESET"
+            ANameEnd = InStr(i, Tokenized$, Chr$(&H2C) + Chr$(&H20) + Chr$(&HFF) + Chr$(MSByte) + Chr$(LSByte)) ' Find the " , PRESET"
             If ANameEnd > 0 Then
                 PUTPRESET = 1
                 PutType = 1
-                I = ANameEnd + 5
+                i = ANameEnd + 5
             Else
-                ANameEnd = InStr(I, Tokenized$, Chr$(&H2C) + Chr$(&H20) + Chr$(&HFC) + Chr$(&H10)) ' Find the " , AND"
+                ANameEnd = InStr(i, Tokenized$, Chr$(&H2C) + Chr$(&H20) + Chr$(&HFC) + Chr$(&H10)) ' Find the " , AND"
                 If ANameEnd > 0 Then
                     PUTAND = 1
                     PutType = 2
-                    I = ANameEnd + 4
+                    i = ANameEnd + 4
                 Else
-                    ANameEnd = InStr(I, Tokenized$, Chr$(&H2C) + Chr$(&H20) + Chr$(&HFC) + Chr$(&H11)) ' Find the " , OR"
+                    ANameEnd = InStr(i, Tokenized$, Chr$(&H2C) + Chr$(&H20) + Chr$(&HFC) + Chr$(&H11)) ' Find the " , OR"
                     If ANameEnd > 0 Then
                         PUTOR = 1
                         PutType = 3
-                        I = ANameEnd + 4
+                        i = ANameEnd + 4
                     Else
-                        ANameEnd = InStr(I, Tokenized$, Chr$(&H2C) + Chr$(&H20) + Chr$(&HFC) + Chr$(&H14)) ' Find the " , NOT"
+                        ANameEnd = InStr(i, Tokenized$, Chr$(&H2C) + Chr$(&H20) + Chr$(&HFC) + Chr$(&H14)) ' Find the " , NOT"
                         If ANameEnd > 0 Then
                             PUTNOT = 1
                             PutType = 4
-                            I = ANameEnd + 4
+                            i = ANameEnd + 4
                         Else
-                            ANameEnd = InStr(I, Tokenized$, Chr$(&H2C) + Chr$(&H20) + Chr$(&HFC) + Chr$(&H13)) ' Find the " , XOR"
+                            ANameEnd = InStr(i, Tokenized$, Chr$(&H2C) + Chr$(&H20) + Chr$(&HFC) + Chr$(&H13)) ' Find the " , XOR"
                             If ANameEnd > 0 Then
                                 PUTXOR = 1
                                 PutType = 5
-                                I = ANameEnd + 4
+                                i = ANameEnd + 4
                             Else
                                 Print "Error: PUT command doesn't end with an action like PSET,PRESET,AND,OR or NOT on";: GoTo FoundError 'Can't find the PUT action
                             End If
@@ -3147,7 +3630,7 @@ While InStr(I, Tokenized$, Chr$(&HFF) + Chr$(MSB) + Chr$(LSB)) > 0 ' See if we s
 Wend
 If TempCOM$ <> "" Then
     ' We found a PUT command
-    Tokenized$ = TempCOM$ + Right$(Tokenized$, Len(Tokenized$) - I + 1)
+    Tokenized$ = TempCOM$ + Right$(Tokenized$, Len(Tokenized$) - i + 1)
 End If
 
 SkipCheckingSpecialCommands:
@@ -3173,66 +3656,66 @@ SkipCheckingSpecialCommands:
 
 Expression$ = Tokenized$
 Tokenized$ = ""
-I = 1
+i = 1
 GetNextToken1:
-While I <= Len(Expression$)
-    i$ = Mid$(Expression$, I, 1): I = I + 1
+While i <= Len(Expression$)
+    i$ = Mid$(Expression$, i, 1): i = i + 1
     If Asc(i$) > &HEF Then
         ' We hit a token, copy it
         Tokenized$ = Tokenized$ + i$
         Select Case Asc(i$)
             Case &HF5:
                 'We have a special character tokenized already
-                i$ = Mid$(Expression$, I, 1): I = I + 1 ' Get the Special character
+                i$ = Mid$(Expression$, i, 1): i = i + 1 ' Get the Special character
                 Tokenized$ = Tokenized$ + i$ ' Copy it
                 If i$ = Chr$(&H22) Then
                     ' Found a quote, so copy all until we get the end tokenized quote
-                    i$ = Mid$(Expression$, I, 1): I = I + 1 ' Get a byte
+                    i$ = Mid$(Expression$, i, 1): i = i + 1 ' Get a byte
                     While i$ <> Chr$(&H22) ' keep copying until we find the end quote
                         Tokenized$ = Tokenized$ + i$ ' Copy the byte
-                        i$ = Mid$(Expression$, I, 1): I = I + 1 ' Get a byte
+                        i$ = Mid$(Expression$, i, 1): i = i + 1 ' Get a byte
                     Wend
                     Tokenized$ = Tokenized$ + i$ ' Copy the end quote
                 End If
                 GoTo GetNextToken1
             Case &HFB:
                 ' DEF FN Function?
-                i$ = Mid$(Expression$, I, 1): I = I + 1: Tokenized$ = Tokenized$ + i$
-                i$ = Mid$(Expression$, I, 1): I = I + 1: Tokenized$ = Tokenized$ + i$
+                i$ = Mid$(Expression$, i, 1): i = i + 1: Tokenized$ = Tokenized$ + i$
+                i$ = Mid$(Expression$, i, 1): i = i + 1: Tokenized$ = Tokenized$ + i$
                 GoTo GetNextToken1
             Case &HFC:
                 ' Operator?
-                i$ = Mid$(Expression$, I, 1): I = I + 1: Tokenized$ = Tokenized$ + i$
+                i$ = Mid$(Expression$, i, 1): i = i + 1: Tokenized$ = Tokenized$ + i$
                 GoTo GetNextToken1
             Case &HFD:
                 ' String Command?
-                i$ = Mid$(Expression$, I, 1): I = I + 1: Tokenized$ = Tokenized$ + i$
-                i$ = Mid$(Expression$, I, 1): I = I + 1: Tokenized$ = Tokenized$ + i$
+                i$ = Mid$(Expression$, i, 1): i = i + 1: Tokenized$ = Tokenized$ + i$
+                i$ = Mid$(Expression$, i, 1): i = i + 1: Tokenized$ = Tokenized$ + i$
                 GoTo GetNextToken1
             Case &HFE:
                 ' Numeric Command?
-                i$ = Mid$(Expression$, I, 1): I = I + 1: Tokenized$ = Tokenized$ + i$
-                i$ = Mid$(Expression$, I, 1): I = I + 1: Tokenized$ = Tokenized$ + i$
+                i$ = Mid$(Expression$, i, 1): i = i + 1: Tokenized$ = Tokenized$ + i$
+                i$ = Mid$(Expression$, i, 1): i = i + 1: Tokenized$ = Tokenized$ + i$
                 'skip forward until after the open and close brackets
                 GoTo GetNextToken1
             Case &HFF:
                 ' General Command?
-                i$ = Mid$(Expression$, I, 1): I = I + 1: Tokenized$ = Tokenized$ + i$
+                i$ = Mid$(Expression$, i, 1): i = i + 1: Tokenized$ = Tokenized$ + i$
                 V = Asc(i$) * 256
-                i$ = Mid$(Expression$, I, 1): I = I + 1: Tokenized$ = Tokenized$ + i$
+                i$ = Mid$(Expression$, i, 1): i = i + 1: Tokenized$ = Tokenized$ + i$
                 V = V + Asc(i$)
                 If V = C_REM Then
                     ' Found a REM, copy the rest of the expression as is, no more tokenizing needed
-                    While I <= Len(Expression$)
-                        i$ = Mid$(Expression$, I, 1): I = I + 1
+                    While i <= Len(Expression$)
+                        i$ = Mid$(Expression$, i, 1): i = i + 1
                         Tokenized$ = Tokenized$ + i$
                     Wend
                     GoTo GetNextToken1
                 End If
                 If V = C_REMApostrophe Then
                     ' Found an apostrophe ' copy the rest of the expression as is, no more tokenizing needed
-                    While I <= Len(Expression$)
-                        i$ = Mid$(Expression$, I, 1): I = I + 1
+                    While i <= Len(Expression$)
+                        i$ = Mid$(Expression$, i, 1): i = i + 1
                         Tokenized$ = Tokenized$ + i$
                     Wend
                     GoTo GetNextToken1
@@ -3240,11 +3723,11 @@ While I <= Len(Expression$)
                 ' Check for a DATA
                 If V = C_DATA Then
                     'We found a DATA command - copy the rest of this line upto a colon or the end
-                    While I <= Len(Expression$)
-                        i$ = Mid$(Expression$, I, 1): I = I + 1
+                    While i <= Len(Expression$)
+                        i$ = Mid$(Expression$, i, 1): i = i + 1
                         Tokenized$ = Tokenized$ + i$
                         If i$ = Chr$(&HF5) Then
-                            i$ = Mid$(Expression$, I, 1): I = I + 1
+                            i$ = Mid$(Expression$, i, 1): i = i + 1
                             Tokenized$ = Tokenized$ + i$
                             If i$ = Chr$(&H3A) Then Exit While
                         End If
@@ -3252,11 +3735,11 @@ While I <= Len(Expression$)
                 End If
                 If V = C_PUT Or V = C_GET Then ' Check for a PUT or GET command
                     'We found a PUT or GET command - copy the rest of this line upto a colon or the end
-                    While I <= Len(Expression$)
-                        i$ = Mid$(Expression$, I, 1): I = I + 1
+                    While i <= Len(Expression$)
+                        i$ = Mid$(Expression$, i, 1): i = i + 1
                         Tokenized$ = Tokenized$ + i$
                         If i$ = Chr$(&HF5) Then
-                            i$ = Mid$(Expression$, I, 1): I = I + 1
+                            i$ = Mid$(Expression$, i, 1): i = i + 1
                             Tokenized$ = Tokenized$ + i$
                             If i$ = Chr$(&H3A) Then Exit While
                         End If
@@ -3265,7 +3748,7 @@ While I <= Len(Expression$)
                 GoTo GetNextToken1
         End Select
     End If
-    CheckStart = I - 1 ' This is as far back as we can go looking for an array label
+    CheckStart = i - 1 ' This is as far back as we can go looking for an array label
     ' Find an open bracket, which could be part of an array variable
     For ii = CheckStart + 1 To Len(Expression$)
         If Mid$(Expression$, ii, 1) = "=" Then Exit For ' This is not an array
@@ -3317,7 +3800,7 @@ While I <= Len(Expression$)
                 For y = BracketStart To Start - 1
                     Tokenized$ = Tokenized$ + Mid$(Expression$, y, 1)
                 Next y
-                I = Start ' Update i's position
+                i = Start ' Update i's position
                 GoTo GetNextToken1
             Else ' Not a string array, check for Numeric array
                 If (Asc(Check$) >= Asc("A") And Asc(Check$) <= Asc("Z")) Or (Asc(Check$) >= Asc("0") And Asc(Check$) <= Asc("9")) Or _
@@ -3360,7 +3843,7 @@ While I <= Len(Expression$)
                     For y = BracketStart To Start - 1
                         Tokenized$ = Tokenized$ + Mid$(Expression$, y, 1)
                     Next y
-                    I = Start ' Update i's position
+                    i = Start ' Update i's position
                     GoTo GetNextToken1
                 Else
                     ' Not an array break out of the FOR Next loop
@@ -3370,45 +3853,101 @@ While I <= Len(Expression$)
         End If
     Next ii
     CopyOtherBytes:
-    If i$ = "&" And I < Len(Expression$) Then
-        ' Might be hex value "&H"
-        Tokenized$ = Tokenized$ + i$ ' output the "&"
-        i$ = Mid$(Expression$, I, 1): I = I + 1
-        If i$ = "H" Then
-            ' We found "&H"
-            Tokenized$ = Tokenized$ + i$ ' copy the H to the output
-            ' Get the first hex value
-            While I <= Len(Expression$)
-                i$ = UCase$(Mid$(Expression$, I, 1)): I = I + 1
-                If (Asc(i$) >= Asc("A") And Asc(i$) <= Asc("F")) Or (Asc(i$) >= Asc("0") And Asc(i$) <= Asc("9")) Then
-                    Tokenized$ = Tokenized$ + i$
-                Else
-                    I = I - 1
-                    Exit While
-                End If
-            Wend
-            GoTo GetNextToken1
-        End If
+    If i$ = "&" And i < Len(Expression$) Then
+        Select Case Mid$(Expression$, i, 1)
+            Case "H"
+                ' Found an "&H"
+                Temp$ = ""
+                i = i + 1 ' skip the H
+                While i <= Len(Expression$)
+                    i$ = UCase$(Mid$(Expression$, i, 1)): i = i + 1
+                    If (Asc(i$) >= Asc("A") And Asc(i$) <= Asc("F")) Or (Asc(i$) >= Asc("0") And Asc(i$) <= Asc("9")) Then
+                        Temp$ = Temp$ + i$
+                    Else
+                        i = i - 1
+                        Exit While
+                    End If
+                Wend
+                Tokenized$ = Tokenized$ + Str$(Val("&H" + Temp$))
+                GoTo GetNextToken1
+            Case "O"
+                ' Found an "&O"
+                Temp$ = ""
+                i = i + 1 ' skip the H
+                While i <= Len(Expression$)
+                    i$ = UCase$(Mid$(Expression$, i, 1)): i = i + 1
+                    If Asc(i$) >= Asc("0") And Asc(i$) <= Asc("9") Then
+                        Temp$ = Temp$ + i$
+                    Else
+                        i = i - 1
+                        Exit While
+                    End If
+                Wend
+                Tokenized$ = Tokenized$ + Str$(Val("&O" + Temp$))
+                GoTo GetNextToken1
+            Case "B"
+                ' Found an "&B"
+                Temp$ = ""
+                i = i + 1 ' skip the H
+                While i <= Len(Expression$)
+                    i$ = UCase$(Mid$(Expression$, i, 1)): i = i + 1
+                    If Asc(i$) = Asc("0") Or Asc(i$) = Asc("1") Then
+                        Temp$ = Temp$ + i$
+                    Else
+                        i = i - 1
+                        Exit While
+                    End If
+                Wend
+                Tokenized$ = Tokenized$ + Str$(Val("&B" + Temp$))
+                GoTo GetNextToken1
+            Case Else
+                Tokenized$ = Tokenized$ + i$ ' output the "&"
+                i$ = Mid$(Expression$, i, 1): i = i + 1
+        End Select
+
+        ' Last CopyOtherBytes was:
+        '        CopyOtherBytes:
+        '        If i$ = "&" And i < Len(Expression$) Then
+        '            ' Might be hex value "&H"
+        '            Tokenized$ = Tokenized$ + i$ ' output the "&"
+        '            i$ = Mid$(Expression$, i, 1): i = i + 1
+        '            If i$ = "H" Then
+        '                ' We found "&H"
+        '                Tokenized$ = Tokenized$ + i$ ' copy the H to the output
+        '                ' Get the first hex value
+        '                While i <= Len(Expression$)
+        '                    i$ = UCase$(Mid$(Expression$, i, 1)): i = i + 1
+        '                    If (Asc(i$) >= Asc("A") And Asc(i$) <= Asc("F")) Or (Asc(i$) >= Asc("0") And Asc(i$) <= Asc("9")) Then
+        '                        Tokenized$ = Tokenized$ + i$
+        '                    Else
+        '                        i = i - 1
+        '                        Exit While
+        '                    End If
+        '                Wend
+        '                GoTo GetNextToken1
+        '            End If
+        '        End If
+
     End If
     Tokenized$ = Tokenized$ + i$
 Wend
 If Verbose > 1 Then
     Print "2nd:"
-    For I = 1 To Len(Tokenized$)
-        a = Asc(Mid$(Tokenized$, I, 1))
+    For i = 1 To Len(Tokenized$)
+        a = Asc(Mid$(Tokenized$, i, 1))
         If a < 16 Then Print "0";
-        Print Hex$(Asc(Mid$(Tokenized$, I, 1)));
-    Next I
+        Print Hex$(Asc(Mid$(Tokenized$, i, 1)));
+    Next i
     Print
 End If
 
 ' Tokenize Special Characters
 Expression$ = Tokenized$
 Tokenized$ = ""
-I = 1
+i = 1
 GetNextToken2:
-While I <= Len(Expression$)
-    V = Asc(Mid$(Expression$, I, 1)): I = I + 1
+While i <= Len(Expression$)
+    V = Asc(Mid$(Expression$, i, 1)): i = i + 1
     If V < &HF0 Then
         If V = &H23 Then Tokenized$ = Tokenized$ + Chr$(&HF5) + Chr$(V): GoTo GetNextToken2 ' Found #
         If V = &H28 Then Tokenized$ = Tokenized$ + Chr$(&HF5) + Chr$(V): GoTo GetNextToken2 ' Found open bracket
@@ -3422,43 +3961,43 @@ While I <= Len(Expression$)
     Tokenized$ = Tokenized$ + Chr$(V) 'copy the token
     Select Case V
         Case &HF0, &HF1: ' Found a Numeric or String array
-            V = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(V): I = I + 1 ' Copy MSB of Array ID
-            V = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(V): I = I + 1 ' Copy LSB of Array ID
-            V = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(V): I = I + 1 ' Copy # of dimensions
+            V = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(V): i = i + 1 ' Copy MSB of Array ID
+            V = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(V): i = i + 1 ' Copy LSB of Array ID
+            V = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(V): i = i + 1 ' Copy # of dimensions
         Case &HF2, &HF3, &HF4: ' Found a numeric or string or floating point variable
-            V = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(V): I = I + 1 ' Copy MSB of variable ID
-            V = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(V): I = I + 1 ' Copy LSB of variable ID
+            V = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(V): i = i + 1 ' Copy MSB of variable ID
+            V = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(V): i = i + 1 ' Copy LSB of variable ID
         Case &HF5 ' Found a special character
-            V = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(V): I = I + 1 ' Copy Special character
+            V = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(V): i = i + 1 ' Copy Special character
             'We have a special character tokenized already
             If V = &H22 Then
                 ' Found a quote, so copy all until we get the end tokenized quote
-                i$ = Mid$(Expression$, I, 1) ' Get a byte
+                i$ = Mid$(Expression$, i, 1) ' Get a byte
                 While i$ <> Chr$(&H22) ' keep skipping until we find the end quote
                     Tokenized$ = Tokenized$ + i$ ' Copy the byte
-                    I = I + 1: i$ = Mid$(Expression$, I, 1) ' Get a byte
+                    i = i + 1: i$ = Mid$(Expression$, i, 1) ' Get a byte
                 Wend
             End If
         Case &HFB: ' Found a DEF FN Function
-            V = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(V): I = I + 1 ' Copy MSB of FN ID
-            V = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(V): I = I + 1 ' Copy LSB of FN ID
+            V = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(V): i = i + 1 ' Copy MSB of FN ID
+            V = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(V): i = i + 1 ' Copy LSB of FN ID
         Case &HFC: ' Found an Operator
-            V = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(V): I = I + 1 ' Copy Operator
+            V = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(V): i = i + 1 ' Copy Operator
         Case &HFD, &HFE: 'Found String,Numeric command
-            V = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(V): I = I + 1 ' Copy MSB of command ID
-            V = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(V): I = I + 1 ' Copy LSB of command ID
+            V = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(V): i = i + 1 ' Copy MSB of command ID
+            V = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(V): i = i + 1 ' Copy LSB of command ID
         Case &HFF: 'Found General command
-            V = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(V): I = I + 1 ' Copy MSB of command ID
-            V = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(V): I = I + 1 ' Copy LSB of command ID
+            V = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(V): i = i + 1 ' Copy MSB of command ID
+            V = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(V): i = i + 1 ' Copy LSB of command ID
             ' Check for a DATA command
-            V = Asc(Mid$(Expression$, I - 2, 1)) * 256 + Asc(Mid$(Expression$, I - 1, 1))
+            V = Asc(Mid$(Expression$, i - 2, 1)) * 256 + Asc(Mid$(Expression$, i - 1, 1))
             If V = C_DATA Then
                 'We found a line with the DATA command, copy it all as it is, don't add extra control characters
-                While I <= Len(Expression$)
-                    i$ = Mid$(Expression$, I, 1): I = I + 1
+                While i <= Len(Expression$)
+                    i$ = Mid$(Expression$, i, 1): i = i + 1
                     Tokenized$ = Tokenized$ + i$
                     If i$ = Chr$(&HF5) Then
-                        i$ = Mid$(Expression$, I, 1): I = I + 1
+                        i$ = Mid$(Expression$, i, 1): i = i + 1
                         Tokenized$ = Tokenized$ + i$
                         If i$ = Chr$(&H3A) Then Exit While
                     End If
@@ -3467,11 +4006,11 @@ While I <= Len(Expression$)
             End If
             If V = C_REM Or V = C_REMApostrophe Then
                 'We found a line with the REM command, copy it all as it is, don't add extra control characters
-                While I <= Len(Expression$)
-                    i$ = Mid$(Expression$, I, 1): I = I + 1
+                While i <= Len(Expression$)
+                    i$ = Mid$(Expression$, i, 1): i = i + 1
                     Tokenized$ = Tokenized$ + i$
                     If i$ = Chr$(&HF5) Then
-                        i$ = Mid$(Expression$, I, 1): I = I + 1
+                        i$ = Mid$(Expression$, i, 1): i = i + 1
                         Tokenized$ = Tokenized$ + i$
                         If i$ = Chr$(&H3A) Then Exit While
                     End If
@@ -3497,58 +4036,58 @@ Wend
 ' Find Numeric & String Variables
 Expression$ = Tokenized$
 Tokenized$ = ""
-I = 1
+i = 1
 GetNextToken3:
-While I <= Len(Expression$)
-    i$ = Mid$(Expression$, I, 1)
+While i <= Len(Expression$)
+    i$ = Mid$(Expression$, i, 1)
     If Asc(i$) > &HEF Then ' Test if we hit a token
         If i$ = Chr$(&HF5) Then
             Tokenized$ = Tokenized$ + i$ ' copy the &HF5
             'We have a special character tokenized already
-            I = I + 1: i$ = Mid$(Expression$, I, 1) ' Get the Special character
+            i = i + 1: i$ = Mid$(Expression$, i, 1) ' Get the Special character
             Tokenized$ = Tokenized$ + i$ ' Copy it
             If i$ = Chr$(&H22) Then
                 ' Found a quote, so copy all until we get the end tokenized quote
-                I = I + 1: i$ = Mid$(Expression$, I, 1) ' Get a byte
-                While Mid$(Expression$, I, 1) <> Chr$(&H22) ' keep skipping until we find the end quote
+                i = i + 1: i$ = Mid$(Expression$, i, 1) ' Get a byte
+                While Mid$(Expression$, i, 1) <> Chr$(&H22) ' keep skipping until we find the end quote
                     Tokenized$ = Tokenized$ + i$ ' Copy the byte
-                    I = I + 1: i$ = Mid$(Expression$, I, 1) ' Get a byte
+                    i = i + 1: i$ = Mid$(Expression$, i, 1) ' Get a byte
                 Wend
                 GoTo GetNextToken3
             End If
-            I = I + 1: i$ = Mid$(Expression$, I, 1) ' Get a byte
+            i = i + 1: i$ = Mid$(Expression$, i, 1) ' Get a byte
             GoTo GetNextToken3
         End If
         ' This needs to account for 16 bit numbers now
         If Asc(i$) = &HF0 Or Asc(i$) = &HF1 Then
             ' Copy the token plus 3 more values (array , # of dimensions)
             Tokenized$ = Tokenized$ + i$ ' copy the token
-            I = I + 1: i$ = Mid$(Expression$, I, 1) ' Get the array MSB
+            i = i + 1: i$ = Mid$(Expression$, i, 1) ' Get the array MSB
             Tokenized$ = Tokenized$ + i$ ' Copy
-            I = I + 1: i$ = Mid$(Expression$, I, 1) ' Get the array LSB
+            i = i + 1: i$ = Mid$(Expression$, i, 1) ' Get the array LSB
             Tokenized$ = Tokenized$ + i$ ' Copy
-            I = I + 1: i$ = Mid$(Expression$, I, 1) ' Get the # of dimensions in the array
+            i = i + 1: i$ = Mid$(Expression$, i, 1) ' Get the # of dimensions in the array
             Tokenized$ = Tokenized$ + i$ ' Copy
-            I = I + 1
+            i = i + 1
             GoTo GetNextToken3
         Else
             ' Check for a REM or '
             Check$ = "REM": GoSub FindGenCommandInExpression 'Checks if position i in Expression$ has the command Check$, return Found=1 is found else Found=0
             If Found = 1 Then
-                While I <= Len(Expression$)
-                    i$ = Mid$(Expression$, I, 1)
+                While i <= Len(Expression$)
+                    i$ = Mid$(Expression$, i, 1)
                     Tokenized$ = Tokenized$ + i$
-                    I = I + 1
+                    i = i + 1
                 Wend
                 GoTo GetNextToken3
             End If
             ' Check for a an apostrophe '
             Check$ = "'": GoSub FindGenCommandInExpression 'Checks if position i in Expression$ has the command Check$, return Found=1 is found else Found=0
             If Found = 1 Then
-                While I <= Len(Expression$)
-                    i$ = Mid$(Expression$, I, 1)
+                While i <= Len(Expression$)
+                    i$ = Mid$(Expression$, i, 1)
                     Tokenized$ = Tokenized$ + i$
-                    I = I + 1
+                    i = i + 1
                 Wend
                 GoTo GetNextToken3
             End If
@@ -3556,11 +4095,11 @@ While I <= Len(Expression$)
             Check$ = "DATA": GoSub FindGenCommandInExpression 'Checks if position i in Expression$ has the command Check$, return Found=1 is found else Found=0
             If Found = 1 Then
                 'We found a DATA command - copy the rest of this line
-                While I <= Len(Expression$)
-                    i$ = Mid$(Expression$, I, 1): I = I + 1
+                While i <= Len(Expression$)
+                    i$ = Mid$(Expression$, i, 1): i = i + 1
                     Tokenized$ = Tokenized$ + i$
                     If i$ = Chr$(&HF5) Then
-                        i$ = Mid$(Expression$, I, 1): I = I + 1
+                        i$ = Mid$(Expression$, i, 1): i = i + 1
                         Tokenized$ = Tokenized$ + i$
                         If i$ = Chr$(&H3A) Then Exit While
                     End If
@@ -3570,56 +4109,110 @@ While I <= Len(Expression$)
             If Asc(i$) = &HFC Then
                 ' Hit an operator, copy only one value after
                 Tokenized$ = Tokenized$ + i$ ' copy the token
-                I = I + 1: i$ = Mid$(Expression$, I, 1) ' Get the operator
+                i = i + 1: i$ = Mid$(Expression$, i, 1) ' Get the operator
                 Tokenized$ = Tokenized$ + i$ ' Copy
-                I = I + 1
+                i = i + 1
                 GoTo GetNextToken3
             Else
                 ' We hit a token, copy it
                 Tokenized$ = Tokenized$ + i$ ' copy the token
-                I = I + 1: i$ = Mid$(Expression$, I, 1) ' Get the array MSB
+                i = i + 1: i$ = Mid$(Expression$, i, 1) ' Get the array MSB
                 Tokenized$ = Tokenized$ + i$ ' Copy
-                I = I + 1: i$ = Mid$(Expression$, I, 1) ' Get the array LSB
+                i = i + 1: i$ = Mid$(Expression$, i, 1) ' Get the array LSB
                 Tokenized$ = Tokenized$ + i$ ' Copy
-                I = I + 1
+                i = i + 1
                 GoTo GetNextToken3
             End If
         End If
     Else
-        If i$ = "&" And I < Len(Expression$) Then
-            ' Might be hex value "&H"
-            Tokenized$ = Tokenized$ + i$ ' output the "&"
-            I = I + 1 ' move past the "&"
-            i$ = Mid$(Expression$, I, 1)
-            If i$ = "H" Then
-                ' We found "&H"
-                Tokenized$ = Tokenized$ + i$ ' copy the H to the output
-                I = I + 1
-                ' Get the first hex value
-                i$ = UCase$(Mid$(Expression$, I, 1)): I = I + 1
-                While I <= Len(Expression$)
-                    If (Asc(i$) >= Asc("A") And Asc(i$) <= Asc("F")) Or (Asc(i$) >= Asc("0") And Asc(i$) <= Asc("9")) Then
-                        Tokenized$ = Tokenized$ + i$
-                        i$ = UCase$(Mid$(Expression$, I, 1)): I = I + 1
-                    Else
-                        Exit While
-                    End If
-                Wend
-                I = I - 1
-            End If
+        If i$ = "&" And i < Len(Expression$) Then
+            i = i + 1 ' Point at the next character
+            Select Case Mid$(Expression$, i, 1)
+                Case "H"
+                    ' Found an "&H"
+                    i = i + 1 ' skip the H
+                    Temp$ = ""
+                    While i <= Len(Expression$)
+                        i$ = UCase$(Mid$(Expression$, i, 1)): i = i + 1
+                        If (Asc(i$) >= Asc("A") And Asc(i$) <= Asc("F")) Or (Asc(i$) >= Asc("0") And Asc(i$) <= Asc("9")) Then
+                            Temp$ = Temp$ + i$
+                        Else
+                            i = i - 1
+                            Exit While
+                        End If
+                    Wend
+                    Tokenized$ = Tokenized$ + Str$(Val("&H" + Temp$))
+                Case "O"
+                    ' Found an "&H"
+                    i = i + 1 ' skip the O
+                    Temp$ = ""
+                    While i <= Len(Expression$)
+                        i$ = UCase$(Mid$(Expression$, i, 1)): i = i + 1
+                        If Asc(i$) >= Asc("0") And Asc(i$) <= Asc("7") Then
+                            Temp$ = Temp$ + i$
+                        Else
+                            i = i - 1
+                            Exit While
+                        End If
+                    Wend
+                    Tokenized$ = Tokenized$ + Str$(Val("&O" + Temp$))
+                Case "B"
+                    ' Found an "&B"
+                    i = i + 1 ' skip the B
+                    Temp$ = ""
+                    While i <= Len(Expression$)
+                        i$ = UCase$(Mid$(Expression$, i, 1)): i = i + 1
+                        If Asc(i$) = Asc("0") Or Asc(i$) = Asc("1") Then
+                            Temp$ = Temp$ + i$
+                        Else
+                            i = i - 1
+                            Exit While
+                        End If
+                    Wend
+                    Tokenized$ = Tokenized$ + Str$(Val("&B" + Temp$))
+                Case Else
+                    Tokenized$ = Tokenized$ + i$ ' output the "&"
+                    i$ = Mid$(Expression$, i, 1)
+            End Select
         Else
+
+            ' original &H handling:
+            '            If i$ = "&" And i < Len(Expression$) Then
+            '                ' Might be hex value "&H"
+            '                Tokenized$ = Tokenized$ + i$ ' output the "&"
+            '                i = i + 1 ' move past the "&"
+            '                i$ = Mid$(Expression$, i, 1)
+            '                If i$ = "H" Then
+            '                    ' We found "&H"
+            '                    Tokenized$ = Tokenized$ + i$ ' copy the H to the output
+            '                    i = i + 1
+            '                    ' Get the first hex value
+            '                    i$ = UCase$(Mid$(Expression$, i, 1)): i = i + 1
+            '                    While i <= Len(Expression$)
+            '                        If (Asc(i$) >= Asc("A") And Asc(i$) <= Asc("F")) Or (Asc(i$) >= Asc("0") And Asc(i$) <= Asc("9")) Then
+            '                            Tokenized$ = Tokenized$ + i$
+            '                            i$ = UCase$(Mid$(Expression$, i, 1)): i = i + 1
+            '                        Else
+            '                            Exit While
+            '                        End If
+            '                    Wend
+            '                    i = i - 1
+            '                End If
+            '            Else
+
+
             ' Check for a variable
             If Asc(UCase$(i$)) >= Asc("A") And Asc(UCase$(i$)) <= Asc("Z") Then ' Is it a letter?
                 ' It is part of a variable name, we don't know if it's numeric or string at the moment
                 ' Get the variable name
-                Start = I ' start points at the 2nd character of the variable
+                Start = i ' start points at the 2nd character of the variable
                 While Start <= Len(Expression$)
                     If Mid$(Expression$, Start, 1) = " " Or Mid$(Expression$, Start, 1) = Chr$(&HF5) Or Mid$(Expression$, Start, 1) = Chr$(&HFC) _
                     Or Mid$(Expression$, Start, 1) = "$" or Mid$(Expression$, Start, 1) = "=" Then Exit While
                     Start = Start + 1
                 Wend
                 If Mid$(Expression$, Start, 1) = "$" Then Start = Start + 1
-                Temp$ = Mid$(Expression$, I, Start - I)
+                Temp$ = Mid$(Expression$, i, Start - i)
                 If Right$(Temp$, 1) = "$" Then
                     'We found a string variable to tokenize
                     GoSub AddStringVariable ' Add variable Temp$ to the String variable List
@@ -3630,7 +4223,7 @@ While I <= Len(Expression$)
                         Num = StringVariableCounter - 1: GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSB
                         Tokenized$ = Tokenized$ + Chr$(&HF3) + Chr$(MSB) + Chr$(LSB)
                     End If
-                    I = I + Len(Temp$) ' move pointer forward
+                    i = i + Len(Temp$) ' move pointer forward
                     GoTo GetNextToken3
                 Else
                     'Test if Temp$ is a label instead of a variable name, write it as is if it is a LABEL
@@ -3655,6 +4248,7 @@ While I <= Len(Expression$)
                                     Tokenized$ = Tokenized$ + Chr$(&HF4) + Chr$(MSB) + Chr$(LSB)
                                 End If
                             Else
+                                GoSub CheckVarForSpecial ' If variable Temp$ ends with special tokens which temp change their Type, we must ignore them
                                 GoSub AddNumericVariable ' Add variable Temp$ to the Numeric variable List
                                 If Found = 1 Then
                                     Num = ii: GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSB
@@ -3665,6 +4259,7 @@ While I <= Len(Expression$)
                                 End If
                             End If
                         Else
+                            GoSub CheckVarForSpecial ' If variable Temp$ ends with special tokens which temp change their Type, we must ignore them
                             GoSub AddNumericVariable ' Add variable Temp$ to the Numeric variable List
                             If Found = 1 Then
                                 Num = ii: GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSB
@@ -3680,23 +4275,23 @@ While I <= Len(Expression$)
                             Tokenized$ = Tokenized$ + Mid$(LabelCheck$, ii1, 1)
                         Next ii1
                     End If
-                    I = I + Len(Temp$) ' move pointer forward
+                    i = i + Len(Temp$) ' move pointer forward
                     GoTo GetNextToken3
                 End If
             End If
         End If
     End If
     Tokenized$ = Tokenized$ + i$
-    I = I + 1
+    i = i + 1
 Wend
 ' Remove all spaces that aren't in a quote or DATA statement
 Expression$ = Tokenized$
 Tokenized$ = ""
-I = 1
+i = 1
 
 LoopFindSpaces:
-While I <= Len(Expression$)
-    V = Asc(Mid$(Expression$, I, 1)): I = I + 1
+While i <= Len(Expression$)
+    V = Asc(Mid$(Expression$, i, 1)): i = i + 1
     If V < &HF0 Then
         If V <> &H20 Then Tokenized$ = Tokenized$ + Chr$(V) ' If not a space then copy it
         GoTo LoopFindSpaces
@@ -3705,43 +4300,43 @@ While I <= Len(Expression$)
     Tokenized$ = Tokenized$ + Chr$(V) 'copy the token
     Select Case V
         Case &HF0, &HF1: ' Found a Numeric or String array
-            V = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(V): I = I + 1 ' Copy MSB of Array ID
-            V = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(V): I = I + 1 ' Copy LSB of Array ID
-            V = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(V): I = I + 1 ' Copy # of dimensions
+            V = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(V): i = i + 1 ' Copy MSB of Array ID
+            V = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(V): i = i + 1 ' Copy LSB of Array ID
+            V = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(V): i = i + 1 ' Copy # of dimensions
         Case &HF2, &HF3, &HF4: ' Found a numeric or string or floating point variable
-            V = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(V): I = I + 1 ' Copy MSB of variable ID
-            V = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(V): I = I + 1 ' Copy LSB of variable ID
+            V = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(V): i = i + 1 ' Copy MSB of variable ID
+            V = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(V): i = i + 1 ' Copy LSB of variable ID
         Case &HF5 ' Found a special character
-            V = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(V): I = I + 1 ' Copy Special character
+            V = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(V): i = i + 1 ' Copy Special character
             'We have a special character tokenized already
             If V = &H22 Then
                 ' Found a quote, so copy all until we get the end tokenized quote
-                i$ = Mid$(Expression$, I, 1) ' Get a byte
+                i$ = Mid$(Expression$, i, 1) ' Get a byte
                 While i$ <> Chr$(&H22) ' keep skipping until we find the end quote
                     Tokenized$ = Tokenized$ + i$ ' Copy the byte
-                    I = I + 1: i$ = Mid$(Expression$, I, 1) ' Get a byte
+                    i = i + 1: i$ = Mid$(Expression$, i, 1) ' Get a byte
                 Wend
             End If
         Case &HFB: ' Found a DEF FN Function
-            V = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(V): I = I + 1 ' Copy MSB of FN ID
-            V = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(V): I = I + 1 ' Copy LSB of FN ID
+            V = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(V): i = i + 1 ' Copy MSB of FN ID
+            V = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(V): i = i + 1 ' Copy LSB of FN ID
         Case &HFC: ' Found an Operator
-            V = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(V): I = I + 1 ' Copy Operator
+            V = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(V): i = i + 1 ' Copy Operator
         Case &HFD, &HFE: 'Found String,Numeric command
-            V = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(V): I = I + 1 ' Copy MSB of command ID
-            V = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(V): I = I + 1 ' Copy LSB of command ID
+            V = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(V): i = i + 1 ' Copy MSB of command ID
+            V = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(V): i = i + 1 ' Copy LSB of command ID
         Case &HFF: 'Found General command
-            V = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(V): I = I + 1 ' Copy MSB of command ID
-            V = Asc(Mid$(Expression$, I, 1)): Tokenized$ = Tokenized$ + Chr$(V): I = I + 1 ' Copy LSB of command ID
-            V = Asc(Mid$(Expression$, I - 2, 1)) * 256 + Asc(Mid$(Expression$, I - 1, 1))
+            V = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(V): i = i + 1 ' Copy MSB of command ID
+            V = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(V): i = i + 1 ' Copy LSB of command ID
+            V = Asc(Mid$(Expression$, i - 2, 1)) * 256 + Asc(Mid$(Expression$, i - 1, 1))
             ' Check for a REM or '
             If V = C_REM Or V = C_REMApostrophe Then
                 'We found a line with the REM command, copy it all as it is, don't add extra control characters
-                While I <= Len(Expression$)
-                    i$ = Mid$(Expression$, I, 1): I = I + 1
+                While i <= Len(Expression$)
+                    i$ = Mid$(Expression$, i, 1): i = i + 1
                     Tokenized$ = Tokenized$ + i$
                     If i$ = Chr$(&HF5) Then
-                        i$ = Mid$(Expression$, I, 1): I = I + 1
+                        i$ = Mid$(Expression$, i, 1): i = i + 1
                         Tokenized$ = Tokenized$ + i$
                         If i$ = Chr$(&H3A) Then Exit While
                     End If
@@ -3752,10 +4347,10 @@ While I <= Len(Expression$)
             If V = C_DATA Then
                 'We found a line with the DATA command
                 MoreDataToCheck:
-                If I > Len(Expression$) Then GoTo LoopFindSpaces ' we have reached the end of the expression
-                V = Asc(Mid$(Expression$, I, 1)): I = I + 1 'Get the first byte after the command DATA or after a comma
+                If i > Len(Expression$) Then GoTo LoopFindSpaces ' we have reached the end of the expression
+                V = Asc(Mid$(Expression$, i, 1)): i = i + 1 'Get the first byte after the command DATA or after a comma
                 If V = Asc(" ") Then
-                    If I <= Len(Expression$) Then
+                    If i <= Len(Expression$) Then
                         GoTo MoreDataToCheck ' skip extra spaces after a comma or after the command DATA
                     Else
                         GoTo LoopFindSpaces ' we have reached the end of the expression
@@ -3768,42 +4363,42 @@ While I <= Len(Expression$)
                 End If
                 If (V >= Asc("0") And V <= Asc("9")) Then
                     'We have a number to copy, so we can erase any spaces we find until a comma or end of Expression$
-                    Do Until V = &H2C Or I > Len(Expression$)
+                    Do Until V = &H2C Or i > Len(Expression$)
                         If V = &HF5 Then
-                            If Asc(Mid$(Expression$, I, 1)) = &H3A Then
+                            If Asc(Mid$(Expression$, i, 1)) = &H3A Then
                                 Exit Do
                             End If
                         End If
                         If V <> Asc(" ") Then Tokenized$ = Tokenized$ + Chr$(V)
-                        V = Asc(Mid$(Expression$, I, 1)): I = I + 1
+                        V = Asc(Mid$(Expression$, i, 1)): i = i + 1
                     Loop
                     Tokenized$ = Tokenized$ + Chr$(V)
                     If V = &HF5 Then
                         ' We found a colon on this line
-                        V = Asc(Mid$(Expression$, I, 1)): I = I + 1
+                        V = Asc(Mid$(Expression$, i, 1)): i = i + 1
                         Tokenized$ = Tokenized$ + Chr$(V) ' Copy the colon
                         GoTo LoopFindSpaces ' look for more commands after the colon
                     End If
-                    If I > Len(Expression$) Then GoTo LoopFindSpaces ' we are at the end
+                    If i > Len(Expression$) Then GoTo LoopFindSpaces ' we are at the end
                     GoTo MoreDataToCheck ' Handle more data
                 End If
-                If V = Asc("&") And Mid$(Expression$, I, 1) = "H" Then
+                If V = Asc("&") And Mid$(Expression$, i, 1) = "H" Then
                     'it's a hex number get it all and convert it to a number
                     Temp$ = ""
-                    I = I + 1 ' skip past the "H"
-                    V = Asc(Mid$(Expression$, I, 1)): I = I + 1
-                    Do Until V = &H2C Or I > Len(Expression$)
+                    i = i + 1 ' skip past the "H"
+                    V = Asc(Mid$(Expression$, i, 1)): i = i + 1
+                    Do Until V = &H2C Or i > Len(Expression$)
                         If V = &HF5 Then
-                            If Asc(Mid$(Expression$, I, 1)) = &H3A Then
+                            If Asc(Mid$(Expression$, i, 1)) = &H3A Then
                                 Exit Do
                             End If
                         End If
                         Temp$ = Temp$ + Chr$(V)
-                        V = Asc(Mid$(Expression$, I, 1)): I = I + 1
+                        V = Asc(Mid$(Expression$, i, 1)): i = i + 1
                     Loop
                     If V = &HF5 Then
                         ' We found a colon on this line
-                        V = Asc(Mid$(Expression$, I, 1)): I = I + 1
+                        V = Asc(Mid$(Expression$, i, 1)): i = i + 1
                         Tokenized$ = Tokenized$ + Chr$(V) ' Copy the colon
                         GoTo LoopFindSpaces ' look for more commands after the colon
                     End If
@@ -3825,47 +4420,47 @@ While I <= Len(Expression$)
                 End If
                 'Otherwise it's a string copy spaces in the string
                 DataString:
-                If V = &HF5 And Asc(Mid$(Expression$, I, 1)) = &H22 Then
+                If V = &HF5 And Asc(Mid$(Expression$, i, 1)) = &H22 Then
                     ' Found a quote
                     Tokenized$ = Tokenized$ + Chr$(V) ' Copy &HF5
-                    V = Asc(Mid$(Expression$, I, 1)): I = I + 1 ' Get the quote
+                    V = Asc(Mid$(Expression$, i, 1)): i = i + 1 ' Get the quote
                     ' inside quoted text ignore commas
-                    Do Until (V = &HF5 And Asc(Mid$(Expression$, I, 1)) = &H22) Or I > Len(Expression$) ' copy until we get a close quote or End of line
+                    Do Until (V = &HF5 And Asc(Mid$(Expression$, i, 1)) = &H22) Or i > Len(Expression$) ' copy until we get a close quote or End of line
                         If V = &HF5 Then
-                            If Asc(Mid$(Expression$, I, 1)) = &H3A Then
+                            If Asc(Mid$(Expression$, i, 1)) = &H3A Then
                                 Exit Do
                             End If
                         End If
                         Tokenized$ = Tokenized$ + Chr$(V)
-                        V = Asc(Mid$(Expression$, I, 1)): I = I + 1
+                        V = Asc(Mid$(Expression$, i, 1)): i = i + 1
                     Loop
                     Tokenized$ = Tokenized$ + Chr$(V)
-                    If V = &HF5 And Asc(Mid$(Expression$, I, 1)) = &H22 Then
+                    If V = &HF5 And Asc(Mid$(Expression$, i, 1)) = &H22 Then
                         ' We found an end quote
-                        V = Asc(Mid$(Expression$, I, 1)): I = I + 1
+                        V = Asc(Mid$(Expression$, i, 1)): i = i + 1
                         Tokenized$ = Tokenized$ + Chr$(V)
                         GoTo MoreDataToCheck ' Handle more data
                     End If
-                    If V = &HF5 And Asc(Mid$(Expression$, I, 1)) = &H3A Then
+                    If V = &HF5 And Asc(Mid$(Expression$, i, 1)) = &H3A Then
                         ' We found a colon on this line
-                        V = Asc(Mid$(Expression$, I, 1)): I = I + 1
+                        V = Asc(Mid$(Expression$, i, 1)): i = i + 1
                         Tokenized$ = Tokenized$ + Chr$(V) ' Copy the colon
                         GoTo LoopFindSpaces ' look for more commands after the colon
                     End If
                     GoTo LoopFindSpaces ' look for more commands
                 Else
                     ' Not a quote, copy as is until we get a comma, Colon or EOL
-                    Do Until V = &H2C Or I > Len(Expression$)
+                    Do Until V = &H2C Or i > Len(Expression$)
                         If V = &HF5 Then
-                            If Asc(Mid$(Expression$, I, 1)) = &H3A Then
+                            If Asc(Mid$(Expression$, i, 1)) = &H3A Then
                                 Exit Do
                             End If
                         End If
                         Tokenized$ = Tokenized$ + Chr$(V)
-                        V = Asc(Mid$(Expression$, I, 1)): I = I + 1
+                        V = Asc(Mid$(Expression$, i, 1)): i = i + 1
                     Loop
                     ' Make sure right most byte is not a space
-                    If I > Len(Expression$) Then
+                    If i > Len(Expression$) Then
                         'Got to EOL
                         Tokenized$ = Tokenized$ + Chr$(V)
                         Tokenized$ = Left$(Tokenized$, Len(Tokenized$) - 1)
@@ -3877,7 +4472,7 @@ While I <= Len(Expression$)
                         Tokenized$ = Tokenized$ + Chr$(V) ' Write the &HF5 or comma
                         If V = &HF5 Then
                             ' We found a colon on this line
-                            V = Asc(Mid$(Expression$, I, 1)): I = I + 1
+                            V = Asc(Mid$(Expression$, i, 1)): i = i + 1
                             Tokenized$ = Tokenized$ + Chr$(V) ' Copy the colon
                             GoTo LoopFindSpaces ' look for more commands after the colon
                         End If
@@ -3894,27 +4489,27 @@ Check$ = "DEF": GoSub FindGenCommandNumber ' Gets the General Command number of 
 If Found = 1 Then
     Num = ii
     GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSBs
-    I = 1
-    While I <= Len(Tokenized$)
-        V = Asc(Mid$(Tokenized$, I, 1))
+    i = 1
+    While i <= Len(Tokenized$)
+        V = Asc(Mid$(Tokenized$, i, 1))
         If V = &HFF Then
-            If Asc(Mid$(Tokenized$, I + 1, 1)) = MSB And Asc(Mid$(Tokenized$, I + 2, 1)) = LSB Then
+            If Asc(Mid$(Tokenized$, i + 1, 1)) = MSB And Asc(Mid$(Tokenized$, i + 2, 1)) = LSB Then
                 ' Found a DEF FN, let's get the Variable type and number
-                DefVar(DefVarCount) = Asc(Mid$(Tokenized$, I + 9, 1)) * 256 + Asc(Mid$(Tokenized$, I + 10, 1))
+                DefVar(DefVarCount) = Asc(Mid$(Tokenized$, i + 9, 1)) * 256 + Asc(Mid$(Tokenized$, i + 10, 1))
                 DefVarCount = DefVarCount + 1
             End If
         End If
-        I = I + 1
+        i = i + 1
     Wend
 End If
 DoneGettingExpression:
 If Verbose > 1 Then
     Print "3rd:"
-    For I = 1 To Len(Tokenized$)
-        a = Asc(Mid$(Tokenized$, I, 1))
+    For i = 1 To Len(Tokenized$)
+        a = Asc(Mid$(Tokenized$, i, 1))
         If a < 16 Then Print "0";
-        Print Hex$(Asc(Mid$(Tokenized$, I, 1)));
-    Next I
+        Print Hex$(Asc(Mid$(Tokenized$, i, 1)));
+    Next i
     Print
 End If
 Return
@@ -4056,6 +4651,29 @@ NumericCommandsFound$(NumericCommandsFoundCount) = Temp$
 NumericCommandsFoundCount = NumericCommandsFoundCount + 1
 Return
 
+' Set Variable Number in NumericVarType() to the requested value
+' Set Numeric Array in NumericArrayType() to the requested value
+' C_AS = command AS
+
+' DIM command is used to assign variables types and space for arrays:
+' Variable types are:
+'   1 Dim a As _Bit '                 Min -1, Max 0
+'   2 Dim b As _Unsigned _Bit '       Min 0 , Max 1
+'   3 Dim c As _Byte '                Min -128, Max 127
+'   4 Dim d As _Unsigned _Byte '      Min 0, Max 255
+'   5 Dim e As Integer '              Min -32,768, Max 32,767
+'   6 Dim f As _Unsigned Integer '    Min 0, Max 65,535
+'   7 Dim g As Long '                 Min -2 Gig, +2 Gig
+'   8 Dim h As _Unsigned Long '       Min 0, Max 4 Gig
+'   9 Dim i As _Integer64 '           Min -(8 byte value), Max +(8 byte value)
+'  10 Dim j As _Unsigned _Integer64 ' Min 0, Max (8 byte value)
+'  11 Dim k As Single '(Default size) Min E-38, Max E+38
+'  12 Dim l As Double '               Min E-308, Max E+308
+
+' Since at this point the commands variables and in the program have already been identified we need to change the numeric variable format from
+' Numeric array    &HF0, MSB,LSB,# of Elements in the Array to &HF0, MSB,LSB,Type,# of Elements in the Array
+' Numeric Variable &HF2, MSB,LSB to &HF2, MSB,LSB,Type
+
 
 ' To calculate the maximum RAM required for an array:
 ' Default arrays are 0 to 10 = 11 elements
@@ -4063,68 +4681,108 @@ Return
 ' Ram required = (11 * 11 * 11 * 11) * 2
 ' A 2 dimension, String array would be calculated with
 ' Ram required = (11 * 11) * 256
+
 DoDim:
 V = Array(x): x = x + 1
 ' Get the tokenized array
 ' F0 = Numeric Arrays
 ' F1 = String Arrays
-If V = &HF0 Then
-    'Set the size of a numeric array
+If V = &HF1 Then
+    'Set the size of a string array
     ii = Array(x) * 256 + Array(x + 1): x = x + 2 ' Get the array identifier value
-    NumericArrayBits(ii) = 8 ' Set the default # of bits needed for the array as 8 bits
-    NumericArrayDimensionsVal$(ii) = "" ' clear the # of Element values per dimension
+    StringArrayDimensionsVal$(ii) = "" ' clear the # of Element values per dimension
     NumOfDims = Array(x): x = x + 1 ' Get the number of dimensions for the arrays
     ' Get the number of elements per dimension
     ' These values will be before a comma
     V = Array(x): x = x + 2 ' consume the $F5 & open bracket
+    ArrayElems = 1
     For T1 = 1 To NumOfDims
         Temp$ = ""
-        V = Array(x): x = x + 1 ' get the first value
-        While V <> &HF5 ' comma will be &HF5 &H2C and close bracket will be &HF5 &H29
+        V = Array(x): x = x + 1 ' get first digit byte
+        While V <> &HF5 ' stop when we hit the special-char token (F5)
             Temp$ = Temp$ + Chr$(V)
-            V = Array(x): x = x + 1 ' Get the next digit of the number
+            V = Array(x): x = x + 1
         Wend
-        V = Array(x): x = x + 1 ' consume the comma or close bracket
-        DimVal$ = Hex$(Val(Temp$)) ' Make the value a hex string
-        DimVal$ = Right$("0000" + DimVal$, 4) ' Make sure the value is four digits
-        If Val("&H" + DimVal$) > 254 Then NumericArrayBits(ii) = 16 ' If any of the Element sizes are more that 254 flag as 16 bit array
-        NumericArrayDimensionsVal$(ii) = NumericArrayDimensionsVal$(ii) + DimVal$
+        V = Array(x): x = x + 1 ' consume the special char value (2C comma or 29 close paren)
+        DimN = Val(Temp$) ' DIM A(DimN, ...)
+        ArrayElems = ArrayElems * (DimN + 1) ' 0-based => 0..DimN
+        DimVal$ = Hex$(DimN)
+        DimVal$ = Right$("0000" + DimVal$, 4)
+        StringArrayDimensionsVal$(ii) = StringArrayDimensionsVal$(ii) + DimVal$
     Next T1
-Else
-    If V = &HF1 Then
-        'Set the size of a string array
-        ii = Array(x) * 256 + Array(x + 1): x = x + 2 ' Get the array identifier value
+    If ArrayElems > 254 Then
+        StringArrayBits(ii) = 16 ' If it requires more than 254 bytes than consider it a 16 bit array, 16 bit multiply will be needed
+    Else
         StringArrayBits(ii) = 8 ' Set the default # of bits needed for the array as 8 bits
-        StringArrayDimensionsVal$(ii) = "" ' clear the # of Element values per dimension
+    End If
+Else
+    If V = &HF0 Then
+        'Set the type of a numeric array
+        ii = Array(x) * 256 + Array(x + 1): x = x + 2 ' Get the array identifier value
         NumOfDims = Array(x): x = x + 1 ' Get the number of dimensions for the arrays
+        NumericArrayBits(ii) = 8 ' Set the default # of bits needed for the array as 8 bits
+        NumericArrayDimensionsVal$(ii) = "" ' clear the # of Element values per dimension
         ' Get the number of elements per dimension
         ' These values will be before a comma
         V = Array(x): x = x + 2 ' consume the $F5 & open bracket
+        ArrayElems = 1
+        DimType = 11
         For T1 = 1 To NumOfDims
             Temp$ = ""
-            V = Array(x): x = x + 1 ' get the first value
-            While V <> &HF5 ' comma will be &HF5 &H2C and close bracket will be &HF5 &H29
+            V = Array(x): x = x + 1 ' get first digit byte
+            While V <> &HF5 ' stop when we hit the special-char token (F5)
                 Temp$ = Temp$ + Chr$(V)
-                V = Array(x): x = x + 1 ' Get the next digit of the number
+                V = Array(x): x = x + 1
             Wend
-            V = Array(x): x = x + 1 ' consume the comma or close bracket
-            DimVal$ = Hex$(Val(Temp$)) ' Make the value a hex string
-            DimVal$ = Right$("0000" + DimVal$, 4) ' Make sure the value is four digits
-            If Val("&H" + DimVal$) > 254 Then StringArrayBits(ii) = 16 ' If any of the Element sizes are more that 254 flag as 16 bit array
-            StringArrayDimensionsVal$(ii) = StringArrayDimensionsVal$(ii) + DimVal$
+            V = Array(x): x = x + 1 ' consume the special char value (2C comma or 29 close paren)
+            DimN = Val(Temp$) ' DIM A(DimN, ...)
+            ArrayElems = ArrayElems * (DimN + 1) ' 0-based => 0..DimN
+            DimVal$ = Hex$(DimN)
+            DimVal$ = Right$("0000" + DimVal$, 4)
+            NumericArrayDimensionsVal$(ii) = NumericArrayDimensionsVal$(ii) + DimVal$
         Next T1
+        If ArrayElems > 254 Then
+            NumericArrayBits(ii) = 16 ' If it requires more than 254 bytes than consider it a 16 bit array, 16 bit multiply will be needed
+        Else
+            NumericArrayBits(ii) = 8 ' Set the default # of bits needed for the array as 8 bits
+        End If
+        If Array(x) = &HFF Then
+            AsCode = Array(x + 1) * 256 + Array(x + 2)
+            If AsCode = C_AS Then
+                x = x + 3
+                GoSub FoundAS
+                NumericArrayType(ii) = DimType ' DimType has the variable/array type to be assigned
+                ' ^^^ Moved this set inside the If (only set if AS present)
+            End If
+        End If
+        ' ^^^ Note: Removed the set outside the If
+    Else
+        If V = &HF2 Then
+            ' Set the type of a numeric variable
+            ii = Array(x) * 256 + Array(x + 1): x = x + 2 ' Get the variable identifier value
+            DimType = 11 ' Still default here, but only used if AS overrides it
+            If Array(x) = &HFF Then
+                AsCode = Array(x + 1) * 256 + Array(x + 2)
+                If AsCode = C_AS Then
+                    x = x + 3
+                    GoSub FoundAS
+                    NumericVarType(ii) = DimType ' DimType has the variable/array type to be assigned
+                    ' ^^^ Moved this set (and print) inside the If (only set if AS present)
+                End If
+            End If
+            ' ^^^ Note: Removed the set outside the If
+        End If
     End If
 End If
 If V = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A) Then V = Array(x): x = x + 1: Return ' We are done with the DIM command
 If V = &HFF Then
-    V = Array(x) * 256 + Array(x + 1)
+    V = Array(x) * 256 + Array(x + 1): x = x + 2
     If V = C_REM Or V = C_REMApostrophe Then
         ' we have a REMark
         GoTo ConsumeCommentsAndEOL ' Consume any comments and the EOL and Return
     End If
 End If
 GoTo DoDim ' Set the next array values
-
 ConsumeCommentsAndEOL:
 If V = &H0D Or V = &H3A Then Return
 Do Until V = &HF5 And Array(x) = &H0D 'consume any comments and the EOL
@@ -4132,7 +4790,71 @@ Do Until V = &HF5 And Array(x) = &H0D 'consume any comments and the EOL
 Loop
 V = Array(x): x = x + 1
 Return
-
+' Get DimType (after AS command)
+FoundAS:
+V = Array(x): x = x + 1
+If V <> &HFF Then
+    ' First byte must be a command
+    Print "Error: Unknown value after AS on";: GoTo FoundError
+End If
+Type1 = Array(x) * 256 + Array(x + 1): x = x + 2 ' Get the first type value
+If Type1 <> C_UNSIGNED Then
+    ' Type is not _UNSIGNED
+    Select Case Type1
+        Case C_UBIT
+            ' _BIT
+            DimType = 1
+        Case C_UBYTE
+            ' _BYTE
+            DimType = 3
+        Case C_INTEGER
+            ' INTEGER
+            DimType = 5
+        Case C_LONG
+            ' LONG
+            DimType = 7
+        Case C_INTEGER64
+            ' _INTEGER64
+            DimType = 9
+        Case C_SINGLE
+            ' SINGLE
+            DimType = 11
+        Case C_DOUBLE
+            ' DOUBLE
+            DimType = 12
+        Case Else
+            Print "Error: Unknown value after AS on";: GoTo FoundError
+    End Select
+Else
+    ' First value is _UNSIGNED
+    V = Array(x): x = x + 1
+    If V <> &HFF Then
+        ' First byte must be a command
+        Print "Error: Unknown value after AS on";: GoTo FoundError
+    End If
+    Type2 = Array(x) * 256 + Array(x + 1): x = x + 2 ' Get the 2nd type value
+    ' First type is _UNSIGNED
+    Select Case Type2
+        Case C_UBIT
+            ' _BIT
+            DimType = 2
+        Case C_UBYTE
+            ' _BYTE
+            DimType = 4
+        Case C_INTEGER
+            ' INTEGER
+            DimType = 6
+        Case C_LONG
+            ' LONG
+            DimType = 8
+        Case C_INTEGER64
+            ' _INTEGER64
+            DimType = 10
+        Case Else
+            Print "Error: Unknown value after AS on";: GoTo FoundError
+    End Select
+End If
+Return
 ' Send assembly instructions out to .asm file
 AO:
 'Print z$ at the beginning of the line
@@ -4214,92 +4936,17 @@ Return
 'Checks if position i in Expression$ has the command Check$, return Found=1 is found else Found=0
 FindGenCommandInExpression:
 Found = 0
-If Asc(Mid$(Expression$, I, 1)) = &HFF Then
+If Asc(Mid$(Expression$, i, 1)) = &HFF Then
     For ii = 0 To GeneralCommandsCount
         If GeneralCommands$(ii) = Check$ Then
             Exit For
         End If
     Next ii
-    If Asc(Mid$(Expression$, I + 1, 1)) * 256 + Asc(Mid$(Expression$, I + 2, 1)) = ii Then
+    If Asc(Mid$(Expression$, i + 1, 1)) * 256 + Asc(Mid$(Expression$, i + 2, 1)) = ii Then
         Found = 1
     End If
 End If
 Return
-
-' Convert numbers to Floating point format
-'DECLARE FUNCTION FloatTo6809Format# (num AS DOUBLE)
-Dim FPNum As Double
-Dim lineFC As String
-Dim label As String
-Dim expo As Integer, sign As _Byte, mant As Long
-Dim byte(5) As _Byte
-
-label = ""
-Print "* These are the floating point constants."
-Print "* They are generated by the QB64 version of makeflot."
-FPConversionLoop:
-Do
-    ' Read input from the user
-    Line Input lineFC
-    lineFC = RTrim$(lineFC)
-
-    If Len(lineFC) = 0 Then
-        ' Skip empty lines
-        GoTo FPConversionLoop
-    End If
-
-    If Left$(lineFC, 1) = "*" Then
-        ' Print comments as they are
-        Print lineFC
-        GoTo FPConversionLoop
-    End If
-
-    ' Check if it's a label or a number
-    If (Asc(Left$(lineFC, 1)) >= 65 And Asc(Left$(lineFC, 1)) <= 90) Or (Asc(Left$(lineFC, 1)) >= 97 And Asc(Left$(lineFC, 1)) <= 122) Then
-        ' It's a label
-        label = lineFC
-    Else
-        ' It's a number, convert it
-        FPNum = Val(lineFC)
-        If FPNum = 0 Then
-            sign = 0
-            expo = 0
-            mant = 0
-        Else
-            If FPNum < 0 Then sign = &H80 Else sign = 0
-            FPNum = Abs(FPNum)
-            expo = &H9F
-
-            ' Normalize mantissa
-            Do While FPNum < 2147483648#
-                FPNum = FPNum * 2
-                expo = expo - 1
-            Loop
-            Do While FPNum >= 4294967296#
-                FPNum = FPNum / 2
-                expo = expo + 1
-            Loop
-
-            mant = Int(FPNum + 0.5)
-        End If
-
-        ' Create the 5-byte floating point representation
-        byte(0) = expo
-        byte(1) = (Val("&H" + Left$(Hex$(mant), 2)) And &H7F) Or sign
-        byte(2) = Val("&H" + Mid$(Hex$(mant), 3, 2))
-        byte(3) = Val("&H" + Mid$(Hex$(mant), 5, 2))
-        byte(4) = Val("&H" + Right$(Hex$(mant), 2))
-
-        ' Print the floating-point constant in the same format
-        Print label; Spc(16 - Len(label));
-        Print "fcb $"; Hex$(byte(0)); ",$"; Hex$(byte(1)); ",$"; Hex$(byte(2)); ",$"; Hex$(byte(3)); ",$"; Hex$(byte(4)); " ;"; lineFC
-        label = ""
-    End If
-
-Loop Until 1 > 1
-
-Print "* End of floating point constants."
-System
 
 ' LINE may or may not have ,B or BF at the end which might get turned into variable below
 ' Change the Tokenized$ command so it will have
@@ -4309,27 +4956,27 @@ System
 ' ,1,1 - Draw a box and fill it
 FixLineCommand:
 Temp$ = ""
-I = 1
+i = 1
 Num = ii
 GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSBs
-While InStr(I, Tokenized$, Chr$(&HFF) + Chr$(MSB) + Chr$(LSB)) > 0
-    I = InStr(I, Tokenized$, Chr$(&HFF) + Chr$(MSB) + Chr$(LSB))
-    StartLine = I ' Start of the line
+While InStr(i, Tokenized$, Chr$(&HFF) + Chr$(MSB) + Chr$(LSB)) > 0
+    i = InStr(i, Tokenized$, Chr$(&HFF) + Chr$(MSB) + Chr$(LSB))
+    StartLine = i ' Start of the line
     ' Does this command end with a Colon?
-    EndLine = InStr(I, Tokenized$, Chr$(&HF5) + Chr$(&H3A))
+    EndLine = InStr(i, Tokenized$, Chr$(&HF5) + Chr$(&H3A))
     If EndLine = 0 Then
         FoundREM = 0
         ' no colon found at the end of the line, check for a REM or an apostrophe
         Num = C_REM
         GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSBs
-        If InStr(I, Tokenized$, " " + Chr$(&HFF) + Chr$(MSB) + Chr$(LSB)) > 0 Then
-            EndLine = InStr(I, Tokenized$, " " + Chr$(&HFF) + Chr$(MSB) + Chr$(LSB)) - 1
+        If InStr(i, Tokenized$, " " + Chr$(&HFF) + Chr$(MSB) + Chr$(LSB)) > 0 Then
+            EndLine = InStr(i, Tokenized$, " " + Chr$(&HFF) + Chr$(MSB) + Chr$(LSB)) - 1
             FoundREM = 1
         End If
         Num = C_REMApostrophe
         GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSBs
-        If InStr(I, Tokenized$, " " + Chr$(&HFF) + Chr$(MSB) + Chr$(LSB)) > 0 Then
-            EndLine = InStr(I, Tokenized$, " " + Chr$(&HFF) + Chr$(MSB) + Chr$(LSB)) - 1
+        If InStr(i, Tokenized$, " " + Chr$(&HFF) + Chr$(MSB) + Chr$(LSB)) > 0 Then
+            EndLine = InStr(i, Tokenized$, " " + Chr$(&HFF) + Chr$(MSB) + Chr$(LSB)) - 1
             FoundREM = 1
         End If
     End If
@@ -4360,14 +5007,160 @@ While InStr(I, Tokenized$, Chr$(&HFF) + Chr$(MSB) + Chr$(LSB)) > 0
         ' BF at the end of this line
         Temp$ = Temp$ + Mid$(Tokenized$, StartLine, EndLine - StartLine - 4) + BFTemp$ + FoundColon$
     End If
-    I = EndLine + 2
+    i = EndLine + 2
 Wend
 If Temp$ <> "" Then
     ' We found a LINE command
-    Tokenized$ = Temp$ + Right$(Tokenized$, Len(Tokenized$) - I + 1)
+    Tokenized$ = Temp$ + Right$(Tokenized$, Len(Tokenized$) - i + 1)
 End If
 Return
 
+
+' ATTR may or may not have ,B or ,U at the end which might get turned into variable below
+' Change the Tokenized$ command so it will have
+' ,0,0 - No Blink or Underline
+' ,1,0 - Blink
+' ,0,1 - Underline
+' ,1,1 - Blink & Underline
+FixAttrCommand:
+Temp$ = ""
+i = 1
+Num = ii 'ii = ATTR command number
+GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSBs
+While InStr(i, Tokenized$, Chr$(&HFF) + Chr$(MSB) + Chr$(LSB)) > 0
+    i = InStr(i, Tokenized$, Chr$(&HFF) + Chr$(MSB) + Chr$(LSB))
+    StartLine = i ' Start of the ATTR
+    ' Does this command end with a Colon?
+    EndLine = InStr(i, Tokenized$, Chr$(&HF5) + Chr$(&H3A))
+    If EndLine = 0 Then
+        FoundREM = 0
+        ' no colon found at the end of the line, check for a REM or an apostrophe
+        Num = C_REM
+        GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSBs
+        If InStr(i, Tokenized$, " " + Chr$(&HFF) + Chr$(MSB) + Chr$(LSB)) > 0 Then
+            EndLine = InStr(i, Tokenized$, " " + Chr$(&HFF) + Chr$(MSB) + Chr$(LSB)) - 1
+            FoundREM = 1
+        End If
+        Num = C_REMApostrophe
+        GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSBs
+        If InStr(i, Tokenized$, " " + Chr$(&HFF) + Chr$(MSB) + Chr$(LSB)) > 0 Then
+            EndLine = InStr(i, Tokenized$, " " + Chr$(&HFF) + Chr$(MSB) + Chr$(LSB)) - 1
+            FoundREM = 1
+        End If
+    End If
+    If FoundREM = 1 Then
+        FoundColon$ = ""
+    Else
+        If EndLine = 0 Then
+            ' No other LINE commands after colons, this is the last
+            EndLine = Len(Tokenized$)
+            FoundColon$ = ""
+        Else
+            EndLine = EndLine - 1
+            FoundColon$ = Chr$(&HF5)
+        End If
+    End If
+    BUTemp$ = ",0,0"
+    If Mid$(Tokenized$, EndLine - 6, 7) = ", B , U" Then
+        BUTemp$ = ",1,1"
+        Temp$ = Temp$ + Mid$(Tokenized$, StartLine, EndLine - StartLine - 7) + BUTemp$
+        GoTo FoundBU
+    End If
+    If Mid$(Tokenized$, EndLine - 6, 7) = ", U , B" Then
+        BUTemp$ = ",1,1"
+        Temp$ = Temp$ + Mid$(Tokenized$, StartLine, EndLine - StartLine - 7) + BUTemp$
+        GoTo FoundBU
+    End If
+    If Mid$(Tokenized$, EndLine - 2, 3) = ", B" Then
+        BUTemp$ = ",1,0"
+        Temp$ = Temp$ + Mid$(Tokenized$, StartLine, EndLine - StartLine - 3) + BUTemp$
+        GoTo FoundBU
+    End If
+    If Mid$(Tokenized$, EndLine - 2, 3) = ", U" Then
+        BUTemp$ = ",0,1"
+        Temp$ = Temp$ + Mid$(Tokenized$, StartLine, EndLine - StartLine - 3) + BUTemp$
+        GoTo FoundBU
+    End If
+    If BUTemp$ = ",0,0" Then
+        ' No B or U found at the end of this line
+        Temp$ = Temp$ + Mid$(Tokenized$, StartLine, EndLine - StartLine + 1) + BUTemp$
+    End If
+    FoundBU:
+    i = EndLine + 2
+Wend
+If Temp$ <> "" Then
+    ' We found a ATTR command
+    Tokenized$ = Temp$ + Right$(Tokenized$, Len(Tokenized$) - i + 1)
+End If
+Return
+
+CheckType:
+' # are encoded as $F523, so they are checked and handled elsewhere
+If Array(x) = Asc("&") Or Array(x) = Asc("~") Or Array(x) = Asc("!") Then
+    ' Looks like we have a special type assignment
+    If Array(x) = Asc("~") And Array(x + 1) = Asc("&") And Array(x + 2) = Asc("&") Then ' ~&&  _Unsigned _Integer64
+        Temp$ = "Math_Integer64": GoSub AddIncludeTemp ' Add code for 64 bit math, some routines use integer 64 Add/Subtract
+        x = x + 3
+        GoTo DoneCheckType
+    End If
+    If Array(x) = Asc("&") And Array(x + 1) = Asc("&") Then ' ~&   _Unsigned Long
+        Temp$ = "Math_Integer32": GoSub AddIncludeTemp ' Add code for 32 bit math
+        x = x + 2
+        GoTo DoneCheckType
+    End If
+    If Array(x) = Asc("&") And Array(x + 1) = Asc("&") Then ' &&   _Integer64
+        Temp$ = "Math_Integer64": GoSub AddIncludeTemp ' Add code for 64 bit math, some routines use integer 64 Add/Subtract
+        x = x + 2
+        GoTo DoneCheckType
+    End If
+    If Array(x) = Asc("~") And Array(x + 1) = Asc("~") Then ' ~~   _Unsigned _Short
+        x = x + 2
+        GoTo DoneCheckType
+    End If
+    If Array(x) = Asc("&") Then ' &   Long
+        Temp$ = "Math_Integer32": GoSub AddIncludeTemp ' Add code for 32 bit math
+        x = x + 1
+        GoTo DoneCheckType
+    End If
+    If Array(x) = Asc("!") Then ' !(None) Single '(Default size)
+        '        Temp$ = "Math_FloatingPointLB": GoSub AddIncludeTemp ' Add code for Lennart Benschop's Floating point math routines
+        Temp$ = "Math_Fast_Floating_Point": GoSub AddIncludeTemp ' Add code for my Fast Floating Point math routines
+        x = x + 1
+        GoTo DoneCheckType
+    End If
+    If Array(x) = Asc("~") Then ' ~   _Short
+        x = x + 1
+    End If
+Else
+    ' Might be a #
+    If Array(x) = &HF5 And Array(x + 1) = Asc("#") Then ' #    use Double
+        Temp$ = "Math_IEEE_754_Double_64bit": GoSub AddIncludeTemp ' Add code for Selecting the audio muxer and to turn it on or off
+        Temp$ = "Math_Integer64": GoSub AddIncludeTemp ' Add code for 64 bit math, some routines use integer 64 Add/Subtract
+        x = x + 2
+    End If
+End If
+DoneCheckType:
+Return
+
+' If variable Temp$ ends with special tokens which temp change their Type, we must ignore them
+CheckVarForSpecial:
+' Check for a single special symbol at the end of the variable
+Select Case Asc(Right$(Temp$, 1))
+    Case Asc("`"), Asc("%"), Asc("&"), Asc("!"), Asc("#")
+        Temp$ = Left$(Temp$, Len(Temp$) - 1)
+        Return
+End Select
+Select Case Right$(Temp$, 2)
+    Case "`n", "~`", "%%", "~%", "~&", "&&", "##", "%&"
+        Temp$ = Left$(Temp$, Len(Temp$) - 2)
+        Return
+End Select
+Select Case Right$(Temp$, 3)
+    Case "~%%", "~&&", "~%&"
+        Temp$ = Left$(Temp$, Len(Temp$) - 3)
+        Return
+End Select
+Return ' leave it as is
 
 'Test if a string contains a number or a variable
 Function IsNumber (s$)

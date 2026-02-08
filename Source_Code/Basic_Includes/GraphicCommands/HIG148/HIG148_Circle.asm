@@ -134,8 +134,8 @@ SelfModC4_HIG148:
         LDX     x0
         LDD     #CircleScale_HIG148     ; Scale factor
         PSHS    D,X
-        JSR     MUL16           ; D = D * X
-        LEAS    4,S             ; Fix the stack
+        JSR     MUL16           ; Do D * X, D has the High 16 bits of the product and X has the Low 16 bits of the product
+        PULS    D               ; get low 16 bit number in D and fix the stack
         ADDA    y_Center+1
         PULS    X               ; restore x value
 SelfModC5_HIG148:
@@ -147,8 +147,8 @@ SelfModC5_HIG148:
         LDX     x0
         LDD     #CircleScale_HIG148     ; Scale factor
         PSHS    D,X
-        JSR     MUL16           ; D = D * X
-        LEAS    4,S             ; Fix the stack
+        JSR     MUL16           ; Do D * X, D has the High 16 bits of the product and X has the Low 16 bits of the product
+        PULS    D               ; get low 16 bit number in D and fix the stack
         ADDA    y_Center+1
         PULS    X               ; restore x value
 SelfModC6_HIG148:
@@ -160,8 +160,8 @@ SelfModC6_HIG148:
         LDX     x0
         LDD     #CircleScale_HIG148     ; Scale factor
         PSHS    D,X
-        JSR     MUL16           ; D = D * X
-        LEAS    4,S             ; Fix the stack
+        JSR     MUL16           ; Do D * X, D has the High 16 bits of the product and X has the Low 16 bits of the product
+        PULS    D               ; get low 16 bit number in D and fix the stack
         NEGA
         ADDA    y_Center+1
         PULS    X               ; restore x value
@@ -174,8 +174,8 @@ SelfModC7_HIG148:
         LDX     x0
         LDD     #CircleScale_HIG148     ; Scale factor
         PSHS    D,X
-        JSR     MUL16           ; D = D * X
-        LEAS    4,S             ; Fix the stack
+        JSR     MUL16           ; Do D * X, D has the High 16 bits of the product and X has the Low 16 bits of the product
+        PULS    D               ; get low 16 bit number in D and fix the stack
         NEGA
         ADDA    y_Center+1
         PULS    X               ; restore x value
