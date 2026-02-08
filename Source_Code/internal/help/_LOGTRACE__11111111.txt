@@ -1,0 +1,46 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:41:52}}
+{{DISPLAYTITLE:_LOGTRACE}}
+The '''_LOGTRACE''' statement writes a log message at the Trace level.
+
+
+{{PageSyntax}}
+: [[_LOGTRACE]] {{Parameter|message}}
+
+
+{{PageParameters}}
+* {{Parameter|message}} is a string to write to the log output.
+
+
+{{PageDescription}}
+* See the page on the [[Logging]] system for more detailed usage information.
+
+
+{{PageAvailability}}
+<!-- QB64 = a version or none, QBPE = a version or all, Platforms = yes or no -->
+<gallery widths="48px" heights="48px" mode="nolines">
+File:Qb64.png|'''no'''
+File:Qbpe.png|'''v4.0.0'''
+File:Apix.png
+File:Win.png|'''yes'''
+File:Lnx.png|'''yes'''
+File:Osx.png|'''yes'''
+</gallery>
+<!-- additional availability notes go below here -->
+
+
+{{PageExamples}}
+; Example 1 : Writes a log message at the Trace level
+{{CodeStart}}
+{{Cl|_LOGTRACE}} {{Text|<nowiki>"This is a log message"</nowiki>|#FFB100}}
+{{Cl|_LOGTRACE}} {{Text|<nowiki>"a= "</nowiki>|#FFB100}} + {{Cl|STR$}}(a)
+{{CodeEnd}}
+
+
+{{PageSeeAlso}}
+* [[_LOGMINLEVEL]]
+* [[_LOGINFO]], [[_LOGWARN]], [[_LOGERROR]]
+* [[Logging]]
+
+
+{{PageNavigation}}

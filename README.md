@@ -10,9 +10,27 @@ For more info check out the blog post here:
 https://wordpress.com/post/nowhereman999.wordpress.com/5054
 
 V 5.00
-- Tons of changes internally     
+- Many of changes internally     
 - Fully supports all Variable Types, Variables default to Single (Fast floating point format), to maximize speed and size
-  of your program you must assign variable types to their minimum size and accuracy needed. 
+  of your program you must assign variable types to their minimum size and accuracy needed.
+  Fastest are _Byte, _Unsigned _Byte
+  Second fastest are Integer, _Unsigned Integer 
+
+  Type  Symbol
+   1      `   	_Bit          			    Min -1, Max 0
+   2     ~`   	_Unsigned _Bit			    Min 0 , Max 1
+   3     %%   	_Byte              		  Min -128, Max 127
+   4    ~%%   	_Unsigned _Byte  		    Min 0, Max 255
+   5      %   	Integer            		  Min -32,768, Max 32,767
+   6     ~%   	Unsigned Integer   		  Min 0, Max 65,535
+   7      &   	Long               		  Min -2 Gig, +2 Gig
+   8     ~&   	_Unsigned Long    		  Min 0, Max 4 Gig
+   9     &&   	_Integer64         		  Min -(8 byte value), Max +(8 byte value)
+  10    ~&&   	_Unsigned _Integer64   	Min 0, Max (8 byte value)
+  11  !(None) 	Single (Default size)  	Min E-20, Max E+19 (Fast Float)
+  12      #   	Double                 	Min E-308, Max E+308
+
+- Added support of using Single or Double floating point functions that Color BASIC has, like SIN(),COS(),TAN(),SQR(),...
 - Added CoCo 3 commands WIDTH 40, WIDTH 64, WIDTH 80
 
 V 4.43b

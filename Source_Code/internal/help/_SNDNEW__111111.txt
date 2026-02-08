@@ -1,0 +1,75 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:42:59}}
+{{DISPLAYTITLE:_SNDNEW}}
+The '''_SNDNEW''' function creates a raw empty sound in memory and returns a [[LONG]] handle value for later access.
+
+
+{{PageSyntax}}
+: {{Parameter|soundHandle&}} = [[_SNDNEW]]({{Parameter|frames&}}, {{Parameter|channels&}}, {{Parameter|bits&}})
+
+
+{{PageParameters}}
+* {{Parameter|frames&}} is the number of sample frames needed. The number needed for one second of sound is determined by your sound hardware's sample rate, hence you may use the following formula:
+** {{InlineCode}}frames& = {{Cl|_SNDRATE}} * neededSeconds!{{InlineCodeEnd}} where you may also specify fractional seconds.
+* {{Parameter|channels&}} is the number of channels needed (1 = mono, 2 = stereo).
+* {{Parameter|bits&}} is the number of bits per channel (8 = 8-bit unsigned integer, 16 = 16-bit signed integer, 32 = 32-bit floating point).
+
+
+{{PageDescription}}
+* Use this function to create a raw sound in memory.
+* Once the sound is created, it can be accessed and manipulated using the [[_MEM]] interface statements and functions, mainly [[_MEMSOUND]], [[_MEMGET]] & [[_MEMPUT]].
+* Using this function can generate sounds once programmatically and then play it multiple times.
+* The sound memory can also be filled with sample data from other sources like files, [[DATA]] statements and more.
+* Sound memory pointers obtained with [[_MEMSOUND]] must be freed using [[_MEMFREE]] and the Sound handle value itself must be freed using [[_SNDCLOSE]] when no longer required.
+
+
+{{PageAvailability}}
+* '''QB64-PE v3.5.0 and up'''
+
+
+{{PageExamples}}
+;Example 1:Creating a sound at runtime and playing it.
+{{CodeStart}}
+{{Cl|OPTION _EXPLICIT}}
+
+{{Cl|RANDOMIZE}} {{Cl|TIMER (function)|TIMER}}
+
+{{Cl|CONST}} SOUND_DURATION = 5 ' duration is seconds
+{{Cl|CONST}} SAMPLE_CHANNELS = 1 ' number of channes. For stereo we need to add another _MEMPUT below and +offset by SAMPLE_BYTES
+{{Cl|CONST}} SAMPLE_BYTES = 4 ' number of bytes / sample (not frame!)
+
+{{Cl|DIM}} h {{Cl|AS}} {{Cl|LONG}}: h = {{Cl|_SNDNEW}}(SOUND_DURATION * {{Cl|_SNDRATE}}, SAMPLE_CHANNELS, SAMPLE_BYTES * 8)
+{{Cl|IF}} (h < 1) {{Cl|THEN}}
+    {{Cl|PRINT}} "Failed to create sound!"
+    {{Cl|END}}
+{{Cl|END IF}}
+
+{{Cl|DIM}} sndblk {{Cl|AS}} {{Cl|_MEM}}: sndblk = {{Cl|_MEMSOUND}}(h, 0)
+{{Cl|IF}} sndblk.SIZE = 0 {{Cl|THEN}}
+    {{Cl|_SNDCLOSE}} h
+    {{Cl|PRINT}} "Failed to access sound data!"
+    {{Cl|END}}
+{{Cl|END IF}}
+
+{{Cl|DIM}} t {{Cl|AS}} {{Cl|_INTEGER64}}
+{{Cl|FOR}} t = 0 {{Cl|TO}} (SOUND_DURATION * {{Cl|_SNDRATE}}) - 1
+    {{Cl|_MEMPUT}} sndblk, sndblk.OFFSET + (t * SAMPLE_BYTES * SAMPLE_CHANNELS), {{Cl|SIN}}(2 * {{Cl|_PI}} * 440 * t / {{Cl|_SNDRATE}}) + {{Cl|RND}} - {{Cl|RND}} {{Cl|AS}} {{Cl|SINGLE}} ' mixes noise and a sine wave
+{{Cl|NEXT}}
+
+{{Cl|_SNDPLAY}} h
+
+{{Cl|SLEEP}} SOUND_DURATION
+
+{{Cl|_SNDCLOSE}} h
+
+{{Cl|END}}
+{{CodeEnd}}
+
+
+{{PageSeeAlso}}
+* [[_MEM]], [[_MEMSOUND]], [[_MEMFREE]]
+* [[_MEMPUT]], [[_MEMGET]], [[_MEMGET (function)]]
+* [[_SNDOPEN]], [[_SNDCLOSE]], [[_SNDRAW]], [[_SNDRATE]]
+
+
+{{PageNavigation}}

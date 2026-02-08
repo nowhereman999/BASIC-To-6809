@@ -1,0 +1,114 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:40:40}}
+{{DISPLAYTITLE:_CAST}}
+The '''_CAST''' function performs a C-like cast of a numerical value to a specified numerical type.
+
+
+{{PageSyntax}}
+: {{Parameter|result}} = [[_CAST]]({{Parameter|numericalType}}, {{Parameter|numericalValue}})
+
+
+{{PageParameters}}
+* {{Parameter|numericalType}} specifies the target type for the conversion. Accepted types are:
+** [[SINGLE]]
+** [[DOUBLE]]
+** [[_FLOAT]]
+** [[_BYTE]]
+** [[INTEGER]]
+** [[LONG]]
+** [[_INTEGER64]]
+** [[_OFFSET]]
+* The [[_UNSIGNED]] modifier is also allowed and can be combined with the integer types.
+* {{Parameter|numericalValue}} is the value to be cast to the specified type.
+
+
+{{PageDescription}}
+* '''_CAST''' allows explicit type conversion, similar to C-style casting.
+* '''_CAST''' does not round the value like [[INT]], [[_ROUND]], [[CINT]], or [[CLNG]].
+* The {{Parameter|result}} type is determined by {{Parameter|numericalType}}.
+* A compiler error is thrown if {{Parameter|numericalType}} is invalid or {{Parameter|numericalValue}} is a [[STRING]].
+* No runtime errors are thrown if {{Parameter|numericalType}} and {{Parameter|numericalValue}} are valid.
+
+
+{{PageAvailability}}
+<!-- QB64 = a version or none, QBPE = a version or all, Platforms = yes or no -->
+<gallery widths="48px" heights="48px" mode="nolines">
+File:Qb64.png|'''none'''
+File:Qbpe.png|'''v4.0.0'''
+File:Apix.png
+File:Win.png|'''yes'''
+File:Lnx.png|'''yes'''
+File:Osx.png|'''yes'''
+</gallery>
+<!-- additional availability notes go below here -->
+
+
+{{PageExamples}}
+; Example 1: Basic type conversion.
+{{CodeStart}}
+{{Cl|DIM}} a {{Cl|AS}} {{Cl|DOUBLE}}
+{{Cl|DIM}} b {{Cl|AS}} {{Cl|_INTEGER64}}
+
+a = {{Text|123.456|#F580B1}}
+b = {{Cl|_CAST}}({{Cl|_INTEGER64}}, a)
+
+{{Cl|PRINT}} {{Text|<nowiki>"Original: "</nowiki>|#FFB100}}; a
+{{Cl|PRINT}} {{Text|<nowiki>"Casted: "</nowiki>|#FFB100}}; b
+
+a = {{Text|456.789|#F580B1}}
+b = {{Cl|_CAST}}({{Cl|_INTEGER64}}, a)
+
+{{Cl|PRINT}} {{Text|<nowiki>"Original: "</nowiki>|#FFB100}}; a
+{{Cl|PRINT}} {{Text|<nowiki>"Casted: "</nowiki>|#FFB100}}; b
+
+a = {{Text|-123.456|#F580B1}}
+b = {{Cl|_CAST}}({{Cl|_INTEGER64}}, a)
+
+{{Cl|PRINT}} {{Text|<nowiki>"Original: "</nowiki>|#FFB100}}; a
+{{Cl|PRINT}} {{Text|<nowiki>"Casted: "</nowiki>|#FFB100}}; b
+
+a = {{Text|-456.789|#F580B1}}
+b = {{Cl|_CAST}}({{Cl|_INTEGER64}}, a)
+
+{{Cl|PRINT}} {{Text|<nowiki>"Original: "</nowiki>|#FFB100}}; a
+{{Cl|PRINT}} {{Text|<nowiki>"Casted: "</nowiki>|#FFB100}}; b
+{{CodeEnd}}
+{{OutputStart}}
+Original:  123.456
+Casted:  123
+Original:  456.789
+Casted:  456
+Original: -123.456
+Casted: -123
+Original: -456.789
+Casted: -456
+{{OutputEnd}}
+
+----
+
+; Example 2: Type conversion function comparison.
+{{CodeStart}}
+{{Cl|PRINT}} {{Text|4.6!|#F580B1}}; {{Cl|INT}}({{Text|4.6!|#F580B1}}); {{Cl|FIX}}({{Text|4.6!|#F580B1}}); {{Cl|CLNG}}({{Text|4.6!|#F580B1}}); {{Cl|_ROUND}}({{Text|4.6!|#F580B1}}); {{Cl|_CAST}}({{Cl|LONG}}, {{Text|4.6!|#F580B1}})
+{{Cl|PRINT}} {{Text|-4.6!|#F580B1}}; {{Cl|INT}}({{Text|-4.6!|#F580B1}}); {{Cl|FIX}}({{Text|-4.6!|#F580B1}}); {{Cl|CLNG}}({{Text|-4.6!|#F580B1}}); {{Cl|_ROUND}}({{Text|-4.6!|#F580B1}}); {{Cl|_CAST}}({{Cl|LONG}}, {{Text|-4.6!|#F580B1}})
+
+{{Cl|PRINT}} {{Text|1%%|#F580B1}}; {{Cl|_CAST}}({{Cl|_UNSIGNED}} {{Cl|_BYTE}}, {{Text|1%%|#F580B1}})
+{{Cl|PRINT}} {{Text|-1%%|#F580B1}}; {{Cl|_CAST}}({{Cl|_UNSIGNED}} {{Cl|_BYTE}}, {{Text|-1%%|#F580B1}})
+{{CodeEnd}}
+{{OutputStart}}
+ 4.6  4  4  5  5  4
+-4.6 -5 -4 -5 -5 -4
+ 1  1
+-1  255
+{{OutputEnd}}
+
+
+{{PageSeeAlso}}
+* [[_CEIL]]
+* [[INT]], [[FIX]]
+* [[CINT]], [[CLNG]],
+* [[CSNG]], [[CDBL]]
+* [[_ROUND]]
+* [[Variable Types]]
+
+
+{{PageNavigation}}

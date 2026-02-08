@@ -1,0 +1,66 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:45:37}}
+The '''WIDTH''' statement changes the text dimensions of certain '''SCREEN''' modes or devices.
+
+
+{{PageSyntax}}
+;*For SCREEN:'''WIDTH''' [{{Parameter|columns%}}] [,{{Parameter|rows%}}]
+
+;*For CONSOLE (Windows Console Only):'''WIDTH''' [{{Parameter|columns%}}] [,{{Parameter|rows%}}] [,{{Parameter|buffer_columns%}}] [,{{Parameter|buffer_rows%}}]
+
+;*For Files:'''WIDTH''' {{Parameter|file_number <nowiki>|</nowiki> device}}, {{Parameter|columnwidth%}}
+
+
+{{PageParameters}}
+* When parameters are not specified, columns defaults to 80 with 25 (30 in [[SCREEN]] 11 or 12) rows.
+
+
+{{PageDescription}}
+* '''WIDTH''' should be used after a program [[SCREEN]] statement. It does not affect screen graphics or graphic coordinates.
+* Affects SCREEN 0 Window size and alters the text block size of each screen mode listed in QBasic:
+:* SCREEN 0 can use 80 or 40 columns and 25, 43 or 50 rows. Default is '''WIDTH''' 80, 25.
+:* SCREEN 9 can use 80 columns and 25 or 43(not supported on many monitors) rows. Default '''WIDTH''' 80, 25 fullscreen.
+:* SCREEN 10 can use 80 columns and 25 or 43 rows. Default is '''WIDTH''' 80, 25 fullscreen.
+:* SCREEN 11 and 12 can use 80 columns and 30 or 60 rows. Default is '''WIDTH''' 80, 30 fullscreen.
+* '''QB64''' can alter all [[SCREEN]] mode widths and heights which may also affect text or [[_FONT]] block sizes.
+* If a [[$CONSOLE]] window is active and you set [[_DEST]] [[_CONSOLE]], '''WIDTH''' will affect the console output window size (Windows only), with the last two optional parameters setting the buffer size for the console.  (For example, you can set a console to be 80 characters x 25 lines for the display, with a buffer size of 300 characters and 100 lines, which allows you to display that much information and navigate the visible display with the scroll bars.)
+;*Note:'''WIDTH''' changes may change screen color settings in QBasic. Use [[PALETTE]] to reset to default colors.
+:* '''WIDTH LPRINT''' is not supported in QB64.
+
+
+{{PageExamples}}
+;*Example 1:Showing the use of the buffer parameters for [[$CONSOLE]] usage.
+:*The program creates more output than fits to the display, but the buffer preserves the output and you can scroll back and forth.
+{{CodeStart}}
+{{Cl|$CONSOLE|$CONSOLE:ONLY}}
+{{Cl|WIDTH}} 80, 25, 300, 100
+{{Cl|CLS}}
+{{Cl|FOR...NEXT|FOR}} i = 1 {{Cl|FOR...NEXT|TO}} 97
+    {{Cl|PRINT}} i
+{{Cl|NEXT}}
+{{Cl|PRINT}} {{Cl|STRING$}}(100, "0") + {{Cl|STRING$}}(100, "1") + {{Cl|STRING$}}(100, "2") 'print the 100's placeholders
+{{Cl|FOR...NEXT|FOR}} j = 1 {{Cl|FOR...NEXT|TO}} 3
+    {{Cl|FOR...NEXT|FOR}} i = 0 {{Cl|FOR...NEXT|TO}} 9
+        {{Cl|PRINT}} {{Cl|STRING$}}(10, {{Cl|_TRIM$}}({{Cl|STR$}}(i))); 'print the 10's placeholders
+    {{Cl|NEXT}}
+{{Cl|NEXT}}
+
+{{Cl|FOR...NEXT|FOR}} j = 1 {{Cl|FOR...NEXT|TO}} 30
+    {{Cl|FOR...NEXT|FOR}} i = 0 {{Cl|FOR...NEXT|TO}} 9
+        {{Cl|PRINT}} {{Cl|_TRIM$}}({{Cl|STR$}}(i)); 'print the 1's placeholders.
+    {{Cl|NEXT}}
+{{Cl|NEXT}}
+
+{{Cl|SLEEP}}
+{{CodeEnd}}
+
+
+{{PageSeeAlso}}
+* [https://qb64phoenix.com/forum/showthread.php?tid=1276 Featured in our "Keyword of the Day" series]
+* [[SCREEN]], [[COLOR]], [[OUT]]
+* [[_PRINTWIDTH]]
+* [[_WIDTH (function)]], [[_HEIGHT]]
+* [[_FONT]], [[_FONTWIDTH]], [[_FONTHEIGHT]]
+
+
+{{PageNavigation}}

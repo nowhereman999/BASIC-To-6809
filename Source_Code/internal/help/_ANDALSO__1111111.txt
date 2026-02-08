@@ -1,0 +1,82 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:40:24}}
+{{DISPLAYTITLE:_ANDALSO}}
+'''_ANDALSO''' is a [[Boolean|boolean]] logical operator that performs short-circuiting logical conjunction on two expressions.
+
+
+{{PageSyntax}}
+:{{Parameter|result}} = {{Parameter|firstvalue}} [[_ANDALSO]] {{Parameter|secondvalue}}
+
+
+{{PageDescription}}
+* A logical operation is said to be short-circuiting if the compiled code can bypass the evaluation of one expression depending on the result of another expression.
+* Short-circuiting can improve performance if the bypassed expression is complex, or if it involves procedure ([[SUB]] or [[FUNCTION]]) calls.
+* If the result of the first expression evaluated determines the final result of the operation, there is no need to evaluate the second expression, because it cannot change the final result. E.g. if the first expression is already false, then the second expression can't change the result anymore, it will always remain false, even if the second expression would be true. Hence, the second expression is irrelevant and never evaluated, if the first one is already false.
+** {{Text|'''Note'''|red}} that any procedures involved in the second expression are '''not called''', if the first expression is false. This behavior is intended and the reason for the better performance, but it may cause unexpected failures if you're not aware of it.
+** In fact, if any procedures in the second expression '''must be called''' regardless of the truth of the first expression, then you must use the regular [[AND (boolean)|AND]] instead.
+* Only if both expressions evaluate to true, then the result is true too.
+
+
+{{PageAvailability}}
+<!-- QB64 = a version or none, QBPE = a version or all, Platforms = yes or no -->
+<gallery widths="48px" heights="48px" mode="nolines">
+File:Qb64.png|'''none'''
+File:Qbpe.png|'''v3.13.0'''
+File:Apix.png
+File:Win.png|'''yes'''
+File:Lnx.png|'''yes'''
+File:Osx.png|'''yes'''
+</gallery>
+<!-- additional availability notes go below here -->
+
+
+{{PageExamples}}
+;Example: AND versus _ANDALSO
+{{CodeStart}}
+{{Cl|DIM}} {{Cl|AS}} {{Cl|LONG}} index, values({{Text|1|#F580B1}} {{Cl|TO}} {{Text|10|#F580B1}}), v
+
+{{Cl|FOR}} index = {{Text|1|#F580B1}} {{Cl|TO}} {{Text|10|#F580B1}}
+    values(index) = {{Cl|RND}} * {{Text|255|#F580B1}}
+{{Cl|NEXT}} index
+
+{{Text|<nowiki>' value of index is now > 10</nowiki>|#919191}}
+
+{{Cl|PRINT}} {{Text|<nowiki>"Trying _ANDALSO"</nowiki>|#FFB100}}
+
+{{Text|<nowiki>' _ANDALSO performs short-circuiting logical conjunction and hence the GetArrayValue check is completely bypassed</nowiki>|#919191}}
+{{Cl|IF}} index >= {{Text|1|#F580B1}} {{Cl|_ANDALSO}} index <= {{Text|10|#F580B1}} {{Cl|_ANDALSO}} {{Text|GetArrayValue|#55FF55}}(values(), index, v) {{Cl|THEN}}
+    {{Cl|PRINT}} {{Text|<nowiki>"_ANDALSO: Value ="</nowiki>|#FFB100}}; v
+{{Cl|ELSE}}
+    {{Cl|PRINT}} {{Text|<nowiki>"_ANDALSO: Outside range."</nowiki>|#FFB100}}
+{{Cl|END IF}}
+
+{{Cl|PRINT}}
+{{Cl|PRINT}} {{Text|<nowiki>"Trying AND"</nowiki>|#FFB100}}
+
+{{Text|<nowiki>' AND does not performs short-circuiting logical conjunction and hence QB64-PE will throw a runtime error: Subscript out of range</nowiki>|#919191}}
+{{Cl|IF}} index >= {{Text|1|#F580B1}} {{Cl|AND (boolean)|AND}} index <= {{Text|10|#F580B1}} {{Cl|AND (boolean)|AND}} {{Text|GetArrayValue|#55FF55}}(values(), index, v) {{Cl|THEN}}
+    {{Cl|PRINT}} {{Text|<nowiki>"AND: Value ="</nowiki>|#FFB100}}; v
+{{Cl|ELSE}}
+    {{Cl|PRINT}} {{Text|<nowiki>"AND: Outside range."</nowiki>|#FFB100}}
+{{Cl|END IF}}
+
+{{Cl|END}}
+
+{{Cl|FUNCTION}} {{Text|GetArrayValue%%|#55FF55}} (arr() {{Cl|AS}} {{Cl|LONG}}, idx {{Cl|AS}} {{Cl|LONG}}, value {{Cl|AS}} {{Cl|LONG}})
+    value = arr(idx)
+    {{Text|GetArrayValue|#55FF55}} = {{Text|-1|#F580B1}} {{Text|<nowiki>' return true</nowiki>|#919191}}
+{{Cl|END FUNCTION}}
+{{CodeEnd}}
+
+
+{{PageSeeAlso}}
+* [https://qb64phoenix.com/forum/showthread.php?tid=2658 Featured in our "Keyword of the Day" series]
+* [[_BIT]], [[&B]], [[_BYTE]]
+* [[AND]], [[XOR]], [[OR]]
+* [[AND (boolean)]], [[XOR (boolean)]], [[OR (boolean)]]
+* [[_ORELSE]], [[_NEGATE]], [[_IIF]]
+* [[Binary]], [[Boolean]]
+* [[Mathematical Operations]]
+
+
+{{PageNavigation}}

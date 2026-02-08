@@ -1,0 +1,55 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:40:37}}
+{{DISPLAYTITLE:_BUTTON}}
+The [[_BUTTON]] function returns -1 when specified button number on a controller device is pressed.
+
+
+{{PageSyntax}}
+: {{Parameter|press%%}} = [[_BUTTON]]({{Parameter|button_number%}})
+
+
+{{PageDescription}}
+* Values returned are -1 for a press and 0 when a button is released or not pressed.
+* The {{Parameter|button_number%}} must be a number which does not exceed the number of buttons found by the [[_LASTBUTTON]] function.
+* '''The number of [[_DEVICES]] must be read before using [[_DEVICE$]], [[_DEVICEINPUT]] or [[_LASTBUTTON]].'''
+* '''Note:''' The number 2 button is the center button in this device configuration. Center is also designated as [[_MOUSEBUTTON]](3).
+
+
+{{PageExamples}}
+''Example:'' Reading multiple controller device buttons, axis and wheels.
+{{CodeStart}}
+{{Cl|FOR}} i = {{Text|1|#F580B1}} {{Cl|TO}} {{Cl|_DEVICES}}
+    {{Cl|PRINT}} {{Cl|STR$}}(i) + {{Text|<nowiki>") "</nowiki>|#FFB100}} + {{Cl|_DEVICE$}}(i) + {{Text|<nowiki>" Buttons:"</nowiki>|#FFB100}}; {{Cl|_LASTBUTTON}}(i); {{Text|<nowiki>",Axis:"</nowiki>|#FFB100}}; {{Cl|_LASTAXIS}}(i); {{Text|<nowiki>",Wheel:"</nowiki>|#FFB100}}; {{Cl|_LASTWHEEL}}(i)
+{{Cl|NEXT}}
+
+{{Cl|DO}}
+    d& = {{Cl|_DEVICEINPUT}}
+    {{Cl|IF}} d& {{Cl|THEN}} {{Text|<nowiki>'             the device number cannot be zero!</nowiki>|#919191}}
+        {{Cl|PRINT}} {{Text|<nowiki>"Found"</nowiki>|#FFB100}}; d&;
+        {{Cl|FOR}} b = {{Text|1|#F580B1}} {{Cl|TO}} {{Cl|_LASTBUTTON}}(d&)
+            {{Cl|PRINT}} {{Cl|_BUTTONCHANGE}}(b); {{Cl|_BUTTON}}(b);
+        {{Cl|NEXT}}
+        {{Cl|FOR}} a = {{Text|1|#F580B1}} {{Cl|TO}} {{Cl|_LASTAXIS}}(d&)
+            {{Cl|PRINT}} {{Cl|_AXIS}}(a);
+        {{Cl|NEXT}}
+        {{Cl|FOR}} w = {{Text|1|#F580B1}} {{Cl|TO}} {{Cl|_LASTWHEEL}}(d&)
+            {{Cl|PRINT}} {{Cl|_WHEEL}}(w);
+        {{Cl|NEXT}}
+        {{Cl|PRINT}}
+    {{Cl|END IF}}
+{{Cl|DO...LOOP|LOOP UNTIL}} {{Cl|INKEY$}} = {{Cl|CHR$}}({{Text|27|#F580B1}}) {{Text|<nowiki>'escape key exit</nowiki>|#919191}}
+
+{{Cl|END}}
+{{CodeEnd}}
+: ''Note:'' When there is no device control to read, a [[FOR...NEXT|FOR]] n = 1 TO 0 loop will not run thus avoiding a control function read error.
+
+
+{{PageSeeAlso}}
+* [[_LASTWHEEL]], [[_LASTBUTTON]], [[_LASTAXIS]]
+* [[_AXIS]], [[_WHEEL]], [[_BUTTONCHANGE]]
+* [[_DEVICE$]], [[_DEVICES]]
+* [[_MOUSEBUTTON]]
+* [[Controller Devices]]
+
+
+{{PageNavigation}}

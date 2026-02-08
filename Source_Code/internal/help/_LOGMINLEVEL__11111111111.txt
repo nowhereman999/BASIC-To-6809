@@ -1,0 +1,67 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:41:51}}
+{{DISPLAYTITLE:_LOGMINLEVEL}}
+The '''_LOGMINLEVEL''' function returns the current minimum logging level that is being output.
+
+
+{{PageSyntax}}
+: {{Parameter|level&}} = [[_LOGMINLEVEL]]
+
+
+{{PageParameters}}
+* The return value {{Parameter|level&}} is a number from 1 to 5 indicating the current minimum level of logging enabled. The below table indicates the mapping:
+                           ┌────────┬─────────────┐
+                           │ '''Number''' │  '''Log level'''  │
+                           ├────────┼─────────────┤
+                           │   1    │    Trace    │
+                           ├────────┼─────────────┤
+                           │   2    │ Information │
+                           ├────────┼─────────────┤
+                           │   3    │   Warning   │
+                           ├────────┼─────────────┤
+                           │   4    │    Error    │
+                           ├────────┼─────────────┤
+                           │   5    │    None     │
+                           └────────┴─────────────┘
+
+
+{{PageDescription}}
+* The purpose of '''_LOGMINLEVEL''' is to allow programs to skip generating expensive logging if that logging would not be output anywhere.
+* For example, you may have a very large array of integers that you want to log fairly often - generating the strings of the log messages for that array can slow down your program even if those messages are ultimately never written anywhere. By checking [[_LOGMINLEVEL]] before generating those log messages you can avoid that expensive work if it would not be used but also still produce it when you request it.
+* If the function returns a 2, that indicates that only logging at the Information level and above is being captured somewhere. If the function returns a 5, that means no logging is being captured anywhere.
+
+
+{{PageAvailability}}
+<!-- QB64 = a version or none, QBPE = a version or all, Platforms = yes or no -->
+<gallery widths="48px" heights="48px" mode="nolines">
+File:Qb64.png|'''no'''
+File:Qbpe.png|'''v4.0.0'''
+File:Apix.png
+File:Win.png|'''yes'''
+File:Lnx.png|'''yes'''
+File:Osx.png|'''yes'''
+</gallery>
+<!-- additional availability notes go below here -->
+
+
+{{PageExamples}}
+; Example 1 : Writes a log message at the information level
+{{CodeStart}}
+level& = {{Cl|_LOGMINLEVEL}}
+
+{{Cl|IF}} level& < {{Text|2|#F580B1}} {{Cl|THEN}}
+    {{Text|<nowiki>' Generate expensive log messages</nowiki>|#919191}}
+    {{Cl|_LOGTRACE}} expensiveLogMessage$
+{{Cl|END IF}}
+
+{{Cl|END}}
+{{CodeEnd}}
+
+
+{{PageSeeAlso}}
+* [[_LOGTRACE]], [[_LOGINFO]]
+* [[_LOGWARN]], [[_LOGERROR]]
+* [[Logging]]
+
+
+{{PageNavigation}}

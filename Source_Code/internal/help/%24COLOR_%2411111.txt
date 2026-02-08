@@ -1,0 +1,79 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:40:47}}
+'''$COLOR''' is a metacommand that adds named color constants into a program, which then can be used instead of hardcoded literal color values.
+
+
+{{PageSyntax}}
+: [[$COLOR]]''':'''{0|32}
+
+
+{{PageParameters}}
+* The one and only parameter is a literal number designating either to include [[SCREEN|SCREEN 0]] based color indexes, or full [[_RGB32]] color values with full (opaque) alpha.
+
+
+{{PageDescription}}
+* '''$COLOR:0''' adds constants for the colors 0-15 available in '''SCREEN 0''', these do also match for the first 16 colors on 8-Bit (256 colors) graphic screens as long as they are not changed using [[PALETTE]] or [[_PALETTECOLOR]]. For the actual constant names see [https://qb64phoenix.com/qb64wiki/resources/Color0.html $COLOR:0 Name Table].
+* '''$COLOR:32''' adds constants for full 32-Bit color values as used on 32-Bit screens created via [[_NEWIMAGE]], similar to HTML color names. For the actual constant names see [https://qb64phoenix.com/qb64wiki/resources/Color32.html $COLOR:32 Name Table].
+* Prior to QB64-PE v0.5.0, '''$COLOR''' was not compatible with [[$NOPREFIX]].
+* Since QB64-PE v0.5.0, '''$COLOR''' can now be used with [[$NOPREFIX]], with a few notable differences to three conflicting colors -- Red, Green, Blue.
+
+:Red would conflict with [[_RED]], Green would conflict with [[_GREEN]], and Blue would conflict with [[_BLUE]], once the underscore was removed from those commands with [[$NOPREFIX]].
+:
+:To prevent these conflicts, the [[COLOR]] values have had '''NP_''' prepended to the front of them, to distinguish them from the non-prefixed command names.  All other color names remain the same, with only the three colors in conflict having to use '''NP_''' (for '''N'''o '''P'''refix) in front of them.
+:
+:Note that [[$NOPREFIX]] was {{Text|'''deprecated'''|red}} in '''QB64-PE v4.0.0''' and so also the '''NP_''' color names are gone.
+
+
+{{PageExamples}}
+;Example 1:Adding named color constants for SCREEN 0.
+{{CodeStart}}
+{{Cm|$COLOR}}:{{Text|0|#F580B1}}
+
+{{Cl|COLOR}} BrightWhite, Red
+{{Cl|PRINT}} {{Text|<nowiki>"Bright white on red."</nowiki>|#FFB100}}
+{{CodeEnd}}
+{{OutputStartBG0}}
+{{Ot|Bright white on red.|#ffffff|#aa0000}}
+{{OutputEnd}}
+
+----
+
+;Example 2:Adding named color constants for 32-bit modes.
+{{CodeStart}}
+{{Cl|SCREEN}} {{Cl|_NEWIMAGE}}({{Text|640|#F580B1}}, {{Text|400|#F580B1}}, {{Text|32|#F580B1}})
+{{Cm|$COLOR}}:{{Text|32|#F580B1}}
+
+{{Cl|COLOR}} CrayolaGold, DarkCyan
+{{Cl|PRINT}} {{Text|<nowiki>"CrayolaGold on DarkCyan."</nowiki>|#FFB100}}
+{{CodeEnd}}
+{{OutputStartBG0}}
+{{Ot|CrayolaGold on DarkCyan.|#E7C697|#008B8B}}
+{{OutputEnd}}
+
+----
+
+;Example 3:Adding named color constants for 32-bit modes (with $NOPREFIX in effect).
+{{CodeStart}}
+{{Cm|$NOPREFIX}}
+
+{{Cl|SCREEN}} {{Cl|NEWIMAGE}}({{Text|640|#F580B1}}, {{Text|400|#F580B1}}, {{Text|32|#F580B1}})
+{{Cm|$COLOR}}:{{Text|32|#F580B1}}
+
+{{Cl|COLOR}} NP_Red, White {{Text|<nowiki>'notice the NP_ in front of Red?</nowiki>|#919191}}
+{{Text|<nowiki>'This is to distinguish the color from the command with $NOPREFIX.</nowiki>|#919191}}
+{{Cl|PRINT}} {{Text|<nowiki>"Red on White."</nowiki>|#FFB100}}
+{{CodeEnd}}
+{{OutputStartBG0}}
+{{Ot|Red on White.|#ff0000|#ffffff}}
+{{OutputEnd}}
+
+
+{{PageSeeAlso}}
+* [[COLOR]]
+* [[SCREEN]], [[_NEWIMAGE]]
+* [[Metacommand]]
+* [https://qb64phoenix.com/qb64wiki/resources/Color0.html $COLOR:0 Name Table]
+* [https://qb64phoenix.com/qb64wiki/resources/Color32.html $COLOR:32 Name Table]
+
+
+{{PageNavigation}}

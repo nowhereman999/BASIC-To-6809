@@ -1,0 +1,15 @@
+float *__SINGLE_A=NULL;
+float *__SINGLE_AU=NULL;
+int16 *__INTEGER_B=NULL;
+uint16 *__UINTEGER_BU=NULL;
+int32 *__LONG_C=NULL;
+uint32 *__ULONG_CU=NULL;
+int64 *__INTEGER64_D=NULL;
+uint64 *__UINTEGER64_DU=NULL;
+int8 *__BYTE_RESULT=NULL;
+int32 console=0;
+int32 screen_hide_startup=0;
+int32 asserts=0;
+int32 vwatch=0;
+ptrszint data_size=0;
+uint8 *data=(uint8*)calloc(1,1);

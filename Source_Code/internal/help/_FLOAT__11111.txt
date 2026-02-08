@@ -1,0 +1,59 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:41:23}}
+{{DISPLAYTITLE:_FLOAT}}
+'''_FLOAT''' variables are 80-bits floating point numerical values up to nineteen digits precision ([[Wikipedia:Extended_precision|see IEEE 754 Extended precision]]). This variable type is new to QB64(PE), it is not available in QuickBASIC/QBasic.
+
+
+{{PageSyntax}}
+; Explicit declaration
+: [[DIM]] {{Parameter|variable}} [[AS]] [[_FLOAT]] 'AS type variant
+: [[DIM]] {{Parameter|variable}}## 'type suffix variant ('''##''')
+; Implicit for a specific letter range
+: [[_DEFINE]] F-G [[AS]] [[_FLOAT]] 'all variables beginning with F(f) or G(g)
+; Implicit without declaration
+: {{Parameter|variable}}## 'simply always use the type suffix
+
+; {{Text|'''Note'''|red}}
+:* Although the numbers are 80-bits wide (10 bytes), QB64(PE) always allocates 32 bytes to store this value. Hence, using [[LEN]] on any '''_FLOAT''' variable will always return 32 and the [[_MK$]] function returns a 32 chars long string when converting a '''_FLOAT''' number.
+
+
+{{PageDescription}}
+* Values can range up to 19 digits. Decimal point accuracy depends on whole value places taken.
+* The suffix '''##''' can also be placed after a literal numerical value to designate the value as '''_FLOAT'''.
+* Values may be given as real number (''123.456'') or scientific notation using '''F''' as exponent marker (''1.23456F+2'').
+* [[PRINT]] usually takes the shorter of both notations (depending on the value) to output the numbers. In alternative you may use [[PRINT USING]] to designate your desired output format.
+* Floating decimal point numerical values cannot be [[_UNSIGNED]].
+* Values can be converted to 32-bytes [[STRING]] values using [[_MK$]]('''_FLOAT''', value) and back to numbers with [[_CV]]('''_FLOAT''', value$).
+; Some useful [[constants]] are available since QB64-PE v4.0.0
+:* _SIZE_OF_FLOAT = 32 'in bytes
+:* _FLOAT_MIN## = -1.189731495357231765F+4932 'smallest normal number
+:* _FLOAT_MAX## = 1.189731495357231765F+4932 'largest normal number
+:* _FLOAT_MIN_FRAC## = 3.362103143112093506F-4932 'smallest normal number closest to zero
+
+
+{{PageAvailability}}
+<!-- QB64 = a version or none, QBPE = a version or all, Platforms = yes or no -->
+<gallery widths="48px" heights="48px" mode="nolines">
+File:Qb64.png|'''all'''
+File:Qbpe.png|'''all'''
+File:Apix.png
+File:Win.png|'''yes'''
+File:Lnx.png|'''yes'''
+File:Osx.png|'''yes'''
+</gallery>
+<!-- additional availability notes go below here -->
+* In all '''QB64(PE)''' versions there's the problem, that [[STR$]] can't correctly handle values exceeding the [[DOUBLE]] range. This unfortunatly also affects the [[PRINT]] output as well as [[INPUT]], [[INPUT (file_statement)|INPUT #]] and [[READ]]ing from [[DATA]].
+** We'll see if we can fix these issues in a future version in such a way, that it don't breaks QB4.5 compatiblity.
+* By now, you may work around the input/data issues by providing/reading '''_FLOAT''' values as number strings and pass them through [[VAL]] afterwards to convert it into numerics.
+* Since '''QB64-PE v4.0.0''' there's also the [[_TOSTR$]] function, which can be used to convert full range '''_FLOAT''' values into number strings. You can then simply [[PRINT]] the number strings.
+
+
+{{PageSeeAlso}}
+* [[SINGLE]], [[DOUBLE]]
+* [[DIM]], [[_DEFINE]]
+* [[_MK$]], [[_CV]]
+* [[LEN]], [[Constants]]
+* [[Variable Types]]
+
+
+{{PageNavigation}}

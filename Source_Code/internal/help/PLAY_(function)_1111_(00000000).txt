@@ -1,0 +1,253 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:44:52}}
+The '''PLAY''' function returns the amount of time (in seconds) in the background music queue.
+
+
+{{PageSyntax}}
+: {{Parameter|remaining#}} = '''PLAY'''({{Parameter|voice&}})
+
+
+{{PageParameters}}
+* {{Parameter|remaining#}} is the number of seconds left to play in the background music queue.
+* {{Parameter|voice&}} can be any numeric expression. It indicates for which tone voice channel the number of seconds remaining is to be returned. If {{Parameter|voice&}} is not in [0-3], the queue for voice 0 is returned.
+* '''See also the important version dependent notes in the [[#Availability|Availability]] section.'''
+
+
+{{PageDescription}}
+* This function may be used to detect, if the background music queue is still playing.
+* When nothing is left to play, this function returns zero.
+
+
+{{PageAvailability}}
+<!-- QB64 = a version or none, QBPE = a version or all, Platforms = yes or no -->
+<gallery widths="48px" heights="48px" mode="nolines">
+File:Qb64.png|'''v0.934'''
+File:Qbpe.png|'''v3.1.0'''
+File:Apix.png
+File:Win.png|'''yes'''
+File:Lnx.png|'''yes'''
+File:Osx.png|'''yes'''
+</gallery>
+<!-- additional availability notes go below here -->
+* In '''QB64''' and early '''QB64-PE''', this was implemented as a stub function that always returned zero.
+* The function has been fully implemented since '''QB64-PE v3.1.0''', but unlike '''QuickBASIC''', in '''QB64-PE''', this function does not return the number of notes left but the amount of time (in seconds) left to play.
+* Since '''QB64-PE v3.8.0''', if {{Parameter|voice&}} is a number other than zero, the function returns the amount of time (seconds) left to play.
+* Multi-voice support was introduced in '''QB64-PE v4.0.0'''.
+* Since '''QB64-PE v4.0.0''', the function returns the amount of time (seconds) left to play specifically for the tone voice channel identified by the given {{Parameter|voice&}} number.
+
+
+{{PageExamples}}
+; Example 1: Using PLAY with a single voice.
+{{CodeStart}}
+{{Cl|OPTION}} {{Cl|_EXPLICIT}}
+
+{{Cl|CONST}} MML = {{Text|<nowiki>"mbv15l16t155o2mnb4p8msbbmnb4p8msbbb8g#8e8g#8b8g#8b8o3e8o2b8g#8e8g#8b8g#8b8o3e8o2mnb4p8msbbmnb4"</nowiki>|#FFB100}} + _
+    {{Text|<nowiki>"p8msbbmnb4p8msbbmnb4p8msbbb8bbb8b8b8bbb8b8b8bbb8b8b8bbb8b8mlb2b2b8p8p4p4p8mso1bbb8bbb8bbo2e8f#8g#8o1bb"</nowiki>|#FFB100}} + _
+    {{Text|<nowiki>"b8bbo2e8g#g#f#8d#8o1b8bbb8bbb8bbo2e8f#8g#8eg#mlb4bmsag#f#e8g#8e8o3bbb8bbb8bbo4e8f#8"</nowiki>|#FFB100}} + _
+    {{Text|<nowiki>"g#8o3bbb8bbo4e8g#g#f#8d#8o3b8bbb8bbb8bbo4e8f#8g#8mleg#b4bag#f#mse8g#8e8o3g#g#g#8g#g#g#8g#g#"</nowiki>|#FFB100}} + _
+    {{Text|<nowiki>"g#8o4c#8o3g#8o4c#8o3g#8o4c#8o3g#8f#8e8d#8c#8g#g#g#8g#g#g#8g#g#g#8o4c#8o3g#8o4c#8"</nowiki>|#FFB100}} + _
+    {{Text|<nowiki>"o3g#8o4c#8o3b8a#8b8a#8b8g#g#g#8g#g#g#8g#g#g#8o4c#8o3g#8o4c#8o3g#8o4c#8o3g#8f#8"</nowiki>|#FFB100}} + _
+    {{Text|<nowiki>"e8d#8c#8g#g#g#8g#g#g#8g#g#g#8o4c#8o3g#8o4c#8o3g#8o4c#8o3b8a#8b8o2bbb8f#f#"</nowiki>|#FFB100}} + _
+    {{Text|<nowiki>"f#8f#f#f#8g#8a8f#4mna8msg#8mne4msg#8f#8f#8f#8o3f#f#f#8f#f#f#8g#8"</nowiki>|#FFB100}} + _
+    {{Text|<nowiki>"a8mnf#4msa8g#8mne4msg#8f#8o2bbb8o1bbb8bbb8bbo2mne8f#8g#8o1bbb8bbo2e8g#g#f#8d#8o1b8bbb8bb"</nowiki>|#FFB100}} + _
+    {{Text|<nowiki>"b8bbo2e8f#8g#8eg#mlb4mnbag#f#e8g#8e8o3bbb8bbb8bbo4e8f#8g#8o3bbb8bbo4e8g#g#f#8d#8o3b8bb"</nowiki>|#FFB100}} + _
+    {{Text|<nowiki>"b8bbb8bbo4e8f#8g#8mleg#mlb4mnbag#f#mne8g#8e8o3mle56f56g56a56b56o4c56d56mne8eee8e8mlg#4g#8"</nowiki>|#FFB100}} + _
+    {{Text|<nowiki>"mnf#8e8d#8e8c#8mso3bo4c#o3bo4c#o3bo4c#d#eo3abababo4c#d#o3g#ag#ag#abo4c#o3f#"</nowiki>|#FFB100}} + _
+    {{Text|<nowiki>"g#f#g#f#g#f#g#f#g#f#d#o2bo3mlbo4c#d#e8d#8e8c#8o3msbo4c#o3bo4c#o3bo4c#d#eo3abababo4c#d#o3g#"</nowiki>|#FFB100}} + _
+    {{Text|<nowiki>"ag#ag#abo4c#o3f#g#f#g#f#af#emne8p8mlc#4mnc#o2cmso3c#o2co3d#c#o2baag#ec#c#c#c#c#e"</nowiki>|#FFB100}} + _
+    {{Text|<nowiki>"d#o1cg#g#g#g#g#g#o2c#eg#o3c#c#c#c#c#o2co3c#o2co3d#c#o2baag#ec#c#c#c#c#ed#o1cg#g#g#g#g#mng#"</nowiki>|#FFB100}} + _
+    {{Text|<nowiki>"o2c#eg#o3msc#ed#c#d#o2cg#g#g#o3g#ec#d#o2cg#g#g#o3g#ec#d#o2bg#g#a#gd#d#g#gg#gg#ag#f#e"</nowiki>|#FFB100}} + _
+    {{Text|<nowiki>"o1ba#bo2eo1bo2f#o1bo2g#ed#eg#eaf#bo3g#f#ed#f#ec#o2bo3c#o2bo3c#d#ef#g#o2ababo3c#d#ef#o2g#"</nowiki>|#FFB100}} + _
+    {{Text|<nowiki>"ag#aco3c#d#eo2f#g#f#g#f#g#f#g#f#g#f#d#o1bco2c#d#eo1ba#bo2eo1bo2f#o1bo2g#ed#eg#eaf#b"</nowiki>|#FFB100}} + _
+    {{Text|<nowiki>"o3g#f#ed#f#ec#o2bo3c#o2bo3c#d#ef#g#o2ababo3c#d#ef#o2g#ag#abo3c#d#eo2f#o3c#o2co3c#d#c#o2af#mne"</nowiki>|#FFB100}} + _
+    {{Text|<nowiki>"o3mlef#g#abo4c#d#mne8mseee8e8mlg#4g#8msf#8mse8d#8e8c#8o3bo4c#o3bo4c#o3bo4c#d#eo3a"</nowiki>|#FFB100}} + _
+    {{Text|<nowiki>"bababo4c#d#o3g#ag#ag#abo4c#o3f#g#f#g#f#g#f#g#f#g#f#d#o2bo3mlbo4c#d#mne8eee8e8mlg#4g#8"</nowiki>|#FFB100}} + _
+    {{Text|<nowiki>"msf#8e8d#8e8c#8o3bo4c#o3bo4c#o3bo4c#d#eo3abababo4c#d#o3g#ag#ag#abo4c#o3f#"</nowiki>|#FFB100}} + _
+    {{Text|<nowiki>"g#f#g#f#ag#f#e8o2b8o3e8g#g#g#8mng#g#g#8g#g#g#8o4c#8o3g#8o4c#8o3g#8o4c#8o3g#8f#8e8"</nowiki>|#FFB100}} + _
+    {{Text|<nowiki>"d#8c#8g#g#g#8g#g#g#8g#g#g#8o4c#8o3g#8o4c#8o3g#8o4c#8o3b8a#8b8a#8b8g#g#g#8"</nowiki>|#FFB100}} + _
+    {{Text|<nowiki>"g#g#g#8g#g#g#8o4c#8o3g#8o4c#8o3g#8o4c#8o3g#8f#8e8d#8c#8g#g#g#8g#g#g#8g#g#g#8"</nowiki>|#FFB100}} + _
+    {{Text|<nowiki>"o4c#8o3g#8o4c#8o3g#8o4c#8o3b8a#8b8a#8b8o2f#f#f#8f#f#f#8g#8a8f#4a8g#8"</nowiki>|#FFB100}} + _
+    {{Text|<nowiki>"e4g#8f#8o0b8o1b8o2f#f#f#8f#f#f#8g#8a8f#4a8g#8e4g#8f#8bbb8o1bbb8bbb8bbo2e8f#8g#8"</nowiki>|#FFB100}} + _
+    {{Text|<nowiki>"o1bbb8bbo2e8g#g#f#8d#8o1b8bbb8bbb8bbo2e8f#8g#8eg#mlb4mnbag#f#e8o1b8o2e8o3bbb8bbb8bbo4e8"</nowiki>|#FFB100}} + _
+    {{Text|<nowiki>"f#8g#8o3bbb8bbo4e8g#g#f#8d#8o3b8bbb8bbb8bbo4e8f#8g#8o3eg#mlb4mnbag#f#mlef#g#mnamlg#abo4mnc#mlo3bo4c#d#mnemld#"</nowiki>|#FFB100}} + _
+    {{Text|<nowiki>"ef#mng#ao3bo4ao3bo4ao3bo4ao3bo4ao3bo4ao3bo4ao3bo4ao3bmlef#g#mnamlg#abmno4c#mlo3bo4c#d#mnemld#ef#mng#ao3bo4ao3bo4a"</nowiki>|#FFB100}} + _
+    {{Text|<nowiki>"o3bo4ao3bo4ao3bo4ao3bo4ao3bo4ao3bp16mlg#o4g#o3mng#p16mld#o4d#o3mnd#p16"</nowiki>|#FFB100}} + _
+    {{Text|<nowiki>"mleo4eo3mnep16mlao4ao3mnap16mlg#o4g#o3mng#p16mld#o4d#o3mnd#p16mleo4eo3mnep16"</nowiki>|#FFB100}} + _
+    {{Text|<nowiki>"mlao4ao3mnao4go3go4go3go4go3go4go3go4msg8e8c8e8o4mng#o3g#o4g#o3g#o4g#o3g#o4g#o3g#o4msg#8e8o3b8o4e8mng#o3g#o4g#o3g#o4g#"</nowiki>|#FFB100}} + _
+    {{Text|<nowiki>"o3g#o4g#o3g#o4msg#8f8c#8f8mna#o3a#o4a#o3a#o4a#o3a#o4a#o3a#o4msa#8g8e8g8b8p16mna#p16ap16g#p16f#p16ep16"</nowiki>|#FFB100}} + _
+    {{Text|<nowiki>"d#p16c#p16o3bp16a#p16ap16g#p16f#p16ep16d#p16f#mlef#g#mnamlg#abmno4c#o3mlbo4c#d#mnemld#ef#mng#ao3bo4ao3bo4a"</nowiki>|#FFB100}} + _
+    {{Text|<nowiki>"o3bo4ao3bo4ao3bo4ao3bo4ao3bo4ao3bmlef#g#mnamlg#abmno4c#o3mlb"</nowiki>|#FFB100}} + _
+    {{Text|<nowiki>"o4c#d#mnemld#ef#mng#ao3bo4ao3bo4ao3bo4ao3bo4ao3bo4ao3bo4a"</nowiki>|#FFB100}} + _
+    {{Text|<nowiki>"o3bo4ao3bp16mlg#o4g#o3mng#p16mld#o4d#o3mnd#p16mleo4eo3mnep16mlao4ao3mnap16"</nowiki>|#FFB100}} + _
+    {{Text|<nowiki>"mlg#o4g#o3mng#p16mld#o4d#o3mnd#p16mleo4eo3mnep16mlao4ao3mnao4go3go4go3go4g"</nowiki>|#FFB100}} + _
+    {{Text|<nowiki>"o3go4go3go4g8e8c8e8g#o3g#o4g#o3g#o4g#o3g#o4g#o3g#o4g#8e8o3b8o4e8g#o3g#o4g#o3g#o4g#o3g#o4g#o3g#o4msg#8mnf8c#8"</nowiki>|#FFB100}} + _
+    {{Text|<nowiki>"f8a#o3a#o4a#o3a#o4a#o3a#o4a#o3a#o4a#8g8e8g8b8p16a#p16ap16g#p16f#p16ep16d#p16c#p16o3bp16a#p16"</nowiki>|#FFB100}} + _
+    {{Text|<nowiki>"ap16g#p16f#p16ep16d#p16fmled#ed#mne8bbb8bbb8bbo4e8f#8g#8o3bbb8bbb8bbo4g#8a8b8p8e8f#8g#8p8o3g#8"</nowiki>|#FFB100}} + _
+    {{Text|<nowiki>"a8b8p8p2o2bco3c#dd#eff#gg#aa#bco4c#d#ed#f#d#ed#f#d#ed#f#d#ed#f#d#ed#f#d#ed#f#d#ed#f#d#e"</nowiki>|#FFB100}} + _
+    {{Text|<nowiki>"d#f#d#e8eo3eo4eo3eo4eo3eo4e8o3bo2bo3bo2bo3bo2bo3b8g#o2g#o3g#o2g#o3g#o2g#o3g8eo2eo3eo2eo3eo2eo3e8eee8"</nowiki>|#FFB100}} + _
+    {{Text|<nowiki>"e8e8o2bbb8b8b8g#g#g#8g#8g#8eee8e8e8o1b8o2e8o1b8o2g#8e8b8g#8o3e8o2b8o3e8o2b8o3g#8e8b8g#8o4e4"</nowiki>|#FFB100}} + _
+    {{Text|<nowiki>"p8eee8e8e8e8e4p8p16ee4p8p16o2ee2"</nowiki>|#FFB100}}
+
+{{Cl|LOCATE}} {{Text|12|#F580B1}}, {{Text|28|#F580B1}}
+{{Cl|PRINT}} {{Text|<nowiki>"The William Tell Overture."</nowiki>|#FFB100}}
+{{Cl|PLAY}} MML
+
+{{Cl|DIM}} secondsLeft {{Cl|AS}} {{Cl|LONG}}
+
+{{Cl|DO}}
+    {{Cl|LOCATE}} {{Text|13|#F580B1}}, {{Text|32|#F580B1}}
+
+    secondsLeft = {{Cl|PLAY (function)|PLAY}}({{Text|0|#F580B1}})
+
+    {{Cl|PRINT USING}} {{Text|<nowiki>"(### seconds left)"</nowiki>|#FFB100}}; secondsLeft;
+
+    {{Cl|_LIMIT}} {{Text|30|#F580B1}}
+{{Cl|DO...LOOP|LOOP WHILE}} secondsLeft {{Cl|_ANDALSO}} {{Cl|_KEYHIT}} <> {{Text|27|#F580B1}}
+
+{{Cl|END}}
+{{CodeEnd}}
+
+
+; Example 2: Using PLAY with 3 voices.
+{{CodeStart}}
+{{Cl|OPTION}} {{Cl|_EXPLICIT}}
+
+{{Cl|DIM}} mml({{Text|0|#F580B1}} {{Cl|TO}} {{Text|2|#F580B1}}) {{Cl|AS}} {{Cl|STRING}}
+
+{{Cl|PRINT}} {{Text|<nowiki>"Playing tune."</nowiki>|#FFB100}}
+
+{{Cl|DO}}
+    {{Cl|READ}} mml({{Text|0|#F580B1}}), mml({{Text|1|#F580B1}}), mml({{Text|2|#F580B1}})
+    {{Cl|PLAY}} mml({{Text|0|#F580B1}}), mml({{Text|1|#F580B1}}), mml({{Text|2|#F580B1}})
+{{Cl|DO...LOOP|LOOP WHILE}} {{Cl|LEN}}(mml({{Text|0|#F580B1}})) {{Cl|_ORELSE}} {{Cl|LEN}}(mml({{Text|1|#F580B1}})) {{Cl|_ORELSE}} {{Cl|LEN}}(mml({{Text|2|#F580B1}}))
+
+{{Cl|PRINT}} {{Text|<nowiki>"Waiting for tune to finish playing."</nowiki>|#FFB100}}
+
+{{Cl|DIM}} cLine {{Cl|AS}} {{Cl|LONG}}: cLine = {{Cl|CSRLIN}}
+
+{{Cl|DO}}
+    {{Cl|_LIMIT}} {{Text|60|#F580B1}}
+    {{Cl|LOCATE}} cLine, {{Text|1|#F580B1}}
+{{Cl|DO...LOOP|LOOP WHILE}} {{Cl|_KEYHIT}} <> {{Text|27|#F580B1}} {{Cl|_ANDALSO}} {{Text|DisplayVoiceStats|#55FF55}}
+
+{{Cl|END}}
+
+{{Cl|DATA}} {{Text|<nowiki>"mb v15"</nowiki>|#FFB100}},{{Text|<nowiki>"mb v15"</nowiki>|#FFB100}},{{Text|<nowiki>"mb v15"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"v11 t120 o3 e-8 >e-8"</nowiki>|#FFB100}},{{Text|<nowiki>"v12 t120 o2 p4"</nowiki>|#FFB100}},{{Text|<nowiki>"v12 t120 o2 e-4"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 <f8 >e-8"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 p4"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 e-4"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 <g8 >e-8"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 p4"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 p4"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 <a-8 >e-8"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 p4"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 c4"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 <b-8 >e-8"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 p4"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 c4"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 c8 e-8"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 p4"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 p4"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 <b-16 >e-16 d16 c16"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 p4"</nowiki>|#FFB100}},{{Text|<nowiki>"o1 g4"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 <b-16 >g16 f16 e-16"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 p4"</nowiki>|#FFB100}},{{Text|<nowiki>"o1 a-4"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 d16 c16 <b-16 a-16"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 p4"</nowiki>|#FFB100}},{{Text|<nowiki>"o1 b-4"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o3 g16 a-16 b-16 g16"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 p4"</nowiki>|#FFB100}},{{Text|<nowiki>"o1 e-4"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o3 e-16 g16 b-16 >e-16"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 p4"</nowiki>|#FFB100}},{{Text|<nowiki>"o1 g4"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 <f16 a16 >c16 e-16"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 p4"</nowiki>|#FFB100}},{{Text|<nowiki>"o1 a4"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 d16 c16 d16 f16"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 b-8 >b-8"</nowiki>|#FFB100}},{{Text|<nowiki>"o1 b-4"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 e-16 d16 e-16 g16"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 c8 b-8"</nowiki>|#FFB100}},{{Text|<nowiki>"o1 b-4"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 f16 e-16 f16 a-16"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 d8 b-8"</nowiki>|#FFB100}},{{Text|<nowiki>"o1 p4"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 g16 f16 g16 b-16"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 e-8 b-8"</nowiki>|#FFB100}},{{Text|<nowiki>"o1 b-4"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 d16 c16 d16 b-16"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 f8 b-8"</nowiki>|#FFB100}},{{Text|<nowiki>"o1 b-4"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 e-16 d16 e-16 b-16"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 g8 b-8"</nowiki>|#FFB100}},{{Text|<nowiki>"o1 p4"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 d8 f8"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 f16 b-16 a16 g16"</nowiki>|#FFB100}},{{Text|<nowiki>"o1 b-4"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 b-8 d8"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 f16 >d16 c16 <b-16"</nowiki>|#FFB100}},{{Text|<nowiki>"o1 >d4"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 c8 a8"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 a16 g16 f16 e-16"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 f4"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 b-8 d8"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 d16 e-16 f16 d16"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 b-4"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 f8 d8"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 <b-16 >d16 f16 b-16"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 b-4"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 <b-8 >d8"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 d16 f16 a-16 b-16"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 p4"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 e-8 p8"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 g16 f16 g16 b-16"</nowiki>|#FFB100}},{{Text|<nowiki>"o1 e-8 >e-8"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 e-8 p8"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 a-16 g16 a-16 >c16"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 <f8 >e-8"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 e-8 p8"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 <b-16 a-16 b-16 >d-16"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 <g8 >e-8"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 e-8 p8"</nowiki>|#FFB100}},{{Text|<nowiki>"o4 c16 <b-16 >c16 e-16"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 <a-8 >e-8"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 e-8 p8"</nowiki>|#FFB100}},{{Text|<nowiki>"o4 <g16 f16 g16 >e-16"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 <b-8 >e-8"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 e-8 p8"</nowiki>|#FFB100}},{{Text|<nowiki>"o4 <a-16 g16 a-16 >e-16"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 c8 e-8"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 p16 e-16 f16 g16"</nowiki>|#FFB100}},{{Text|<nowiki>"o4 <g8 b-8"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 <b-8 p8"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 a-16 b-16 >c16 <b-16"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 >e-8 <g8"</nowiki>|#FFB100}},{{Text|<nowiki>"o1 >c8 p8"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 a-16 g16 f16 a-16"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 f8 b-8"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 d8 p8"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 g8 <b-8"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 p16 e-16 f16 g16"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 e-4"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o3 >c8 <a-8"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 a-16 b-16 >c16 <b-16"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 e-4"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o3 >f4"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 a-16 g16 f16 a-16"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 d4"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 p16 a-16 g16 f16"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 g8 <b-8"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 e-4"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 e-16 d16 c16 <b-16"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 >c8 <a-8"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 a-4"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o3 a-16 g16 a-16 >f16"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 >f4"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 p4"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 <g16 >f16 e-16 d16"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 p16 a-16 g16 f16"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 <b4"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 c16 <b-16 a-16 g16"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 e-16 d16 c16 <b-16"</nowiki>|#FFB100}},{{Text|<nowiki>"o1 >c4"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o3 f4"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 a-16 g16 a-16 >f16"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 d4"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o3 p16 a-16 g16 f16"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 <g16 >f16 e-16 d16"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 <e-4"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o3 e-4"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 c16 <b-16 a-16 g16"</nowiki>|#FFB100}},{{Text|<nowiki>"o1 a-4"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o3 p16 d16 e-16 f16"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 f4"</nowiki>|#FFB100}},{{Text|<nowiki>"o1 a-4"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o3 <b8 >d8"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 p16 a-16 g16 f16"</nowiki>|#FFB100}},{{Text|<nowiki>"o1 g4"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o3 g8 b8"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 e-8 g8"</nowiki>|#FFB100}},{{Text|<nowiki>"o1 p16 >g16 f16 g16"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o3 >c8 d8"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 a8 b8"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 e-16 f16 d16 e-16"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 e-16 c16 <b16 >c16"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 c8 p8"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 c8 e-8"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 <g16 >c16 <b16 >c16"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 p4"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 c8 e-8"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 e-16 c16 <b-16 >c16"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 p4"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 c8 e-8"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 <a-8 p8"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 p16 f16 e-16 f16"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 <f8 >a-8"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o3 >e-8 p8"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 c16 f16 e-16 f16"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 <f8 >a-8"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 e-8 p8"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 a-16 f16 e-16 f16"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 <f8 >a-8"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 p16 <b-16 a-16 b-16"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 d8 p8"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 <b-8 >d8"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o3 f16 b-16 a-16 b-16"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 a-8 p8"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 <b-8 >d8"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o3 >d16 <b-16 a-16 b-16"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 a-8 p8"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 <b-8 >d8"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o3 g8 p8"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 p16 e-16 d-16 e-16"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 <e-8 >g8"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o3 >d-8 p8"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 <b-16 >e-16 d-16 e-16"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 <e-8 >g8"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 d-8 p8"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 g16 e-16 d-16 e-16"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 <e-8 g8"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o3 p16 a-16 g16 a-16"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 c16 f16 e16 f16"</nowiki>|#FFB100}},{{Text|<nowiki>"o1 a-8 >c8"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o3 f16 a-16 g16 a-16"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 c16 f16 e16 f16"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 <a-8 >c8"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o3 >c16 <a-16 g16 a-16"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 a-16 f16 e-16 f16"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 <a-8 >c8"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o3 f16 b-16 a-16 b-16"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 d8 f8"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 <a-8 >d8"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o3 >d16 <b-16 a-16 b-16"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 b-4"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 <a-8 >d8"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o3 >f16 d16 c16 d16"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 b-4"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 <a-8 >d8"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 b-8 g8"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 p16 <b-16 a-16 b-16"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 <g8 >e-8"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 e-4"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 >e-16 <b-16 a-16 b-16"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 <g8 >e-8"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 e-4"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 >g16 e-16 d16 e-16"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 <g8 >e-8"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 p16 d16 c16 <b-16"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 a16 b-16 a16 g16"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 <f4"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o3 a16 b-16 a16 g16"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 f16 >d16 c16 <b-16"</nowiki>|#FFB100}},{{Text|<nowiki>"o1 p4"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o3 f16 >e-16 d16 c16"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 a16 g16 f16 e-16"</nowiki>|#FFB100}},{{Text|<nowiki>"o1 p4"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o3 b-4"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 d16 c16 d16 f16"</nowiki>|#FFB100}},{{Text|<nowiki>"o1 b-8 >b-8"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o3 b-4"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 e-16 d16 e-16 g16"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 c8 b-8"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o3 b-4"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 f16 e-16 f16 a-16"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 d8 b-8"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o3 p16 a16 b-16 >e-16"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 g16 f16 g16 b-16"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 e-8 b-8"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 <b-16 a16 b-16 >d16"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 d16 c16 d16 b-16"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 f8 b-8"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 c4"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 e-16 d16 e-16 b-16"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 g8 b-8"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 p16 g16 f16 e-16"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 d4"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 f8 b-8"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 d16 b-16 a16 g16"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 p16 >d16 c16 <b-16"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 e-8 b-8"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 f16 e-16 d16 c16"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 a16 g16 f16 e-16"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 f8 a8"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o3 b-8 >f8"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 d16 b-16 a16 b-16"</nowiki>|#FFB100}},{{Text|<nowiki>"o1 b-4"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 g8 f8"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 e-16 b-16 d16 b-16"</nowiki>|#FFB100}},{{Text|<nowiki>"o1 p4"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 g8 f8"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 e-16 b-16 c16 b-16"</nowiki>|#FFB100}},{{Text|<nowiki>"o1 p4"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 f16 b-16 a16 b-16"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 d8 f8"</nowiki>|#FFB100}},{{Text|<nowiki>"o1 b-4"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 e-16 b-16 d16 b-16"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 g8 f8"</nowiki>|#FFB100}},{{Text|<nowiki>"o1 p4"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 e-16 b-16 c16 b-16"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 g8 e-8"</nowiki>|#FFB100}},{{Text|<nowiki>"o1 p4"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 d4"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 f16 <b-16 >c16 d16"</nowiki>|#FFB100}},{{Text|<nowiki>"o1 p8 >f8"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 p16 <b-16 >c16 d16"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 e-4"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 g8 f8"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 e-16 f16 g16 a16"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 p16 d16 e-16 c16"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 g8 e-8"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 b-8 <b-8"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 f8 d8"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 d8 g8"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o3 >c8 p8"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 e-8 p8"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 e-8 p8"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o4 <a4"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 c4"</nowiki>|#FFB100}},{{Text|<nowiki>"o2 f4"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o3 mlb-4"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 mld4"</nowiki>|#FFB100}},{{Text|<nowiki>"o1 mlb-4"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o3 b-4"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 d4"</nowiki>|#FFB100}},{{Text|<nowiki>"o1 b-4"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>"o3 b-4"</nowiki>|#FFB100}},{{Text|<nowiki>"o3 d4"</nowiki>|#FFB100}},{{Text|<nowiki>"o1 b-4"</nowiki>|#FFB100}}
+{{Cl|DATA}} {{Text|<nowiki>""</nowiki>|#FFB100}},{{Text|<nowiki>""</nowiki>|#FFB100}},{{Text|<nowiki>""</nowiki>|#FFB100}}
+
+{{Cl|FUNCTION}} {{Text|DisplayVoiceStats%%|#55FF55}}
+    {{Cl|DIM}} voiceTime({{Text|0|#F580B1}} {{Cl|TO}} {{Text|3|#F580B1}}) {{Cl|AS}} {{Cl|_INTEGER64}}
+    {{Cl|DIM}} i {{Cl|AS}} {{Cl|LONG}}
+
+    {{Cl|FOR}} i = {{Text|0|#F580B1}} {{Cl|TO}} {{Text|3|#F580B1}}
+        voiceTime(i) = {{Cl|PLAY (function)|PLAY}}(i)
+        {{Cl|PRINT}} {{Text|<nowiki>"Voice"</nowiki>|#FFB100}}; i; {{Text|<nowiki>":"</nowiki>|#FFB100}}; voiceTime(i); {{Text|<nowiki>"seconds left"</nowiki>|#FFB100}}; {{Cl|SPC}}({{Text|10|#F580B1}})
+    {{Cl|NEXT}} i
+
+    {{Text|DisplayVoiceStats|#55FF55}} = voiceTime({{Text|0|#F580B1}}) > {{Text|0|#F580B1}} {{Cl|_ORELSE}} voiceTime({{Text|1|#F580B1}}) > {{Text|0|#F580B1}} {{Cl|_ORELSE}} voiceTime({{Text|2|#F580B1}}) > {{Text|0|#F580B1}} {{Cl|_ORELSE}} voiceTime({{Text|3|#F580B1}}) > {{Text|0|#F580B1}}
+{{Cl|END FUNCTION}}
+{{CodeEnd}}
+
+
+{{PageSeeAlso}}
+* [[PLAY]], [[SOUND]], [[BEEP]]
+* [[_SNDOPEN]], [[_SNDRAW]]
+
+
+{{PageNavigation}}

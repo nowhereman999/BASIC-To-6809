@@ -1,0 +1,193 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:41:57}}
+{{DISPLAYTITLE:_MEM}}
+The [[_MEM]] variable type can be used when working with memory blocks. It has no variable [[Variable Types|type]] suffix.
+
+
+{{PageSyntax}}
+:  [[DIM]] m [[AS]] [[_MEM]]
+
+
+{{PageDescription}}
+''Variable TYPE:''
+* Memory DOT values are actually part of the built in memory variable [[Variable Types|type]] in QB64. The following [[TYPE]] is built in:
+{{FixedStart}}
+TYPE memory_type
+  OFFSET AS _OFFSET       'start location of block(changes with byte position)
+  SIZE AS _OFFSET         'size of block remaining at offset(changes with position)
+  TYPE AS _OFFSET         'type description of variable used(never changes)
+  ELEMENTSIZE AS _OFFSET  'byte size of values inside the block(never changes)
+  IMAGE AS LONG           'the image handle used when _MEMIMAGE(handle) is used
+  SOUND AS LONG           'the sound handle used when _MEMSOUND(handle) is used
+END TYPE
+
+{{Text|The above [[TYPE]] is for clarification purposes only. It '''doesn't need''' to be pasted in<br>a program to use _MEM.|red}}
+
+{{Text|'''IMPORTANT NOTE:''' ''As of Build 20170802/57 onward (early v1.2 development), mem.TYPE has<br>been changed to be an _OFFSET, just as mem.SIZE and mem.ELEMENTSIZE.''|red}}
+{{FixedEnd}}
+
+=== Usage ===
+* The _MEM type contains the following '''read-only''' elements where ''name'' is the _MEM variable name:
+:: ''name'''''.OFFSET''' is the current start position in the memory block AS [[_OFFSET]]. Add bytes to change position.
+:: ''name'''''.SIZE''' is the remaining size of the block at current position in bytes AS [[_OFFSET]]
+:: ''name'''''.TYPE''' is the type (represented as bits combined to form a value) AS [[_OFFSET]]:
+
+
+== .TYPE values (version 1.000 and up incl. all QB64-PE releases) ==
+:::* [bit 0] 1* byte types (_BYTE)
+:::* [bit 1] 2* byte types (INTEGER)
+:::* [bit 2] 4* byte types (LONG or SINGLE)
+:::* [bit 3] 8* byte types (DOUBLE or _INTEGER64)
+:::* [bit 4] 16* byte types (reserved for future use)
+:::* [bit 5] 32* byte types (_FLOAT)
+:::* [bit 6] 64* byte types (reserved for future use)
+:::* [bit 7] 128 = integer types (_BYTE, INTEGER, LONG, _INTEGER64) (added to *)
+:::* [bit 8] 256 = floating point types (SINGLE, DOUBLE, _FLOAT) (added to *)
+:::* [bit 9] 512 = STRING types (fixed length or variable length)
+:::* [bit 10] 1024 = _UNSIGNED types (added to *+128)
+:::* [bit 11] 2048 = pixel data usually from _MEMIMAGE (added to 1+128+1024 for 256 color screens, or 2+128+1024 for text screens, or 4+128+1024 for 32-bit color screens)
+:::* [bit 12] 4096 = _MEM TYPE structure (NOT added to 32768)
+:::* [bit 13] 8192 = _OFFSET type (added to 4+128+[1024] or 8+128+[1024] or future_size+128+[1024])
+:::* [bit 14] 16384 = data created/defined by _MEMNEW(size) or _MEMNEW(offset,size)
+:::* [bit 15] 32768 = a custom, user defined type (ie. created with TYPE name ... END TYPE)
+:::* [bit 16] 65536 = an array of data (added to other type values defining the array's data type)
+''Note: If a future integer, float or other type doesn't have a size that is 1,2,4,8,16,32,64,128 or 256 it won't have a size-bit set.''
+
+=== Versions prior to 1.000 (never use with QB64-PE releases) ===
+:::* 1 = Integer types such as [[_BYTE]], [[INTEGER]], [[LONG]], [[_INTEGER64]] or [[_OFFSET]]
+:::* 2 = [[_UNSIGNED]] variable types. Value must be added to the variable type value.(2 cannot be used by itself)
+:::* 3 = ALL [[_UNSIGNED]] [[INTEGER]] type values.(add 1 + 2)
+:::* 4 = Floating point types such as [[SINGLE]], [[DOUBLE]] or [[_FLOAT]]
+:::* 8 = [[STRING]]
+:::* 0 = unknown(eg. created with [[_MEMNEW]]) or [[TYPE|user-defined-types]]
+
+* '''Note: [[_OFFSET]] values cannot be cast to other variable [[Variable Types|type]]s reliably. _MEM is a reserved custom variable [[Variable Types|type]].'''
+* '''[[_MEM (function)|_MEM]] cannot reference variable length [[STRING]] variable values. String values must be designated as a fixed-[[LEN|length]] string.'''
+
+
+{{PageExamples}}
+''Example 1:'' Demonstration of .IMAGE to determine an image's dimensions, .TYPE to verify the type and [[_MEMEXISTS]] to check image has not been freed
+{{CodeStart}}
+{{Text|<nowiki>'The $UNSTABLE command may not be necessary if HTTP integration has been fully accepted into QB64PE.</nowiki>|#919191}}
+{{Text|<nowiki>'Feel free to remark it out if the IDE flags the following line with an ERROR message.</nowiki>|#919191}}
+{{Text|<nowiki>'And kindly report the issue on our forums or Discord so that we can update this page to keep it as 100% relevant, as possible.</nowiki>|#919191}}
+
+{{Cm|$UNSTABLE}}:HTTP
+
+{{Cl|SCREEN}} {{Cl|_NEWIMAGE}}({{Text|500|#F580B1}}, {{Text|500|#F580B1}}, {{Text|32|#F580B1}})
+
+Image$ = {{Text|Download$|#55FF55}}({{Text|<nowiki>"https://qb64phoenix.com/qb64wiki/resources/assets/peWikiLogo.png"</nowiki>|#FFB100}}, statusCode&) {{Text|<nowiki>'Let's try and download the QB64PE Logo from the web</nowiki>|#919191}}
+{{Cl|IF}} statusCode& = {{Text|200|#F580B1}} {{Cl|THEN}} {{Text|<nowiki>'                                      200 says a proper connection was made to the web page in question</nowiki>|#919191}}
+    i = {{Cl|_LOADIMAGE}}(Image$, {{Text|32|#F580B1}}, {{Text|<nowiki>"memory"</nowiki>|#FFB100}}) {{Text|<nowiki>'                       and then we load it for use as a registered imange</nowiki>|#919191}}
+{{Cl|ELSE}}
+    {{Cl|PRINT}} {{Text|<nowiki>"HTTP ERROR"</nowiki>|#FFB100}}; statusCode {{Text|<nowiki>'                             can't get a proper connection to our webpage, so we don't have an image to work with.</nowiki>|#919191}}
+    {{Cl|END}} {{Text|<nowiki>'                                                        end and go report the issue on the forums, if you'd be so kind, dear user.</nowiki>|#919191}}
+{{Cl|END IF}}
+
+{{Cl|_PUTIMAGE}} ({{Text|0|#F580B1}}, {{Text|0|#F580B1}})-({{Text|500|#F580B1}}, {{Text|500|#F580B1}}), i {{Text|<nowiki>'                                 put the image on the screen so we can view it</nowiki>|#919191}}
+{{Cl|DIM}} m {{Cl|AS}} {{Cl|_MEM}}: m = {{Cl|_MEMIMAGE}}(i) {{Text|<nowiki>'                                make a memblock and point it towards our image</nowiki>|#919191}}
+
+
+{{Text|<nowiki>'                                                           **** try uncommenting the following line and see what happens ****</nowiki>|#919191}}
+{{Text|<nowiki>'_MEMFREE m</nowiki>|#919191}}
+
+
+{{Cl|IF}} m.TYPE {{Cl|AND (boolean)|AND}} {{Text|2048|#F580B1}} {{Cl|THEN}}
+    {{Cl|PRINT}} {{Text|<nowiki>"this is/was an image"</nowiki>|#FFB100}}
+    {{Cl|IF}} {{Cl|_MEMEXISTS}}(m) {{Cl|THEN}} {{Text|<nowiki>'                                      check if memory m is still available</nowiki>|#919191}}
+        {{Cl|PRINT}} t {{Cl|AND}} {{Text|7|#F580B1}}; {{Text|<nowiki>"bytes per pixel"</nowiki>|#FFB100}}
+        {{Cl|PRINT}} {{Text|<nowiki>"image handle "</nowiki>|#FFB100}}; m.IMAGE
+        {{Cl|PRINT}} {{Text|<nowiki>"image width"</nowiki>|#FFB100}}; {{Cl|_WIDTH (function)|_WIDTH}}(m.IMAGE)
+        {{Cl|PRINT}} {{Text|<nowiki>"image height"</nowiki>|#FFB100}}; {{Cl|_HEIGHT}}(m.IMAGE)
+    {{Cl|ELSE}} {{Text|<nowiki>'                                                       if we removed the remark from the _MEMFREE above, we'll see the following message</nowiki>|#919191}}
+        {{Cl|PRINT}} {{Text|<nowiki>"Memory already freed!"</nowiki>|#FFB100}}
+    {{Cl|END IF}}
+{{Cl|END IF}}
+
+
+{{Text|<nowiki>' Content of the HTTP response is returned.</nowiki>|#919191}}
+{{Text|<nowiki>' The statusCode is also assigned.</nowiki>|#919191}}
+{{Cl|FUNCTION}} {{Text|Download$|#55FF55}} (url {{Cl|AS}} {{Cl|STRING}}, statusCode {{Cl|AS}} {{Cl|LONG}})
+    {{Cl|DIM}} h {{Cl|AS}} {{Cl|LONG}}, content {{Cl|AS}} {{Cl|STRING}}, s {{Cl|AS}} {{Cl|STRING}}
+    h = {{Cl|_OPENCLIENT}}({{Text|<nowiki>"HTTP:"</nowiki>|#FFB100}} + url)
+
+    statusCode = {{Cl|_STATUSCODE}}(h)
+
+    {{Cl|WHILE}} {{Cl|NOT}} {{Cl|EOF}}(h)
+        {{Cl|_LIMIT}} {{Text|60|#F580B1}}
+        {{Cl|GET}} #h, , s
+        content = content + s
+    {{Cl|WEND}}
+    {{Cl|CLOSE}} #h
+
+    {{Text|Download$|#55FF55}} = content
+{{Cl|END FUNCTION}}
+{{CodeEnd}}
+
+
+
+''Example 2:'' Converts the current [[_DEST|destination]] [[SCREEN]] 13 image memory altered by [[PSET]] to a [[STRING]] value. SCREEN 13 only.
+{{CodeStart}}
+{{Cl|SCREEN}} {{Text|13|#F580B1}}
+{{Cl|PSET}} ({{Text|0|#F580B1}}, {{Text|0|#F580B1}}), {{Cl|ASC (function)|ASC}}({{Text|<nowiki>"H"</nowiki>|#FFB100}}) {{Text|<nowiki>'put the ASCII value of "H" into the top left corner of screen, which is the first byte of screen image memory</nowiki>|#919191}}
+{{Cl|PSET}} ({{Text|1|#F580B1}}, {{Text|0|#F580B1}}), {{Cl|ASC (function)|ASC}}({{Text|<nowiki>"E"</nowiki>|#FFB100}}) {{Text|<nowiki>'put the ASCII value of "E" into the 2nd byte of screen image memory</nowiki>|#919191}}
+{{Cl|PSET}} ({{Text|2|#F580B1}}, {{Text|0|#F580B1}}), {{Cl|ASC (function)|ASC}}({{Text|<nowiki>"L"</nowiki>|#FFB100}}) {{Text|<nowiki>'put the ASCII value of "L" into the 3nd byte of screen image memory</nowiki>|#919191}}
+{{Cl|PSET}} ({{Text|3|#F580B1}}, {{Text|0|#F580B1}}), {{Cl|ASC (function)|ASC}}({{Text|<nowiki>"L"</nowiki>|#FFB100}}) {{Text|<nowiki>'put the ASCII value of "L" into the 4th byte of screen image memory</nowiki>|#919191}}
+{{Cl|PSET}} ({{Text|4|#F580B1}}, {{Text|0|#F580B1}}), {{Cl|ASC (function)|ASC}}({{Text|<nowiki>"O"</nowiki>|#FFB100}}) {{Text|<nowiki>'put the ASCII value of "O" into the 5th byte of screen image memory                                                                                                                                                                                                            'put the ASCII value of "E" into the 2nd byte of screen image memory</nowiki>|#919191}}
+
+{{Cl|DIM}} m {{Cl|AS}} {{Cl|_MEM}} {{Text|<nowiki>'                         define m as a mem block</nowiki>|#919191}}
+m = {{Cl|_MEMIMAGE}}({{Text|0|#F580B1}}) {{Text|<nowiki>'                      point m to where our screen exists in memory</nowiki>|#919191}}
+
+x1$ = {{Cl|_MEMGET (function)|_MEMGET}}(m, m.OFFSET, {{Cl|STRING}} * {{Text|5|#F580B1}}) {{Text|<nowiki>'m is the mem block that we're wanting to get information from</nowiki>|#919191}}
+{{Text|<nowiki>'                                       m.OFFSET is the mem block m starting position</nowiki>|#919191}}
+{{Text|<nowiki>'                                       STRING * 5 is the size and type of information that we want to get from that position in memory.</nowiki>|#919191}}
+
+{{Cl|LOCATE}} {{Text|2|#F580B1}}, {{Text|1|#F580B1}}
+{{Cl|PRINT}} {{Cl|LEN}}(x1$) {{Text|<nowiki>'                        prints 5 bytes as we deliberately fetched STRING * 5 bytes with our _MEMGET above.</nowiki>|#919191}}
+{{Cl|PRINT}} x1$ {{Text|<nowiki>'                             prints the contents of that 5-byte string which we got above -- which is "HELLO" as CHR$() string character values</nowiki>|#919191}}
+{{Cl|_MEMFREE}} m
+{{CodeEnd}}
+{{OutputStart}}
+ 5
+HELLO
+
+{{OutputEnd}}
+
+
+''Example 3:'' Using _MEM to convert _OFFSET to _INTEGER64.
+{{CodeStart}}
+{{Cl|DIM}} x {{Cl|AS}} {{Cl|INTEGER}}
+{{Cl|DIM}} m {{Cl|AS}} {{Cl|_MEM}}
+m = {{Cl|_MEM (function)|_MEM}}(x)
+{{Cl|PRINT}} m.OFFSET
+{{Cl|PRINT}} {{Text|ConvertOffset|#55FF55}}(m.OFFSET)
+
+
+{{Cl|FUNCTION}} {{Text|ConvertOffset&&|#55FF55}} (value {{Cl|AS}} {{Cl|_OFFSET (function)|_OFFSET}})
+    {{Cm|$CHECKING}}:{{Cl|OFF}}
+    {{Cl|DIM}} m {{Cl|AS}} {{Cl|_MEM}} {{Text|<nowiki>'Define a memblock</nowiki>|#919191}}
+    m = {{Cl|_MEM (function)|_MEM}}(value) {{Text|<nowiki>'Point it to use value</nowiki>|#919191}}
+    {{Cm|$IF}} {{Text|64BIT|#F580B1}} {{Cm|THEN}}
+        {{Cl|DIM}} temp {{Cl|AS}} {{Cl|_INTEGER64}} {{Text|<nowiki>'On 64 bit OSes, an OFFSET is 8 bytes in size.</nowiki>|#919191}}
+    {{Cm|$ELSE}}
+        {{Cl|DIM}} temp {{Cl|AS}} {{Cl|LONG}} {{Text|<nowiki>'      However, on 32 bit OSes, an OFFSET is only 4 bytes.</nowiki>|#919191}}
+    {{Cm|$END IF}} 
+    {{Cl|_MEMGET}} m, m.OFFSET, temp {{Text|<nowiki>'Once we've sized our variable correctly, let's get it</nowiki>|#919191}}
+    {{Text|ConvertOffset&&|#55FF55}} = temp {{Text|<nowiki>'   And then assign that long value to ConvertOffset&&</nowiki>|#919191}}
+    {{Cl|_MEMFREE}} m {{Text|<nowiki>'               Free the memblock</nowiki>|#919191}}
+    {{Cm|$CHECKING}}:{{Cl|ON}}
+{{Cl|END FUNCTION}}
+{{CodeEnd}}
+
+
+''Explanation:'' The above will print two numbers which should match.  These numbers will vary, as they're representations of where X is stored in memory, and that position is going to vary every time the program is run.  What it should illustrate, however, is a way to convert _OFFSET to _INTEGER64 values, which can sometimes be useful when trying to run calculations involving mem.SIZE, mem.TYPE, or mem.ELEMENTSIZE.
+
+
+{{PageSeeAlso}}
+* [[_MEM (function)]], [[_MEMELEMENT]]
+* [[_MEMNEW]], [[_MEMCOPY]], [[_MEMFREE]]
+* [[_MEMGET]], [[_MEMPUT]], [[_MEMFILL]]
+* [[_MEMIMAGE]], [[_MEMSOUND]]
+
+
+{{PageNavigation}}

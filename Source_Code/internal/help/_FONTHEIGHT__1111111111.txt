@@ -1,0 +1,59 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:41:25}}
+{{DISPLAYTITLE:_FONTHEIGHT}}
+The [[_FONTHEIGHT]] function returns the font height of a font handle created by [[_LOADFONT]].
+
+
+{{PageSyntax}}
+:{{Parameter|pixelHeight%}} = [[_FONTHEIGHT]][({{Parameter|fontHandle&}})]
+
+
+{{PageDescription}}
+* Returns the height of the last font used if a handle is not designated.
+* If no font is set it returns the current screen mode's text block height.
+
+
+{{PageExamples}}
+''Example:'' Finding the [[_FONT|font]] or text block size of printed [[STRING|string]] characters in graphic [[SCREEN]] modes.
+{{CodeStart}}
+{{Cl|DO}}
+    {{Cl|INPUT}} {{Text|<nowiki>"Enter Screen mode 1, 2 or 7 to 13 or 256, 32 for _NEWIMAGE: "</nowiki>|#FFB100}}, scr$
+    mode% = {{Cl|VAL}}(scr$)
+{{Cl|DO...LOOP|LOOP UNTIL}} mode% > {{Text|0|#F580B1}}
+{{Cl|SELECT CASE}} mode%
+    {{Cl|CASE}} {{Text|1|#F580B1}}, {{Text|2|#F580B1}}, {{Text|7|#F580B1}} {{Cl|TO}} {{Text|13|#F580B1}}: {{Cl|SCREEN}} mode%
+    {{Cl|CASE}} {{Text|256|#F580B1}}, {{Text|32|#F580B1}}: {{Cl|SCREEN}} {{Cl|_NEWIMAGE}}({{Text|800|#F580B1}}, {{Text|600|#F580B1}}, mode%)
+    {{Cl|CASE ELSE}}: {{Cl|PRINT}} {{Text|<nowiki>"Invalid mode selected!"</nowiki>|#FFB100}}: {{Cl|END}}
+{{Cl|END SELECT}}
+
+{{Cl|INPUT}} {{Text|<nowiki>"Enter first name of TTF font to use or hit enter for text block size: "</nowiki>|#FFB100}}, TTFont$
+{{Cl|IF}} {{Cl|LEN}}(TTFont$) {{Cl|THEN}} {{Cl|INPUT}} {{Text|<nowiki>"Enter font height: "</nowiki>|#FFB100}}, hi$
+height& = {{Cl|VAL}}(hi$)
+{{Cl|IF}} height& > {{Text|0|#F580B1}} {{Cl|THEN}}
+    fnt& = {{Cl|_LOADFONT}}({{Text|<nowiki>"C:\Windows\Fonts\"</nowiki>|#FFB100}} + TTFont$ + {{Text|<nowiki>".ttf"</nowiki>|#FFB100}}, height&, style$)
+    {{Cl|IF}} fnt& <= {{Text|0|#F580B1}} {{Cl|THEN}} {{Cl|PRINT}} {{Text|<nowiki>"Invalid Font handle!"</nowiki>|#FFB100}}: {{Cl|END}}
+    {{Cl|_FONT}} fnt&
+{{Cl|END IF}}
+
+{{Text|TextSize|#55FF55}} wide&, high& {{Text|<nowiki>'get the font or current screen mode's text block pixel size</nowiki>|#919191}}
+
+{{Cl|_PRINTSTRING}} ({{Text|20|#F580B1}}, {{Text|100|#F580B1}}), {{Text|<nowiki>"Block size = "</nowiki>|#FFB100}} + {{Cl|CHR$}}({{Text|1|#F580B1}}) + {{Cl|STR$}}(wide&) + {{Text|<nowiki>" X"</nowiki>|#FFB100}} + {{Cl|STR$}}(high&) + {{Text|<nowiki>" "</nowiki>|#FFB100}} + {{Cl|CHR$}}({{Text|2|#F580B1}})
+
+{{Cl|END}}
+
+{{Cl|SUB}} {{Text|TextSize|#55FF55}} (TextWidth&, TextHeight&)
+    TextWidth& = {{Cl|_PRINTWIDTH}}({{Text|<nowiki>"W"</nowiki>|#FFB100}}) {{Text|<nowiki>'measure width of one font or text character</nowiki>|#919191}}
+    TextHeight& = {{Cl|_FONTHEIGHT}} {{Text|<nowiki>'can measure normal text block heights also</nowiki>|#919191}}
+{{Cl|END SUB}}
+{{CodeEnd}}
+
+
+{{PageSeeAlso}}
+* [https://qb64phoenix.com/forum/showthread.php?tid=1145 Featured in our "Keyword of the Day" series]
+* [[_FONTWIDTH]], [[_FONT]]
+* [[_PRINTWIDTH]], [[_PRINTSTRING]]
+* [[SCREEN]], [[_LOADFONT]]
+* [[Text Using Graphics]] (Demo)
+
+
+{{PageNavigation}}

@@ -1,0 +1,47 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:41:29}}
+{{DISPLAYTITLE:_FULLPATH$}}
+The '''_FULLPATH$''' function returns an absolute or full path name for the specified relative path name.
+
+
+{{PageSyntax}}
+: {{Parameter|p$}} = [[_FULLPATH$]]({{Parameter|pathName$}})
+
+
+{{PageParameters}}
+* ''pathname$'' is the file or directory for which to obtain absolute path information.
+
+
+{{PageDescription}}
+* The path returned ends with a backslash on Windows and a forward-slash on Linux and macOS if ''pathname$'' is a directory.
+* A nonexistent file or directory generates the error message, "Path Not Found.".
+
+
+{{PageAvailability}}
+<!-- QB64 = a version or none, QBPE = a version or all, Platforms = yes or no -->
+<gallery widths="48px" heights="48px" mode="nolines">
+File:Qb64.png|'''none'''
+File:Qbpe.png|'''v3.11.0'''
+File:Apix.png
+File:Win.png|'''yes'''
+File:Lnx.png|'''yes'''
+File:Osx.png|'''yes'''
+</gallery>
+<!-- additional availability notes go below here -->
+
+
+{{PageExamples}}
+;Example: Display the absolute path name of the parent directory.
+{{CodeStart}}
+{{Cl|PRINT}} {{Text|<nowiki>"Parent directory full path: "</nowiki>|#FFB100}}; {{Cl|_FULLPATH$}}({{Text|<nowiki>"../"</nowiki>|#FFB100}})
+{{CodeEnd}}
+
+
+{{PageSeeAlso}}
+* [https://qb64phoenix.com/forum/showthread.php?tid=2734 Featured in our "Keyword of the Day" series]
+* [[_CWD$]], [[_STARTDIR$]]
+* [[FILES]], [[_FILES$]]
+* [[_DIREXISTS]], [[_FILEEXISTS]]
+
+
+{{PageNavigation}}

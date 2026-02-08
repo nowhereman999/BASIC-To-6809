@@ -1,0 +1,37 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:40:35}}
+{{DISPLAYTITLE:_BLINK (function)}}
+The [[_BLINK]] function returns the current blink setting for SCREEN 0 colors. If enabled, returns -1 (default), otherwise returns 0.
+
+
+{{PageSyntax}}
+: {{Parameter|blinkState%%}} = [[_BLINK]]
+
+
+{{PageAvailability}}
+* '''QB64 v1.2 and up'''
+* '''QB64-PE all versions'''
+
+
+{{PageExamples}}
+{{CodeStart}}
+{{Cl|COLOR}} {{Text|16|#F580B1}}, {{Text|7|#F580B1}}
+
+{{Text|<nowiki>'Try uncommenting the line below:</nowiki>|#919191}}
+{{Text|<nowiki>'_BLINK OFF</nowiki>|#919191}}
+
+{{Cl|IF}} {{Cl|_BLINK (function)|_BLINK}} {{Cl|THEN}}
+    {{Cl|PRINT}} {{Text|<nowiki>"I'm blinking"</nowiki>|#FFB100}}
+{{Cl|ELSE}}
+    {{Cl|PRINT}} {{Text|<nowiki>"I'm not blinking"</nowiki>|#FFB100}}
+{{Cl|END IF}}
+{{CodeEnd}}
+
+
+{{PageSeeAlso}}
+* [https://qb64phoenix.com/forum/showthread.php?tid=1319 Featured in our "Keyword of the Day" series]
+* [[_BLINK]] (statement)
+* [[OUT]]
+
+
+{{PageNavigation}}

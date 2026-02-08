@@ -1,0 +1,1074 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:40:14}}
+{| align="Right"
+|  __TOC__
+|}
+* [[Main Page|Main Page with Articles and Tutorials]]
+
+* [[Metacommand|Alphabetical Metacommands list]]
+
+* [[Keyword Reference - Alphabetical|Alphabetical Keywords list]]
+
+* [[Historic Pages]] ({{Text|Informations may be invalid now.|red}})
+
+* '''[[Keywords currently not supported by QB64]]'''
+
+* '''[[Keywords currently not supported by QB64#Keywords_not_supported_in_Linux_or_macOS_versions|Keywords not supported in Linux or macOS versions]]'''
+
+* [[QB64 FAQ|Frequently asked questions about QB64]]
+
+
+== [[Arrays]] and Data Storage ==
+
+<center>'''Arrays'''</center>
+* [[_DEFINE]] (statement)  {{Text|defines a range of untyped variable names according to their first character as a datatype.}}
+* [[_PRESERVE]] ([[REDIM]] option) {{Text|preserves the existing element values when an array is resized.}}
+* [[CLEAR]] (statement) {{Text|resets all variable values and array element values to 0 or null [[STRING|strings]] and closes all open files.}}
+* [[DIM]] (statement) {{Text|dimensions(sizes) a [[STATIC|static]] array and defines the type.}}
+* [[$DYNAMIC]] (metacommand) {{Text|defines that all arrays are dynamic or changeable in size.}}
+* [[ERASE]] (array statement) {{Text|clears a [[STATIC|static]] array of all values and totally removes a [[$DYNAMIC|dynamic]] array.}}
+* [[LBOUND]] (function) {{Text|returns the lowest valid index (lower boundary) of an [[arrays|array]].}}
+* [[OPTION BASE]] (statement) {{Text|sets the default starting index of an array to 0 or 1.}}
+* [[REDIM]] (statement) {{Text|re-dimensions the number of elements in a [[$DYNAMIC|dynamic]](resizeable) [[arrays|array]] and defines the type.}}
+* [[SHARED]] (statement) {{Text|designates variable values that can be shared with sub-procedures without using parameters.}}
+* [[STATIC]] (statement) {{Text|defines a variable or list of variables that will retain their values after the sub-procedure is exited.}}
+* [[$STATIC]] (metacommand) {{Text|defines that all arrays are static or unchangeable in size.}}
+* [[SWAP]] (statement) {{Text|trades the values of two numerical or string values or array elements.}}
+* [[UBOUND]] (function) {{Text|returns the highest valid index (upper boundary) of an [[arrays|array]].}}
+
+See also: [[Arrays]]
+
+
+<center>'''Fixed read-only storage'''</center>
+* [[DATA]] (statement) {{Text|creates a field of built-in program data values separated by commas.}}
+* [[READ]] (statement) {{Text|reads the DATA from the data field sequentially.}}
+* [[RESTORE]] (statement) {{Text|sets the data pointer to the start of all DATA or a specified DATA field.}}
+
+* [[$EMBED]] (metacommand) {{Text|is used to embed any file's contents into the compiled executable.}}
+* [[_EMBEDDED$]] (function) {{Text|recalls the contents of a file embedded using [[$EMBED]].}}
+
+<p style="text-align: center">([[#toc|Return to Table of Contents]])</p>
+
+
+== [[COLOR|Colors]] and Transparency ==
+
+* [[_ALPHA]] (function) {{Text|returns the alpha channel transparency level of a color value used on a screen page or image.}}
+* [[_ALPHA32]] (function) {{Text|function returns the alpha channel level of a 32 bit color value only.}}
+* [[_BACKGROUNDCOLOR]] (function) {{Text|returns the current background color for an image handle or page.}}
+* [[_BLEND]] (statement) {{Text|turns on alpha blending for the current image or a specific one.}}
+* [[_BLEND (function)]] {{Text|returns if blending is enabled or disabled for the current window or a specified image handle.}}
+* [[_BLINK]] (statement) {{Text|statement turns blinking colors on/off in SCREEN 0}}
+* [[_BLINK (function)]] {{Text|returns -1 if enabled or 0 if disabled by [[_BLINK]] statement.}}
+* [[_BLUE]] (function) {{Text|returns the palette intensity OR the blue component intensity of a 32-bit image color.}}
+* [[_BLUE32]] (function) {{Text|returns the blue component intensity of a 32-bit image color.}}
+* [[_BRIGHTNESS32]] (function) {{Text|returns the brightness value (HSB colorspace) of a given 32-bit ''ARGB'' color.}}
+* [[_CLEARCOLOR]] (statement) {{Text|sets a specific color to be treated as transparent in an image}}
+* [[_CLEARCOLOR (function)]] {{Text|returns the current transparent color of an image.}}
+* [[_COLORCHOOSERDIALOG]] (function) {{Text|Displays a standard color picker dialog box and returns a 32-bit RGBA color selected by the user.}}
+* [[_COPYPALETTE]] (statement) {{Text|copies the color palette intensities from one image to another image or screen page.}}
+* [[_DEFAULTCOLOR]] (function) {{Text|returns the current default (text/drawing) color for an image handle or page.}}
+* [[_DONTBLEND]] (statement) {{Text|turns off alpha blending for an image handle.}}
+* [[_GREEN]] (function) {{Text|returns the palette index OR the green component intensity of a 32-bit image.}}
+* [[_GREEN32]] (function) {{Text|returns the green component intensity of a 32-bit image color.}}
+* [[_HSB32]] (function) {{Text|returns the 32-bit ''ARGB'' color value equivalent to the specified HSB colorspace values.}}
+* [[_HSBA32]] (function) {{Text|returns the 32-bit ''ARGB'' color value equivalent to the specified HSB colorspace values + alpha channel.}}
+* [[_HUE32]] (function) {{Text|returns the hue value (HSB colorspace) of a given 32-bit ''ARGB'' color.}}
+* [[_NEWIMAGE]] (function) {{Text|prepares a custom sized program [[SCREEN]] or page surface that can use 256 or 32 bit colors.}}
+* [[_PALETTECOLOR]] (statement) {{Text|sets the color value of a palette entry of an image using 256 color modes or less (4 or 8 BPP).}}
+* [[_PALETTECOLOR (function)]] {{Text|returns the 32 bit attribute color setting of an image or screen page handle's palette.}}
+* [[_PIXELSIZE]] (function) {{Text|returns the color depth (Bits Per Pixel) of an image.}}
+* [[_RED]] (function) {{Text|returns the palette index OR the red component intensity of a 32-bit screen.}}
+* [[_RED32]] (function) {{Text|returns the red component intensity of a 32-bit image color.}}
+* [[_RGB]] (function) {{Text|returns the closest palette attribute index OR the [[LONG]] 32 bit color value in 32 bit screens.}}
+* [[_RGB32]] (function) {{Text|returns the [[LONG]] 32 bit color value only.}}
+* [[_RGBA]] (function) {{Text|returns the closest palette attribute index OR the [[LONG]] 32 bit color value in [[_ALPHA]] screens.}}
+* [[_RGBA32]] (function) {{Text|returns the [[LONG]] 32 bit [[_ALPHA]] color value only.}}
+* [[_SATURATION32]] (function) {{Text|returns the saturation value (HSB colorspace) of a given 32-bit ''ARGB'' color.}}
+* [[_SETALPHA]] (statement) {{Text|sets the alpha channel transparency level of some or all of the pixel colors of an image.}}
+
+
+* [[CLS]] (statement) {{Text|clears the screen and can set the background color in QB64.}}
+* [[COLOR]] (statement) {{Text|sets the current text color attribute or [[_RGB]] value to be used or background colors in some screen modes.}}
+* [[INP]] (function) {{Text|returns the RGB color intensity values from color port register &H3C9 for a specific attributes.}}
+* [[OUT]] (statement) {{Text|sets the color port access mode and sets the RGB color intensity values using &H3C9.}}
+* [[PALETTE]] (statement) {{Text|sets the Red, Green and Blue color attribute intensities using a RGB multiplier calculation.}}
+* [[PALETTE USING]] (statement) {{Text|sets the color intensity settings using a designated [[arrays|array]].}}
+* [[POINT]] (function) {{Text|returns a pixel coordinate color attribute or the [[LONG]] [[_RGB]] color value of a 32 bit color.}}
+* [[PRESET]] (statement) {{Text|sets a pixel coordinate to the background color or a color specified.}}
+* [[PSET]] (statement) {{Text|sets a pixel coordinate a specified color or uses the current color when not designated.}}
+* [[SCREEN]] {{Text|sets the screen mode of a program which may determine the number of colors available in legacy modes.}}
+
+<p style="text-align: center">([[#toc|Return to Table of Contents]])</p>
+
+
+== [[Console Window]] ==
+* [[$CONSOLE]] (metacommand) {{Text|creates a console window that can be used throughout a program.}}
+* [[_CONSOLE]] (statement) {{Text|used to turn a console window OFF or ON or to designate [[_DEST]] _CONSOLE for output.}}
+* [[_CONSOLEINPUT]] (function) {{Text|fetches input data from a [[$CONSOLE]] window to be read later (both mouse and keyboard)}}
+* [[_CINP]] (function) {{Text|Returns a key code from $CONSOLE input}}
+* [[_CONSOLECURSOR]] (statement) {{Text|is used to switch the text cursor in [[Console Window]]s off/on or change its size.}}
+* [[_CONSOLEFONT]] (statement) {{Text|is used to change the text font used in [[Console Window]]s or change its size.}}
+* [[_CONSOLETITLE]] (statement) {{Text|creates the title of the console window using a literal or variable [[STRING|string]].}}
+* [[$SCREENHIDE]] (metacommand) {{Text|hides the program window throughout the program until [[$SCREENSHOW]] is used.}}
+* [[_SCREENHIDE]] {{Text|hides the main program window in a section of code until [[_SCREENSHOW]] is used.}}
+* [[$SCREENSHOW]] (metacommand) {{Text|displays the main program window throughout the program after [[$SCREENHIDE]] has been used.}}
+* [[_SCREENSHOW]] {{Text|displays the main program window in a section of code after [[_SCREENHIDE]] has been used.}}
+* [[SHELL (function)]] {{Text|executes a DOS command or calls another program. Returns codes sent by [[END]] or [[SYSTEM]].}}
+* [[_SHELLHIDE]] (function) {{Text|hides a DOS command or call to another program. Returns codes sent by [[END]] or [[SYSTEM]].}}
+
+
+<p style="text-align: center">([[#toc|Return to Table of Contents]])</p>
+
+
+== Conditional Operations ==
+
+
+* [[AND (boolean)]] {{Text|returns True if all of the arguments are True.}}
+* [[_ANDALSO]] (boolean) {{Text|performs short-circuiting logical conjunction on two expressions.}}
+* [[_IIF]] (function) {{Text|provides conditional evaluations similar to a ternary operator, with short-circuiting behavior.}}
+* [[_NEGATE]] (boolean) {{Text|returns True when a [[boolean]] evaluation is False and vice-versa.}}
+* [[NOT]] (boolean) {{Text|returns the opposite condition of an argument.}}
+* [[OR (boolean)]] {{Text|returns True if one of the arguments is True.}}
+* [[_ORELSE]] (boolean) {{Text|performs short-circuiting inclusive logical disjunction on two expressions.}}
+* [[XOR (boolean)]] {{Text|returns True if only one of two arguments are True.}}
+
+
+<center>See also: [[#Logical_Bitwise_Operations|Logical Operations]] and [[Relational Operations]]</center>
+
+
+<p style="text-align: center">([[#toc|Return to Table of Contents]])</p>
+
+
+== Definitions and Variable Types ==
+
+* [[_BIT]] {` numerical [[TYPE|type]]) {{Text|values of 0 (bit off) or -1 (bit on). [[_UNSIGNED|Unsigned]] of 0 or 1.}}
+* [[_BYTE]] {%% numerical [[TYPE|type]]) {{Text|values from -128 to 127 (one byte or 8 [[_BIT]]s). [[_UNSIGNED|Unsigned]] from 0 to 255.}}
+* [[_DEFINE]] (statement)  {{Text|defines a range of untyped variable names according to their first character as a datatype.}}
+* [[_FLOAT]] {## numerical [[TYPE|type]]) {{Text|values offer the maximum floating-point decimal precision available using QB64.}}
+* [[_INTEGER64]] (&& numerical [[TYPE|type]]) {{Text|values -9223372036854775808 to 9223372036854775807. [[_UNSIGNED|Unsigned]] to 18446744073709551615.}}
+* [[_MEM]] (variable type) {{Text|contains read only dot elements for the OFFSET, SIZE, TYPE and ELEMENTSIZE of a block of memory.}}
+* [[_OFFSET]](%& variable type) {{Text|can store any memory offset integer value when using [[DECLARE LIBRARY]] or [[_MEM]]ory only.}}
+* [[_UNSIGNED]] {~ numerical [[TYPE|type]]) {{Text|defines an integer numerical value as being positive only in QB64.}}
+* [[COMMON]] (statement) {{Text|shares common variable values with other Linked or [[CHAIN]]ed programs.}}
+* [[COMMON SHARED]] (statement) {{Text|shares common variable values with all sub-procedures and other Linked or CHAINed programs.}}
+* [[CONST]] (statement) {{Text|defines one or more named numeric or string shared values which can  not change in a program.}}
+* [[DEFDBL]] (statement) {{Text|defines undefined variable starting letters AS [[DOUBLE]] variables instead of the [[SINGLE]] type default.}}
+* [[DEFINT]] (statement) {{Text|defines undefined variable starting letters AS [[INTEGER]] variables instead of the [[SINGLE]] type default.}}
+* [[DEFLNG]] (statement) {{Text|defines undefined variable starting letters AS [[LONG]] variables instead of the [[SINGLE]] type default.}}}}
+* [[DEFSNG]] (statement) {{Text|defines undefined variable starting letters AS [[SINGLE]] variables instead of the [[SINGLE]] type default.}}
+* [[DEFSTR]] (statement) {{Text|defines undefined variable starting letters AS [[STRING]] variables instead of the [[SINGLE]] type default.}}
+* [[DIM]] {{Text|defines a variable or size a [[$STATIC|static]] array and can define the type of value it returns.}}
+* [[DOUBLE]] {# numerical [[TYPE|type]]) {{Text|an 8 byte floating decimal variable type with numerical values up to 15 decimal places.}}
+* [[INTEGER]] {% numerical [[TYPE|type]]) {{Text|a two byte variable type with values from -32768 to 32767. [[_UNSIGNED|Unsigned]] to 65535.}}
+* [[LONG]] {& numerical [[TYPE|type]]) {{Text|Integer values can be from -2147483648 to 2147483647. [[_UNSIGNED]] values to 4294967295.}}
+* [[OPTION BASE]] (statement) {{Text|sets the default starting index of an [[arrays|array]] to 0 or 1.}}
+* [[REDIM]] {{Text|defines and sizes a [[$DYNAMIC|dynamic]](changeable) array and can define the type of value returned.}}
+* [[SHARED]] (statement) {{Text|designates variable values that can be shared with sub-procedures without using [[SUB]] parameters.}}
+* [[SINGLE]] (! numerical [[TYPE|type]]) {{Text|a 4 byte floating decimal variable type with numerical values up to 7 decimal places.}}
+* [[STATIC]] (statement) {{Text|defines a variable or list of variables that will retain their values after the sub-procedure is exited.}}
+* [[STRING]] ($ variable type) {{Text|one byte text variable with [[ASCII]] code values from 0 to 255.}}
+* [[TYPE]] (statement) {{Text|defines variable types that can hold more than one variable type value of a fixed byte length.}}
+
+
+<center>See also: [[Variable Types|QB64 Variable Types]] and  [[Libraries#C.2B.2B_Variable_Types|C++ Variable Types]]</center>
+
+<p style="text-align: center">([[#toc|Return to Table of Contents]])</p>
+
+
+== External Disk and API calls ==
+* [[_ACCEPTFILEDROP]] (statement) {{Text|turns a program window into a valid drop destination for dragging files from Windows Explorer.}}
+* [[_DEVICE$]] (function) {{Text|returns a [[STRING]] expression listing device names and input types of system input devices.}}
+* [[_DEVICES]] (function) {{Text|returns the number of input devices found on a computer system.}}
+* [[_DIREXISTS]] (function) {{Text|returns -1 if the directory folder name [[STRING|string]] parameter exists. Zero if it does not.}}
+* [[_DROPPEDFILE]] (function) {{Text| returns the list of items (files or folders) dropped in a program's window after [[_ACCEPTFILEDROP]] is enabled.}}
+* [[_CLIPBOARD$]] (statement) {{Text|sends [[STRING]] data to the Clipboard.}}
+* [[_CLIPBOARD$ (function)]] {{Text|returns the current contents of the Clipboard as a [[STRING|string]].}}
+* [[_CLIPBOARDIMAGE (function)]] {{Text|pastes an image from the clipboard into a new QB64 image in memory.}}
+* [[_CLIPBOARDIMAGE]] (statement) {{Text|copies a valid QB64 image to the clipboard.}}
+* [[_CWD$]] (function) {{Text|returns the current working directory path as a [[STRING]].}}
+* [[_DONTWAIT]] (SHELL action) {{Text|allows the program to continue without waiting for the other program to close.}}
+* [[_FILEEXISTS]] (function) {{Text|returns -1 if the file name [[STRING|string]] parameter exists. Zero if it does not.}}
+* [[_FINISHDROP]] (statement) {{Text| resets [[_TOTALDROPPEDFILES]] and clears the [[_DROPPEDFILE]] list of items (files/folders).}}
+* [[_HIDE]] (SHELL action) {{Text|hides the DOS screen output during a shell.}}
+* [[_LASTBUTTON]] (function) {{Text|returns the number of buttons available on a specified number device listed by [[DEVICE$]].}}
+* [[_OPENFILEDIALOG$]] (function) {{Text|Displays a standard dialog box that prompts the user to open a file.}}
+* [[_OS$]] (function) {{Text| returns the QB64 compiler version in which the program was compiled as [WINDOWS], [LINUX] or [MACOSX] and [32BIT] or [64BIT].}}
+* [[_SAVEFILEDIALOG$]] (function) {{Text|Displays a standard dialog box that prompts the user to save a file.}}
+* [[_SCREENCLICK]]  {{Text|simulates clicking the mouse at a position on the screen to get focus.}}
+* [[_SCREENIMAGE]]  {{Text|captures the current desktop screen image.}}
+* [[_SCREENPRINT]]  {{Text|simulates keyboard entries on the desktop.}}
+* [[_SELECTFOLDERDIALOG$]] (function) {{Text|Displays a dialog box that enables the user to select a folder (directory).}}
+* [[_SHELLHIDE]] (function) {{Text|executes a DOS command or calls another program. Returns codes sent by [[END]] or [[SYSTEM]].}}
+* [[_STARTDIR$]] (function) {{Text|returns the user's program calling path as a [[STRING]].}}
+* [[_TOTALDROPPEDFILES]] (function) {{Text| returns the number of items (files or folders) dropped in a program's window after [[_ACCEPTFILEDROP]] is enabled.}}
+
+
+* [[CHDIR]] (statement) {{Text|changes the program path to a new path.}}
+* [[COMMAND$]] (function) {{Text|returns command line parameters sent when a program is started.}}
+* [[ENVIRON]] (statement) {{Text|temporarily sets an environmental key/pair value.}}
+* [[ENVIRON$]] (function) {{Text|returns the environmental settings of the computer.}}
+* [[_ENVIRONCOUNT]] (function) {{Text|returns the number of key/value pairs currently exist in the environment table.}}
+* [[_FILES$]] (function) {{Text|returns a file or directory name that matches the specified pattern.}}
+* [[FILES]] (statement) {{Text|displays a specified list of files.}}
+* [[_FULLPATH$]] (function) {{Text|returns an absolute or full path name for the specified relative path name.}}
+* [[MKDIR]] (statement) {{Text|creates a new directory folder in the designated path.}}
+* [[NAME]] (statement) {{Text|renames a file.}}
+* [[RMDIR]] (statement) {{Text|removes an empty directory folder from the specified path.}}
+* [[SHELL]] (statement) {{Text|performs a command line operation in DOS.}}
+* [[SHELL (function)]] {{Text|executes a DOS command or calls another program. Returns codes sent by [[END]] or [[SYSTEM]].}}
+
+
+<p style="text-align: center">([[#toc|Return to Table of Contents]])</p>
+
+
+== Error Trapping, Logging & Debugging ==
+
+* [[$ASSERTS]] (metacommand) {{Text|Enables the [[_ASSERT]] macro}}
+* [[$CHECKING]] (metacommand) {{Text|turns off or on error event checking and strips error code from compiled programs.}}
+* [[$DEBUG]] (metacommand) {{Text|enables debugging features, allowing you to step through your code line by line.}}
+
+
+* [[_ASSERT]] (statement) {{Text|Performs debug tests.}}
+* [[_ERRORLINE]] (function) {{Text|returns the actual text code line where a program error occurred.}}
+* [[_LOGERROR]] (statement) {{Text|writes a log message at the Error level with an accompanying stacktrace.}}
+* [[_LOGINFO]] (statement) {{Text|writes a log message at the Information level.}}
+* [[_LOGMINLEVEL]] (function) {{Text|returns the current minimum logging level that is being output.}}
+* [[_LOGTRACE]] (statement) {{Text|writes a log message at the Trace level.}}
+* [[_LOGWARN]] (statement) {{Text|writes a log message at the Warning level.}}
+
+
+* [[ERR]] (function) {{Text|returns the error code number of the last error to occur.}}
+* [[ERROR]] (statement) {{Text|simulates a program error based on the error code number used.}}
+* [[ERL]] (function) {{Text|returns the closest line number before an error occurred if the program uses them.}}
+* [[ON ERROR]] (statement) [[GOTO]] {{Text|sends the program to a line number or label when an error occurs. Use to avoid program errors.}}
+* [[RESUME]] (statement) {{Text|error statement sends the program to the [[NEXT]] code line or a designated line number or label .}}
+
+<p style="text-align: center">([[#toc|Return to Table of Contents]])</p>
+
+
+== Event Trapping ==
+
+* [[_AUTODISPLAY]] (statement) {{Text|enables the automatic display of the screen image changes previously disabled by [[_DISPLAY]].}}
+* [[_DELAY]] (statement) {{Text|suspends program execution for a [[SINGLE]] value of seconds down to milliseconds.}}
+* [[_DISPLAY]] (statement) {{Text|turns off automatic display while only displaying the screen changes when called.}}
+*[[_EXIT (function)]] {{Text|prevents a user exit and indicates if a user has clicked the close X window button or CTRL + BREAK.}}
+*[[_FREETIMER]] (function) {{Text|returns a free TIMER number for multiple [[ON TIMER(n)]] events.}}
+* [[_MOUSEINPUT]] (function) {{Text|reports any changes to the mouse status and MUST be used to read those changes.}}
+* [[_SHELLHIDE]] (function) {{Text|returns the code sent by a program exit using [[END]] or [[SYSTEM]] followed by an [[INTEGER]] value.}}
+
+
+* [[OFF]] {{Text|turns event checking off and does not remember subsequent events.}}
+* [[ON]] {{Text|turns event checking on.}}
+* [[ON ERROR]] [[GOTO]] (event statement) {{Text|executes when a program error occurs}}
+* [[ON KEY(n)]] (event statement) {{Text|executes when a keypress or keypress combination occurs.}}
+* [[ON TIMER(n)]] (event statement) {{Text|executes when a timed event occurs. QB64 can use multiple numbered timers.}}
+* [[ON...GOSUB]] (event statement) {{Text|branches to a line number or label according to a numerical ordered list of labels.}}
+* [[ON...GOTO]] (event statement) {{Text|branches to a line number or label according to a numerical ordered list of labels.}}
+* [[STOP]] {{Text|suspends event checking and remembers subsequent events that are executed when events are turned back on.}}
+* [[TIMER (function)]] {{Text|returns the number of seconds past the previous midnite down to a QB64 accuracy of one millisecond.}}
+* [[TIMER]] (statement) {{Text|enables, turns off or stops timer event trapping. In QB64 TIMER(n) FREE can free multiple timers. }}
+* [[WAIT]] (statement) {{Text|normally used to delay program display execution during or after vertical retrace periods.}}
+
+<p style="text-align: center">([[#toc|Return to Table of Contents]])</p>
+
+
+== File Input and Output ==
+
+* [[_DIREXISTS]] (function) {{Text|returns -1 if the directory folder name [[STRING|string]] parameter exists. Zero if it does not.}}
+* [[_FILEEXISTS]] (function) {{Text|returns -1 if the file name [[STRING|string]] parameter exists. Zero if it does not.}}
+* [[_READFILE$]] (function) {{Text|directly read a file into a string, without [[OPEN]]/[[CLOSE]] overhead.}}
+* [[_WRITEFILE]] (statement) {{Text|directly write a string into a file, without [[OPEN]]/[[CLOSE]] overhead.}}
+* [[ACCESS]] (clause) {{Text|used in a networking [[OPEN]] statement to allow READ or WRITE access to files.}}
+* [[APPEND]] (file mode) {{Text|opens or creates a file that can be appended with data at the end.}}
+* [[BINARY]] (file mode) {{Text|opens or creates a file that can be byte accessed using both [[GET]] and [[PUT]].}}
+* [[BLOAD]] (statement) {{Text|opens a binary file and loads the contents to a specific array.}}
+* [[BSAVE]] (statement) {{Text|creates a binary file that holds the contents of a specified array.}}
+* [[CHDIR]] (statement) {{Text|changes the program path to a new path.}}
+* [[CLOSE]] (statement) {{Text|closes a specified file or all open files.}}
+* [[EOF]] (function) {{Text|returns -1 when the end of a file has been read.}}
+* [[FIELD]] (statement) {{Text|creates a [[STRING]] type definition for a random-access file buffer.}}
+* [[FILES]] (statement) {{Text|displays a specified list of files.}}
+* [[FREEFILE]] (function) {{Text|returns a file access number that is currently not in use.}}
+* [[GET]] (file I/O statement) {{Text|reads file data by byte or record positions.}}
+* [[INPUT (file mode)]] {{Text|only [[OPEN]]s existing sequential files for program INPUT.}}
+* [[INPUT (file statement)]] {{Text|reads sequential file data that was created using PRINT # or WRITE #. }}
+* [[INPUT$]] (function) {{Text|reads a specific number of bytes from random or binary files.}}
+* [[KILL]] (statement) {{Text|deletes a specified file without asking for verification. Remove empty folders with [[RMDIR]].}}
+* [[LINE INPUT (file statement)]] {{Text|reads an entire text row of printed sequential file data.}}
+* [[LOC]] (function) {{Text|finds the current file location or size of a [[OPEN COM|COM]] port receive buffer.}}
+* [[LOCK]] (statement) {{Text|prevents access to a file.}}
+* [[LOF]] (function) {{Text|returns the size of a file in bytes.}}
+* [[MKDIR]] (statement) {{Text|creates a new folder in the designated path.}}
+* [[NAME]] (statement) {{Text|renames a file [[AS]] a new file name.}}
+* [[OPEN]] (file I/O statement) {{Text|opens a specified file FOR an access mode with a set reference number.}}
+* [[OUTPUT]] (file mode) {{Text|opens or creates a new file that holds no data.}}
+* [[PRINT (file statement)]] {{Text|writes text and numerical data into a file.}}
+* [[PRINT USING (file statement)]]  {{Text|writes template formatted text into a file.}}
+* [[PUT]] (file I/O statement) {{Text|writes data into a [[RANDOM]] or [[BINARY]] file by byte or record position.}}
+* [[RANDOM]] (file mode) {{Text|opens or creates a file that can be accessed using both [[GET]] and [[PUT]].}}
+* [[RESET]] (statement) {{Text|closes all files and writes the directory information to a diskette.}}
+* [[RMDIR]] (statement) {{Text|removes an empty folder from the specified path.}}
+* [[SEEK (function)]] {{Text|returns the current read or write byte position in a file.}}
+* [[SEEK]] (statement) {{Text|sets the current read or write byte position in a file.}}
+* [[UNLOCK]] (statement) {{Text|unlocks access to a file.}}
+* [[WIDTH]] (statement) {{Text|sets the text width of a file.}}
+* [[WRITE (file statement)]] {{Text|writes numerical and string data to a sequential file using comma separators.}}
+
+<p style="text-align: center">([[#toc|Return to Table of Contents]])</p>
+
+
+== Checksums and Hashes ==
+* [[_ADLER32]] (function) {{Text|Returns the Adler-32 checksum of any arbitrary string.}}
+* [[_CRC32]] (function) {{Text|Returns the Crc-32 checksum of any arbitrary string.}}
+* [[_MD5$]] (function) {{Text|Returns the MD5 hash value of any arbitrary string.}}
+
+<p style="text-align: center">([[#toc|Return to Table of Contents]])</p>
+
+
+== Compression and Encoding ==
+* [[_BASE64DECODE$]] (function) {{Text|Decodes a Base64-encoded string.}}
+* [[_BASE64ENCODE$]] (function) {{Text|Encodes a string into Base64 format.}}
+* [[_DEFLATE$]] (function) {{Text|Compresses a string.}}
+* [[_INFLATE$]] (function) {{Text|Decompresses a string.}}
+
+<p style="text-align: center">([[#toc|Return to Table of Contents]])</p>
+
+
+== Fonts ==
+
+* [[_FONT (function)]] {{Text|creates a new alphablended font handle from a designated image handle}}
+* [[_FONT]] (statement) {{Text|sets the current [[_LOADFONT]] function font handle to be used by [[PRINT]] or [[_PRINTSTRING]].}}
+* [[_FONTHEIGHT]] (function) {{Text|returns the font height of a font handle created by [[_LOADFONT]].}}
+* [[_FONTWIDTH]] (function) {{Text|returns the font width of a MONOSPACE font handle created by [[_LOADFONT]].}}
+* [[_FREEFONT]] (statement) {{Text|frees a font handle value from memory}}
+* [[_LOADFONT]] (function) {{Text|loads a TrueType font (.TTF) file of a specific size and style and returns a font handle value.}}
+* [[_MAPUNICODE]] (statement) {{Text|maps a [[Unicode]] value to an [[ASCII]] character code value.}}
+* [[_PRINTMODE (function)]] {{Text|returns the present _PRINTMODE status as a numerical value.}}
+* [[_PRINTMODE]] (statement) {{Text|sets the text or [[_FONT]] printing mode on a background image when using [[PRINT]] or [[_PRINTSTRING]].}}
+:*_KEEPBACKGROUND {{Text|(1): Text background transparent. Only the text is displayed over anything behind it.}}
+:*_ONLYBACKGROUND {{Text|(2): Text background is only displayed. Text is transparent to anything behind it.}}
+:*_FILLBACKGROUND {{Text|(3): Text and background block anything behind them like a normal [[PRINT]]. Default setting.}}
+* [[_PRINTSTRING]] (statement) {{Text|prints text or custom font strings using graphic column and row coordinate positions.}}
+* [[_PRINTWIDTH]] (function) {{Text|returns the width in pixels of the [[_FONT]] or text [[STRING|string]] that a program will print.}}
+* [[PRINT]] (statement) {{Text|prints numeric or [[STRING|string]] expressions to the program screen.}}
+* [[PRINT USING]] (statement) {{Text|prints template formatted numeric or string values to the program screen.}}
+* [[_UCHARPOS]] (function) {{Text|calculates the starting pixel positions of every character of a (unicode) text string.}}
+* [[_UFONTHEIGHT]] (function) {{Text|returns the global glyph height (incl. ascender/descender) of a loaded font.}}
+* [[_ULINESPACING]] (function) {{Text|returns the vertical line spacing (distance between two consecutive baselines) in pixels.}}
+* [[_UPRINTSTRING]] (statement) {{Text|locates and prints a (unicode) text [[STRING|string]] using graphic coordinates.}}
+* [[_UPRINTWIDTH]] (function) {{Text|returns the pixel width of a (unicode) text string to be printed using [[_UPRINTSTRING]].}}
+* [[WRITE]] (screen I/O statement) {{Text|writes a comma-separated list of values to the screen.}}
+
+
+<p style="text-align: center">([[#toc|Return to Table of Contents]])</p>
+
+
+== Game Controller Input (Joystick) ==
+* [[_AXIS]] (function) {{Text|returns a [[SINGLE]] value between -1 and 1 indicating the maximum distance from device axis center 0.}}
+* [[_BUTTON]] (function) {{Text|returns -1 when a device button is pressed and 0 when button is released.}}
+* [[_BUTTONCHANGE]] (function) {{Text|returns -1 when a device button has been pressed and 1 when released. Zero indicates no change.}}
+* [[_DEVICE$]] (function) {{Text|returns a [[STRING]] expression listing a designated numbered input device name and types of input.}}
+* [[_DEVICEINPUT]] (function) {{Text|returns the [[_DEVICES]] number of an [[_AXIS]], [[_BUTTON]] or [[_WHEEL]] event.}}
+* [[_DEVICES]] (function) {{Text|returns the number of input devices found on a computer system including the keyboard and mouse.}}
+* [[_LASTAXIS]] (function) {{Text|returns the number of axis available on a specified number device listed by [[_DEVICE$]].}}
+* [[_LASTBUTTON]] (function) {{Text|returns the number of buttons available on a specified number device listed by [[DEVICE$]].}}
+* [[_LASTWHEEL]] (function) {{Text|returns the number of scroll wheels available on a specified number device listed by [[_DEVICE$]].}}
+* [[_MOUSEMOVEMENTX]] (function) {{Text|returns the relative horizontal position of the mouse cursor compared to the previous position.}}
+* [[_MOUSEMOVEMENTY]] (function) {{Text|returns the relative vertical position of the mouse cursor compared to the previous position.}}
+* [[_WHEEL]] (function) {{Text|returns -1 when a device wheel is scrolled up and 1 when scrolled down. Zero indicates no activity.}}
+* [[ON STRIG(n)]] (event statement) {{Text|directs program flow upon a button press event of a game controller device.}}
+* [[STICK]] (function) {{Text|returns the directional axis coordinate values from 1 to 254 of game port (&H201) or USB controller devices.}}
+* [[STRIG]] (function) {{Text|returns the True or False button press status of game port (&H201) or USB controller devices.}}
+* [[STRIG(n)]] (statement) {{Text|enables, suspends or disables event trapping of STRIG button return values.}}
+
+
+<p style="text-align: center">([[#toc|Return to Table of Contents]])</p>
+
+
+== Graphic Commands ==
+
+* [[_COPYIMAGE]] (function) {{Text|can copy a software surface to a hardware accelerated surface handle using mode 33.}}
+* [[_DISPLAY]] (statement) {{Text|renders surfaces visible in the [[_DISPLAYORDER]] previously set in the QB64 program.}}
+* [[_DISPLAYORDER]] {{Text|sets the rendering order of _SOFTWARE, _HARDWARE and _GLRENDER with [[_DISPLAY]].}}
+* [[_LOADIMAGE]] (function) {{Text|can load images as hardware accelerated using mode 33.}}
+* [[_PUTIMAGE]] (statement) {{Text|can place GL surfaces and allows the _SMOOTH action to blend stretched surfaces.}}
+
+<p style="text-align: center">([[#toc|Return to Table of Contents]])</p>
+
+
+== Graphics and Imaging: ==
+
+* [[_AUTODISPLAY]] (statement) {{Text|enables the automatic display of the screen image changes previously disabled by [[_DISPLAY]].}}
+* [[_CLIP]] ([[PUT (graphics statement)|PUT]] action) {{Text|allows placement of an image partially off of the screen.}}
+* [[_COPYIMAGE]] (function) {{Text|function duplicates an image handle from a designated handle.}}
+* [[_COPYPALETTE]] (statement) {{Text|copies the color palette intensities from one image to another image or screen page.}}
+* [[_DESKTOPHEIGHT]] (function) {{Text|returns the height of the desktop (not program window).}}
+* [[_DESKTOPWIDTH]] (function) {{Text|returns the width of the desktop (not program window).}}
+* [[_DEST]] (statement) {{Text|sets the current write image or page. All graphics will go to this image.}}
+* [[_DEST (function)]] {{Text|returns the current write destination image or page.}}
+* [[_DISPLAY]] (statement) {{Text|turns off automatic display while only displaying the screen changes when called.}}
+* [[_DISPLAY (function)]] {{Text|returns the handle of the current image that is displayed on the screen.}}
+* [[_FULLSCREEN (function)]] {{Text|returns the present full screen mode setting of the screen window.}}
+* [[_FULLSCREEN]] (statement) {{Text|sets the full screen mode of the screen window. Alt + Enter can do it manually.}}
+* [[_FREEIMAGE]] (statement) {{Text|releases an image handle value from memory when no longer needed.}}
+* [[_HEIGHT]] (function) {{Text|returns the height of an image handle or current write page.}}
+* [[_ICON]] (function) {{Text|places an image in the title bar using a [[_LOADIMAGE]] handle.}}
+* [[_LOADIMAGE]] (function) {{Text|loads a graphic file image into memory and returns an image handle.}}
+* [[_MAPTRIANGLE]] (statement) {{Text|maps a triangular portion of an image to a destination image or screen page.}}
+* [[_NEWIMAGE]] (function) {{Text|prepares a window image or page surface and returns the handle value.}}
+* [[_PIXELSIZE]] (function) {{Text|returns the color depth (Bits Per Pixel) of an image.}}
+* [[_PRINTSTRING]] (statement) {{Text|prints text or custom font strings using graphic column and row coordinate positions.}}
+* [[_PUTIMAGE]] (statement) {{Text|maps a rectangular area of a source image to an area of a destination image in one operation}}
+* [[_SAVEIMAGE]] (statement) {{Text|Saves the screen or an image handle to an image file.}}
+* [[_SCREENIMAGE]] (function) {{Text|creates an image of the current desktop and returns an image handle.}}
+* [[_SMOOTH (function)]] {{Text|checks whether the current [[_FULLSCREEN]] mode has antialiasing enabled or not.}}
+* [[_SOURCE]] (statement) {{Text|establishes the image SOURCE using a designated image handle}}
+* [[_SOURCE (function)]] {{Text|returns the present image _SOURCE handle value.}}
+* [[_UCHARPOS]] (function) {{Text|calculates the starting pixel positions of every character of a (unicode) text string.}}
+* [[_UPRINTSTRING]] (statement) {{Text|locates and prints a (unicode) text [[STRING|string]] using graphic coordinates.}}
+* [[_WIDTH (function)]] {{Text|returns the width of an image handle or current write page.}}
+
+
+* [[CIRCLE]] (statement) {{Text|is used in graphics SCREEN modes to create circles, arcs or ellipses.}}
+* [[CLS]] (statement) {{Text|clears a screen page or the program [[SCREEN]]. QB64 can clear with a color.}}
+* [[COLOR]] (statement) {{Text|sets the current text color attribute or [[_RGB]] value to be used or background colors in some screen modes.}}
+* [[DRAW]] (statement) {{Text|uses a special type of [[STRING|string]] expression to draw lines on the screen.}}
+* [[GET (graphics statement)]] {{Text|used to store a box area image of the screen into an [[INTEGER]] array.}}
+* [[LINE]] (statement) {{Text|used in graphic [[SCREEN]] modes to create lines or boxes.}}
+* [[PAINT]] (statement) {{Text|used to color enclosed graphic objects with a designated fill color and border color.}}
+* [[PALETTE]] (statement) {{Text|can swap color settings, set colors to default or set the Red, Green, Blue color palette.}}
+* [[PALETTE USING]] (statement) {{Text|sets all RGB screen color intensities using values from an array.}}
+* [[PCOPY]] (statement) {{Text|copies one source screen page to a destination page in memory.}}
+* [[PMAP]] (function) {{Text|returns the physical or [[WINDOW]] view coordinates.}}
+* [[POINT]] (function) {{Text|returns the pixel [[COLOR]] attribute or [[_RGB]] value at a specified graphics coordinate.}}
+* [[PRESET]] (statement) {{Text|sets a pixel coordinate to the background color or a designated color.}}
+* [[PSET]] (statement) {{Text|sets a pixel coordinate to the default color or designated color attribute.}}
+* [[PUT (graphics statement)]] {{Text|statement is used to place [[GET (graphics statement)|GET]] saved or [[BSAVE]]d images stored in an array.}}
+* [[SCREEN]] {{Text|sets the screen mode of a program. No statement defaults the program to SCREEN 0 text only mode.}}
+* [[STEP]] (relational statement) {{Text|is used to step through FOR loop values or use relative graphical coordinates.}}
+* [[VIEW]] (graphics statement) {{Text|creates a graphics view port area by defining the coordinate limits to be viewed.}}
+* [[WINDOW]] (statement) {{Text|defines the coordinate dimensions of the current graphics viewport.}}
+
+
+<center>See also: [[Bitmaps]], [[Icons and Cursors]], [[SaveImage SUB]], [[GIF Images]]</center>
+
+<p style="text-align: center">([[#toc|Return to Table of Contents]])</p>
+
+
+== Keyboard Input ==
+* [[_CONTROLCHR]] (statement) {{Text|[[OFF]] allows the control characters to be used as text characters. [[ON]](default) can use them as commands.}}
+* [[_CONTROLCHR (function)]]  {{Text| returns the current state of _CONTROLCHR as 1 when OFF and 0 when ON.}}
+* [[_EXIT (function)]] {{Text|prevents a program user exit and indicates if a user has clicked the close X window button or CTRL + BREAK.}}
+* [[_INPUTBOX$]] (function) {{Text|Displays a prompt in a dialog box, waits for the user to input text or click a button, and returns a string containing the contents of the text box.}}
+* [[_KEYDOWN]] (function) {{Text|returns whether modifying keys like CTRL, ALT, SHIFT, and any other keys are pressed.}}
+* [[_KEYHIT]] (function) {{Text|returns ASCII one and two byte, SDL Virtual Key and Unicode keyboard key press codes.}}
+* [[_SCREENPRINT]] (statement) {{Text|simulates typing text into another OS program using the keyboard.}}
+
+
+* [[INKEY$]] (function) {{Text|returns the [[ASCII]] [[STRING|string]] character of a keypress.}}
+* [[INPUT]] (statement) {{Text|requests a [[STRING]] or numerical keyboard entry from a program user.}}
+* [[INPUT$]] (function) {{Text|used to get a set number of keypress characters or bytes from a file.}}
+* [[INP]] (function) {{Text|returns a scan code value from keyboard register &H60(96) to determine key presses.}}
+* [[KEY n]] (event statement) {{Text|is used to assign a "softkey" string to a key and/or display them.}}
+* [[KEY(n)]] (event statement) {{Text|assigns, enables, disables or suspends event trapping of a keypress.}}
+* [[KEY LIST]] (statement) {{Text|lists the 12 Function key soft key string assignments going down left side of screen.}}
+* [[LINE INPUT]] (statement) {{Text|requests a [[STRING]] keyboard entry from a program user.}}
+* [[ON KEY(n)]] (event statement) {{Text|defines a line number or label to go to when a specified key is pressed.}}
+* [[SLEEP]] (statement) {{Text|pauses the program for a specified number of seconds or a until a key press.}}
+
+
+<center>See also: [[Keyboard scancodes]], [[ASCII|ASCII Codes]] references or  [[Windows Libraries#Hot_Keys_(maximize)|Hot Keys for Windows]].</center>
+
+
+<p style="text-align: center">([[#toc|Return to Table of Contents]])</p>
+
+
+== [[Libraries]] ==
+
+* [[_OFFSET (function)]] {{Text|returns the memory offset of a variable when used with [[DECLARE LIBRARY]] only.}}
+* [[_OFFSET]](variable type) {{Text|can be used store the value of an offset in memory when using [[DECLARE LIBRARY]] only.}}
+
+
+* [[ALIAS]] (statement) {{Text|tells the program that you will use a different name than the name used in the Library file.}}
+* [[BYVAL]] (statement) {{Text|used to pass a parameter's value with sub-procedures from a Library.}}
+* [[DECLARE LIBRARY]] {{Text|allows the use of OS specific, SDL or C++ external library [[SUB]] and [[FUNCTION]] procedures}}
+* [[DECLARE LIBRARY|END DECLARE]] {{Text|required at the END of the block of Library declarations in QB64.}}
+
+
+<center>'''QB64 also supports [[$INCLUDE]] text code file Libraries. QB64 does not support QLB Libraries or OBJ files.'''</center>
+* [[$INCLUDEONCE]] (metacommand) {{Text|prevents that include file contents is injected multiple times into a program.}}
+
+
+<center>See also: [[Libraries#C++_Variable_Types|C++ Variable Types]]</center>
+
+
+<p style="text-align: center">([[#toc|Return to Table of Contents]])</p>
+
+
+== Logical Bitwise Operations ==
+
+* [[AND]] (operator) {{Text|the bit is set when both bits are set.}}
+* [[EQV]] (operator) {{Text|the bit is set when both are set or both are not set.}}
+* [[IMP]] (operator) {{Text|the bit is set when both are set or both are unset or the second condition bit is set.}}
+* [[OR]] (operator) {{Text|the bit is set when either bit is set.}}
+* [[NOT]] (operator) {{Text|the bit is set when a bit is not set and not set when a bit is set.}}
+* [[XOR]] (operator) {{Text|the bit is set when just one of the bits are set.}}
+
+
+<p style="text-align: center">([[#toc|Return to Table of Contents]])</p>
+
+
+== Mathematical Functions and Operations ==
+
+* [[_CLAMP]] (function) {{Text|Forces the given numeric value into a specific range.}}
+* [[_MAX]] (function) {{Text|Returns the greater of two given numeric values.}}
+* [[_MIN]] (function) {{Text|Returns the lesser of two given numeric values.}}
+* [[_ROUND]] (function) {{Text|rounds to the closest EVEN [[INTEGER]], [[LONG]] or [[_INTEGER64]] numerical value.}}
+
+
+* [[+|+ addition operation]]
+* [[-|- subtraction or negation operation]]
+* [[*|* multiplication operation]]
+* [[/|/ decimal point division operation]]
+* [[\|\ integer division operation]]
+* [[^|^ exponential operation]]
+* [[MOD|MOD integer remainder operation]]
+
+
+* [[ABS]] (function) {{Text|returns the the positive value of a variable or literal numerical value.}}
+* [[ATN]] (function) {{Text|or arctangent returns the angle in radians of a numerical [[TAN|tangent]] value.}}
+* [[CDBL]] (function) {{Text|closest double rounding function}}
+* [[CINT]] (function) {{Text|closest integer rounding function}}
+* [[CLNG]] (function) {{Text|closest long integer rounding function}}
+* [[COS]] (function) {{Text|cosine of a radian angle}}
+* [[CSNG]] (function) {{Text|closest single rounding function}}
+* [[EXP]] (function) {{Text|returns the value of e to the power of the parameter used.}}
+* [[FIX]] (function) {{Text|rounds positive or negative values to integer values closer to 0}}
+* [[INT]] (function) {{Text|rounds to lower integer value}}
+* [[LOG]] (function) {{Text|natural logarithm of a specified numerical value.}}
+* [[SIN]] (function) {{Text|sine of a radian angle.}}
+* [[SQR]] (function) {{Text|square root of a positive number.}}
+* [[TAN]] (function) {{Text|returns the ratio of [[SIN]]e to [[COS]]ine or tangent value of an angle measured in radians.}}
+
+
+<center>See also: [[Mathematical Operations]] and [[#Logical_Bitwise_Operations|Logical Operations]]</center>
+
+<p style="text-align: center">([[#toc|Return to Table of Contents]])</p>
+
+
+== Memory Handling and Clipboard ==
+
+* [[_CLIPBOARD$ (function)]] {{Text|returns the current [[STRING]] contents of the system Clipboard.}}
+* [[_CLIPBOARD$]] (statement) {{Text|sets and overwrites the [[STRING]] contents of the current system Clipboard.}}
+* [[_MEM (function)]] {{Text|returns _MEM block referring to the largest continuous memory region beginning at a designated variable's offset.}}
+* [[_MEM]] (variable type) {{Text|contains read only dot elements for the OFFSET, SIZE, TYPE and ELEMENTSIZE of a block of memory.}}
+* [[_MEMCOPY]] (statement) {{Text|copies a value from a designated OFFSET and SIZE [[TO]] a block of memory at a designated OFFSET.}}
+* [[_MEMELEMENT]] (function) {{Text|returns a [[_MEM]] block referring to a variable's memory (but not past it).}}
+* [[_MEMEXISTS]] (function) {{Text|verifies that a memory block exists for a memory variable name or returns zero.}}
+* [[_MEMFILL]] (statement) {{Text|fills a designated memory block OFFSET with a certain SIZE and TYPE of value.}}
+* [[_MEMFREE]] (statement) {{Text|frees a designated memory block in a program. Only free memory once!}}
+* [[_MEMGET]] (statement) {{Text|reads a designated value from a designated memory OFFSET}}
+* [[_MEMGET (function)]] {{Text|returns a value from a designated memory block and OFFSET using a designated variable [[TYPE]].}}
+* [[_MEMIMAGE]] (function) {{Text|returns a [[_MEM]] block referring to a designated image handle's memory}}
+* [[_MEMNEW]] (function) {{Text|allocates new memory with a designated SIZE and returns a [[_MEM]] block referring to it.}}
+* [[_MEMPUT]] (statement) {{Text|places a designated value into a designated memory [[_OFFSET]]}}
+* [[_MEMSOUND]] (function) {{Text|returns a [[_MEM]] block referring to a designated sound handle's memory}}
+* [[_OFFSET (function)]] {{Text|returns the memory offset of a variable when used with [[DECLARE LIBRARY]] or [[_MEM]] only.}}
+* [[_OFFSET]](%& numerical type) {{Text|can be used store the value of an offset in memory when using [[DECLARE LIBRARY]] or [[_MEM]] only.}}
+
+
+<center>'''Functions and statements using QB64's emulated 16 bit memory'''</center>
+* [[DEF SEG]] (statement) {{Text|defines the segment address in memory.}}
+* [[PEEK]] (function) {{Text|returns the value that is contained at a certain memory address offset.}}
+* [[POKE]] (statement) {{Text|sets the value of a specified memory address offset.}}
+* [[SADD]] (function) {{Text|returns the address of a STRING variable as an offset from the current data segment.}}
+* [[VARPTR]] (function) {{Text|returns an [[INTEGER]] value that is the offset pointer of the memory address within it's [[segment]].}}
+* [[VARPTR$]] (function) {{Text|returns a STRING representation of a variable's memory address value}}
+* [[VARSEG]] (function) {{Text|returns an [[INTEGER]] value that is the [[segment]] part of a variable or array memory address.}}
+
+<center>See also: [[Screen Memory]] or [[Using _OFFSET]]</center>
+
+<p style="text-align: center">([[#toc|Return to Table of Contents]])</p>
+
+
+== Mouse Input ==
+* [[_AXIS]] (function) {{Text|returns a [[SINGLE]] value between -1 and 1 indicating the maximum distances from device center 0.}}
+* [[_BUTTON]] (function) {{Text|returns -1 when a device button is pressed and 0 when button is released. 2 is the mouse center or scroll button}}
+* [[_BUTTONCHANGE]] (function) {{Text|returns -1 when a device button has been pressed and 1 when released. Zero indicates no change.}}
+* [[_DEVICE$]] (function) {{Text|returns a [[STRING]] expression listing device names and input types of system input devices.}}
+* [[_DEVICEINPUT]] (function) {{Text|returns the [[_DEVICES]] number of an [[_AXIS]], [[_BUTTON]] or [[_WHEEL]] event. Mouse is normally _DEVICEINPUT(2).}}
+* [[_DEVICES]] (function) {{Text|returns the number of input devices found on a computer system. The mouse is normally device 2.}}
+* [[_EXIT (function)]] {{Text|prevents a program user exit and indicates if a user has clicked the close X window button or CTRL + BREAK.}}
+* [[_LASTAXIS]] (function) {{Text|returns the number of axis available on a specified number device listed by [[_DEVICE$]].}}
+*[[_LASTBUTTON]] (function) {{Text|returns the number of buttons available on a specified number device listed by [[DEVICE$]].}}
+* [[_LASTWHEEL]] (function) {{Text|returns the number of scroll wheels available on a specified number device listed by [[_DEVICE$]].}}
+* [[_MOUSEBUTTON]] (function) {{Text|returns whether a specified mouse button number has been clicked. 3 is the mouse center or scroll button}}
+* [[_MOUSEHIDDEN]] (function) {{Text|returns the current state of the mouse pointer.}}
+* [[_MOUSEHIDE]] (statement) {{Text|hides the OS mouse pointer from view.}}
+* [[_MOUSEINPUT]] (function) {{Text|must be used to monitor and read all changes in the mouse status.}}
+* [[_MOUSEMOVE]] (statement) {{Text|moves the mouse cursor pointer to a designated coordinate.}}
+* [[_MOUSEMOVEMENTX]] (function) {{Text|returns the relative horizontal position of the mouse cursor.}}
+* [[_MOUSEMOVEMENTY]] (function) {{Text|returns the relative vertical position of the mouse cursor.}}
+* [[_MOUSESHOW]] (statement) {{Text|displays the OS mouse cursor after it has been hidden.}}
+* [[_MOUSEWHEEL]] (function) {{Text|returns a positive or negative count the mouse scroll wheel clicks since the last read.}}
+* [[_MOUSEX]] (function) {{Text|indicates the current horizontal position of the mouse pointer.}}
+* [[_MOUSEY]] (function) {{Text|indicates the current vertical position of the mouse pointer.}}
+* [[_SCREENCLICK]]  {{Text|simulates clicking the mouse at a position on the screen to get focus.}}
+* [[_WHEEL]] (function) {{Text|returns -1 when a device wheel is scrolled up and 1 when scrolled down. Zero indicates no activity.}}
+
+
+* [[CALL ABSOLUTE|CALL ABSOLUTE]] (statement) {{Text|used to access Interrupt vector &H33 to work with the mouse. Functions 0 to 3 implemented.}}
+* [[INTERRUPT]] (statement) {{Text|used to access Interrupt vector &H33 to work with the mouse. Functions 0 to 3 implemented. }}
+
+
+<p style="text-align: center">([[#toc|Return to Table of Contents]])</p>
+
+
+== Numerical Manipulation and Conversion ==
+
+* [[_BIN$]] (function) {{Text|converts the [[INTEGER]] part of any value to binary [[STRING]] number value.}}
+* [[_CAST]] (function) {{Text|performs a C-like cast of a numerical value to a specified numerical type.}}
+* [[_CV]] (function)  {{Text|used to convert [[_MK$]] [[ASCII]] [[STRING|string]] values to specified numerical value types.}}
+* [[_MK$]] (function)  {{Text|converts a specified numerical type into an [[ASCII]] [[STRING|string]]  value that must be converted back using [[_CV]].}}
+* [[_PRESERVE]] ([[REDIM]] action) {{Text|preserves the current contents of an [[arrays|array]], when re-dimensioning it.}}
+* [[_TOSTR$]] (function) {{Text|Returns the [[STRING]] representation of a numerical value. It's a successor of the legacy [[STR$]] function.}}
+* [[_UNSIGNED]] {numerical [[TYPE|type]]) {{Text|defines a numerical value as being positive only using QB64.}}
+
+
+* [[ABS]] (function) {{Text|returns the the positive value of a variable or literal numerical value.}}
+* [[ASC (function)]] {{Text|returns the [[ASCII]] code number of a certain [[STRING]] text character or a keyboard press.}}
+* [[CDBL]] (function) {{Text|converts a numerical value to the closest [[DOUBLE]]-precision value.}}
+* [[CHR$]] (function) {{Text|returns the character associated with a certain [[ASCII]] character code as a [[STRING]].}}
+* [[CINT]] (function) {{Text|returns the closest [[INTEGER]] value of a number.}}
+* [[CLEAR]] (statement) {{Text|clears all variable values to 0 or null [[STRING|strings]] and closes all open files.}}
+* [[CLNG]] (function) {{Text| rounds decimal point numbers up or down to the nearest [[LONG]] integer value.}}
+* [[CSNG]] (function) {{Text|converts a numerical value to the closest [[SINGLE]]-precision number.}}
+* [[CVD]] (function) {{Text|converts [[STRING]] values to [[DOUBLE]] numerical values.}}
+* [[CVDMBF]] (function) {{Text|converts a 8-byte Microsoft Binary format [[STRING|string]] value to a [[DOUBLE]] precision number.}}
+* [[CVI]] (function) {{Text|converts 2 byte STRING values to [[INTEGER]] numerical values.}}
+* [[CVL]] (function) {{Text|converts 4 byte STRING values to [[LONG]] numerical values.}}
+* [[CVS]] (function) {{Text|converts 4 byte STRING values to [[SINGLE]] numerical values.}}
+* [[CVSMBF]] (function) {{Text|converts a 4-byte Microsoft Binary format [[STRING|string]] value to a [[SINGLE]]-precision number.}}
+* [[DIM]] (statement) {{Text|used to declare a variable type or dimension a [[STATIC]] array.}}
+* [[ERASE]] (array statement) {{Text|clears a [[STATIC]] array of all values and totally removes a [[$DYNAMIC]] array.}}
+* [[HEX$]] (function) {{Text|converts the [[INTEGER]] part of any value to hexadecimal [[STRING]] number value.}}
+* [[INT]] (function) {{Text|rounds a numeric value down to the next whole number or [[INTEGER]] value.}}
+* [[LEN]] (function) {{Text|returns the byte size of strings or numerical variables.}}
+* [[OCT$]] (function) {{Text|converts the [[INTEGER]] part of any value to octal [[STRING]] number value.}}
+* [[RANDOMIZE]] (statement) {{Text|seeds the [[RND]] random number generation sequence.}}
+* [[REDIM]] (statement) {{Text|re-dimensions the number of elements in a [[$DYNAMIC|dynamic]](resizeable) [[arrays|array]].}}
+* [[RND]] (function) {{Text|returns a randomly generated number from 0 to .9999999}}
+* [[SGN]] (function) {{Text|returns the sign as -1 for negative, zero for 0 and 1 for positive numerical values.}}
+* [[STR$]] (function) {{Text|converts a numerical value to a [[STRING]] value.}}
+* [[SWAP]] (statement) {{Text|trades the values of two numerical types or [[STRING|strings]].}}
+* [[VAL]] (function) {{Text|converts number [[STRING|strings]] into numerical values until it runs into a non-numeric character.}}
+
+
+<p style="text-align: center">([[#toc|Return to Table of Contents]])</p>
+
+
+== Port Input and Output (COM and LPT) ==
+
+* [[GET]] (file I/O statement) {{Text|reads port data data by byte or record positions.}}
+* [[LOC]] (function) {{Text|finds the current file location or size of a [[OPEN COM|COM]] port receive buffer.}}
+
+
+* [[OPEN COM]] (statement) {{Text|opens a computer serial COMmunications port.}}
+* [[OUT]] (statement) {{Text|sends values to register or port hardware addresses (emulated - limited access).}}
+
+
+* [[PRINT (file statement)]] {{Text|writes text and numerical data to a port transmit buffer.}}
+* [[PUT]] (file I/O statement) {{Text|writes data into a [[RANDOM]] or [[BINARY]] port by byte or record position.}}
+
+
+<center>'''See [[Port Access Libraries]] for other ways to access COM and LPT ports.'''.</center>
+
+
+<p style="text-align: center">([[#toc|Return to Table of Contents]])</p>
+
+
+== Print formatting ==
+
+* [[LPRINT USING]] (statement) {{Text|prints template formatted [[STRING]] text to an LPT or USB  printer page.}}
+* [[PRINT USING]] (statement) {{Text|prints template formatted [[STRING]] text to the screen.}}
+* [[PRINT USING (file statement)]] {{Text|prints template formatted [[STRING]] text to a text file.}}
+
+
+<p style="text-align: center">([[#toc|Return to Table of Contents]])</p>
+
+
+== Printer Output (LPT and USB) ==
+
+* [[_PRINTIMAGE]] (statement) {{Text|prints an image stretched to the size of the paper setting of an LPT or USB printer.}}
+
+
+* [[LPOS]] (function) {{Text|returns the current parallel(LPT) printer head position.}}
+* [[LPRINT]] (statement) {{Text|prints text to an LPT or USB printer page.}}
+* [[LPRINT USING]] (statement) {{Text|prints template formatted [[STRING]] text to an LPT or USB  printer page.}}
+
+
+<center>'''QB64 will use the default system printer selected. [[_PRINTIMAGE]] images will be stretched to the paper size setting.'''</center>
+
+
+<p style="text-align: center">([[#toc|Return to Table of Contents]])</p>
+
+
+== Program Flow and Loops ==
+* [[_CONTINUE]] (statement) {{Text|skips the remaining lines in a control block (DO/LOOP, FOR/NEXT or WHILE/WEND)}}
+* [[_DEST]] (statement) {{Text|sets the current write image or page. All graphics will go to this image.}}
+* [[_DEST (function)]] {{Text|returns the current write destination image or page.}}
+* [[_EXIT (function)]] {{Text|prevents a user exit and indicates if a user has clicked the close X window button or CTRL + BREAK.}}
+* [[_SOURCE]] (statement) {{Text|establishes the image SOURCE using a designated image handle}}
+* [[_SOURCE (function)]] {{Text|returns the present image _SOURCE handle value.}}
+* [[_SHELLHIDE]] (function) {{Text|returns the code sent by a program exit using [[END]] or [[SYSTEM]] followed by an [[INTEGER]] value.}}
+
+
+* [[CALL]] (statement) {{Text|sends code execution to a subroutine procedure in a program.}}
+* [[CASE]] ([[SELECT CASE]] statement) {{Text|used within a SELECT CASE block to specify a conditional value of the compared variable.}}
+* [[CASE ELSE]] ([[SELECT CASE]] statement) {{Text|used in a SELECT CASE block to specify an alternative to other CASE values.}}
+* [[CASE IS]] ([[SELECT CASE]] statement) {{Text|used within a SELECT CASE block to specify a conditional value of the compared variable.}}
+* [[DO...LOOP]] (loop statement) {{Text|used in programs to repeat code or return to the start of a procedure.}}
+* [[ELSE]] (statement) {{Text|used in [[IF...THEN]] statements to offer an alternative to other conditional statements.}}
+* [[ELSEIF]] (statement) {{Text|used in [[IF...THEN]] block statements to offer an alternative conditional statement.}}
+* [[END]] (statement) {{Text|ENDs a conditional block statement, a sub-procedure or ends the program with "Press any key..."}}
+* [[END IF]] (IF statement end) {{Text|ENDs an IF statement block.}}
+* [[ERROR]] (error statement) {{Text|used to simulate an error in a program.}}
+* [[EXIT]] (statement) {{Text|exits a loop, function or sub-procedure early.}}
+* [[FOR...NEXT]] (statement) {{Text|a counter loop procedure that repeats code a specified number of times.}}
+* [[GOSUB]] (statement) {{Text|send the program to a designated line label procedure in the main module or a [[SUB]] procedure.}}
+* [[GOTO]] (statement) {{Text|sends the program to a designated line number or label.}}
+* [[IF...THEN]] (statement) {{Text|a conditional flow statement or block of statements.}}
+* [[LOOP]] {{Text|end of a DO...LOOP procedure that repeats code until or while a condition is true.}}
+* [[RESUME]] (error statement) {{Text|an error statement that can return the program to the NEXT code line or a specific line number.}}
+* [[RETURN]] (statement) {{Text|a sub-procedure statement that returns the program to the code immediately after the procedure call.}}
+* [[RUN]] (statement) {{Text|clears and restarts the program currently in memory or executes another specified program.}}
+* [[SELECT CASE]] (statement) {{Text|determines the program flow by comparing the value of a variable to specific values.}}
+* [[SHELL]] (DOS statement) {{Text|directly accesses the Operating System's command line procedures.}}
+* [[SLEEP]] (statement) {{Text|stops program progression for a specific number of seconds or until a keypress is made.}}
+* [[STEP]] (relational statement) {{Text|is used to step through FOR loop values or use relative graphical coordinates.}}
+* [[STOP]] (statement) {{Text|is used when troubleshooting a program to stop the program at a specified code line.}}
+* [[SYSTEM]] (statement) {{Text|immediately exits a program and closes the program window.}}
+* [[UNTIL]] (conditional statement) {{Text|continues a DO LOOP procedure until a condition is true.}}
+* [[WHILE]] (statement) {{Text|continues a DO LOOP procedure while a condition is true.}}
+* [[WHILE...WEND]] (statement) {{Text|a loop procedure that repeats code while a condition is true.}}
+
+<p style="text-align: center">([[#toc|Return to Table of Contents]])</p>
+
+
+== Sounds and Music ==
+
+* [[_MIDISOUNDBANK]] {{Text|enables [[_SNDOPEN]] to use external FM Banks or SoundFonts when playing MIDI files.}}
+* [[$MIDISOUNDFONT]] (metacommand) ({{Text|deprecated|red}}) {{Text|enables the MIDI support for [[_SNDOPEN]].}}
+* [[_SNDBAL]] (statement) {{Text|sets the balance or 3D position of a sound.}}
+* [[_SNDCLOSE]] (statement) {{Text|frees and unloads an open sound using a _SNDOPEN or _SNDCOPY handle.}}
+* [[_SNDCOPY]] (function) {{Text|copies a sound to a new handle so that two or more of the same sound can be played at once.}}
+* [[_SNDGETPOS]] (function) {{Text|returns the current playing position in seconds of a designated sound handle.}}
+* [[_SNDLEN]] (function) {{Text|returns the length of a sound in seconds of a designated sound handle.}}
+* [[_SNDLIMIT]] (statement) {{Text|stops playing a sound after it has been playing for a set number of seconds.}}
+* [[_SNDLOOP]] (statement) {{Text|loops the playing of a specified sound handle.}}
+* [[_SNDNEW]] (function) {{Text|creates a raw empty sound in memory and returns a LONG handle value for later access.}}
+* [[_SNDOPEN]] (function) {{Text|loads a sound file with certain capabilities and returns a handle value.}}
+* [[_SNDPAUSE]] (statement) {{Text|pauses a specified sound handle if it is playing.}}
+* [[_SNDPAUSED]] (function) {{Text|returns the pause status of a specified sound handle.}}
+* [[_SNDPLAY]] (statement) {{Text|plays a designated sound file handle.}}
+* [[_SNDPLAYCOPY]] (statement) {{Text|copies a sound, plays it, and automatically closes the copy using a handle parameter}}
+* [[_SNDPLAYFILE]] (statement) {{Text|a simple command to play a sound file with limited options.}}
+* [[_SNDPLAYING]] (function) {{Text|returns whether a sound handle is being played.}}
+* [[_SNDRATE]] (function) {{Text|returns the sample rate frequency per second of the current computer's sound card.}}
+* [[_SNDRAW]] (statement) {{Text|plays a mono or stereo sound sample frame.}}
+* [[_SNDRAWBATCH]] (statement) {{Text|plays a batch of mono or stereo sound sample frames from an [[Arrays|array]].}}
+* [[_SNDRAWDONE]] (statement) {{Text|pads a [[_SNDRAW]] stream so the final (partially filled) buffer section is played.}}
+* [[_SNDRAWLEN]] (function) {{Text|returns the length, in seconds, of a _SNDRAW sound currently queued.}}
+* [[_SNDOPENRAW]] (function) {{Text|returns a handle to a new, separate [[_SNDRAW]] audio stream.}}
+* [[_SNDSETPOS]] (statement) {{Text|changes the current/starting playing position of a sound in seconds.}}
+* [[_SNDSTOP]] (statement) {{Text|stops a playing or paused sound handle.}}
+* [[_SNDVOL]] (statement) {{Text|sets the volume of a sound handle being played.}}
+* [[_WAVE]] (statement) {{Text|defines the waveform shape for a specified audio channel when used with [[SOUND]] or [[PLAY]].}}
+
+
+* [[BEEP]] (statement) {{Text|makes a beep sound when called or CHR$(7) is printed.}}
+* [[PLAY]] (music statement) {{Text|uses a custom string statement to play musical notes.}}
+* [[SOUND]] (statement) {{Text|creates sounds of a specified frequency for a set duration.}}
+
+<p style="text-align: center">([[#toc|Return to Table of Contents]])</p>
+
+
+== String Text Manipulation and Conversion ==
+
+* [[_CLIPBOARD$ (function)]] {{Text|returns the current [[STRING]] contents of the system Clipboard.}}
+* [[_CLIPBOARD$]] (statement) {{Text|sets the [[STRING]] contents of the current system Clipboard.}}
+* [[_CONTROLCHR]] (statement) {{Text|[[OFF]] allows the control characters to be used as text characters. [[ON]](default) can use them as commands.}}
+* [[_CONTROLCHR (function)]]  {{Text| returns the current state of _CONTROLCHR as 1 when OFF and 0 when ON.}}
+* [[_CV]] (function)  {{Text|used to convert [[_MK$]] [[ASCII]] [[STRING|string]] values to numerical values.}}
+* [[_MK$]] (function)  {{Text|converts any numerical type into an [[ASCII]] [[STRING|string]]  value that must be converted back using [[_CV]].}}
+* [[_STRCMP]] (function) {{Text|compares the relationship between two strings.}}
+* [[_STRICMP]] (function) {{Text|compares the relationship between two strings, without regard for case-sensitivity.}}
+* [[_TOSTR$]] (function) {{Text|Returns the [[STRING]] representation of a numerical value. It's a successor of the legacy [[STR$]] function.}}
+
+
+* [[ASC]] (statement) {{Text|allows a QB64 program to change a character at any position of a predefined STRING.}}
+* [[HEX$]] (function) {{Text|returns the base 16 hexadecimal representation of an [[INTEGER]] value as a [[STRING]].}}
+* [[INSTR]] (function) {{Text|searches for the first occurance of a search STRING within a string and returns the position.}}
+* [[LCASE$]] (function) {{Text|changes the uppercase letters of a STRING to lowercase.}}
+* [[LEFT$]] (function) {{Text|returns a part of a STRING from the start a designated number of character places.}}
+* [[LEN]] (function) {{Text|returns the number of bytes or characters in a [[STRING]] value.}}
+* [[LSET]] (statement) {{Text|left-justifies a fixed length string expression based on the size of the STRING.}}
+* [[LTRIM$]] (function) {{Text|returns a string with all leading spaces removed.}}
+* [[MID$]] (statement) {{Text|allows a QB64 program to change existing characters of a predefined STRING.}}
+* [[MKD$]] (function) {{Text|converts a [[DOUBLE]] numerical value into an 8 byte [[ASCII]] [[STRING]] value.}}
+* [[MKDMBF$]] (function) {{Text|converts a double-precision number to a string containing a value in Microsoft Binary format.}}
+* [[MKI$]] (function) {{Text|converts a numerical [[INTEGER]] value to a 2 byte [[ASCII]] string value.}}
+* [[MKL$]] (function) {{Text|converts a numerical [[LONG]] value to a 4 byte [[ASCII]] string value.}}
+* [[MKS$]] (function) {{Text|converts a numerical [[SINGLE]] value to a 4 byte [[ASCII]] string value.}}
+* [[MKSMBF$]] (function) {{Text|converts a single-precision number to a string containing a value in Microsoft Binary format.}}}}
+* [[OCT$]] (function) {{Text|returns the base 8 Octal representation of an INTEGER value.}}
+* [[RIGHT$]] (function) {{Text|returns a set number of characters in a STRING variable starting from the end.}}
+* [[RSET]] (statement) {{Text|right-justifies a string according to length of the string expression.}}
+* [[RTRIM$]] (function) {{Text|returns a string with all of the spaces removed at the right end of a string.}}
+* [[SPACE$]] (function) {{Text|returns a STRING consisting of a number of space characters.}}
+* [[STR$]] (function) {{Text|converts a numerical value to a [[STRING]].}}
+* [[STRING]] ($ variable type) {{Text|one byte text variable with [[ASCII]] code values from 0 to 255.}}
+* [[STRING$]] (function)  {{Text|returns a STRING consisting of a single character repeated a set number of times.}}
+* [[SWAP]] (statement)  {{Text|used to exchange two string variable or array element values.}}
+* [[UCASE$]] (function) {{Text|returns a string with all letters as uppercase.}}
+* [[VAL]] (function) {{Text|converts a string number value to a numerical value.}}
+
+
+<p style="text-align: center">([[#toc|Return to Table of Contents]])</p>
+
+
+== Sub procedures and Functions ==
+
+* [[CALL]] (statement) {{Text|sends code execution to a [[SUB]] procedure in a program. Parameter brackets are required when used.}}
+* [[CALL ABSOLUTE|CALL ABSOLUTE]] (statement) {{Text|used to access Interrupts on the computer or execute assembly type procedures.}}
+* [[CHAIN]] (statement) {{Text|changes seamlessly from one program module to another.}}
+* DECLARE (BASIC statement) {{Text|used to tell that a SUB or FUNCTION is created to be used in the program. NOT USED by QB64!}}
+* [[END]] (statement) {{Text|ends a [[SUB]] or [[FUNCTION]] procedure.}}
+* [[EXIT]] (statement) {{Text|exits a [[SUB]] or [[FUNCTION]] procedure early.}}
+* [[FUNCTION]] (statement) {{Text|a procedure that holds ONE return value in the function's name which is a variable type. }}
+* [[GOSUB]] (statement) {{Text|sends the program to a sub program that uses a line number or label.}}
+* [[$INCLUDE]] (metacommand) {{Text|used to insert a source code text file into your program at the point of the insertion.}}
+* [[INTERRUPT]] (statement) {{Text|a built in assembly routine for accessing computer information registers.}}
+* [[RETURN]] (statement) {{Text|used in GOSUB procedures to return to the original call code line.}}
+* [[RUN]] (statement) {{Text| flow statement that clears and restarts the program currently in memory or executes another specified program.}}
+* [[SHARED]] (statement) defines a variable or list of variables as shared with the main program module.}}
+* [[SHELL]] (statement) {{Text|allows a program to use OS command lines.}}
+* [[STATIC]] (statement) {{Text|defines a variable or list of variables that will retain their values after the sub-procedure is exited.}}
+* [[SUB]] (statement) {{Text|procedures are programs within programs that can return multiple calculations.}}
+
+<p style="text-align: center">([[#toc|Return to Table of Contents]])</p>
+
+
+== TCP/IP Networking HTTP(S) and Email ==
+
+* [[_CONNECTED]] (function) {{Text|returns the connection status of a TCP/IP connection handle.}}
+* [[_CONNECTIONADDRESS$]] (function) {{Text| function returns a connected user's [[STRING]] IP address value.}}
+* [[_STATUSCODE]] (function) {{Text|gives the HTTP status code of an HTTP response that was opened using [[_OPENCLIENT]].}}
+
+
+* [[_OPENCLIENT]] (function) {{Text|connects to a Host on the Internet as a Client and returns the Client status handle.}}
+* [[_OPENCONNECTION]] (function) {{Text|open's a connection from a client that the host has detected and returns a status handle.}}
+* [[_OPENHOST]] (function) {{Text|opens a Host which listens for new connections and returns a Host status handle.}}
+
+
+* [[_ENCODEURL$]] (function) {{Text|returns the so called percent encoded representation of the given URL.}}
+* [[_DECODEURL$]] (function) {{Text|returns the decoded plain text URL of the given encoded URL.}}
+
+
+* [[CLOSE]] (statement) {{Text|closes an opened internet connection using the handle assigned in an OPEN statement.}}
+
+
+* [[GET (HTTP statement)]] {{Text|reads the response of an HTTP request that was opened using [[_OPENCLIENT]].}}
+* [[GET (TCP/IP statement)]] {{Text|reads a TCP/IP connection port to return a value.}}
+
+* [[PUT (TCP/IP statement)]] {{Text|sends unformatted(raw) data to an open connection using a user's handle.}}
+
+
+<center>See also: [[Downloading Files]]</center>
+
+
+<p style="text-align: center">([[#toc|Return to Table of Contents]])</p>
+
+
+== Text on Screen ==
+* [[_CONTROLCHR]] {{Text|[[OFF]] allows [[ASCII]] characters 0 to 31 to be used as text characters. [[ON]](default) resets to default usage.}}
+* [[_FONT (function)]] {{Text|creates a new alphablended font handle from a designated image handle}}
+* [[_FONT]] (statement) {{Text|sets the current [[_LOADFONT]] function font handle to be used by [[PRINT]] or [[_PRINTSTRING]].}}
+* [[_MAPUNICODE]] (statement) {{Text|maps a [[Unicode]] value to an [[ASCII]] character code value.}}
+* [[_PRINTSTRING]] (statement) {{Text|prints text or custom font strings using graphic column and row coordinate positions.}}
+* [[_SCREENPRINT]] (statement) {{Text|simulates typing text into a Windows program using the keyboard.}}
+* [[_TOSTR$]] (function) {{Text|Returns the [[STRING]] representation of a numerical value. It's a successor of the legacy [[STR$]] function.}}
+* [[_UCHARPOS]] (function) {{Text|calculates the starting pixel positions of every character of a (unicode) text string.}}
+* [[_UPRINTSTRING]] (statement) {{Text|locates and prints a (unicode) text [[STRING|string]] using graphic coordinates.}}
+
+
+* [[CHR$]] (function) {{Text|returns the text character associated with a certain [[ASCII]] character code as a one byte [[STRING]].}}
+* [[CLS]] (statement) {{Text|clears a screen page or the program [[SCREEN]]. QB64 can clear with a color.}}
+* [[COLOR]] (statement) {{Text|used to change the color of the text and background in some legacy screen modes.}}
+* [[CSRLIN]] (function) {{Text|returns the current print cursor row position on the screen.}}
+* [[INPUT]] (statement) {{Text|requests a [[STRING]] or numerical keyboard entry from a program user.}}
+* [[KEY LIST]] (statement) {{Text|vertically lists all the [[ON KEY(n)]] softkey strings associated with each function key F1 to F12.}}
+* [[LINE INPUT]] (statement) {{Text|requests a [[STRING]] keyboard entry from a program user.}}
+* [[LOCATE]] (statement) {{Text|locates the screen text row and column positions for a [[PRINT]] or [[INPUT]] procedure.}}
+* [[POS]] (function) {{Text|returns the current print cursor column position.}}
+* [[PRINT]] (statement) {{Text|prints numeric or [[STRING|string]] expressions to the program screen.}}
+* [[PRINT USING]] (statement) {{Text|prints template formatted numeric or string values to the program screen.}}
+* [[SCREEN]] (statement) {{Text|sets the screen mode of a program. No statement defaults the program to SCREEN 0 text mode.}}
+* [[SCREEN (function)]] {{Text|returns the [[ASCII]] code of a text character or the color attribute at a set text location on the screen.}}
+* [[SPACE$]] (function) {{Text|returns a [[STRING|string]] consisting of a number of space characters.}}
+* [[SPC]] (function) {{Text|used in [[PRINT]] and [[LPRINT]] statements to print or output a number of space characters.}}
+* [[STR$]] (function) {{Text|returns the [[STRING]] representation of a numerical value.}}
+* [[STRING$]](function) {{Text| returns a [[STRING]] consisting of a single character repeated a set number of times.}}
+* [[TAB]] (function) {{Text|used in [[PRINT]] and [[LPRINT]] statements to move to a specified text column position.}}
+* [[VIEW PRINT]] (statement) {{Text|defines the boundaries of a text viewport [[PRINT]] area.}}
+* [[WIDTH]] (statement) {{Text|changes the text dimensions of certain [[SCREEN]] modes or printer page widths}}
+* [[WRITE]] (screen I/O statement) {{Text|writes a comma-separated list of values to the screen.}}
+
+
+<center>See also: [[#Fonts_and_Unicode:|Fonts and Unicode]] or [[ASCII|ASCII Code Table]]</center>
+
+<p style="text-align: center">([[#toc|Return to Table of Contents]])</p>
+
+
+== Time, Date and Timing ==
+
+* [[_AUTODISPLAY]] (statement) {{Text|enables the automatic display of the screen image changes previously disabled by [[_DISPLAY]].}}
+* [[_DELAY]] (statement) {{Text|suspends program execution for a [[SINGLE]] value of seconds down to milliseconds.}}
+* [[_DISPLAY]] (statement) {{Text|turns off automatic display while only displaying the screen changes when called.}}
+*[[_FREETIMER]] (function) {{Text|returns a free TIMER number for multiple [[ON TIMER(n)]] events.}}
+* [[_KEYDOWN]] (function) {{Text|returns whether modifying keys like CTRL, ALT, SHIFT, and any other keys are pressed.}}
+* [[_KEYHIT]] (function) {{Text|returns ASCII one and two byte, SDL Virtual Key and Unicode keyboard key press codes.}}
+* [[_LIMIT]] (statement) {{Text|sets the loop repeat rate of a program to so many per second, relinquishing spare cpu cycles.}}
+
+
+* [[DATE$]] (function) {{Text|returns the present computer date in a mm-dd-yyyy [[STRING|string]] format}}
+
+* [[INKEY$]] (function) {{Text| can be used in a loop to wait for a keypress or a [Ctrl] + letter key combination.}}
+* [[INPUT]] (statement) {{Text|can be used to wait for an [Enter] key press or a text or numerical menu entry.}}
+* [[INPUT$]] (function) {{Text|can be used to wait for a key press or a fixed length text entry.}}
+* [[ON KEY(n)]] (event statement) {{Text|executes when a keypress or keypress combination occurs.}}
+* [[ON TIMER(n)]] (event statement) {{Text|executes when a timed event occurs. QB64 can use multiple numbered timer events.}}
+
+* [[SLEEP]] (statement) {{Text|pauses the program for a specified number of seconds or a until a key press is made.}}
+* [[TIME$]] (function) {{Text|returns the present computer time in a hh:mm:ss 24 hour [[STRING|string]] format}}
+
+* [[TIMER (function)]] {{Text|returns the number of seconds past the previous midnite down to a QB64 accuracy of one millisecond.}}
+* [[TIMER]] (statement) {{Text|enables, turns off or stops timer event trapping. In QB64 TIMER(n) FREE can free multiple timers. }}
+
+* [[WAIT]] (statement) {{Text|normally used to delay program display execution during or after vertical retrace periods.}}
+
+<p style="text-align: center">([[#toc|Return to Table of Contents]])</p>
+
+
+== Window and Desktop ==
+
+* [[_COLORCHOOSERDIALOG]] (function) {{Text|Displays a standard color picker dialog box and returns a 32-bit RGBA color selected by the user.}}
+* [[_DESKTOPHEIGHT]] (function) {{Text|returns the height of the desktop (not program window).}}
+* [[_DESKTOPWIDTH]] (function) {{Text|returns the width of the desktop (not program window).}}
+* [[_FULLSCREEN (function)]] {{Text|returns the present full screen mode setting number of the screen window.}}
+* [[_FULLSCREEN]] (statement) {{Text|sets the full screen mode of the screen window. Alt + Enter can do it manually.}}
+* [[_HEIGHT]] (function) {{Text|returns the height of a [[_SCREENIMAGE]] handle to get the desktop resolution.}}
+* [[_ICON]] (statement) {{Text|creates a program icon from an image file handle created by [[_LOADIMAGE]]. Cannot use .ICO files!}}
+* [[_INPUTBOX$]] (function) {{Text|Displays a prompt in a dialog box, waits for the user to input text or click a button, and returns a string containing the contents of the text box.}}
+* [[_MESSAGEBOX (function)]] {{Text|Displays a message dialog box, which presents a message and returns the button ID clicked by the user.}}
+* [[_MESSAGEBOX]] (statement) {{Text|Displays a message dialog box, which presents a message to the user.}}
+* [[_NEWIMAGE]] (statement) {{Text|function prepares a window image surface and returns the handle value.}}
+* [[_NOTIFYPOPUP]] (statement) {{Text|Shows a system notification popup.}}
+* [[_OPENFILEDIALOG$]] (function) {{Text|Displays a standard dialog box that prompts the user to open a file.}}
+* [[$RESIZE]] (metacommand) {{Text|used with ON allows a user to resize the program window where OFF does not.}}
+* [[_RESIZE (function)]] {{Text|returns -1 when a program user attempts to resize the program screen.}}
+* [[_RESIZEHEIGHT]] (function) {{Text|returns the requested new user screen height when [[$RESIZE]]:ON allows it.}}
+* [[_RESIZEWIDTH]] (function) {{Text|returns the requested new user screen width when [[$RESIZE]]:ON allows it.}}
+* [[_SAVEFILEDIALOG$]] (function) {{Text|Displays a standard dialog box that prompts the user to save a file.}}
+* [[_SCREENCLICK]]  {{Text|simulates clicking the mouse at a position on the screen to get focus.}}
+* [[_SCREENEXISTS]] (function) {{Text|returns a -1 value once a screen has been created.}}
+* [[$SCREENHIDE]] (metacommand) {{Text|hides the program window throughout the program until [[$SCREENSHOW]] is used.}}
+* [[_SCREENHIDE]] (statement) {{Text|hides the main program window in a section of code until [[_SCREENSHOW]] is used.}}
+* [[_SCREENIMAGE]] (function) {{Text|creates an image of the current desktop and returns an image handle.}}
+* [[_SCREENMOVE]] (statement) {{Text|positions the program window on the desktop using designated coordinates or _MIDDLE.}}
+* [[_SCREENPRINT]] (statement) {{Text|simulates typing text into a Windows program using the keyboard.}}
+* [[$SCREENSHOW]] (metacommand) {{Text|displays the main program window throughout the program after [[$SCREENHIDE]].}}
+* [[_SCREENSHOW]] (statement) {{Text|displays the main program window in a section of code after [[_SCREENHIDE]] has been used.}}
+* [[_SCREENX]] (function) {{Text|returns the current program window's upper left corner column position on the desktop.}}
+* [[_SCREENY]] (function) {{Text|returns the current program window's upper left corner row position on the desktop.}}
+* [[_SELECTFOLDERDIALOG$]] (function) {{Text|Displays a dialog box that enables the user to select a folder (directory).}}
+* [[_SMOOTH (function)]] {{Text|checks whether the current [[_FULLSCREEN]] mode has antialiasing enabled or not.}}
+* [[_TITLE]] (statement) {{Text|sets the program name [[STRING|string]] in the title bar of the program window.}}
+* [[_WIDTH (function)]] {{Text|returns the width of a [[_SCREENIMAGE]] handle to get the desktop resolution.}}
+
+
+* [[SCREEN]] {{Text|sets the screen mode of a program. No statement defaults the program to SCREEN 0 text mode.}}
+
+
+<center>See also: [[C Libraries#Console_Window|Console Window]],  [[Windows Libraries#Hot_Keys_(maximize)|Windows Hot Keys]] or [[Windows Libraries#Focus|Focus on Program]].</center>
+
+<p style="text-align: center">([[#toc|Return to Table of Contents]])</p>
+
+
+== QB64 Programming Symbols ==
+
+<center>''[Note: All symbols below can also be used inside of literal quoted strings except for quotation marks.]''</center>
+
+
+:'''Print, Input or File Formatting'''
+* [[Semicolon|; Semicolon]] after a [[PRINT]] stops the invisible cursor at end of the printed value. Can prevent screen rolling!
+* [[Comma|, Comma]] after a [[PRINT]] tabs the invisible cursor past the end of the printed value.
+* [[Quotation mark|" Quotation mark]] delimits the ends of a literal [[STRING]] value in a [[PRINT]], [[INPUT]] or [[LINE INPUT]] statement.
+* [[Question mark|? Question mark]] is a shortcut substitute for the [[PRINT]] keyword. Will change to PRINT when cursor leaves the code line.
+
+
+:'''Program Code Markers'''
+* [[Apostrophe|' Apostrophe]] denotes a program comment, to ignore a code line or a legacy QBasic [[Metacommand]]. Same as using [[REM]].
+* [[Comma|, Comma]] is a statement variable or [[DATA]], [[SUB]] or [[FUNCTION]] parameter separator.
+* [[: Colon]]s can be used to separate two procedure statements on one code line.
+* [[Dollar Sign|$ Dollar sign]] used as prefix denotes a [[Metacommand]], used as suffix it denotes a [[STRING]] variable.
+* [[Parenthesis|( ) Parenthesis]] enclose a math or conditional procedure order, [[SUB]] or [[FUNCTION]] parameters or to pass by value.
+* [[+|+ Plus]] [[concatenation]] operator MUST be used to combine literal string values in a variable definition.
+* [[Quotation mark|" Quotation mark]] delimits the ends of a literal [[STRING]] value. Use [[CHR$]](34) to insert quotes in a text [[STRING]].
+* [[REM]] or apostrophe are used to make comments or ignore code or precedes a legacy QBasic [[Metacommand]].
+* [[Underscore|_ Underscore]] at the end of a code line is used to continue a line of code to the next program line in '''QB64 only'''.
+
+<p style="text-align: center">([[#toc|Return to Table of Contents]])</p>
+
+:'''Variable Name Type Suffixes'''
+* [[STRING|$ STRING]] text character type: 1 byte
+* [[SINGLE|! SINGLE]] floating decimal point numerical type (4 bytes)
+* [[DOUBLE|# DOUBLE]] floating decimal point numerical type (8 bytes)
+* [[_FLOAT|## _FLOAT]] '''QB64''' decimal point numerical type (32 bytes)
+* [[_UNSIGNED|~ _UNSIGNED]] '''QB64''' [[INTEGER|whole]] positive numerical type when it precedes the 6 numerical suffixes below:
+* [[INTEGER|% INTEGER]] [[INTEGER|whole]] numerical type (2 bytes)
+* [[LONG|& LONG]] [[INTEGER|whole]] numerical type (4 bytes}
+* [[_INTEGER64|&& _INTEGER64]] '''QB64''' [[INTEGER|whole]] numerical type (8 bytes)
+* [[_BIT|` _BIT]] '''QB64''' [[INTEGER|whole]] numerical type (1 bit)(Key below tilde(~) or [[CHR$]](96))
+* [[_BYTE|%% _BYTE]] '''QB64''' [[INTEGER|whole]] numerical type (1 byte)
+* [[_OFFSET|%& _OFFSET]] '''QB64''' [[INTEGER|whole]] numerical pointer address type (any byte size required)
+
+<p style="text-align: center">([[#toc|Return to Table of Contents]])</p>
+:'''Numerical Base Prefixes'''
+* [[&B|&B Binary]]           base 2    Digits 0 or 1 ['''QB64''']
+* [[&O|&O Octal]]            base 8    Digits 0 to 7
+* [[&H|&H Hexadecimal]] base 16: Digits 0 to F
+
+
+:'''[[Mathematical Operations]]'''
+*[[+|+ Addition]] operator or sign
+*[[-|- Subtraction]] operator or sign
+*[[*|* Multiplication]] operator
+*[[/|/ Division]] (floating decimal point) operator
+*[[\|\ Integer division]] operator
+*[[^|^ Exponential]] operator
+*[[MOD|MOD Integer Remainder division]] operator
+
+
+:'''[[Relational Operations]]'''
+* [[Equal|=]] (Equal to condition)
+* [[Greater Than|>]] (Greater than condition)
+* [[Less Than|<]] (Less than condition)
+* [[Not Equal|<>]] (Not equal to condition)
+* [[Greater Than Or Equal|>=]] (Greater than or equal to condition)
+* [[Less Than Or Equal|<=]] (Less than or equal to condition)
+
+<p style="text-align: center">([[#toc|Return to Table of Contents]])</p>
+
+
+{{PageReferences}}

@@ -1,0 +1,33 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:43:14}}
+{{DISPLAYTITLE:_TOTALDROPPEDFILES}}
+The [[_TOTALDROPPEDFILES]] function returns the number of items (files or folders) dropped in a program's window after [[_ACCEPTFILEDROP]] is enabled.
+
+
+{{PageSyntax}}
+: {{Parameter|totalFilesReceived&}} = [[_TOTALDROPPEDFILES]]
+
+
+{{PageDescription}}
+* After [[_ACCEPTFILEDROP]] is enabled, [[_TOTALDROPPEDFILES]] will return 0 until the user drops files or folders into the program's window.
+* When using [[_DROPPEDFILE]] to read the list sequentially, [[_TOTALDROPPEDFILES]] will be reset to 0 after the last item is retrieved (after [[_DROPPEDFILE]] returns an empty string "").
+* If using [[_DROPPEDFILE]] with an index, you must call [[_FINISHDROP]] after you finish working with the list.
+* When using [[_DROPPEDFILE]] to read the list with an index, [[_TOTALDROPPEDFILES]] will '''not''' be reset (and the list of items won't be cleared) until [[_FINISHDROP]] is called.
+* '''[[Keywords currently not supported by QB64#Keywords_not_supported_in_Linux_or_macOS_versions|Keyword not supported in Linux or macOS versions]]'''
+
+
+{{PageAvailability}}
+* '''QB64 v1.3 and up'''
+* '''QB64-PE all versions'''
+
+
+{{PageExamples}}
+* See example for [[_ACCEPTFILEDROP]]
+
+
+{{PageSeeAlso}}
+* [[_ACCEPTFILEDROP]], [[_DROPPEDFILE]], [[_FINISHDROP]]
+* [[_FILEEXISTS]], [[_DIREXISTS]]
+
+
+{{PageNavigation}}

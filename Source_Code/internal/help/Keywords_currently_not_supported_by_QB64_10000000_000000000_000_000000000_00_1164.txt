@@ -1,0 +1,65 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:40:15}}
+'''QB64''' is meant to be compatible with '''QB 4.5 or lower''' versions. '''PDS (7.1) is not supported'''. The keywords listed below are currently not supported in '''QB64'''. However, older code that uses these keywords won't generate errors, as these are ignored by the compiler.
+
+
+{| align="right" style="max-width:30%;"
+|  __TOC__
+|}
+== Keywords not supported in all versions ==
+* [[ALIAS]] (supported in [[DECLARE LIBRARY]] only)
+* ANY
+* [[BYVAL]] (supported in [[DECLARE LIBRARY]] only)
+* CALLS
+* CDECL
+* DATE$ (statement) (reading the current [[DATE$]] is supported)
+* DECLARE (non-BASIC statement)
+* DEF FN, EXIT DEF, END DEF (must be reworked into actual [[FUNCTION]]s)
+* ERDEV, ERDEV$
+* FILEATTR
+* FRE
+* IOCTL, IOCTL$
+* [[OPEN]] with devices like '''LPT:''', '''CON:''', '''KBRD:''', and other devices is not supported. [[LPRINT]] and [[OPEN COM]] are supported.
+* ON PEN, PEN (statement), PEN (function)
+* ON PLAY(n), PLAY(n) ON/OFF/STOP. ([[PLAY]] music is supported.)
+* ON UEVENT, UEVENT (statement)
+* SETMEM
+* SIGNAL
+* TIME$ (statement) (reading the current [[TIME$]] is supported)
+* TRON, TROFF
+* WIDTH [[LPRINT]] combined statement is not supported.
+
+
+== Keywords not supported in Linux or macOS versions ==
+The commands listed here contain platform-specific calls and may be implemented in the future in Linux and macOS. These commands currently result in stub calls which do nothing.
+
+'''Desktop and Window calls:'''
+* [[_ACCEPTFILEDROP]], [[_TOTALDROPPEDFILES]], [[_DROPPEDFILE]], [[_FINISHDROP]]
+* [[_SCREENPRINT]]
+* [[_SCREENCLICK]]
+* [[_SCREENMOVE]] (available in macOS, not available in Linux)
+* [[_WINDOWHASFOCUS]] (available in Linux, not available in macOS)
+* [[_WINDOWHANDLE]]
+* [[_CAPSLOCK]], [[_NUMLOCK]], [[_SCROLLLOCK]] (statements and functions)
+
+'''Console:'''
+* [[_CONSOLETITLE]], [[_CONSOLECURSOR]], [[_CONSOLEFONT]]
+* [[_CONSOLEINPUT]], [[_CINP]]
+
+'''Modularity:''' QB64 has no limit on file size so BAS file modules can be combined.
+* [[CHAIN]]
+* [[RUN]]
+
+'''Printing:'''
+* [[LPRINT]]
+* [[_PRINTIMAGE]]
+
+'''Port access:'''
+* [[OPEN COM]]
+
+'''File locking:'''
+* [[LOCK]]
+* [[UNLOCK]]
+
+
+{{PageReferences}}

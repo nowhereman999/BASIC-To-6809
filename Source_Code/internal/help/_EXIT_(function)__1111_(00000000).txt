@@ -1,0 +1,70 @@
+{{QBDLDATE:02-23-2025}}
+{{QBDLTIME:17:41:21}}
+{{DISPLAYTITLE:_EXIT (function)}}
+The [[_EXIT]] function prevents the user from closing a program and indicates if a user has clicked the close button in the window title ('''X''' button) or used CTRL + BREAK.
+
+
+{{PageSyntax}}
+:{{Parameter|exitSignal%}} = [[_EXIT]]
+
+
+{{PageDescription}}
+* Once the [[_EXIT]] function is used, the user can no longer manually exit the program until it is ended with [[END]] or [[SYSTEM]].
+* [[_EXIT]] returns any exit requests made after the initial call as:
+:: 0 = no exit request has been made since _EXIT monitoring began in the program.
+:: 1 = exit attempted by clicking the window X (close) button since last function call. (Bit 0 set)
+:: 2 = exit attempted with CTRL + BREAK since last call. (Bit 1 set)
+:: 3 = both CTRL + BREAK and the X box have been used since last call. (Bit 0 and 1 set)
+* If a return value is not 0 the program can handle an exit request at a more convenient time if necessary.
+* After being read, the _EXIT value is reset to 0 so store the value when a program delays an exit request.
+* '''Note: Once _EXIT has been used once, you must monitor your program by checking it for user _EXIT requests.'''
+* Don't just use _EXIT once to prevent a user from exiting a program early, as that constitutes bad practice.
+
+
+{{PageExamples}}
+''Example 1:'' Using an ON TIMER check to read the _EXIT request return values.
+{{CodeStart}}
+q = {{Cl|_EXIT (function)|_EXIT}} {{Text|<nowiki>'function read prevents any program exit at start of program</nowiki>|#919191}}
+{{Cl|ON TIMER(n)|ON TIMER}}({{Text|5|#F580B1}}) {{Cl|GOSUB}} quit
+{{Cl|TIMER}} {{Cl|ON}}
+{{Cl|PRINT}} {{Text|<nowiki>"  The Timer will check for exit request every 5 seconds."</nowiki>|#FFB100}}
+{{Cl|PRINT}} {{Text|<nowiki>"Click the X box and/or Ctrl - Break to see the _EXIT return!"</nowiki>|#FFB100}}
+{{Cl|PRINT}} {{Text|<nowiki>"                    Any Key Quits"</nowiki>|#FFB100}}
+{{Cl|PRINT}}
+{{Cl|DO}}: {{Cl|_LIMIT}} {{Text|30|#F580B1}}
+    {{Text|<nowiki>'                    ' simulated program loop</nowiki>|#919191}}
+{{Cl|DO...LOOP|LOOP UNTIL}} {{Cl|INKEY$}} <> {{Text|<nowiki>""</nowiki>|#FFB100}}
+{{Cl|END}}
+
+quit:
+q = {{Cl|_EXIT (function)|_EXIT}}
+{{Cl|IF}} q {{Cl|THEN}} {{Cl|PRINT}} q;
+{{Cl|SELECT CASE}} q
+    {{Cl|CASE}} {{Text|1|#F580B1}}: {{Cl|PRINT}} {{Text|<nowiki>"= X button was clicked"</nowiki>|#FFB100}}
+    {{Cl|CASE}} {{Text|2|#F580B1}}: {{Cl|PRINT}} {{Text|<nowiki>"= Ctrl + Break keypress"</nowiki>|#FFB100}}
+    {{Cl|CASE}} {{Text|3|#F580B1}}: {{Cl|PRINT}} {{Text|<nowiki>"= Both X and Ctrl + Break!"</nowiki>|#FFB100}}
+{{Cl|END SELECT}}
+{{Cl|RETURN}}
+{{CodeEnd}}
+
+----
+
+''Example 2:'' Removing temporary files before closing a program upon a user's exit request.
+{{CodeStart}}
+x = {{Cl|_EXIT (function)|_EXIT}} {{Text|<nowiki>'initial function call blocks a user exit</nowiki>|#919191}}
+{{Cl|OPEN}} {{Text|<nowiki>"t3mpdata.tmp"</nowiki>|#FFB100}} {{Cl|OPEN#File_Access_Modes|FOR}} {{Cl|OPEN#File_Access_Modes|APPEND}} {{Cl|OPEN|AS}} #1
+{{Cl|DO}}
+    {{Cl|IF}} {{Cl|_EXIT (function)|_EXIT}} {{Cl|THEN}} {{Cl|CLOSE}}: {{Cl|KILL}} {{Text|<nowiki>"t3mpdata.tmp"</nowiki>|#FFB100}}: {{Cl|_DELAY}} {{Text|1|#F580B1}}: {{Cl|SYSTEM}}
+{{Cl|LOOP}}
+{{CodeEnd}}
+<center>{{Text|Note: If you have a file named ''t3mpdata.tmp'' change the file name!|red}}</center>
+
+
+{{PageSeeAlso}}
+* [https://qb64phoenix.com/forum/showthread.php?tid=1257 Featured in our "Keyword of the Day" series]
+* [[SYSTEM]]
+* [[END]]
+* [[EXIT]]
+
+
+{{PageNavigation}}
