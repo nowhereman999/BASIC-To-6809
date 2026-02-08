@@ -18,6 +18,7 @@ V 5.00
 
   Type  Symbol
    1      `   	_Bit          			    Min -1, Max 0
+   
    2     ~`   	_Unsigned _Bit			    Min 0 , Max 1
    3     %%   	_Byte              		  Min -128, Max 127
    4    ~%%   	_Unsigned _Byte  		    Min 0, Max 255
