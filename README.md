@@ -1,5 +1,6 @@
 # BASIC-To-6809
-A BASIC compiler for the TRS-80 Color Computer 1,2 & 3 and also the Dragon computers.
+A BASIC cross compiler for the TRS-80 Color Computer 1,2 & 3 and also the Dragon computers.  The syntax is pretty much the same
+as Extended Color BASIC, with many new BASIC commands and features.
 
 Binaries for all major OSs are available in the binaries folder
 
