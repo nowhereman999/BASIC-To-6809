@@ -15,7 +15,7 @@ V 5.00
 - Fully supports all Variable Types, Variables default to Single (Fast floating point format), to maximize speed and size
   of your program you must assign variable types to their minimum size and accuracy needed.
   Fastest are _Byte, _Unsigned _Byte
-  Second fastest are Integer, _Unsigned Integer 
+  Second fastest are Integer, _Unsigned Integer
 
 - Added support of using Single or Double floating point to all the functions that Color BASIC has, like SIN(),COS(),TAN(),SQR(),...
 - Added CoCo 3 commands WIDTH 40, WIDTH 64, WIDTH 80
