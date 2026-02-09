@@ -26,7 +26,7 @@
 ; FFP_CMP_Stack   ; Compare FFP Value1 @ 3,S with Value2 @ ,S sets the 6809 flags Z, N, and C
 ;
 ; RandomFFP_Zero  ; Generate a random number @,S in the range of > 0 and < 1
-; RandomFFP       ; Gets a random number where random # is > 0 and < X where X is the FFP value on the stack, then S=S+3 result @,S
+; RandomFFP       ; Gets a random number where random # is 1 to X where X is the FFP value on the stack, then S=S+3 result @,S
 ;
 ; Shifting routines:
 ; FFP_Shift_Right64_AtU_B  ; Right-shift 64-bit value at U by B bits (B >= 0)
@@ -140,7 +140,8 @@ FFP_MANT    EQU   FFP_Medium4_03    ; Final resulting Mantissa storage
 ; output: Random FFP value >0 <1 at ,S (3 bytes)
 ; clobbers: B,Y
 RandomFFP_Zero:
-      PULS    Y               ; return address
+      PULS    U               ; return address
+      STU   @Return+1
       ; ----- Mantissa LSB -----
       JSR     RandomFast8Bit  ; B = rand
       TFR     B,A
@@ -191,9 +192,10 @@ RandomFFP_Zero:
 @PUSH_E:
         PSHS    A             ; push sign/exp byte last so final layout is:
                               ; ,S=exp  1,S=mantMSB  2,S=mantLSB
-        JMP     ,Y
+@Return:
+      JMP   >$FFFF            ; Return, self modified jump address
 
-; RandomFFP: Gets a random number where random # is > 0 and < X where X is the FFP value on the stack
+; RandomFFP: Gets a random number where random # is 1 to X where X is the FFP value on the stack
 ; output: randon FFP number at ,S (3 bytes)
 ; clobbers: all
 RandomFFP:
@@ -201,6 +203,10 @@ RandomFFP:
       STD   @Return+1
       BSR   RandomFFP_Zero    ; Get a FFP Random number on the stack (>0 and <1)
       JSR   FFP_MUL           ; Multiply 3,S * ,S Then S=S+3 result @ ,S
+      CLRB
+      LDX   #$8000            ; +1.0
+      PSHS  B,X               ; Push FFP value of 1.0 on the stack
+      JSR   FFP_ADD   	      ; Add 3,S + ,S Then S=S+3 result @ ,S
 @Return:
       JMP   >$FFFF            ; Return
 

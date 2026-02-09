@@ -1173,9 +1173,8 @@ DoPalette:
 ' Get first number in D
 GoSub GetExpressionB4Comma: x = x + 2 ' Get the expression before a Comma, & move past it
 GoSub ParseNumericExpression_UByte ' Parse Number and return with value as Unsigned value in B
-A$ = "ANDB": B$ = "#%00001111": C$ = "Save D in X as the place to poke memory": GoSub AO
-A$ = "LDX": B$ = "#$FFB0": C$ = "Point at the start of the palette memory": GoSub AO
-A$ = "ABX": C$ = "X now points at the correct palette to set the colour value": GoSub AO
+A$ = "ANDB": B$ = "#%00001111": C$ = "Make sure B is a range of 0 to 15": GoSub AO
+A$ = "PSHS": B$ = "B": C$ = "Save the palette # to set on the stack": GoSub AO
 'Get colour value in D (we only use B)
 GoSub GetExpressionB4EOL 'Handle an expression that ends with a colon or End of a Line
 GoSub ParseNumericExpression_UByte ' Parse Number and return with value as Unsigned value in B
@@ -1183,10 +1182,10 @@ GoSub ParseNumericExpression_UByte ' Parse Number and return with value as Unsig
 A$ = "LDA": B$ = "$FF02": C$ = "Reset Vsync flag": GoSub AO
 Z$ = "!": A$ = "LDA": B$ = "$FF03": C$ = "See if Vsync has occurred yet": GoSub AO
 A$ = "BPL": B$ = "<": C$ = "If not then keep looping, until the Vsync occurs": GoSub AO
-A$ = "STB": B$ = ",X": C$ = "Store B at X": GoSub AO
+A$ = "LDX": B$ = "#$FFB0": C$ = "Point at the start of the palette memory": GoSub AO
+A$ = "PULS": B$ = "A": C$ = "Get the palette # to set, fix the stack": GoSub AO
+A$ = "STB": B$ = "A,X": C$ = "Update the palette # to B": GoSub AO
 Return
-
-
 
 ' Quickly get the joystick values of 0,31,63 of both joysticks both horizontally and vertically
 ' Results are stored same place BASIC normally has the Joystick readings:
@@ -2479,7 +2478,7 @@ v = Array(x): x = x + 1
 Return
 
 
-' NTSC_FONTCOLOURS RNDZ(255),RNDZ(255)  - Sets the background and forground colour values
+' NTSC_FONTCOLOURS RND(256)-1,RND(256)-1  - Sets the background and forground colour values
 DoNTSCFontColours:
 If Gmode > 159 Then
     ' Get the numeric value before a comma

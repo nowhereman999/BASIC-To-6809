@@ -10,7 +10,16 @@ https://github.com/nowhereman999/BASIC-To-6809/blob/main/Manual.pdf
 For more info check out the blog post here:
 https://wordpress.com/post/nowhereman999.wordpress.com/5054
 
+V 5.01
+- Fixed a bug with the palette command, it would calculate the located to change but it wasn't saving it before actually
+  using the location.
+- Fix the RND(x) routine with Single and Double types.  Previously it would generate a value from 0 to x, now it matches
+  normal BASIC and will return a value from 1 to x.  The fix was to add 1 to the result, so technically the result can still be it's possible that x could be fractionally larger than x like x.8 but the integer value will truncate it to x.  If I
+  change the code to give a max value of x it will slow down the random routine, and the main goal of the compiler is speed. 
+- Changed all 4 colour modes so that a variable with more than 4 colours will display properly.
+
 V 5.00
+- Option -b no longer needed or supported
 - Many changes internally     
 - Fully supports all Variable Types, Variables default to Single (Fast floating point format), to maximize speed and size
   of your program you must assign variable types to their minimum size and accuracy needed.

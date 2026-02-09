@@ -29,7 +29,7 @@
 ; Double_CMP_Stack  ; Compare Double Value1 @ 10,S with Value2 @ ,S sets the 6809 flags Z, N, and C
 ;
 ; RandomDB_Zero     ; Generate a random number @,S in the range of > 0 and < 1
-; RandomDB          ; Gets a random number where random # is > 0 and < X where X is the Double value on the stack, then S=S+10 result @,S
+; RandomDB          ; Gets a random number where random # is 1 to X where X is the Double value on the stack, then S=S+10 result @,S
 ;
 ; FIND_MSB_64       ; Subroutine: Find position of highest set bit in 64-bit number at X, Returns: A = position (0-63, or 255 if zero)
 ;
@@ -179,7 +179,7 @@ RandomDB_Zero:
 @Return:
     JMP     ,Y          ; Return
 
-; RandomDB: Gets a random number where random # is > 0 and < X where X is the Double value on the stack, then S=S+10 result @,S
+; RandomDB: Gets a random number where random # is 1 to X where X is the Double value on the stack, then S=S+10 result @,S
 ; output: randon Double number at ,S (10 bytes)
 ; clobbers: all
 RandomDB:
@@ -187,6 +187,14 @@ RandomDB:
       STD   @Return+1
       JSR   RandomDB_Zero     ; Get a Double Random number on the stack (>0 and <1)
       JSR   DB_MUL            ; Multiply 10,S * ,S Then S=S+10 result @ ,S
+; Put 1.0 on the stack
+      LDD   #$0000
+      LDX   #$0010
+      LDU   #$0000
+      LEAY  ,U
+      PSHS  D
+      PSHS  D,X,Y,U           ; Put 1.0 on the stack
+      JSR   DB_ADD            ; Add 10,S + ,S Then S=S+10 result @ ,S
 @Return:
       JMP   >$FFFF            ; Return
 

@@ -5,13 +5,32 @@ Select Case GeneralCommands$(v)
     ' New command to add/test
 
 
+    Case "CIRCLE"
+        GoTo DoCIRCLE
+        
+    Case "GCLS"
+        GoTo DoGCLS
+
+    Case "GMODE"
+        GoTo DoGMODE
+
+    Case "SCREEN"
+        GoTo DoSCREEN
+    
+    Case "PALETTE"
+        GoTo DoPalette
+
+    Case "LINE"
+        GoTo DoLINE
+
+    Case "SET"
+        GoTo DoSET
+
     Case "FOR"
         GoTo DoFOR
 
     Case "NEXT"
         GoTo DoNEXT
-
-
 
         ' Old standard Commands
     Case "CLS"
@@ -44,6 +63,451 @@ GoSub ParseNumericExpression_UInt16 ' Parse Number and return with value as Unsi
 GoSub ParseNumericExpression ' Parse the Numeric Expression
 
 
+DoCIRCLE:
+x = x + 2 'skip the open bracket
+If Array(x - 1) <> &H28 Then Print "Can't find open bracket for CIRCLE command on";: GoTo FoundError
+' Get the x co-ordinate
+GoSub GetExpressionB4Comma: x = x + 2 'Handle an expression that ends with a comma skip brackets & move past it
+GoSub ParseNumericExpression_Int16 ' Parse Number and return with value as Signed value in D
+GoSub VerifyX ' Add code to make sure X value is in bounds of screen size
+If Val(GModeMaxX$(Gmode)) > 255 Then
+    A$ = "PSHS": B$ = "D": C$ = "Save the loction of the X co-ordinate": GoSub AO
+Else
+    A$ = "PSHS": B$ = "B": C$ = "Save the loction of the X co-ordinate": GoSub AO
+End If
+' Get the y co-ordinate
+GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+GoSub ParseNumericExpression_Int16 ' Parse Number and return with value as Signed value in D
+GoSub VerifyY ' Add code to make sure Y value is in bounds of screen size
+A$ = "PSHS": B$ = "B": C$ = "Save the y coordinate on the stack": GoSub AO
+x = x + 2 'move past the &HF5 & comma
+If Array(x - 1) <> &H2C Then Print "Can't find comma after CIRCLE command on";: GoTo FoundError
+GoSub GetExpressionB4CommaEOL 'Handle an expression that ends with a comma or EOL, skip brackets , move past it
+GoSub ParseNumericExpression_Int16 ' Parse Number and return with value as Signed value in D
+If Val(GModeMaxX$(Gmode)) > 255 Then
+    A$ = "PSHS": B$ = "D": C$ = "Save the radius on the stack": GoSub AO
+Else
+    A$ = "PSHS": B$ = "B": C$ = "Save the radius on the stack": GoSub AO
+End If
+x = x + 2 'move past the &HF5 & comma
+If Array(x - 1) <> &H2C Then Print "Can't find comma after radius value of the CIRCLE command on";: GoTo FoundError
+GoSub GetExpressionB4CommaEOL: x = x + 2 'Handle an expression that ends with a comma or EOL, skip brackets , move past it
+GoSub ParseNumericExpression_UByte ' Parse Number and return with value as Unsigned value in B
+A$ = "STB": B$ = "LineColour": C$ = "Save the Colour value": GoSub AO
+Print #1, ' Need a space for @ in assembly
+v = Array(x - 1)
+If Gmode > 99 Then
+    ' Handle CoCo 3 graphic command
+    A$ = "LDY": B$ = "#CIRCLE_" + GModeName$(Gmode): C$ = "Y points at the routine to do": GoSub AO
+    A$ = "JSR": B$ = "DoCC3Graphics": C$ = "Prep for CoCo 3 graphics and then JSR ,Y and restore & return": GoSub AO
+Else
+    A$ = "JSR": B$ = "CIRCLE_" + GModeName$(Gmode): C$ = "Go draw a circle in " + GModeName$(Gmode) + " Screen mode": GoSub AO
+End If
+If Val(GModeMaxX$(Gmode)) > 255 Then
+    A$ = "LEAS": B$ = "5,S": C$ = "Fix the stack": GoSub AO
+Else
+    A$ = "LEAS": B$ = "3,S": C$ = "Fix the stack": GoSub AO
+End If
+Print #1, ' Need a space for @ in assembly
+Return
+
+
+DoSET:
+If Array(x) <> &HF5 Or Array(x + 1) <> &H28 Then Print "Can't find open bracket for SET command on";: GoTo FoundError
+' Get the x co-ordinate
+x = x + 2 'move past the open bracket
+GoSub GetExpressionB4Comma: x = x + 2 ' Get the expression before a Comma & move past it
+GoSub ParseNumericExpression_UInt16 ' Parse Number and return with value as Unsigned value in D
+GoSub VerifyX ' Add code to make sure X value is in bounds of screen size
+If Val(GModeMaxX$(Gmode)) > 255 Then
+    A$ = "PSHS": B$ = "D": C$ = "Save the loction of the X co-ordinate": GoSub AO
+Else
+    A$ = "PSHS": B$ = "B": C$ = "Save the loction of the X co-ordinate": GoSub AO
+End If
+' Get the y co-ordinate
+GoSub GetExpressionB4Comma: x = x + 2 ' Get the expression before a Comma & move past it
+GoSub ParseNumericExpression_UByte ' Parse Number and return with value as Unsigned value in B
+GoSub VerifyY ' Add code to make sure Y value is in bounds of screen size
+A$ = "PSHS": B$ = "B": C$ = "Save the loction of the Y co-ordinate": GoSub AO
+Print #1, ' Need a space for @ in assembly
+' Get the colour to set on screen
+GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+GoSub ParseNumericExpression_UByte ' Parse Number and return with value as Unsigned value in B
+If Val(GModeColours$(Gmode)) = 16 Then
+    ' Handle CoCo 3 with 16 colours, copy colour to the high nibble
+    A$ = "ANDB": B$ = "#%00001111": C$ = "Keep the right nibble value": GoSub AO
+    A$ = "PSHS": B$ = "B": C$ = "Save it on the stack": GoSub AO
+    A$ = "LSLB": C$ = "Move the bits left": GoSub AO
+    A$ = "LSLB": C$ = "Move the bits left": GoSub AO
+    A$ = "LSLB": C$ = "Move the bits left": GoSub AO
+    A$ = "LSLB": C$ = "Move the bits left, now they are in the high nibble": GoSub AO
+    A$ = "ORB": B$ = ",S+": C$ = "B now has the value in the high nibble and the low nibble": GoSub AO
+End If
+A$ = "STB": B$ = "LineColour": C$ = "Save the colour to set the pixel": GoSub AO
+If Gmode > 99 Then
+    ' Handle CoCo 3 graphic command
+    A$ = "LDY": B$ = "#DoSet_" + GModeName$(Gmode): C$ = "Y points at the routine to do": GoSub AO
+    If Val(GModeMaxX$(Gmode)) > 255 Then
+        ' Using a screen of 320 pixels wide or larger
+        A$ = "PULS": B$ = "A": C$ = "Get the Y co-ordinates in A": GoSub AO
+        A$ = "PULS": B$ = "X": C$ = "Get the X co-ordinates in X": GoSub AO
+        A$ = "JSR": B$ = "DoCC3GraphicsBigX": C$ = "Prep for CoCo 3 graphics and then JSR ,Y and restore & return": GoSub AO
+    Else
+        A$ = "PULS": B$ = "D": C$ = "Get the Y & X co-ordinates in A & B": GoSub AO
+        A$ = "JSR": B$ = "DoCC3Graphics": C$ = "Prep for CoCo 3 graphics and then JSR ,Y and restore & return": GoSub AO
+    End If
+Else
+    A$ = "PULS": B$ = "D": C$ = "Get the Y & X co-ordinates in A & B": GoSub AO
+    A$ = "JSR": B$ = "DoSet_" + GModeName$(Gmode): C$ = "Go set the pixel on the " + GModeName$(Gmode) + " screen": GoSub AO
+End If
+GoTo SkipUntilEOLColon ' Skip until we find an EOL or a Colon and return
+
+
+DoSCREEN:
+' Wait for vsync
+A$ = "LDB": B$ = "$FF02": C$ = "Reset Vsync flag": GoSub AO
+Z$ = "!": A$ = "LDB": B$ = "$FF03": C$ = "See if Vsync has occurred yet": GoSub AO
+A$ = "BPL": B$ = "<": C$ = "If not then keep looping, until the Vsync occurs": GoSub AO
+If Array(x) = TK_SpecialChar And Array(x + 1) = TK_Comma Then x = x + 2: GoTo ColourSet ' No Screen Mode # just the colour mode#
+' Get the numeric value before a comma or EOL or Colon
+' Get first number in D
+GoSub GetExpressionB4SemiComEOL: x = x + 2 ' Get an Expression before a semi colon, a comma or an EOL, move past them
+GoSub ParseNumericExpression_UByte ' Parse Number and return with value as Unsigned value in B
+' B = Screen mode (0=text else show graphics screen)
+If Sp = TK_EOL Or Sp = TK_Colon Then
+    ' No Comma then we only do a screen mode change
+    GoTo ScreenSkipColourSet
+Else
+    A$ = "PSHS": B$ = "B": C$ = "Save Screen Mode # on the stack": GoSub AO
+End If
+If Sp <> TK_Comma Then Print "Should have a Comma in the SCREEN command on";: GoTo FoundError
+ColourSet:
+'Get the Colour set number in D (we only use B)
+GoSub GetExpressionB4EOL ' Get the expression before an End of Line in Expression$
+GoSub ParseNumericExpression_UByte ' Parse Number and return with value as Unsigned value in B
+' B = Color Set
+' Change the Color mode to value in B (0 or 1)
+A$ = "TSTB": C$ = "Test B": GoSub AO
+A$ = "BEQ": B$ = ">": C$ = "IF B = 0, use B as is": GoSub AO
+A$ = "LDB": B$ = "#%00001000": C$ = "ELSE make B = 8": GoSub AO
+Z$ = "!"
+A$ = "STB": B$ = "CSSVAL": C$ = "Save the CSSVAL for setting the VDG CSS settings": GoSub AO
+A$ = "PULS": B$ = "B": C$ = "Get the Screen Mode off the stack": GoSub AO
+ScreenSkipColourSet:
+' B = Screen mode 0 = Text, anything else is graphics screen mode
+A$ = "TSTB": C$ = "Test B": GoSub AO
+A$ = "BNE": B$ = "@DoGraphicMode": C$ = "Skip ahead if graphics mode requested": GoSub AO
+A$ = "LDX": B$ = "#$0400": C$ = "Text screen starts here": GoSub AO
+A$ = "STX": B$ = "BEGGRP": C$ = "Update the Screen starting location": GoSub AO
+A$ = "LDA": B$ = "#$0F": C$ = "$0F Back to Text Mode for the CoCo 3": GoSub AO
+A$ = "STA": B$ = "$FF9C": C$ = "Neccesary for CoCo 3 GIME to use this mode": GoSub AO
+If Gmode > 99 Then
+    ' We are using a CoCo 3 graphics mode, Go to CoCo 3 Text mode
+    A$ = "LDA": B$ = "#$CC": GoSub AO
+    A$ = "STA": B$ = "$FF90": GoSub AO
+    A$ = "LDD": B$ = "#$0000": GoSub AO
+    A$ = "STD": B$ = "$FF98": GoSub AO
+    A$ = "STD": B$ = "$FF9A": GoSub AO
+    A$ = "STD": B$ = "$FF9E": GoSub AO
+    A$ = "LDD": B$ = "#$0FE0": GoSub AO
+    A$ = "STD": B$ = "$FF9C": GoSub AO
+End If
+A$ = "LDA": B$ = "#Internal_Alphanumeric": C$ = "A = Text mode requested": GoSub AO
+A$ = "BRA": B$ = ">": GoSub AO
+Z$ = "@DoGraphicMode:": GoSub AO
+If Gmode > 99 Then
+    ' We are using a CoCo 3 graphics mode
+    A$ = "LDA": B$ = "#%01111100": C$ = "CoCo 3 Mode, MMU Enabled, GIME IRQ Enabled, GIME FIRQ Enabled, Vector RAM at FEXX enabled, Standard SCS Normal, ROM Map 16k Int, 16k Ext": GoSub AO
+    A$ = "STA": B$ = "$FF90": C$ = "Make the changes": GoSub AO
+    A$ = "LDD": B$ = "#$" + GModeStartAddress$(Gmode): C$ = "A = the location in RAM to start the graphics screen": GoSub AO
+    A$ = "STD": B$ = "BEGGRP": C$ = "Update the Screen starting location": GoSub AO
+    A$ = "LDA": B$ = "#" + GMode$(Gmode): C$ = "A = Graphic mode requested": GoSub AO
+    A$ = "STA": B$ = "$FF99": C$ = "Vid_Res_Reg": GoSub AO
+    A$ = "LDA": B$ = "#%10000000": GoSub AO
+    A$ = "STA": B$ = "$FF98": C$ = "Video_Mode_Register, Graphics mode, Colour output, 60 hz, max vertical res": GoSub AO
+    A$ = "LDA": B$ = "CC3ScreenStart": C$ = "A = $2000 screen block location": GoSub AO
+    A$ = "CLRB": C$ = "CLEAR B": GoSub AO
+    A$ = "LSLA": C$ = "A=A*2": GoSub AO
+    A$ = "LSLA": C$ = "A=A*4": GoSub AO
+    A$ = "STD": B$ = "$FF9D": C$ = "Update the VidStart": GoSub AO
+    A$ = "CLR": B$ = "$FF9F": C$ = "Hor_Offset_Reg, Don't use a Horizontal offset": GoSub AO
+    A$ = "BRA": B$ = "@Done": C$ = "Skip ahead": GoSub AO
+    '    Print #1, ' Need a space for @ in assembly
+    '    Return
+Else
+    If Gmode = 4 Or Gmode = 7 Then
+        A$ = "LDA": B$ = "#9": C$ = "9 for Semigrpahics 6 or 12": GoSub AO
+        A$ = "STA": B$ = "$FF9C": C$ = "Neccesary for CoCo 3 GIME to use this mode": GoSub AO
+    End If
+    If Gmode = 8 Then
+        A$ = "LDA": B$ = "#10": C$ = "10 for Semigrpahics 24": GoSub AO
+        A$ = "STA": B$ = "$FF9C": C$ = "Neccesary for CoCo 3 GIME to use this mode": GoSub AO
+    End If
+    A$ = "CLRA": C$ = "D=B": GoSub AO
+    A$ = "LDB": B$ = "GModePage": C$ = "Get the screen Page #": GoSub AO
+    A$ = "BEQ": B$ = "@Skip1": C$ = "If first page skip ahead, else calc where to set the graphics page viewer": GoSub AO
+'    A$ = "LDD": B$ = "#$" + GModeStartAddress$(Gmode): C$ = "A = the location in RAM to start the graphics screen": GoSub AO
+'    A$ = "BRA": B$ = "@UpdateScreenStart": C$ = "Go update the screen start location"
+    A$ = "LDX": B$ = "#$" + GModeScreenSize$(Gmode): C$ = "X = the screen size": GoSub AO
+    A$ = "PSHS": B$ = "D,X": C$ = "Save the two 16 bit WORDS on the stack, to be multiplied": GoSub AO
+    A$ = "JSR": B$ = "MUL16": C$ = "16 bit multiply ,S * 2,S D = high 16 bits of the result, X and ,S = low 16 bits": GoSub AO
+    A$ = "PULS": B$ = "D": C$ = "Get the low 16 bit result in D, fix the stack": GoSub AO
+    Z$ = "@Skip1"
+    A$ = "ADDD": B$ = "#$0E00": C$ = "D = Screen Page + Screen start location": GoSub AO
+    Z$ = "@UpdateScreenStart": GoSub AO
+    A$ = "STD": B$ = "BEGGRP": C$ = "Update the Screen starting location": GoSub AO
+    A$ = "LDA": B$ = "#" + GMode$(Gmode): C$ = "A = Graphic mode requested": GoSub AO
+End If
+Z$ = "!"
+A$ = "ORA": B$ = "CSSVAL": C$ = "Add in the colour select value into A": GoSub AO
+' Update the Graphic mode and the screen viewer location
+A$ = "JSR": B$ = "SetGraphicModeA": C$ = "Go setup the mode": GoSub AO
+A$ = "LDA": B$ = "BEGGRP": C$ = "Update the Screen starting location": GoSub AO
+A$ = "LSRA": C$ = "Divide by 2 - 512 bytes per start location": GoSub AO
+A$ = "JSR": B$ = "SetGraphicsStartA": C$ = "Go set the address of the screen": GoSub AO
+Z$ = "@Done": GoSub AO
+Print #1, ' Need a space for @ in assembly
+Return
+
+
+
+DoLINE:
+v = Array(x): x = x + 1
+ContinueLine = 0
+' Add code to handle LINE-(x,y),Colour[,BF] instead of normal LINE(x,y)-(x1,y1),Colour[,BF]
+If v = &HFC And Array(x) = &H2D Then
+    ' Found a hyphen, this is a LINE-(x,y),Colour[,BF]
+    ContinueLine = 1
+    x = x - 1 ' Make it point to the same place it needs below
+End If
+If ContinueLine = 0 And Array(x) <> &H28 Then Print "Can't find open bracket for LINE command on";: GoTo FoundError
+
+' Get the start x co-ordinate
+If ContinueLine = 1 Then
+    ' Use the old X location from the previous LINE command
+    A$ = "LDD": B$ = "endX": C$ = "Use the old X location from the previous LINE command": GoSub AO
+Else
+    x = x + 1 'move past the open bracket
+    GoSub GetExpressionB4Comma: x = x + 2 'Handle an expression that ends with a comma skip brackets & move past it
+    GoSub ParseNumericExpression_Int16 ' Parse Number and return with value as Signed value in D
+End If
+GoSub VerifyX ' Add code to make sure X value is in bounds of screen size
+If Val(GModeMaxX$(Gmode)) > 255 Then
+    A$ = "PSHS": B$ = "D": C$ = "Save the loction of the X co-ordinate": GoSub AO
+Else
+    A$ = "PSHS": B$ = "B": C$ = "Save the loction of the X co-ordinate": GoSub AO
+End If
+' Get the start y co-ordinate
+If ContinueLine = 1 Then
+    ' Use the old Y location from the previous LINE command
+    A$ = "LDD": B$ = "endY": C$ = "Use the old Y location from the previous LINE command": GoSub AO
+Else
+    GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+    GoSub ParseNumericExpression_Int16 ' Parse Number and return with value as Signed value in D
+End If
+GoSub VerifyY ' Add code to make sure Y value is in bounds of screen size
+A$ = "PSHS": B$ = "B": C$ = "Save the y coordinate on the stack": GoSub AO
+Print #1, ' Need a space for @ in assembly
+' Make Sure we have a -(
+If Array(x + 1) = &H2D And Array(x + 2) = &HF5 And Array(x + 3) = &H28 Then
+    ' all is good
+    x = x + 4 ' Move past the open bracket
+Else
+    Print "Can't find minus or open bracket for Line command on";: GoTo FoundError
+End If
+' Get the destination x co-ordinate
+GoSub GetExpressionB4Comma: x = x + 2 'Handle an expression that ends with a comma skip brackets & move past it
+GoSub ParseNumericExpression_Int16 ' Parse Number and return with value as Signed value in D
+GoSub VerifyX ' Add code to make sure X value is in bounds of screen size
+If Val(GModeMaxX$(Gmode)) > 255 Then
+    A$ = "PSHS": B$ = "D": C$ = "Save the loction of the X co-ordinate": GoSub AO
+Else
+    A$ = "PSHS": B$ = "B": C$ = "Save the loction of the X co-ordinate": GoSub AO
+End If
+' Get the destination y co-ordinate
+GoSub GetExpressionMidB4EndBracket: x = x + 2 ' Get the expression that ends with a close bracket & move past it
+GoSub ParseNumericExpression_Int16 ' Parse Number and return with value as Signed value in D
+GoSub VerifyY ' Add code to make sure Y value is in bounds of screen size
+A$ = "PSHS": B$ = "B": C$ = "Save the y coordinate on the stack": GoSub AO
+Print #1, ' Need a space for @ in assembly
+x = x + 1 ' Skip &HF5
+v = Array(x): x = x + 1 ' Get comma
+If v <> &H2C Then Print "Can't find comma after the destination x & y co-ordinates on";: GoTo FoundError
+' Get the Color of the LINE
+GoSub GetExpressionB4CommaEOL: x = x + 2 'Handle an expression that ends with a comma or EOL, skip brackets , move past it
+GoSub ParseNumericExpression_UByte ' Parse Number and return with value as Unsigned value in B
+A$ = "STB": B$ = "LineColour": C$ = "Save the Colour value": GoSub AO
+' Other options for Line Command
+' after PSET or RESET we will have
+' ,0,0 - No Box or Box Fill
+' ,1,0 - Draw a Box
+' ,1,1 - Draw a box and fill it
+Box = Array(x): x = x + 1 ' get the Box flag
+x = x + 2 ' consume the F5 & comma
+Fill = Array(x): x = x + 1 ' get the Fill flag
+If Box = Asc("0") Then
+    ' No Box or Fill, just draw a line
+    If Gmode > 99 Then
+        ' Handle CoCo 3 graphic command
+        A$ = "LDY": B$ = "#LINE_" + GModeName$(Gmode): C$ = "Y points at the routine to do": GoSub AO
+        A$ = "JSR": B$ = "DoCC3Graphics": C$ = "Prep for CoCo 3 graphics and then JSR ,Y and restore & return": GoSub AO
+    Else
+        A$ = "JSR": B$ = "LINE_" + GModeName$(Gmode): C$ = "Go draw foreground colour line": GoSub AO
+    End If
+Else
+    'We have a box to draw
+    If Fill = Asc("0") Then
+        ' Don't fill the box
+        If Gmode > 99 Then
+            ' Handle CoCo 3 graphic command
+            A$ = "LDY": B$ = "#BOX_" + GModeName$(Gmode): C$ = "Y points at the routine to do": GoSub AO
+            A$ = "JSR": B$ = "DoCC3Graphics": C$ = "Prep for CoCo 3 graphics and then JSR ,Y and restore & return": GoSub AO
+        Else
+            A$ = "JSR": B$ = "BOX_" + GModeName$(Gmode): C$ = "Go draw foreground colour box": GoSub AO
+        End If
+    Else
+        ' Fill the box
+        If Gmode > 99 Then
+            ' Handle CoCo 3 graphic command
+            A$ = "LDY": B$ = "#BoxFill_" + GModeName$(Gmode): C$ = "Y points at the routine to do": GoSub AO
+            A$ = "JSR": B$ = "DoCC3Graphics": C$ = "Prep for CoCo 3 graphics and then JSR ,Y and restore & return": GoSub AO
+        Else
+            A$ = "JSR": B$ = "BoxFill_" + GModeName$(Gmode): C$ = "Go draw foreground colour box": GoSub AO
+        End If
+    End If
+End If
+GoSub AO
+Return
+
+' Pallette ColourSlot, ColourValue
+DoPalette:
+' Get the numeric value before a comma
+' Get first number in D
+GoSub GetExpressionB4Comma: x = x + 2 ' Get the expression before a Comma, & move past it
+GoSub ParseNumericExpression_UByte ' Parse Number and return with value as Unsigned value in B
+A$ = "ANDB": B$ = "#%00001111": C$ = "Make sure B is a range of 0 to 15": GoSub AO
+A$ = "PSHS": B$ = "B": C$ = "Save the palette # to set on the stack": GoSub AO
+'Get colour value in D (we only use B)
+GoSub GetExpressionB4EOL 'Handle an expression that ends with a colon or End of a Line
+GoSub ParseNumericExpression_UByte ' Parse Number and return with value as Unsigned value in B
+' Wait for vsync
+A$ = "LDA": B$ = "$FF02": C$ = "Reset Vsync flag": GoSub AO
+Z$ = "!": A$ = "LDA": B$ = "$FF03": C$ = "See if Vsync has occurred yet": GoSub AO
+A$ = "BPL": B$ = "<": C$ = "If not then keep looping, until the Vsync occurs": GoSub AO
+A$ = "LDX": B$ = "#$FFB0": C$ = "Point at the start of the palette memory": GoSub AO
+A$ = "PULS": B$ = "A": C$ = "Get the palette # to set, fix the stack": GoSub AO
+A$ = "STB": B$ = "A,X": C$ = "Update the palette # to B": GoSub AO
+Return
+
+' Colour a new graphics screen mode GCLS variable, variable is the colour #
+DoGCLS:
+If Array(x) = &HF5 And (Array(x + 1) = &H0D Or Array(x + 1) = &H3A) Then
+    ' no Value given for the GCLS colour, use the default forground colour
+    A$ = "LDB": B$ = "BAKCOL": C$ = "Make B the current background colour": GoSub AO
+    GoTo SkipGettingColour ' skip ahead
+End If
+'Get the colour value in D
+GoSub GetExpressionB4EOL ' Get the expression before an End of Line in Expression$
+GoSub ParseNumericExpression_UByte ' Parse Number and return with value as Unsigned value in B
+SkipGettingColour:
+If Gmode > 99 Then
+    ' Handle CoCo 3 graphic command
+    A$ = "LDY": B$ = "#GCLS_" + GModeName$(Gmode): C$ = "Y points at the routine to do": GoSub AO
+    A$ = "JSR": B$ = "DoCC3Graphics": C$ = "Prep for CoCo 3 graphics and then JSR ,Y and restore & return": GoSub AO
+Else
+    A$ = "JSR": B$ = "GCLS_" + GModeName$(Gmode): C$ = "Go colour the screen with the colour in B": GoSub AO
+End If
+Return
+
+
+' GMODE ScreenMode, ScreenPage
+DoGMODE:
+If Array(x) = TK_SpecialChar And Array(x + 1) = TK_Comma Then x = x + 2: GoTo GModePage ' No GMODE # just the screen Page
+' Get the numeric value before a comma or EOL or Colon
+' Get first number in D
+' Get the number that is stored as ASCII into a value QB64 can use, so it can keep track of the Graphics mode it is using
+v = Array(x): x = x + 1: v$ = Chr$(v)
+While Array(x) <> TK_SpecialChar
+    v = Array(x): x = x + 1: v$ = v$ + Chr$(v)
+Wend
+Gmode = Val(v$) ' Set the Gmode # as we need this in order to use all the correct graphics routines for this mode
+x = x + 1 ' Skip the TK_SpecialChar
+v = Array(x): x = x + 1 ' Get the next byte in v
+If v = TK_EOL Or v = TK_Colon Then
+    ' No Comma, then use the Start Address for the first page
+    A$ = "CLR": B$ = "GModePage": C$ = "Set page # to zero": GoSub AO
+    GoTo GModeSkipScreen
+End If
+If v <> TK_Comma Then Print "Should have a Comma in the GMODE command on";: GoTo FoundError
+GModePage:
+' Get the numeric value before an EOL or Colon
+'Get Page value in D (we only use B)
+GoSub GetExpressionB4EOL 'Handle an expression that ends with a colon or End of a Line
+GoSub ParseNumericExpression_UByte ' Parse Number and return with value as Unsigned value in B
+A$ = "STB": B$ = "GModePage": C$ = "Save the screen Page #": GoSub AO
+GModeSkipScreen:
+If Gmode > 99 Then
+    ' We are using a CoCo 3 graphics mode
+    If Gmode > 159 And FirstGmode = 0 Then
+        ' Set the Palette to the special NTSC 256 colour versions
+        Z$ = "; First GMODE, Set the special Palette for the composite 256 colour mode": GoSub AO
+        A$ = "LDD": B$ = "#$0010": C$ = "Palette values for index 0 & 1": GoSub AO
+        A$ = "STD": B$ = "$FFB0": C$ = "Update Palette 0 & 1": GoSub AO
+        A$ = "LDD": B$ = "#$2030": C$ = "Palette values for index 2 & 3": GoSub AO
+        A$ = "STD": B$ = "$FFB2": C$ = "Update Palette 2 & 3": GoSub AO
+    End If
+    A$ = "LDD": B$ = "#$" + GModeStartAddress$(Gmode): C$ = "A = the location in RAM to start the graphics screen": GoSub AO
+    A$ = "STD": B$ = "BEGGRP": C$ = "Update the Screen starting location": GoSub AO
+
+    v1 = Val("&H" + GModeScreenSize$(Gmode))
+    TempVal = 0
+    While (TempVal < v1): TempVal = TempVal + &H2000: Wend ' Get the number of bytes needed per screen at this resolution
+    TempVal = TempVal / &H2000 ' Get the block numbers required
+    A$ = "LDA": B$ = "#$" + Right$("00" + Hex$(TempVal), 2): C$ = "A = # of $2000 blocks required per screen": GoSub AO
+    A$ = "LDB": B$ = "GModePage": C$ = "Get the screen Page #": GoSub AO
+    A$ = "MUL": C$ = "B = Blocks required per screen * the Screen requested": GoSub AO
+    A$ = "STB": B$ = "CC3ScreenStart": C$ = "Save the screen block location": GoSub AO
+Else
+    ' We are using a CoCo 1 or CoCo 2 graphics mode
+    GScreenStart = Val("&H" + GModeStartAddress$(Gmode)) ' Get screen start location
+    v1 = Val("&H" + GModeScreenSize$(Gmode)) ' v1 = The screen size
+    ' We are starting from the normal Text screen location
+    
+    A$ = "CLRA": C$ = "Get the screen Page #": GoSub AO
+    A$ = "LDB": B$ = "GModePage": C$ = "Get the screen Page #": GoSub AO
+    A$ = "BEQ": B$ = ">": C$ = "If first page then skip calc where to set the graphics page viewer": GoSub AO
+    If Gmode = 0 Or Gmode = 1 Or Gmode = 2 Or Gmode = 4 Then
+        ' For the Text screen we move past the Disk variable area
+        TempVal = GScreenStart + &HE00 - &H400 - &H200 '2nd page start here
+    Else
+        TempVal = GScreenStart '1st Page starts here
+    End If
+    '    A$ = "CLRA": C$ = "Clear MSB of D": GoSub AO
+    '    A$ = "LDB": B$ = "GModePage": C$ = "D = the screen Page #": GoSub AO
+    '    A$ = "DECB": C$ = "D = the screen Page # - 1": GoSub AO
+    '    A$ = "BEQ": B$ = ">": C$ = "If D = 0 then the result of the multiply will be zero so skip it": GoSub AO
+    A$ = "LDX": B$ = "#$" + Right$("0000" + Hex$(v1), 4): C$ = "X = the screen size": GoSub AO
+    A$ = "PSHS": B$ = "D,X": C$ = "Save the two 16 bit WORDS on the stack, to be multiplied": GoSub AO
+    A$ = "JSR": B$ = "MUL16": C$ = "16 bit multiply ,S * 2,S D = high 16 bits of the result, X and ,S = low 16 bits": GoSub AO
+    A$ = "PULS": B$ = "D": C$ = "Get the low 16 bit result in D, fix the stack": GoSub AO
+    Z$ = "!": A$ = "ADDD": B$ = "#$" + Right$("0000" + Hex$(TempVal), 4): C$ = "D = Screen Page + Screen start location": GoSub AO
+    Z$ = "@UpdateScreenStart": GoSub AO
+    A$ = "STD": B$ = "BEGGRP": C$ = "Update the Screen starting location": GoSub AO
+    Print #1,
+    ' Skip actually going into graphics mode, that should be done with the screen command
+    '    A$ = "LSRA": C$ = "A = the location in RAM to start the graphics screen / 2 as it must start in a 512 byte block": GoSub AO
+    '    ' Wait for vsync
+    '    A$ = "LDB": B$ = "$FF02": C$ = "Reset Vsync flag": GoSub AO
+    '    Z$ = "!": A$ = "LDB": B$ = "$FF03": C$ = "See if Vsync has occurred yet": GoSub AO
+    '    A$ = "BPL": B$ = "<": C$ = "If not then keep looping, until the Vsync occurs": GoSub AO
+    '    A$ = "JSR": B$ = "SetGraphicsStartA": C$ = "Go setup the screen start location": GoSub AO
+End If
+If FirstGmode = 0 Then
+    FirstGmode = 1
+End If
+Return
+
+
 
 DoFOR:
 FORCount = FORCount + 1
@@ -66,7 +530,6 @@ Array(PointAtTO) = TK_SpecialChar
 Array(PointAtTO + 1) = TK_EOL ' temporarily change the space before the TO command to a $F50D
 x = Start ' Point at the variable before the =
 GoSub HandleNumericVariable ' Handle code such as X=Y*3 and returns with value of Y*3 in _Var_X, NV$ has the variable name, NVT = Numeric Variable Type
-
 NV_Main$ = NV$ ' Save the main variable name
 NVT_Main = NVT ' Save the main variable type, the TO and Step will be changed to this same format
 ' *** At this point the variable is loaded with the starting value
@@ -76,10 +539,6 @@ GoSub GetExpressionB4EOLOrCommand 'Handle an expression that ends with a colon o
 'ExType = 0: GoSub ParseNumericExpression ' Parse the Numeric Expression value is now in D, x now points after the EOL/Colon/$FF
 ' D now has the value we need to Compare against each time we do a FOR Loop
 ' Self Mod Code where we compare the value of the variable aggainst what is now D
-
-?"TO Value:"
-        show$=Expression$: gosub show
-
 GoSub ParseNumericExpression ' Parse Expression$ and return with value at ,S & Variable LastType with the datatype of that variable
 Z$ = "; Got the TO value at ,S": GoSub AO
 Z$ = "; LastType=" + Str$(LastType): GoSub AO
@@ -139,19 +598,12 @@ End Select
 ' Check for a STEP command
 If Array(x) = TK_GeneralCommand Then
     If Array(x + 1) * 256 + Array(x + 2) = STEP_CMD Then
-
-?"FOUND a STEp command!"
-
         'We have a STEP command so get the value of in D
         x = x + 3 ' move to the STEP amount
         GoSub GetExpressionB4EOL 'Handle an expression that ends with a colon or End of a Line
-        show$=Expression$: gosub show
         ' D now has the value we need to Compare against each time we do a FOR Loop
         ' Self Mod Code where we compare the value of the variable aggainst what is now D
-        Z$ = "; STEP Expression$=" + Expression$: GoSub AO
-        
         GoSub ParseNumericExpression ' Parse Expression$ and return with value at ,S & Variable LastType with the datatype of that variable
-        Z$ = "; Got the TO value at ,S": GoSub AO
         Z$ = "; LastType=" + Str$(LastType): GoSub AO
         GoSub ConvertLastType2NVT ' Convert LastType @,S to (Numeric Variable Type) NVT @S, will only change it, if they differ
         Select Case NVT_Main

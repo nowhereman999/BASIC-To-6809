@@ -8,6 +8,72 @@ If Len(i$) >= 4 Then ArgCnt = Asc(Mid$(i$, 4, 1))
 
 Z$ = "; Handle Numeric command here": GoSub AO
 Select Case cmd16
+    Case RND_CMD
+        ' RND(addr) : one numeric arg -> returns UInt8 (or UInt16 if you prefer)
+        If ArgCnt <> 1 Then
+            Print "Error: RND() expects one argument";: GoTo FoundError
+        End If
+        ' ------------------------------------------------------------
+        ' POP: pull the argument token from ProcessRPN stack
+        ' ------------------------------------------------------------
+        Arg1$ = ProcessRPNStack$(ProcessRPNStackPointer)
+        ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        ' Type check: RND expects numeric, not string
+        Temp$ = Arg1$: GoSub IsStringToken
+        If IsStrFlag% Then
+            Print "Error: RND() expects a numeric value";: GoTo FoundError
+        End If
+        ' ------------------------------------------------------------
+        ' PUSH: put the numeric arg onto the 6809 stack
+        ' (this handles literal/variable/&HFA marker)
+        ' ------------------------------------------------------------
+        Temp$ = Arg1$: GoSub PushOneValueTokenOnStack
+        LastType = PushedType
+        ' Get a random number depending on the numeric type
+        Select Case LastType
+            Case Is < NT_Int16
+                ' Get an 8 bit random number
+                A$ = "PULS": B$ = "B": C$ = "Get the range of random number requested": GoSub AO
+                A$ = "JSR": B$ = "RandomB": C$ = "B = RND(B) result will be a random number from 1 to B": GoSub AO
+                A$ = "PSHS": B$ = "B": C$ = "Save the result of random number requested": GoSub AO
+            Case NT_Int16, NT_UInt16
+                ' Get a 16 bit random number
+                A$ = "PULS": B$ = "D": C$ = "Get the range of random number requested": GoSub AO
+                A$ = "JSR": B$ = "RandomD": C$ = "D = RND(D) result will be a random number from 1 to D": GoSub AO
+                A$ = "PSHS": B$ = "D": C$ = "Save the result of random number requested": GoSub AO
+            Case NT_Int32, NT_UInt32
+                ' Get a 32 bit random number
+                A$ = "JSR": B$ = "Random32": C$ = "Get random number from 1 to value on the stack, result is on the stack": GoSub AO
+            Case NT_Int64, NT_UInt64
+                ' Get a 64 bit random number
+                A$ = "JSR": B$ = "Random64": C$ = "Get random number from 1 to value on the stack, result is on the stack": GoSub AO
+            Case NT_Single
+                ' Get a FFP random number
+                A$ = "LDB": B$ = "1,S": C$ = "Check for Special zero": GoSub AO
+                A$ = "BNE": B$ = ">": C$ = "Do normal Random if not zero": GoSub AO
+                A$ = "LEAS": B$ = "3,S": C$ = "Fix the stack": GoSub AO
+                A$ = "JSR": B$ = "RandomFFP_Zero": C$ = "Get random number >0 and <1, result is on the stack": GoSub AO
+                A$ = "BRA": B$ = "@Done": C$ = "Do normal Random if not zero": GoSub AO
+                Z$ = "!": A$ = "JSR": B$ = "RandomFFP": C$ = "Get random number from 1 to value on the stack, result is on the stack": GoSub AO
+                Z$ = "@Done": GoSub AO: GoSub AO
+            Case NT_Double
+                ' Get a Double random number
+                A$ = "LDB": B$ = "3,S": C$ = "Check for Special zero": GoSub AO
+                A$ = "BNE": B$ = ">": C$ = "Do normal Random if not zero": GoSub AO
+                A$ = "LEAS": B$ = "10,S": C$ = "Fix the stack": GoSub AO
+                A$ = "JSR": B$ = "RandomDB_Zero": C$ = "Get random number >0 and <1, result is on the stack": GoSub AO
+                A$ = "BRA": B$ = "@Done": C$ = "Do normal Random if not zero": GoSub AO
+                Z$ = "!": A$ = "JSR": B$ = "RandomDB": C$ = "Get random number from 1 to value on the stack, result is on the stack": GoSub AO
+                Z$ = "@Done": GoSub AO: GoSub AO
+        End Select
+        ' ------------------------------------------------------------
+        ' PUSH RESULT MARKER: one result replaces the popped arg
+        ' Pick the type you want PEEK() to return:
+        '   - NT_UByte (0..255) is typical
+        ' ------------------------------------------------------------
+        ProcessRPNStackPointer = ProcessRPNStackPointer + 1
+        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(LastType)
+        Return
     Case LPEEK_CMD
         ' LPEEK(addr) : one numeric arg -> returns UInt16
         If ArgCnt <> 1 Then

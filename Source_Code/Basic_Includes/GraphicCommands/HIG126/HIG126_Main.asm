@@ -53,7 +53,8 @@ DoSet_HIG126:
         LSLB
         LSLB                    ; X = pixel number * 4
         ABX                     ; Move X in the table
-        LDB     LineColour      ; B = colour value of 0,1,2 or 3 
+        LDB     LineColour      ; B = colour value of 0,1,2 or 3
+        ANDB    #%00000011      ; Make sure the colour is 0 to 3
         ORA     B,X             ; Or original Byte value with the pixel the user wants to set
         STA     ,U              ; Write new byte to the screen
         PULS    D,PC            ; Restore D,X & U and return
