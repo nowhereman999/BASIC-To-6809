@@ -132,6 +132,16 @@ Else
 End If
 Return
 
+' ------------------------------------------------------------
+' Helper: build a 2-digit string in Num$
+' Input: Num
+' Output: Num$ (00..99..)
+' ------------------------------------------------------------
+Make2DigitNum:
+GoSub NumAsString
+IF Num < 10 THEN Num$ = "0" + Num$
+RETURN
+
 CheckForManualType:
 Expression$ = ""
 While Array(x) <> &HF5 And Array(x + 1) <> &H0D And Array(x + 1) <> &H3A
@@ -159,7 +169,9 @@ If p + 2 <= Len(Expression$) Then
         Case "~%%"
             ManualType = NT_UByte: p = p + 3: Return
         Case "~&&"
-            ManualType = NT_UInt64: p = p + 3: Return
+            ' Too large for 32-bit integer literals: default to Single (FFP).
+            ' Use explicit suffixes (e.g., ~&& or &&) if you truly want 64-bit integer literals.
+            ManualType = NT_Single: p = p + 3: Return
     End Select
 End If
 If p + 1 <= Len(Expression$) Then

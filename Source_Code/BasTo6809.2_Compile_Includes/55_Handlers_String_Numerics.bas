@@ -65,8 +65,8 @@ If NumDims = 1 Then
     If NumBits = 8 Then
         ' Handle an array with 8 bit indices
         Z$ = "; Only 8 bit indices": GoSub AO
-        A$ = "LDA": B$ = "#" + Temp$: C$ = "A = BytesPerEntry": GoSub AO
         A$ = "PULS": B$ = "B": C$ = "get d1, fix the stack": GoSub AO
+        A$ = "LDA": B$ = "#" + Temp$: C$ = "A = BytesPerEntry": GoSub AO
         A$ = "MUL": C$ = "Multiply them": GoSub AO
         Num = NumDims: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
         A$ = "ADDD": B$ = "#_ArrayStr_" + NV$ + "+" + Num$: C$ = "Add the array data start location": GoSub AO
@@ -134,6 +134,7 @@ NV$ = NumericArrayVariables$(v)
 If Verbose > 3 Then Print "Numeric array variable is: "; NV$
 NumDims = Array(x): x = x + 1
 NVTArrayType = Array(x): x = x + 1 ' NVT1=Numeric Array Variable Type
+Dim OldForceLitType2 As Integer
 x = x + 2 ' Consume the $F5 & open bracket
 If Verbose > 3 Then Print "Number of dimensons with this array:"; NumDims
 ' Get all the dimensions
@@ -187,8 +188,8 @@ Else
         If NumBits = 8 Then
             ' Handle an array with 8 bit indices
             Z$ = "; Only 8 bit indices": GoSub AO
-            A$ = "LDA": B$ = "#" + Temp$: C$ = "A = BytesPerEntry": GoSub AO
             A$ = "PULS": B$ = "B": C$ = "get d1, fix the stack": GoSub AO
+            A$ = "LDA": B$ = "#" + Temp$: C$ = "A = BytesPerEntry": GoSub AO
             A$ = "MUL": C$ = "Multiply them": GoSub AO
             Num = NumDims: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
             A$ = "ADDD": B$ = "#_ArrayNum_" + NV$ + "+" + Num$: C$ = "Add the array data start location": GoSub AO
@@ -225,7 +226,11 @@ End If
 x = x + 1: v = Array(x): x = x + 1
 If v <> &H3D Then Print "Syntax error13, looking for = sign in";: GoTo FoundError
 GoSub GetExpressionB4EOL ' Get the expression before an End of Line in Expression$
+' Hint to the literal parser: unsuffixed numeric literals should default to the array element type
+OldForceLitType2 = ForceLitType
+ForceLitType = NVTArrayType
 GoSub ParseNumericExpression ' Parse Expression$ and return with value at ,S & Variable LastType with the datatype of that variable
+ForceLitType = OldForceLitType2
 NVT = NVTArrayType
 GoSub ConvertLastType2NVT ' Convert LastType @,S to (Numeric Variable Type) NVT @S, will only change it, if they differ
 ' ,S now has the number we want to store
@@ -268,12 +273,18 @@ v = Array(x) * 256 + Array(x + 1): x = x + 2
 NV$ = "_Var_" + NumericVariable$(v)
 If Verbose > 3 Then Print "Numeric variable is: "; NV$
 NVT1 = Array(x): x = x + 1 ' NVT1=Numeric Variable Type
+Dim OldForceLitType As Integer
 v = Array(x): x = x + 1
 If v <> TK_OperatorCommand Then Print "Syntax error12, looking for = sign in";: GoTo FoundError
 v = Array(x): x = x + 1
 If v <> &H3D Then Print "Syntax error13, looking for = sign in";: GoTo FoundError
 GoSub GetExpressionB4EOL ' Get the expression before an End of Line in Expression$
+' Hint to the literal parser: unsuffixed numeric literals should default to the destination type
+' (e.g., assigning to a Double should load the literal as Double directly).
+OldForceLitType = ForceLitType
+ForceLitType = NVT1
 GoSub ParseNumericExpression ' Parse Expression$ and return with value at ,S & Variable LastType with the datatype of that variable
+ForceLitType = OldForceLitType
 NVT = NVT1
 GoSub ConvertLastType2NVT ' Convert LastType @,S to (Numeric Variable Type) NVT @S, will only change it, if they differ
 Select Case NVT

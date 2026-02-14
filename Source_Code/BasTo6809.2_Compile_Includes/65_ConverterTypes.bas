@@ -711,7 +711,29 @@ Return
 
 ' Convert smaller of LeftType or RightType type to the largest type
 ScaleSmallNumberOnStack:
-If LeftType <> RightType Then ' convert smallest type to the largest type
+' Promote operands so BOTH match Largesttype.
+' (Largesttype can be forced by an operator, e.g. / forces NT_Single)
+If Largesttype > LeftType Or Largesttype > RightType Then
+    ' First promote the TOP operand (type in LeftType) to Largesttype
+    If LeftType < Largesttype Then
+        SaveRT = RightType
+        RightType = Largesttype
+        GoSub ScaleLeft2Right
+        LeftType = Largesttype
+        RightType = SaveRT
+    End If
+
+    ' Now promote the other operand (type in RightType) to Largesttype
+    If RightType < Largesttype Then
+        LeftType = Largesttype
+        GoSub ScaleRight2Left
+        RightType = Largesttype
+    End If
+    Return
+End If
+
+' Normal case: promote the smaller side to the larger side
+If LeftType <> RightType Then
     If LeftType > RightType Then
         GoSub ScaleRight2Left
     End If

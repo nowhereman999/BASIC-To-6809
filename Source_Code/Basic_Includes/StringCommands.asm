@@ -499,7 +499,7 @@ StrCompare:
       ABX               ; X = X + length of string 2
       LEAS  1,X         ; S = the last character of string 2
       LDB   #$FF        ; Make B default of true
-      STA   ,S          ; Save result on the stack and set CC Flags
+      TSTA              ; Save result on the stack and set CC Flags
       JMP   ,Y          ; Return
 
 ; StrConcat concat 2 strings on the stack into one string on the stack

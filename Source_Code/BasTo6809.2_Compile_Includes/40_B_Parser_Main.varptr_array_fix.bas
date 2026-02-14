@@ -1091,8 +1091,8 @@ While RPNEntry <= RPNLast
                             If NumericArrayBits(ArrNum) = 8 Then
                                 ' Handle an array with 8 bit indices
                                 Z$ = "; Only 8 bit indices": GoSub AO
-                                A$ = "LDA": B$ = "#" + Temp$: C$ = "A = BytesPerEntry": GoSub AO
                                 A$ = "PULS": B$ = "B": C$ = "get d1, fix the stack": GoSub AO
+                                A$ = "LDA": B$ = "#" + Temp$: C$ = "A = BytesPerEntry": GoSub AO
                                 A$ = "MUL": C$ = "Multiply them": GoSub AO
                                 Num = NumericArrayDimensions(ArrNum): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
                                 A$ = "ADDD": B$ = "#_ArrayNum_" + NumericArrayVariables$(ArrNum) + "+" + Num$: C$ = "Add the array data start location": GoSub AO
@@ -1227,8 +1227,8 @@ While RPNEntry <= RPNLast
                         If NumericArrayDimensions(ArrNum) = 1 Then
                             If NumericArrayBits(ArrNum) = 8 Then
                                 Z$ = "; Only 8 bit indices": GoSub AO
-                                A$ = "LDA":  B$ = "#" + Temp$: C$ = "A = BytesPerEntry": GoSub AO
                                 A$ = "PULS": B$ = "B": C$ = "get d1, fix the stack": GoSub AO
+                                A$ = "LDA":  B$ = "#" + Temp$: C$ = "A = BytesPerEntry": GoSub AO
                                 A$ = "MUL":  C$ = "D = index*BytesPerEntry": GoSub AO
                                 Num = NumericArrayDimensions(ArrNum): GoSub NumAsString
                                 A$ = "ADDD": B$ = "#_ArrayNum_" + NumericArrayVariables$(ArrNum) + "+" + Num$: C$ = "Add data start": GoSub AO
@@ -1325,8 +1325,8 @@ While RPNEntry <= RPNLast
                         If StringArrayBits(ArrNum) = 8 Then
                             ' Handle an array with 8 bit indices
                             Z$ = "; Only 8 bit indices": GoSub AO
-                            A$ = "LDA": B$ = "#" + Temp$: C$ = "A = BytesPerEntry": GoSub AO
                             A$ = "PULS": B$ = "B": C$ = "get d1, fix the stack": GoSub AO
+                            A$ = "LDA": B$ = "#" + Temp$: C$ = "A = BytesPerEntry": GoSub AO
                             A$ = "MUL": C$ = "Multiply them": GoSub AO
                             Num = StringArrayDimensions(ArrNum): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
                         Else

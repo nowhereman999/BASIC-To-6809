@@ -1519,8 +1519,8 @@ Do Until v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A)
                 If NumBits = 8 Then
                     ' Handle an array with 8 bit indices
                     Z$ = "; Only 8 bit indices": GoSub AO
-                    A$ = "LDA": B$ = "#" + Temp$: C$ = "A = BytesPerEntry": GoSub AO
                     A$ = "PULS": B$ = "B": C$ = "get d1, fix the stack": GoSub AO
+                    A$ = "LDA": B$ = "#" + Temp$: C$ = "A = BytesPerEntry": GoSub AO
                     A$ = "MUL": C$ = "Multiply them": GoSub AO
                     Num = NumDims: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
                     A$ = "ADDD": B$ = "#_ArrayNum_" + NV$ + "+" + Num$: C$ = "Add the array data start location": GoSub AO
@@ -1720,8 +1720,8 @@ Do Until v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A)
                 If NumBits = 8 Then
                     ' Handle an array with 8 bit indices
                     Z$ = "; Only 8 bit indices": GoSub AO
-                    A$ = "LDA": B$ = "#" + Temp$: C$ = "A = BytesPerEntry": GoSub AO
                     A$ = "PULS": B$ = "B": C$ = "get d1, fix the stack": GoSub AO
+                    A$ = "LDA": B$ = "#" + Temp$: C$ = "A = BytesPerEntry": GoSub AO
                     A$ = "MUL": C$ = "Multiply them": GoSub AO
                     Num = NumDims: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
                     A$ = "ADDD": B$ = "#_ArrayStr_" + NV$ + "+" + Num$: C$ = "Add the array data start location": GoSub AO
@@ -1937,8 +1937,8 @@ If count = 0 Then
                     If NumBits = 8 Then
                         ' Handle an array with 8 bit indices
                         Z$ = "; Only 8 bit indices": GoSub AO
-                        A$ = "LDA": B$ = "#" + Temp$: C$ = "A = BytesPerEntry": GoSub AO
                         A$ = "PULS": B$ = "B": C$ = "get d1, fix the stack": GoSub AO
+                        A$ = "LDA": B$ = "#" + Temp$: C$ = "A = BytesPerEntry": GoSub AO
                         A$ = "MUL": C$ = "Multiply them": GoSub AO
                         Num = NumDims: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
                         A$ = "ADDD": B$ = "#_ArrayNum_" + NV$ + "+" + Num$: C$ = "Add the array data start location": GoSub AO
@@ -2073,8 +2073,8 @@ If count = 0 Then
                     If NumBits = 8 Then
                         ' Handle an array with 8 bit indices
                         Z$ = "; Only 8 bit indices": GoSub AO
-                        A$ = "LDA": B$ = "#" + Temp$: C$ = "A = BytesPerEntry": GoSub AO
                         A$ = "PULS": B$ = "B": C$ = "get d1, fix the stack": GoSub AO
+                        A$ = "LDA": B$ = "#" + Temp$: C$ = "A = BytesPerEntry": GoSub AO
                         A$ = "MUL": C$ = "Multiply them": GoSub AO
                         Num = NumDims: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
                         A$ = "ADDD": B$ = "#_ArrayStr_" + NV$ + "+" + Num$: C$ = "Add the array data start location": GoSub AO
@@ -2269,8 +2269,8 @@ Do Until v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A)
                     If NumBits = 8 Then
                         ' Handle an array with 8 bit indices
                         Z$ = "; Only 8 bit indices": GoSub AO
-                        A$ = "LDA": B$ = "#" + Temp$: C$ = "A = BytesPerEntry": GoSub AO
                         A$ = "PULS": B$ = "B": C$ = "get d1, fix the stack": GoSub AO
+                        A$ = "LDA": B$ = "#" + Temp$: C$ = "A = BytesPerEntry": GoSub AO
                         A$ = "MUL": C$ = "Multiply them": GoSub AO
                         Num = NumDims: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
                         A$ = "ADDD": B$ = "#_ArrayNum_" + NV$ + "+" + Num$: C$ = "Add the array data start location": GoSub AO
@@ -2416,8 +2416,8 @@ Do Until v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A)
                     If NumBits = 8 Then
                         ' Handle an array with 8 bit indices
                         Z$ = "; Only 8 bit indices": GoSub AO
-                        A$ = "LDA": B$ = "#" + Temp$: C$ = "A = BytesPerEntry": GoSub AO
                         A$ = "PULS": B$ = "B": C$ = "get d1, fix the stack": GoSub AO
+                        A$ = "LDA": B$ = "#" + Temp$: C$ = "A = BytesPerEntry": GoSub AO
                         A$ = "MUL": C$ = "Multiply them": GoSub AO
                         Num = NumDims: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
                         A$ = "ADDD": B$ = "#_ArrayStr_" + NV$ + "+" + Num$: C$ = "Add the array data start location": GoSub AO
@@ -2818,61 +2818,6 @@ Z$ = "@Done": GoSub AO
 Print #1, ' Need a space for @ in assembly
 Return
 
-DoGOSUB:
-Temp$ = ""
-v = Array(x): x = x + 1
-Do Until v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A) ' could be EOL or a colon if it's part of an IF/THEN/ELSE or REMark
-    Temp$ = Temp$ + Chr$(v)
-    v = Array(x): x = x + 1
-Loop
-x = x + 1
-A$ = "JSR": B$ = "_L" + Temp$: C$ = "GOSUB " + Temp$: GoSub AO
-Return
-
-DoGOTO:
-Temp$ = ""
-v = Array(x): x = x + 1
-Do Until v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A) ' could be EOL or a colon if it's part of an IF/THEN/ELSE or REMark
-    Temp$ = Temp$ + Chr$(v)
-    v = Array(x): x = x + 1
-Loop
-x = x + 1
-A$ = "JMP": B$ = "_L" + Temp$: C$ = "GOTO " + Temp$: GoSub AO
-Return
-
-DoRETURN:
-A$ = "RTS": C$ = "RETURN": GoSub AO
-GoTo SkipUntilEOLColon ' Skip until we find an EOL or colon then return
-
-DoSELECT:
-SELECTCount = SELECTCount + 1
-SELECTStackPointer = SELECTStackPointer + 1
-SELECTSTack(SELECTStackPointer) = SELECTCount
-CaseElseFlag = 0
-v = Array(x): x = x + 1: If v <> &HFF Then Print "Error, SELECT needs a CASE or EVERYCASE command on";: GoTo FoundError
-CaseType = Array(x) * 256 + Array(x + 1): x = x + 2 ' Either CASE or EVERYCASE command
-If CaseType <> CASE_CMD And CaseType <> EVERYCASE_CMD Then Print "Error, SELECT needs a CASE or EVERYCASE command on";: GoTo FoundError
-If CaseType <> EVERYCASE_CMD Then
-    EvCase(SELECTStackPointer) = 0
-Else
-    'We are doing an Everycase
-    EvCase(SELECTStackPointer) = 1
-End If
-' we found a CASE command, Get the test expression
-GoSub GetExpressionB4EOL ' Get the expression before an End of Line in Expression$
-MainCase$(SELECTStackPointer) = Expression$ ' MainCase$ is the value that will be compared in all the CASEs
-A$ = "LDD": B$ = "EveryCasePointer": C$ = "Get the Flag pointer in D": GoSub AO
-A$ = "ADDD": B$ = "#2": C$ = "D=D+2, move the pointer to the next flag": GoSub AO
-A$ = "STD": B$ = "EveryCasePointer": C$ = "Save the new pointer in EveryCasePointer": GoSub AO
-Num = EvCase(SELECTStackPointer): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-If Num < 10 Then Num$ = "0" + Num$
-A$ = "LDD": B$ = "#" + Num$ + "*$100": C$ = "A = The flag if this is an EveryCase=1 or a CASE=0 and clear B": GoSub AO
-A$ = "STD": B$ = "[EveryCasePointer]": C$ = "Save the value pointer in the EveryCaseStack": GoSub AO
-Return
-
-
-
-
 DoSET:
 If Array(x) <> &HF5 Or Array(x + 1) <> &H28 Then Print "Can't find open bracket for SET command on";: GoTo FoundError
 ' Get the x co-ordinate
@@ -2923,163 +2868,329 @@ Else
 End If
 GoTo SkipUntilEOLColon ' Skip until we find an EOL or a Colon and return
 
-DoCASE:
-' Noraml CASE
-CaseCount(SELECTStackPointer) = CaseCount(SELECTStackPointer) + 1
-Num = SELECTSTack(SELECTStackPointer): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-If Num < 10 Then Num$ = "0" + Num$
-If CaseCount(SELECTStackPointer) > 1 Then
-    If EvCase(SELECTStackPointer) = 0 Then
-        ' Not an EVERYCASE
-        A$ = "JMP": B$ = "_EndSelect_" + Num$: C$ = "Last Case code is complete so ignore the other CASEs": GoSub AO
-    End If
-End If
-CaseNumber$ = Num$
-Num = CaseCount(SELECTStackPointer) + 1: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-If Num < 10 Then Num$ = "0" + Num$
-NextCaseNumber$ = CaseNumber$ + "_" + Num$
-Num = CaseCount(SELECTStackPointer): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-If Num < 10 Then Num$ = "0" + Num$
-CaseNumber$ = CaseNumber$ + "_" + Num$
-Z$ = "_CaseCheck_" + CaseNumber$: C$ = "Start of the next CASE": GoSub AO
-
-' Check for CASE ELSE
-If Array(x) = &HFF And Array(x + 1) * 256 + Array(x + 2) = ELSE_CMD Then
-    ' CASE ELSE
-    CaseElseFlag = 1
-    Num = SELECTSTack(SELECTStackPointer): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-    If Num < 10 Then Num$ = "0" + Num$
-    Z$ = "; CASE ELSE Code for SELECT " + Num$: GoSub AO
-    GoSub SkipUntilEOLColon ' Skip until we find an EOL or a Colon and return
-    A$ = "LDD": B$ = "[EveryCasePointer]": C$ = "A = flag pointer for everycase": GoSub AO
-    '    A$ = "TSTA": C$ = "Get the CASE/EVERYCASE Flag": GoSub AO
-    '    A$ = "BNE": B$ = "_EndSelect_" + Num$: C$ = "Skip if this is a CASE (EVERYCASE flag = 1)": GoSub AO
-    A$ = "TSTB": C$ = "If we are doing an EVERYCASE, Check if we've done at least one CASE": GoSub AO
-    A$ = "LBNE": B$ = "_EndSelect_" + Num$: C$ = "If we've done more than zero then Skip to the END SELECT": GoSub AO
-Else
-    ' Check for IS,    DoIS = &H60
-    If Array(x) = &HFF And Array(x + 1) * 256 + Array(x + 2) = IS_CMD Then
-        ' Found an IS to deal with
-        CheckIfTrue$ = MainCase$(SELECTStackPointer) + Chr$(Array(x + 3)) + Chr$(Array(x + 4)) ' Get the <,=,> after IS
-        x = x + 5 ' move forward
-        GoSub GetExpressionB4EOL: x = x + 2 ' Get the expression before an End of Line or Colon in Expression$ & move past it
-        Expression$ = CheckIfTrue$ + Expression$ ' CheckIfTrue$ = CheckIfTrue$ + Expression$
-        '        GoSub GoCheckIfTrue ' This parses CheckIfTrue$, gets it ready to be evaluated in the string NewString$
-        '        GoSub EvaluateNewString ' This Evaluates NewString$ and returns with a LDD with the result, zero is false so it will do an ELSE, if there is one otherwise do what is after the THEN
-        GoSub ParseExpression ' Parse Expression$ and return with value at ,S & Variable LastType with the datatype of that variable
-        A$ = "LDA": B$ = ",S+": C$ = "Get the result and fix the stack": GoSub AO
-
-        A$ = "LBEQ": B$ = "_CaseCheck_" + NextCaseNumber$: C$ = "If result is zero = False then jump to the next case/ELSE Case or END Select": GoSub AO
-        If EvCase(SELECTStackPointer) = 1 Then
-            ' We are in an EVERYCASE
-            A$ = "LDD": B$ = "#$0101": C$ = "flag that we've done at least one CASE": GoSub AO
-            A$ = "STD": B$ = "[EveryCasePointer]": C$ = " = flag pointer for everycase": GoSub AO
-        End If
-    Else
-        ' Check for TO after the CASE
-        Start = x ' Start is just after the CASE command
-        Found = 0
-        v = 0
-        Do Until v = &HF5 And Array(x) = &H0D
-            v = Array(x): x = x + 1
-            If v = &HFF And Array(x) * 256 + Array(x + 1) = TO_CMD Then
-                ' Found a TO
-                Found = 1
-                Exit Do
-            End If
-        Loop
-        If v = &HF5 Then v = Array(x): x = x + 1 ' If found then move past EOL
-        If Found = 1 Then
-            ' We found a TO to deal with
-            ' Temporarily change the space before the "TO" command to a $0D so we can use the HandleNumericVariable routine to setup the FOR X=Y  part
-            x = Start ' x = Start which is just after the CASE command
-            Do Until (v = &HFF And Array(x) * 256 + Array(x + 1) = TO_CMD) Or (v = &HF5 And Array(x) = &H0D)
-                v = Array(x): x = x + 1
-            Loop
-            If v = &HF5 Then v = Array(x): x = x + 1 ' If found then move past EOL
-            If v = &H0D Then Print "Error assigning a value to variable in the CASE command that has a TO on";: GoTo FoundError
-            PointAtTO = x - 1 ' Keep the value where the TO is
-            FixSpot = x - 1 ' Point at the TO
-            Temp1 = Array(FixSpot): Temp2 = Array(FixSpot + 1)
-            Array(FixSpot) = &HF5
-            Array(FixSpot + 1) = &H0D ' temporarily change the space before the TO command to a $F50D
-            x = Start ' x = Start which is just after the CASE command
-            GoSub GetExpressionB4EOL: x = x + 3 ' Get the expression before an End of Line in Expression$ & move past fake EOL and a bit of the TO command
-            Array(FixSpot) = Temp1: Array(FixSpot + 1) = Temp2 ' Restore the array so it's back as it was
-            Expression$ = MainCase$(SELECTStackPointer) + Chr$(&HFC) + Chr$(&H3E) + Chr$(&HFC) + Chr$(&H3D) + Expression$ ' MainCase >= Expression$        ' CheckIfTrue$ = MainCase$(SELECTStackPointer) + Chr$(&HFC) + Chr$(&H3E) + Chr$(&HFC) + Chr$(&H3D) + Expression$ ' MainCase >= Expression$
-            '   GoSub GoCheckIfTrue ' This parses CheckIfTrue$, gets it ready to be evaluated in the string NewString$
-            '   GoSub EvaluateNewString ' This Evaluates NewString$ and returns with a LDD with the result, zero is false so it will do an ELSE, if there is one otherwise do what is after the THEN
-            GoSub ParseExpression ' Parse Expression$ and return with value at ,S & Variable LastType with the datatype of that variable
-            A$ = "LDA": B$ = ",S+": C$ = "Get the result and fix the stack": GoSub AO
-
-            A$ = "LBEQ": B$ = "_CaseCheck_" + NextCaseNumber$: C$ = "If result is zero = False then jump to the next case/ELSE Case or END Select": GoSub AO
-            x = PointAtTO + 3 ' Now point at the value just after the TO command
-            GoSub GetExpressionB4EOL: x = x + 2 ' Get the expression before an End of Line or COLON in Expression$  & move past EOL/Colon
-            Expression$ = MainCase$(SELECTStackPointer) + Chr$(&HFC) + Chr$(&H3C) + Chr$(&HFC) + Chr$(&H3D) + Expression$ ' MainCase <= Expression$ '    CheckIfTrue$ = MainCase$(SELECTStackPointer) + Chr$(&HFC) + Chr$(&H3C) + Chr$(&HFC) + Chr$(&H3D) + Expression$ ' MainCase <= Expression$
-            '    GoSub GoCheckIfTrue ' This parses CheckIfTrue$, gets it ready to be evaluated in the string NewString$
-            '    GoSub EvaluateNewString ' This Evaluates NewString$ and returns with a LDD with the result, zero is false so it will do an ELSE, if there is one otherwise do what is after the THEN
-            GoSub ParseExpression ' Parse Expression$ and return with value at ,S & Variable LastType with the datatype of that variable
-            A$ = "LDA": B$ = ",S+": C$ = "Get the result and fix the stack": GoSub AO
-
-            A$ = "LBEQ": B$ = "_CaseCheck_" + NextCaseNumber$: C$ = "If result is zero = False then jump to the next case/ELSE Case or END Select": GoSub AO
-            If EvCase(SELECTStackPointer) = 1 Then
-                ' We are in an EVERYCASE
-                A$ = "LDD": B$ = "#$0101": C$ = "flag that we've done at least one CASE": GoSub AO
-                A$ = "STD": B$ = "[EveryCasePointer]": C$ = " = flag pointer for everycase": GoSub AO
-            End If
-        Else
-            x = Start ' x = Start which is just after the CASE command
-            ' Check for commas in the expression
-            GoSub GetExpressionB4EOL: x = x + 2 ' Get the expression before an End of Line or COLON in Expression$& move past it
-            ' Find out if there are any commas
-            CaseTemp$ = Expression$
-            CommaPos = InStr(CaseTemp$, ",")
-            If CommaPos > 0 Then
-                'this expression has commas
-                While CommaPos > 0
-                    Expression$ = MainCase$(SELECTStackPointer) + Chr$(&HFC) + Chr$(&H3D) + Left$(CaseTemp$, CommaPos - 2) 'Maincase$=CaseTemp before the comma '       CheckIfTrue$ = MainCase$(SELECTStackPointer) + Chr$(&HFC) + Chr$(&H3D) + Left$(CaseTemp$, CommaPos - 2) 'Maincase$=CaseTemp before the comma
-                    CaseTemp$ = Right$(CaseTemp$, Len(CaseTemp$) - CommaPos)
-                    CommaPos = InStr(CaseTemp$, ",")
-                    '    GoSub GoCheckIfTrue ' This parses CheckIfTrue$, gets it ready to be evaluated in the string NewString$
-                    '    GoSub EvaluateNewString ' This Evaluates NewString$ and returns with a LDD with the result, zero is false so it will do an ELSE, if there is one otherwise do what is after the THEN
-                    GoSub ParseExpression ' Parse Expression$ and return with value at ,S & Variable LastType with the datatype of that variable
-                    A$ = "LDA": B$ = ",S+": C$ = "Get the result and fix the stack": GoSub AO
-
-                    A$ = "LBNE": B$ = "_DOCase_" + CaseNumber$: C$ = "If result is not zero = True so jump to the code after this case": GoSub AO
-                Wend
-                Expression$ = MainCase$(SELECTStackPointer) + Chr$(&HFC) + Chr$(&H3D) + CaseTemp$ 'Maincase$=CaseTemp     ' CheckIfTrue$ = MainCase$(SELECTStackPointer) + Chr$(&HFC) + Chr$(&H3D) + CaseTemp$ 'Maincase$=CaseTemp
-                '   GoSub GoCheckIfTrue ' This parses CheckIfTrue$, gets it ready to be evaluated in the string NewString$
-                '   GoSub EvaluateNewString ' This Evaluates NewString$ and returns with a LDD with the result, zero is false so it will do an ELSE, if there is one otherwise do what is after the THEN
-                GoSub ParseExpression ' Parse Expression$ and return with value at ,S & Variable LastType with the datatype of that variable
-                A$ = "LDA": B$ = ",S+": C$ = "Get the result and fix the stack": GoSub AO
-
-                A$ = "LBEQ": B$ = "_CaseCheck_" + NextCaseNumber$: C$ = "If result is zero = False then jump to the next case/ELSE Case or END Select": GoSub AO
-                Z$ = "_DOCase_" + CaseNumber$: C$ = "Case match, do the code for this CASE": GoSub AO
-                If EvCase(SELECTStackPointer) = 1 Then
-                    ' We are in an EVERYCASE
-                    A$ = "LDD": B$ = "#$0101": C$ = "flag that we've done at least one CASE": GoSub AO
-                    A$ = "STD": B$ = "[EveryCasePointer]": C$ = " = flag pointer for everycase": GoSub AO
-                End If
-            Else
-                ' No commas to deal with
-                ' No TO, just a regular CASE to compare with
-                Expression$ = MainCase$(SELECTStackPointer) + Chr$(&HFC) + Chr$(&H3D) + CaseTemp$ 'Maincase$=CaseTemp ' CheckIfTrue$ = MainCase$(SELECTStackPointer) + Chr$(&HFC) + Chr$(&H3D) + CaseTemp$ 'Maincase$=CaseTemp
-                '    GoSub GoCheckIfTrue ' This parses CheckIfTrue$, gets it ready to be evaluated in the string NewString$
-                '    GoSub EvaluateNewString ' This Evaluates NewString$ and returns with a LDD with the result, zero is false so it will do an ELSE, if there is one otherwise do what is after the THEN
-                GoSub ParseExpression ' Parse Expression$ and return with value at ,S & Variable LastType with the datatype of that variable
-                A$ = "LDA": B$ = ",S+": C$ = "Get the result and fix the stack": GoSub AO
-
-                A$ = "LBEQ": B$ = "_CaseCheck_" + NextCaseNumber$: C$ = "If result is zero = False then jump to the next case/ELSE Case or END Select": GoSub AO
-                If EvCase(SELECTStackPointer) = 1 Then
-                    ' We are in an EVERYCASE
-                    A$ = "LDD": B$ = "#$0101": C$ = "flag that we've done at least one CASE": GoSub AO
-                    A$ = "STD": B$ = "[EveryCasePointer]": C$ = " = flag pointer for everycase": GoSub AO
-                End If
-            End If
-        End If
-    End If
-End If
+DoGOSUB:
+Temp$ = ""
+v = Array(x): x = x + 1
+Do Until v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A) ' could be EOL or a colon if it's part of an IF/THEN/ELSE or REMark
+    Temp$ = Temp$ + Chr$(v)
+    v = Array(x): x = x + 1
+Loop
+x = x + 1
+A$ = "JSR": B$ = "_L" + Temp$: C$ = "GOSUB " + Temp$: GoSub AO
 Return
+
+DoGOTO:
+Temp$ = ""
+v = Array(x): x = x + 1
+Do Until v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A) ' could be EOL or a colon if it's part of an IF/THEN/ELSE or REMark
+    Temp$ = Temp$ + Chr$(v)
+    v = Array(x): x = x + 1
+Loop
+x = x + 1
+A$ = "JMP": B$ = "_L" + Temp$: C$ = "GOTO " + Temp$: GoSub AO
+Return
+
+DoRETURN:
+A$ = "RTS": C$ = "RETURN": GoSub AO
+GoTo SkipUntilEOLColon ' Skip until we find an EOL or colon then return
+
+' ------------------------------------------------------------
+' Helper: split CaseTemp$ into CaseItem$(1..CaseItemCount)
+' Splits only commas at top level (depth=0, not in quotes)
+' Input : CaseTemp$
+' Output: CaseItemCount, CaseItem$()
+' ------------------------------------------------------------
+SplitTopLevelCommas:
+CaseItemCount = 0
+DIM depth AS INTEGER: depth = 0
+DIM inQ AS INTEGER: inQ = 0
+DIM startPos AS INTEGER: startPos = 1
+DIM i AS INTEGER
+DIM ch AS INTEGER
+
+FOR i = 1 TO LEN(CaseTemp$)
+    ch = ASC(MID$(CaseTemp$, i, 1))
+    IF ch = 34 THEN inQ = NOT inQ  ' quote "
+    IF inQ = 0 THEN
+        IF ch = 40 THEN depth = depth + 1 ' (
+        IF ch = 41 THEN IF depth > 0 THEN depth = depth - 1 ' )
+        IF ch = 44 AND depth = 0 THEN ' comma ,
+            CaseItemCount = CaseItemCount + 1
+            CaseItem$(CaseItemCount) = LTRIM$(RTRIM$(MID$(CaseTemp$, startPos, i - startPos)))
+            startPos = i + 1
+        END IF
+    END IF
+NEXT
+
+CaseItemCount = CaseItemCount + 1
+CaseItem$(CaseItemCount) = LTRIM$(RTRIM$(MID$(CaseTemp$, startPos)))
+RETURN
+
+
+' ============================================================
+' DoSELECT:  SELECT CASE <expr>   or   SELECT EVERYCASE <expr>
+' ============================================================
+DoSELECT:
+SELECTCount = SELECTCount + 1
+SELECTStackPointer = SELECTStackPointer + 1
+SELECTStack(SELECTStackPointer) = SELECTCount
+
+CaseElseFlag = 0
+CaseCount(SELECTStackPointer) = 0
+SelHitVar$(SELECTStackPointer) = ""
+
+' Next token must be TK_GeneralCommand ($FF) then CASE or EVERYCASE
+v = Array(x): x = x + 1
+IF v <> &HFF THEN PRINT "Error, SELECT needs a CASE or EVERYCASE command on";: GOTO FoundError
+
+CaseType = Array(x) * 256 + Array(x + 1): x = x + 2
+IF CaseType <> CASE_CMD AND CaseType <> EVERYCASE_CMD THEN
+    PRINT "Error, SELECT needs a CASE or EVERYCASE command on";: GOTO FoundError
+END IF
+
+IF CaseType = EVERYCASE_CMD THEN
+    EvCase(SELECTStackPointer) = 1
+ELSE
+    EvCase(SELECTStackPointer) = 0
+END IF
+
+' Grab the main expression after SELECT CASE/EVERYCASE
+GoSub GetExpressionB4EOL
+
+MainCase$(SELECTStackPointer) = Expression$
+
+SelIsString(SELECTStackPointer) = ExprIsString%(Expression$)
+
+' If EVERYCASE: create a stable per-SELECT flag variable and clear it
+IF EvCase(SELECTStackPointer) = 1 THEN
+    Num = SELECTStack(SELECTStackPointer): GoSub Make2DigitNum
+    SelHitVar$(SELECTStackPointer) = "__SelHit" + Num$
+    A$ = "CLR": B$ = "_Var_" + SelHitVar$(SELECTStackPointer): C$ = "EVERYCASE: clear hit-flag": GoSub AO
+END IF
+
+RETURN
+
+' ============================================================
+' DoCASE: CASE <exprlist> | CASE <a> TO <b> | CASE IS <op> <expr> | CASE ELSE
+' ============================================================
+DoCASE:
+CaseCount(SELECTStackPointer) = CaseCount(SELECTStackPointer) + 1
+
+Num = SELECTStack(SELECTStackPointer): GoSub Make2DigitNum
+SelNum$ = Num$
+
+' If not first CASE and not EVERYCASE, falling through previous CASE should skip rest
+IF CaseCount(SELECTStackPointer) > 1 THEN
+    IF EvCase(SELECTStackPointer) = 0 THEN
+        A$ = "JMP": B$ = "_EndSelect_" + SelNum$: C$ = "Previous CASE fell through; skip remaining CASEs": GoSub AO
+    END IF
+END IF
+
+' Build current and next case labels
+CaseNumber$ = SelNum$
+Num = CaseCount(SELECTStackPointer): GoSub Make2DigitNum
+CaseNumber$ = CaseNumber$ + "_" + Num$              ' e.g. 01_01
+
+Num = CaseCount(SELECTStackPointer) + 1: GoSub Make2DigitNum
+NextCaseNumber$ = SelNum$ + "_" + Num$              ' e.g. 01_02
+
+Z$ = "_CaseCheck_" + CaseNumber$: C$ = "Start of this CASE check": GoSub AO
+
+' CASE ELSE?
+IF Array(x) = &HFF AND (Array(x + 1) * 256 + Array(x + 2)) = ELSE_CMD THEN
+    CaseElseFlag = 1
+    Z$ = "; CASE ELSE for SELECT " + SelNum$: GoSub AO
+    GoSub SkipUntilEOLColon
+
+    ' If EVERYCASE and at least one CASE matched, skip ELSE
+    IF EvCase(SELECTStackPointer) = 1 THEN
+        A$ = "LDB": B$ = "_Var_" + SelHitVar$(SELECTStackPointer): C$ = "EVERYCASE: hit-flag?": GoSub AO
+        A$ = "LBNE": B$ = "_EndSelect_" + SelNum$: C$ = "If any CASE matched, skip ELSE": GoSub AO
+    END IF
+
+    RETURN
+END IF
+
+' --- CASE IS <op> <expr> ?  (numeric only)
+IF SelIsString(SELECTStackPointer) = 0 THEN
+    IF Array(x) = &HFF AND (Array(x + 1) * 256 + Array(x + 2)) = IS_CMD THEN
+        CheckIfTrue$ = MainCase$(SELECTStackPointer) + CHR$(Array(x + 3)) + CHR$(Array(x + 4))
+        x = x + 5
+        GoSub GetExpressionB4EOL: x = x + 2
+        Expression$ = CheckIfTrue$ + Expression$
+
+        GoSub ParseExpression
+        A$ = "LDA": B$ = ",S+": C$ = "CASE IS: result; fix stack": GoSub AO
+        A$ = "LBEQ": B$ = "_CaseCheck_" + NextCaseNumber$: C$ = "False -> next CASE": GoSub AO
+
+        ' True -> mark hit for EVERYCASE
+        IF EvCase(SELECTStackPointer) = 1 THEN
+            A$ = "LDB": B$ = "#1": C$ = "EVERYCASE: set hit flag": GoSub AO
+            A$ = "STB": B$ = "_Var_" + SelHitVar$(SELECTStackPointer): C$ = "": GoSub AO
+        END IF
+
+        RETURN
+    END IF
+END IF
+
+' --- CASE <a> TO <b> ? (numeric only)
+IF SelIsString(SELECTStackPointer) = 0 THEN
+    Start = x
+    Found = 0
+    v = 0
+    DO UNTIL (v = &HF5 AND Array(x) = &H0D)
+        v = Array(x): x = x + 1
+        IF v = &HFF AND (Array(x) * 256 + Array(x + 1)) = TO_CMD THEN Found = 1: EXIT DO
+    LOOP
+    IF v = &HF5 THEN v = Array(x): x = x + 1
+
+    IF Found = 1 THEN
+        x = Start
+        DO UNTIL (v = &HFF AND (Array(x) * 256 + Array(x + 1)) = TO_CMD) OR (v = &HF5 AND Array(x) = &H0D)
+            v = Array(x): x = x + 1
+        LOOP
+        IF v = &HF5 THEN v = Array(x): x = x + 1
+        IF v = &H0D THEN PRINT "Error: CASE ... TO missing end value on";: GOTO FoundError
+
+        PointAtTO = x - 1
+
+        ' Temporarily terminate before TO so GetExpressionB4EOL reads the start value
+        FixSpot = x - 1
+        Temp1 = Array(FixSpot): Temp2 = Array(FixSpot + 1)
+        Array(FixSpot) = &HF5: Array(FixSpot + 1) = &H0D
+
+        x = Start
+        GoSub GetExpressionB4EOL: x = x + 3
+
+        Array(FixSpot) = Temp1: Array(FixSpot + 1) = Temp2
+
+        ' MainCase >= start
+        Expression$ = MainCase$(SELECTStackPointer) + CHR$(&HFC) + CHR$(&H3E) + CHR$(&HFC) + CHR$(&H3D) + Expression$
+        GoSub ParseExpression
+        A$ = "LDA": B$ = ",S+": C$ = "CASE TO: >= result; fix stack": GoSub AO
+        A$ = "LBEQ": B$ = "_CaseCheck_" + NextCaseNumber$: C$ = "False -> next CASE": GoSub AO
+
+        ' Now end value
+        x = PointAtTO + 3
+        GoSub GetExpressionB4EOL: x = x + 2
+
+        ' MainCase <= end
+        Expression$ = MainCase$(SELECTStackPointer) + CHR$(&HFC) + CHR$(&H3C) + CHR$(&HFC) + CHR$(&H3D) + Expression$
+        GoSub ParseExpression
+        A$ = "LDA": B$ = ",S+": C$ = "CASE TO: <= result; fix stack": GoSub AO
+        A$ = "LBEQ": B$ = "_CaseCheck_" + NextCaseNumber$: C$ = "False -> next CASE": GoSub AO
+
+        IF EvCase(SELECTStackPointer) = 1 THEN
+            A$ = "LDB": B$ = "#1": C$ = "EVERYCASE: set hit flag": GoSub AO
+            A$ = "STB": B$ = "_Var_" + SelHitVar$(SELECTStackPointer): C$ = "": GoSub AO
+        END IF
+
+        RETURN
+    END IF
+End IF
+
+' --- Regular CASE with optional comma list
+x = Start
+GoSub GetExpressionB4EOL: x = x + 2
+CaseTemp$ = Expression$
+
+GoSub SplitTopLevelCommas
+
+' ============================================================
+' STRING SELECT/CASE handling
+' ============================================================
+IF SelIsString(SELECTStackPointer) <> 0 THEN
+
+    ' CASE lists and single CASE items are handled the same way:
+    ' test each item with "="; if any match -> execute case body; else -> next CASE check
+
+    ' Create a shared success label for this CASE
+'    Z$ = "_DOCase_" + CaseNumber$: C$ = "String CASE matched -> execute CASE body": GoSub AO
+
+    FOR ii2 = 1 TO CaseItemCount
+
+        ' Build expression:  <MainStringExpr> = <CaseItem>
+        ' This relies on ParseExpression already supporting string "="
+
+
+	            ' Safety: If we somehow captured a leading CASE/EVERYCASE command token,
+	            ' strip it so ParseExpression never sees a general-command inside the
+	            ' expression.
+	            IF LEN(CaseItem$(ii2)) >= 3 THEN
+	                IF ASC(LEFT$(CaseItem$(ii2), 1)) = TK_GeneralCommand THEN
+	                    TempCmd% = ASC(MID$(CaseItem$(ii2), 2, 1)) * 256 + ASC(MID$(CaseItem$(ii2), 3, 1))
+	                    IF TempCmd% = CASE_CMD OR TempCmd% = EVERYCASE_CMD THEN
+	                        CaseItem$(ii2) = MID$(Expression$, 4)
+	                    END IF
+	                END IF
+	            END IF
+
+        Expression$ = MainCase$(SELECTStackPointer) + CHR$(&HFC) + CHR$(&H3D) + CaseItem$(ii2)
+
+        GoSub ParseExpression
+
+        ' ParseExpression must leave a boolean result on the stack like your numeric path
+        A$ = "LDA": B$ = ",S+": C$ = "CASE string: result; fix stack": GoSub AO
+        A$ = "LBNE": B$ = "_DOCase_" + CaseNumber$: C$ = "True -> execute CASE": GoSub AO
+    NEXT
+
+    ' No items matched -> next CASE
+    A$ = "JMP": B$ = "_CaseCheck_" + NextCaseNumber$: C$ = "No string items matched -> next CASE": GoSub AO
+
+    ' Success label: mark hit-flag for EVERYCASE (if needed), then RETURN so case body follows
+    Z$ = "_DOCase_" + CaseNumber$: C$ = "Execute CASE body (string)": GoSub AO
+
+    IF EvCase(SELECTStackPointer) = 1 THEN
+        A$ = "LDB": B$ = "#1": C$ = "EVERYCASE: set hit flag": GoSub AO
+        A$ = "STB": B$ = "_Var_" + SelHitVar$(SELECTStackPointer): C$ = "": GoSub AO
+    END IF
+
+    RETURN
+END IF
+
+IF CaseItemCount > 1 THEN
+    ' Multiple items: if any equals, do this CASE, else next CASE
+    Z$ = "; CASE list (" + LTRIM$(STR$(CaseItemCount)) + " items)": GoSub AO
+
+    ' Create a shared success label for this CASE
+    Z$ = "_DOCase_" + CaseNumber$: C$ = "Any list item matched -> execute CASE body": GoSub AO
+
+    ' We will emit checks first, then jump to next if none matched.
+    ' So: generate checks that jump to _DOCase_.. when true.
+    FOR ii = 1 TO CaseItemCount
+        Expression$ = MainCase$(SELECTStackPointer) + CHR$(&HFC) + CHR$(&H3D) + CaseItem$(ii)
+        GoSub ParseExpression
+        A$ = "LDA": B$ = ",S+": C$ = "CASE list: result; fix stack": GoSub AO
+        A$ = "LBNE": B$ = "_DOCase_" + CaseNumber$: C$ = "True -> execute CASE": GoSub AO
+    NEXT
+
+    A$ = "LBRA": B$ = "_CaseCheck_" + NextCaseNumber$: C$ = "No items matched -> next CASE": GoSub AO
+
+    ' Now the success label is already emitted above; set hit flag here for EVERYCASE
+    IF EvCase(SELECTStackPointer) = 1 THEN
+        A$ = "LDB": B$ = "#1": C$ = "EVERYCASE: set hit flag": GoSub AO
+        A$ = "STB": B$ = "_Var_" + SelHitVar$(SELECTStackPointer): C$ = "": GoSub AO
+    END IF
+
+    RETURN
+END IF
+
+' Single item compare
+Expression$ = MainCase$(SELECTStackPointer) + CHR$(&HFC) + CHR$(&H3D) + CaseItem$(1)
+GoSub ParseExpression
+A$ = "LDA": B$ = ",S+": C$ = "CASE: result; fix stack": GoSub AO
+A$ = "LBEQ": B$ = "_CaseCheck_" + NextCaseNumber$: C$ = "False -> next CASE": GoSub AO
+
+IF EvCase(SELECTStackPointer) = 1 THEN
+    A$ = "LDB": B$ = "#1": C$ = "EVERYCASE: set hit flag": GoSub AO
+    A$ = "STB": B$ = "_Var_" + SelHitVar$(SELECTStackPointer): C$ = "": GoSub AO
+END IF
+
+RETURN
+
+
+
+
 DoEVERYCASE: ' &H5F
 Color 14
 Print "Handled with CASE, this should never been shown EVERYCASE, found on";: GoTo FoundError

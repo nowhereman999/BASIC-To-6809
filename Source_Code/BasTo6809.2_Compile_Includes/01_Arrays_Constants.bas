@@ -48,6 +48,9 @@ Const OP_ARRLOAD = &H70 ' numeric array element load   (FC 70 argCount)
 Const OP_STRARRLOAD = &H71 ' string  array element load   (FC 71 argCount)
 Const OP_ARRPTR      = &H72 ' FC 72 argCount  (numeric array element address -> UInt16)
 Const OP_STRARRPTR   = &H73 ' FC 73 argCount  (string  array element address -> UInt16)
+Const OP_LITTYPEPUSH = &H74 ' FC 74 type    (temporary literal-type hint scope begin)
+Const OP_LITTYPEPOP  = &H75 ' FC 75         (temporary literal-type hint scope end)
+Const OP_FORCENVT     = &H76 ' FC 76 type    (force top-of-stack to NVT)
 Const TK_ADDR_ONSTACK = &HF7  ' pointer/address already on 6809 stack (UInt16)
 
 ' Variable Type Constants
@@ -66,6 +69,15 @@ Const NT_Double = 12
 Const NT_Extended = 13
 Const NT_ShortFloat = 14
 Const NT_UShortFloat = 15
+
+' Stuff for CASE handling
+CONST MAX_SELECT_NEST = 64
+DIM SHARED SelIsString(MAX_SELECT_NEST) AS INTEGER ' Flag whether this is a SELECT CASE String$ or not
+DIM SHARED SelHitVar$(MAX_SELECT_NEST)   ' name like "__SelHit01" for EVERYCASE, else ""
+DIM SHARED CaseItem$(256)
+DIM SHARED CaseItemCount
+
+DIM ii AS INTEGER
 
 Dim VarptrDepth as Integer
 Dim DOStack(1000) As Integer
@@ -151,6 +163,9 @@ Dim FORSTack(10000)
 Dim IFSTack(10000) As Integer 'If Stack
 Dim ElseStack(10000) As Integer ' Else Stack
 Dim ELSELocation(10000) As Integer 'Flag if the IF has an ELSE
+Dim ElseIfIndex(10000) As Integer  ' 0 = first alternate entry (ELSE), 1.. = ELSEIF chain labels
+
+Dim ForceLitType As Integer ' If non-zero, unsuffixed numeric literals default to this type during expression parsing
 
 ' comparing strings
 Dim ExpressionFound$(1000)

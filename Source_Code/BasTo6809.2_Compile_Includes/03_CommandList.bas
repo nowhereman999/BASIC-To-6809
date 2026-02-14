@@ -26,6 +26,8 @@ Check$ = "IS": GoSub FindGenCommandNumber ' Gets the General Command number of C
 IS_CMD = ii
 Check$ = "ELSE": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
 ELSE_CMD = ii
+Check$ = "ELSEIF": GoSub FindGenCommandNumber
+ELSEIF_CMD = ii
 Check$ = "ERASE": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
 ERASE_CMD = ii
 Check$ = "LOCATE": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found

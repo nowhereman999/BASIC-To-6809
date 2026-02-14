@@ -690,9 +690,9 @@ DB_MUL:
 ; Check for zeros
     LDX     2,S             ; Check Mantissa bits first for zero
     BNE     @NotZero
-    LDD     ,S
+    LDB     1,S             ; Ignore the sign bit
     BNE     @NotZero
-    LDU     4,S
+    LDD     4,S
     BNE     @NotZero
     LDU     6,S
     BNE     @NotZero
@@ -704,15 +704,15 @@ DB_MUL:
     PSHS    D               ; Save zero as the result
     JMP     @Return         ; RTS
 @NotZero:
-    LDD     12,S            ; Check Mantissa bits first for zero
+    LDX     12,S            ; Check Mantissa bits first for zero
     BNE     >    
-    LDD     10,S
+    LDB     11,S            ; Ignore the sign bit
     BNE     >
     LDD     14,S
     BNE     >
-    LDD     16,S
+    LDU     16,S
     BNE     >
-    LDD     18,S
+    LDY     18,S
     BNE     >
 ; Get here with a value of zero
     LEAS    10,S            ; Move the stack forward, leave zero as the final result

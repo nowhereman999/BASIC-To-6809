@@ -190,7 +190,7 @@ Return
 
 ' Both are FP 8 bytes
 SubSameFP8:
-A$ = "JSR": B$ = "DoFPDouble_Subtract_ForCompiler": C$ = "Do FP 8 byte (IEEE_754) Subtract on the stack and adjust the stack": GoSub AO
+A$ = "JSR": B$ = "DoFPDouble_Subtract_ForCompiler": C$ = "Do FP 10 byte (IEEE_754) Subtract on the stack and adjust the stack": GoSub AO
 Return
 
 ' Enter with LeftType set, RightType set & LargestType set

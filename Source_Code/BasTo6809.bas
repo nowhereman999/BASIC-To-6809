@@ -1,3 +1,18 @@
+V$ = "5.1"
+'       - Fixed a big bug in the CASE code where it could crash if one of the CASEes did a GOTO/RETURN
+'       - Fixed a bug that was messing up the stack doing string comparisons
+'       - ELSEIF now produces proper code that will compile.  It was completely broken previously
+'       - Added the ability to have multiple variables assigned in the DIM xx AS line, such as:
+'         DIM A,B,C AS _UNSIGNED _BYTE
+'       - Now supports constants with the word "Const" followed by a word and what it equals such as:
+'         Const PI=3.1415926 or Const First=10 + PI
+'         You can then refer to these constents in your program and they won't take any extra RAM, the Constant name will be
+'         substituted for an actual value when compiling (actually at the tokenizing stage).
+'       - Fixed a bug with Double Multiply where it would treat -0 as a value instead of returning with zero.
+'       - Fixed a bug with multi dimensional arrays, causing stack corruption and incorrect data.
+'       - Tweaked Tokenizer so it can properly handle a variable like Sin2 on a PRINT statement such as:
+'         PRINT "Sin2="; Sin2     (This would previously lock up the compile stage)
+
 V$ = "5.01"
 '       - Fixed a bug with the palette command, it would calculate the located to change but it wasn't saving it before actually
 '         using the location.

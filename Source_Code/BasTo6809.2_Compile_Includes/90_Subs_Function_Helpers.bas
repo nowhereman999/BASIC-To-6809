@@ -464,3 +464,46 @@ Function GetMSB& (inputVal As _Integer64)
     Loop Until t = 0
     GetMSB = bitPos
 End Function
+
+' Returns -1 if Expression$ is a STRING expression, 0 if not
+FUNCTION ExprIsString% (E$)
+    DIM p AS LONG
+    DIM t AS INTEGER, c AS INTEGER
+
+    p = 1
+    DO WHILE p <= LEN(E$)
+        t = ASC(MID$(E$, p, 1))
+
+        ' Direct string starters
+        IF t = &HF1 OR t = &HF3 OR t = &HFD THEN
+            ExprIsString% = -1
+            EXIT FUNCTION
+        END IF
+
+        ' Special-char token (F5, next byte is the character)
+        IF t = &HF5 THEN
+            IF p + 1 > LEN(E$) THEN EXIT DO
+            c = ASC(MID$(E$, p + 1, 1))
+
+            ' Skip whitespace and leading parentheses:  F5 ' '  or  F5 '('
+            IF c = 32 OR c = 9 OR c = 40 THEN
+                p = p + 2
+                _CONTINUE
+            END IF
+
+            ' Quoted literal starts with: F5 '"'
+            IF c = 34 THEN
+                ExprIsString% = -1
+                EXIT FUNCTION
+            END IF
+
+            ' Some other special char: stop scanning
+            EXIT DO
+        END IF
+
+        ' Anything else: stop scanning
+        EXIT DO
+    LOOP
+
+    ExprIsString% = 0
+END FUNCTION

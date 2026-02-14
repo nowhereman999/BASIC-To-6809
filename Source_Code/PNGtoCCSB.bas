@@ -1,6 +1,9 @@
 ' Sprite Compiler & Background Image Renderer
 
-VersionNumber$ = "1.00"
+VersionNumber$ = "1.01"
+'       - Modified load location of hte NTSC composite file to only use block $C000 while loading using option -c4
+
+' V1.00
 '       - Added support for not saving the background and writing the sprite with a solid colour behind it
 
 ' V0.08
@@ -2265,49 +2268,59 @@ p = 0
 
 If ConvertBackground = 4 Then
     ' User wants a LOADMable CoCo3 file
+
+    Dim TempArray(41000) As _Unsigned _Byte
+
+
+
+
+    ' Fill array with data
+    c = 0
+    For y = 0 To imageHeight - 1
+        For x = 0 To imageWidth - 1
+            TempArray(c) = DitherOut(x, y): c = c + 1
+        Next x
+    Next y
+
+
+
     BlockNumber = BlkStart 'BlockNumber= 8k block in CoCo3's memory
-    StartLocation = &HFFA2
-    Blocksize = 5
-    DiskOut(p) = 0: p = p + 1 ' Preamble value 0 = data, 255 = Last block
-    DiskOut(p) = Int(Blocksize / 256): p = p + 1
-    DiskOut(p) = Blocksize - Int(Blocksize / 256) * 256: p = p + 1 'Load address LSB
-    DiskOut(p) = Int(StartLocation / 256): p = p + 1
-    DiskOut(p) = StartLocation - Int(StartLocation / 256) * 256: p = p + 1 'Load address LSB
-    DiskOut(p) = BlockNumber: p = p + 1: BlockNumber = BlockNumber + 1
-    DiskOut(p) = BlockNumber: p = p + 1: BlockNumber = BlockNumber + 1
-    DiskOut(p) = BlockNumber: p = p + 1: BlockNumber = BlockNumber + 1
-    DiskOut(p) = BlockNumber: p = p + 1: BlockNumber = BlockNumber + 1
-    DiskOut(p) = BlockNumber: p = p + 1: BlockNumber = BlockNumber + 1
-    StartLocation = &H4000
-    Blocksize = Val("&H" + GModeScreenSize$(Gmode))
-    DiskOut(p) = 0: p = p + 1 ' Preamble value 0 = data, 255 = Last block
-    DiskOut(p) = Int(Blocksize / 256): p = p + 1
-    DiskOut(p) = Blocksize - Int(Blocksize / 256) * 256: p = p + 1 'Load address LSB
-    DiskOut(p) = Int(StartLocation / 256): p = p + 1
-    DiskOut(p) = StartLocation - Int(StartLocation / 256) * 256: p = p + 1 'Load address LSB
+
+    c = 0
+    BlocksNeeded = Int((imageHeight * imageWidth) / &H2000) + 1
+    For i = 1 To BlocksNeeded
+        StartLocation = &HFFA6
+        Blocksize = 1
+        DiskOut(p) = 0: p = p + 1 ' Preamble value 0 = data, 255 = Last block
+        DiskOut(p) = Int(Blocksize / 256): p = p + 1
+        DiskOut(p) = Blocksize - Int(Blocksize / 256) * 256: p = p + 1 'Load address LSB
+        DiskOut(p) = Int(StartLocation / 256): p = p + 1
+        DiskOut(p) = StartLocation - Int(StartLocation / 256) * 256: p = p + 1 'Load address LSB
+        DiskOut(p) = BlockNumber: p = p + 1: BlockNumber = BlockNumber + 1
+        StartLocation = &HC000
+        Blocksize = &H2000
+        DiskOut(p) = 0: p = p + 1 ' Preamble value 0 = data, 255 = Last block
+        DiskOut(p) = Int(Blocksize / 256): p = p + 1
+        DiskOut(p) = Blocksize - Int(Blocksize / 256) * 256: p = p + 1 'Load address LSB
+        DiskOut(p) = Int(StartLocation / 256): p = p + 1
+        DiskOut(p) = StartLocation - Int(StartLocation / 256) * 256: p = p + 1 'Load address LSB
+        For i2 = 1 To &H2000
+            DiskOut(p) = TempArray(c): p = p + 1: c = c + 1
+        Next i2
+    Next i
 End If
-c = 0
-For y = 0 To imageHeight - 1
-    For x = 0 To imageWidth - 1
-        DiskOut(p) = DitherOut(x, y): p = p + 1
-    Next x
-Next y
 
 If ConvertBackground = 4 Then
     ' User wants a LOADMable CoCo3 file
     ' Put 8k blocks back to normal
-    BlockNumber = &H3A 'BlockNumber= 8k block in CoCo3's memory
-    StartLocation = &HFFA2
-    Blocksize = 5
+    BlockNumber = &H3E 'BlockNumber= 8k block in CoCo3's memory
+    StartLocation = &HFFA6
+    Blocksize = 1
     DiskOut(p) = 0: p = p + 1 ' Preamble value 0 = data, 255 = Last block
     DiskOut(p) = Int(Blocksize / 256): p = p + 1
     DiskOut(p) = Blocksize - Int(Blocksize / 256) * 256: p = p + 1 'Load address LSB
     DiskOut(p) = Int(StartLocation / 256): p = p + 1
     DiskOut(p) = StartLocation - Int(StartLocation / 256) * 256: p = p + 1 'Load address LSB
-    DiskOut(p) = BlockNumber: p = p + 1: BlockNumber = BlockNumber + 1
-    DiskOut(p) = BlockNumber: p = p + 1: BlockNumber = BlockNumber + 1
-    DiskOut(p) = BlockNumber: p = p + 1: BlockNumber = BlockNumber + 1
-    DiskOut(p) = BlockNumber: p = p + 1: BlockNumber = BlockNumber + 1
     DiskOut(p) = BlockNumber: p = p + 1: BlockNumber = BlockNumber + 1
 
     ' Postamble

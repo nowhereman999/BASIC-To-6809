@@ -44,15 +44,16 @@ EqualMaxType2:
 A$ = "LDX": B$ = "#$FFFF": C$ = "Default is True": GoSub AO
 If LeftType < 5 Then
     ' Left is 1 byte and right is 2 bytes                     v1=1,S & 2,S - v2=,S
-    A$ = "LDD": B$ = "1,S": C$ = "Get the right 16 bit value": GoSub AO
-    A$ = "SUBB": B$ = ",S+": C$ = "Subtract left 8 bit value, move the stack": GoSub AO
-    A$ = "SBCA": B$ = "#$00": C$ = "Subtract the carry from A": GoSub AO
+    A$ = "LDB": B$ = ",S+": C$ = "Get V2 8 bit value, move the stack": GoSub AO
+    A$ = "SEX": C$ = "D = B": GoSub AO
+    A$ = "SUBD": B$ = ",S": C$ = "Subtract v1 16 bit value, move the stack": GoSub AO
     A$ = "CMPD": B$ = "#$0000": C$ = "TSTD": GoSub AO
 Else
     ' Left is 2 bytes and right is 1 byte                      v1=2,S - v2 =,S & 1,S
-    A$ = "CLRA": C$ = "Clear MSB": GoSub AO
-    A$ = "LDB": B$ = "2,S": C$ = "Get the right 8 bit value": GoSub AO
-    A$ = "CMPD": B$ = ",S+": C$ = "Compare the left 16 bit value to the left, move the stack": GoSub AO
+    A$ = "LDB": B$ = "2,S": C$ = "Get V1 8 bit value": GoSub AO
+    A$ = "SEX": C$ = "D = B": GoSub AO
+    A$ = "SUBD": B$ = ",S+": C$ = "Subtract v2 16 bit value, move the stack": GoSub AO
+    A$ = "CMPD": B$ = "#$0000": C$ = "TSTD": GoSub AO
 End If
 A$ = "BEQ": B$ = ">": C$ = "Skip if Equal": GoSub AO
 A$ = "LDX": B$ = "#$0000": C$ = "Set as False": GoSub AO
@@ -905,15 +906,16 @@ NotEqualMaxType2:
 A$ = "LDX": B$ = "#$FFFF": C$ = "Default is True": GoSub AO
 If LeftType < 5 Then
     ' Left is 1 byte and right is 2 bytes                     v1=1,S & 2,S - v2=,S
-    A$ = "LDD": B$ = "1,S": C$ = "Get the right 16 bit value": GoSub AO
-    A$ = "SUBB": B$ = ",S+": C$ = "Subtract left 8 bit value, move the stack": GoSub AO
-    A$ = "SBCA": B$ = "#$00": C$ = "Subtract the carry from A": GoSub AO
+    A$ = "LDB": B$ = ",S+": C$ = "Get V2 8 bit value, move the stack": GoSub AO
+    A$ = "SEX": C$ = "D = B": GoSub AO
+    A$ = "SUBD": B$ = ",S": C$ = "Subtract v1 16 bit value, move the stack": GoSub AO
     A$ = "CMPD": B$ = "#$0000": C$ = "TSTD": GoSub AO
 Else
     ' Left is 2 bytes and right is 1 byte                      v1=2,S - v2 =,S & 1,S
-    A$ = "CLRA": C$ = "Clear MSB": GoSub AO
-    A$ = "LDB": B$ = "2,S": C$ = "Get the right 8 bit value": GoSub AO
-    A$ = "CMPD": B$ = ",S+": C$ = "Compare to the left 16 bit value, move the stack": GoSub AO
+    A$ = "LDB": B$ = "2,S": C$ = "Get V1 8 bit value": GoSub AO
+    A$ = "SEX": C$ = "D = B": GoSub AO
+    A$ = "SUBD": B$ = ",S+": C$ = "Subtract v2 16 bit value, move the stack": GoSub AO
+    A$ = "CMPD": B$ = "#$0000": C$ = "TSTD": GoSub AO
 End If
 A$ = "BNE": B$ = ">": C$ = "Skip if NotEqual": GoSub AO
 A$ = "LDX": B$ = "#$0000": C$ = "Set as False": GoSub AO
