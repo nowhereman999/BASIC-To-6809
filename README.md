@@ -17,8 +17,8 @@ V 5.1
 - Added the ability to have multiple variables assigned in the DIM xx AS line, such as:
   DIM A,B,C AS _UNSIGNED _BYTE
 - Now supports constants with the word "Const" followed by a word and what it equals such as:
-  Const PI=3.1415926 or Const First=10 + PI
-  You can then refer to these constents in your program and they won't take any extra RAM, the Constant name will be
+  Const PI=3.1415926 and then use Const First=10 + PI
+  You can then refer to these constants in your program and they won't take any extra RAM, the Constant name will be
   substituted for an actual value when compiling (actually at the tokenizing stage).
 - Fixed a bug with Double Multiply where it would treat -0 as a value instead of returning with zero.
 - Fixed a bug with multi dimensional arrays, causing stack corruption and incorrect data.
