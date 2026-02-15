@@ -1,4 +1,10 @@
-V$ = "5.1"
+V$ = "5.11"
+'       - Fixed a major bug with comparisons of types that are not floating point, where the < & > were reversed
+'         Previously you can only trust + or <>, now all types are compared correctly.  The code produced is efficient and works well
+'         but the compiler is doing some double negatives while generating the 6809 code which really should be cleaned up (one day)
+'       - Fixed a specific bug with READing DATA into an array that is exactly 256 elements (0 to 255) as 8 bit values
+
+' V 5.1
 '       - Fixed a big bug in the CASE code where it could crash if one of the CASEes did a GOTO/RETURN
 '       - Fixed a bug that was messing up the stack doing string comparisons
 '       - ELSEIF now produces proper code that will compile.  It was completely broken previously
@@ -13,7 +19,7 @@ V$ = "5.1"
 '       - Tweaked Tokenizer so it can properly handle a variable like Sin2 on a PRINT statement such as:
 '         PRINT "Sin2="; Sin2     (This would previously lock up the compile stage)
 
-V$ = "5.01"
+' V 5.01
 '       - Fixed a bug with the palette command, it would calculate the located to change but it wasn't saving it before actually
 '         using the location.
 '       - Fix the RND(x) routine with Single and Double types.  Previously it would generate a value from 0 to x, now it matches

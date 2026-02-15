@@ -1343,13 +1343,9 @@ DoneNOT:
                             End If
                         End If
 
-
-
-
                         Z$="; Mid of OP_ARRLOAD":gosub AO
                         Temp$ = IndexTok$(DimI) ' 5 then 4
                         Z$="; IndexTok$(DimI)="+Temp$:gosub AO
-                        ?"IndexTok$(DimI)="
                         'Show$=Temp$:gosub show
                         GoSub PushOneValueTokenOnStack
                         Tok$ = Temp$

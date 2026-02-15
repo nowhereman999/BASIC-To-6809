@@ -15,12 +15,11 @@ DoSet_HIG155:
         TST     LineColour      ; Get the Set colour
         BEQ     RESET_HIG155      ; If it's not zero then draw white dot
 SET_HIG155:
-        PSHS    A,X             ; Save x & y coordinate on the stack
+        PSHS    X               ; Save x & y coordinate on the stack
         LDB     #BytesPerRow_HIG155 ; MUL A by the number of bytes per row
         MUL      
         ADDD    BEGGRP          ; Add the Video Start Address
-        TFR     D,X             ; X has the row to start on
-        LDD     1,S
+        EXG     D,X             ; D now has the x co-ordinate, X now has the row to start on
         LSRA
         RORB
         LSRA
@@ -28,14 +27,13 @@ SET_HIG155:
         LSRB                    ; B=D/8
         ABX                     ; X now has the value of Y = Y * 80 + X=X/8 (we now have our screen location)
 
-        LDB     2,S             ; Get B back which has the pixel number
+        LDB     1,S             ; Get B back which has the pixel number
         ANDB    #%00000111      ; B = Pixel value (0 to 7)
         LDU     #PixelTable_HIG155 ; U points to the table of pixel values
         LDA     ,X              ; Get existing pixels in this byte from the screen
         ORA     B,U             ; Or original Byte value with the pixel the user wants to set
         STA     ,X              ; Write new byte to the screen
-        PULS    A,X,PC            ; Restore D,X & U and return
-
+        PULS    X,PC            ; Restore X and return
 PixelTable_HIG155:
         FCB     %10000000 Pixel 0
         FCB     %01000000 Pixel 1

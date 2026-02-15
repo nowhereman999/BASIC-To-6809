@@ -132,11 +132,144 @@ Return
 
 ' 0 = False
 ' $FF & non zero = True
-NumFunctionLessThan:
-Z$ = "; Doing Function LessThan": GoSub AO
+NumFunctionNotEqual:
+Z$ = "; Doing Function NotEqual": GoSub AO
+If Largesttype < 5 Then GoTo NotEqualSameType1 ' Both are a byte size of 1
+If (LeftType = 5 Or LeftType = 6) And (RightType = 5 Or RightType = 6) Then GoTo NotEqualSameType2 ' Both are a byte size of 2
+If LeftType < 7 And RightType < 7 Then GoTo NotEqualMaxType2 ' One is 1 byte the other is 2 byte
+If (LeftType = 7 Or LeftType = 8) And (RightType = 7 Or RightType = 8) Then GoTo NotEqualSameType4 ' Both are a byte size of 4
+If (LeftType = 9 Or LeftType = 10) And (RightType = 9 Or RightType = 10) Then GoTo NotEqualSameType8 ' Both are a byte size of 8
+If LeftType = 11 And RightType = 11 Then GoTo NotEqualSameFFP ' Both are FP 3 bytes
+If LeftType = 12 And RightType = 12 Then GoTo NotEqualSameFP8 ' Both are FP 8 bytes
+
+' Otherwise Types are not the same
+Value1Type = LeftType
+Value2Type = RightType
+GoSub ScaleSmallNumberOnStack ' Convert smaller of Value1Type(Rightside) or Value2Type(Leftside) type to the largest type
+
+Select Case Largesttype
+    Case 7, 8 ' Same 4 byte values
+        GoTo NotEqualSameType4
+    Case 9, 10 ' Same 8 byte values
+        GoTo NotEqualSameType8
+    Case 11 ' Same FFP values
+        GoTo NotEqualSameFFP
+    Case 12 'Same Double values
+        GoTo NotEqualSameFP8
+End Select
+
+' Both are 1 byte
+NotEqualSameType1:
+' Both are 1 byte (8 bits)
+A$ = "LDA": B$ = "#$FF": C$ = "Default is True": GoSub AO
+A$ = "LDB": B$ = "1,S": C$ = "Right value2 is 8 bits": GoSub AO
+' Right is an 8 bit value
+A$ = "CMPB": B$ = ",S+": C$ = "Compare Left value1 is an 8 bit value, move stack": GoSub AO
+A$ = "BNE": B$ = ">": C$ = "Skip if NotEqual": GoSub AO
+A$ = "CLRA": C$ = "Flag as false": GoSub AO
+Z$ = "!": A$ = "STA": B$ = ",S": GoSub AO
+Return
+
+' One is 1 byte, the other is 2 bytes
+NotEqualMaxType2:
+A$ = "LDX": B$ = "#$FFFF": C$ = "Default is True": GoSub AO
+If LeftType < 5 Then
+    ' Left is 1 byte and right is 2 bytes                     v1=1,S & 2,S - v2=,S
+    A$ = "LDB": B$ = ",S+": C$ = "Get V2 8 bit value, move the stack": GoSub AO
+    A$ = "SEX": C$ = "D = B": GoSub AO
+    A$ = "SUBD": B$ = ",S": C$ = "Subtract v1 16 bit value, move the stack": GoSub AO
+    A$ = "CMPD": B$ = "#$0000": C$ = "TSTD": GoSub AO
+Else
+    ' Left is 2 bytes and right is 1 byte                      v1=2,S - v2 =,S & 1,S
+    A$ = "LDB": B$ = "2,S": C$ = "Get V1 8 bit value": GoSub AO
+    A$ = "SEX": C$ = "D = B": GoSub AO
+    A$ = "SUBD": B$ = ",S+": C$ = "Subtract v2 16 bit value, move the stack": GoSub AO
+    A$ = "CMPD": B$ = "#$0000": C$ = "TSTD": GoSub AO
+End If
+A$ = "BNE": B$ = ">": C$ = "Skip if NotEqual": GoSub AO
+A$ = "LDX": B$ = "#$0000": C$ = "Set as False": GoSub AO
+Z$ = "!": A$ = "STX": B$ = ",S+": C$ = "Save X and move the stack forward, we only need to save the result as an 8 bit value": GoSub AO
+Return
+
+' Both are 2 bytes
+NotEqualSameType2:
+A$ = "LDA": B$ = "#$FF": C$ = "Default is True": GoSub AO
+A$ = "LDX": B$ = ",S++": C$ = "D = left 16 bit value1": GoSub AO
+A$ = "CMPX": B$ = ",S+": C$ = "Compare with right 16 bit value2, move the stack": GoSub AO
+A$ = "BNE": B$ = ">": C$ = "Skip if NotEqual": GoSub AO
+A$ = "CLRA": C$ = "Flag as false": GoSub AO
+Z$ = "!": A$ = "STA": B$ = ",S": GoSub AO
+Return
+
+' Both are 4 bytes
+NotEqualSameType4: '
+A$ = "LDA": B$ = "#$FF": C$ = "Default is True": GoSub AO
+A$ = "LDX": B$ = ",S": C$ = "Get the left MSWord 32 bit value": GoSub AO
+A$ = "CMPx": B$ = "4,S": C$ = "Compare with right MSWord 32 bit value": GoSub AO
+A$ = "BNE": B$ = ">": C$ = "If Not Equal, Exit with True": GoSub AO
+A$ = "LDX": B$ = "2,S": C$ = "Get the left LSWord 32 bit value": GoSub AO
+A$ = "CMPX": B$ = "6,S": C$ = "Compare with right MSWord 32 bit value": GoSub AO
+A$ = "BNE": B$ = ">": C$ = "Skip if NotEqual": GoSub AO
+A$ = "CLRA": C$ = "Flag as false": GoSub AO
+Z$ = "!": A$ = "LEAS": B$ = "7,S": C$ = "Move the stack forward": GoSub AO
+A$ = "STA": B$ = ",S": C$ = "Save A and move the stack forward, we only need to save the result as an 8 bit value": GoSub AO
+GoSub AO
+Return
+
+' Both are 8 bytes
+NotEqualSameType8:
+A$ = "LDA": B$ = "#$FF": C$ = "Default is True": GoSub AO
+A$ = "LDX": B$ = ",S": C$ = "Get the left MSWord 64 bit value": GoSub AO
+A$ = "CMPX": B$ = "8,S": C$ = "Compare with right Word 64 bit value": GoSub AO
+A$ = "BNE": B$ = ">": C$ = "If Not Equal, Exit with True": GoSub AO
+A$ = "LDX": B$ = "2,S": C$ = "Get the left LSWord 64 bit value": GoSub AO
+A$ = "CMPX": B$ = "10,S": C$ = "Compare with right MSWord 64 bit value": GoSub AO
+A$ = "BNE": B$ = ">": C$ = "If Not Equal, Exit with True": GoSub AO
+A$ = "LDX": B$ = "4,S": C$ = "Get the left MSWord 64 bit value": GoSub AO
+A$ = "CMPX": B$ = "12,S": C$ = "Compare with right MSWord 64 bit value": GoSub AO
+A$ = "BNE": B$ = ">": C$ = "If Not Equal, Exit with True": GoSub AO
+A$ = "LDX": B$ = "6,S": C$ = "Get the left LSWord 64 bit value": GoSub AO
+A$ = "CMPX": B$ = "14,S": C$ = "Compare with right MSWord 64 bit value": GoSub AO
+A$ = "BNE": B$ = ">": C$ = "Skip if NotEqual": GoSub AO
+A$ = "CLRA": C$ = "Flag as false": GoSub AO
+Z$ = "!": A$ = "LEAS": B$ = "15,S": C$ = "Move the stack forward": GoSub AO
+A$ = "STA": B$ = ",S": C$ = "Save A and move the stack forward, we only need to save the result as an 8 bit value": GoSub AO
+GoSub AO
+Return
+
+' Both are FP 3 bytes in FFP format
+NotEqualSameFFP:
+A$ = "LDX": B$ = "#$FFFF": C$ = "Default is True": GoSub AO
+A$ = "JSR": B$ = "FFP_CMP_Stack": C$ = "Compare FFP Value1 @ 3,S with Value 2 @ ,S sets the 6809 flags Z, N, and C": GoSub AO
+A$ = "BNE": B$ = ">": C$ = "Skip if NotEqual": GoSub AO
+A$ = "LDX": B$ = "#$0000": C$ = "Set as False": GoSub AO
+Z$ = "!": A$ = "LEAS": B$ = "4,S": C$ = "Move the stack forward": GoSub AO
+A$ = "STX": B$ = ",S+": C$ = "Save X and move the stack forward, we only need to save the result as an 8 bit value": GoSub AO
+GoSub AO
+Return
+
+' Both are FP 10 bytes
+NotEqualSameFP8:
+A$ = "LDX": B$ = "#$FFFF": C$ = "Default is True": GoSub AO
+A$ = "JSR": B$ = "Double_CMP_Stack": C$ = "Compare Double Value1 @ 10,S with Value 2 @ ,S sets the 6809 flags Z, N, and C": GoSub AO
+A$ = "BNE": B$ = ">": C$ = "Skip if NotEqual": GoSub AO
+A$ = "LDX": B$ = "#$0000": C$ = "Set as False": GoSub AO
+Z$ = "!": A$ = "LEAS": B$ = "18,S": C$ = "Move the stack forward": GoSub AO
+A$ = "STX": B$ = ",S+": C$ = "Save X and move the stack forward, we only need to save the result as an 8 bit value": GoSub AO
+GoSub AO
+Return
+
+' 0 = False
+' $FF & non zero = True
+' NumFunctionLessThan:
+'Z$ = "; Doing Function LessThan": GoSub AO
+'Z$ = "; LeftType=" + Str$(LeftType): GoSub AO
+'Z$ = "; RightType=" + Str$(RightType): GoSub AO
+' Have to deal with signed and unsigned values when comparing
+NumFunctionGreaterThan:
+Z$ = "; Doing Function GreaterThan": GoSub AO
 Z$ = "; LeftType=" + Str$(LeftType): GoSub AO
 Z$ = "; RightType=" + Str$(RightType): GoSub AO
-' Have to deal with signed and unsigned values when comparing
 If (LeftType = 1 Or LeftType = 3) And (RightType = 1 Or RightType = 3) Then GoTo LessThanSigned1Byte
 If (LeftType = 2 Or LeftType = 4) And (RightType = 2 Or RightType = 4) Then GoTo LessThanUnSigned1Byte
 If (LeftType = 2 Or LeftType = 4) And (RightType = 1 Or RightType = 3) Then GoTo LessThanLURS1Byte
@@ -476,7 +609,7 @@ Return
 LessThanSameFFP:
 A$ = "LDX": B$ = "#$FFFF": C$ = "Default is True": GoSub AO
 A$ = "JSR": B$ = "FFP_CMP_Stack": C$ = "Compare FFP Value1 @ ,S with Value 2 @ 3,S sets the 6809 flags Z, N, and C": GoSub AO
-A$ = "BLT": B$ = ">": C$ = "Skip if LessThan": GoSub AO
+A$ = "BGT": B$ = ">": C$ = "Skip if GreaterThan": GoSub AO
 A$ = "LDX": B$ = "#$0000": C$ = "Set as False": GoSub AO
 Z$ = "!": A$ = "LEAS": B$ = "4,S": C$ = "Move the stack forward": GoSub AO
 A$ = "STX": B$ = ",S+": C$ = "Save X and move the stack forward, we only need to save the result as an 8 bit value": GoSub AO
@@ -486,7 +619,7 @@ Return
 LessThanSameFP8:
 A$ = "LDX": B$ = "#$FFFF": C$ = "Default is True": GoSub AO
 A$ = "JSR": B$ = "Double_CMP_Stack": C$ = "Compare Double Value1 @ ,S with Value 2 @ 10,S sets the 6809 flags Z, N, and C": GoSub AO
-A$ = "BLT": B$ = ">": C$ = "Skip if LessThan": GoSub AO
+A$ = "BGT": B$ = ">": C$ = "Skip if GreaterThan": GoSub AO
 A$ = "LDX": B$ = "#$0000": C$ = "Set as False": GoSub AO
 Z$ = "!": A$ = "LEAS": B$ = "18,S": C$ = "Move the stack forward": GoSub AO
 A$ = "STX": B$ = ",S+": C$ = "Save X and move the stack forward, we only need to save the result as an 8 bit value": GoSub AO
@@ -494,8 +627,13 @@ Return
 
 ' 0 = False
 ' $FF & non zero = True
-NumFunctionGreaterThan:
-Z$ = "; Doing Function GreaterThan": GoSub AO
+'NumFunctionGreaterThan:
+'Z$ = "; Doing Function GreaterThan": GoSub AO
+'Z$ = "; LeftType=" + Str$(LeftType): GoSub AO
+'Z$ = "; RightType=" + Str$(RightType): GoSub AO
+
+NumFunctionLessThan:
+Z$ = "; Doing Function LessThan": GoSub AO
 Z$ = "; LeftType=" + Str$(LeftType): GoSub AO
 Z$ = "; RightType=" + Str$(RightType): GoSub AO
 ' Have to deal with signed and unsigned values when comparing
@@ -845,7 +983,7 @@ Return
 GreaterThanSameFFP:
 A$ = "LDX": B$ = "#$FFFF": C$ = "Default is True": GoSub AO
 A$ = "JSR": B$ = "FFP_CMP_Stack": C$ = "Compare FFP Value1 @ ,S with Value 2 @ 3,S sets the 6809 flags Z, N, and C": GoSub AO
-A$ = "BGT": B$ = ">": C$ = "Skip if GreaterThan": GoSub AO
+A$ = "BLT": B$ = ">": C$ = "Skip if LessThan": GoSub AO
 A$ = "LDX": B$ = "#$0000": C$ = "Set as False": GoSub AO
 Z$ = "!": A$ = "LEAS": B$ = "4,S": C$ = "Move the stack forward": GoSub AO
 A$ = "STX": B$ = ",S+": C$ = "Save X and move the stack forward, we only need to save the result as an 8 bit value": GoSub AO
@@ -855,7 +993,7 @@ Return
 GreaterThanSameFP8:
 A$ = "LDX": B$ = "#$FFFF": C$ = "Default is True": GoSub AO
 A$ = "JSR": B$ = "Double_CMP_Stack": C$ = "Compare Double Value1 @ ,S with Value 2 @ 10,S sets the 6809 flags Z, N, and C": GoSub AO
-A$ = "BGT": B$ = ">": C$ = "Skip if GreaterThan": GoSub AO
+A$ = "BLT": B$ = ">": C$ = "Skip if LessThan": GoSub AO
 A$ = "LDX": B$ = "#$0000": C$ = "Set as False": GoSub AO
 Z$ = "!": A$ = "LEAS": B$ = "18,S": C$ = "Move the stack forward": GoSub AO
 A$ = "STX": B$ = ",S+": C$ = "Save X and move the stack forward, we only need to save the result as an 8 bit value": GoSub AO
@@ -863,137 +1001,13 @@ Return
 
 ' 0 = False
 ' $FF & non zero = True
-NumFunctionNotEqual:
-Z$ = "; Doing Function NotEqual": GoSub AO
-If Largesttype < 5 Then GoTo NotEqualSameType1 ' Both are a byte size of 1
-If (LeftType = 5 Or LeftType = 6) And (RightType = 5 Or RightType = 6) Then GoTo NotEqualSameType2 ' Both are a byte size of 2
-If LeftType < 7 And RightType < 7 Then GoTo NotEqualMaxType2 ' One is 1 byte the other is 2 byte
-If (LeftType = 7 Or LeftType = 8) And (RightType = 7 Or RightType = 8) Then GoTo NotEqualSameType4 ' Both are a byte size of 4
-If (LeftType = 9 Or LeftType = 10) And (RightType = 9 Or RightType = 10) Then GoTo NotEqualSameType8 ' Both are a byte size of 8
-If LeftType = 11 And RightType = 11 Then GoTo NotEqualSameFFP ' Both are FP 3 bytes
-If LeftType = 12 And RightType = 12 Then GoTo NotEqualSameFP8 ' Both are FP 8 bytes
+'NumFunctionLessOrEqual:
+'Z$ = "; Doing Function LessOrEqual": GoSub AO
+'Z$ = "; LeftType=" + Str$(LeftType): GoSub AO
+'Z$ = "; RightType=" + Str$(RightType): GoSub AO
 
-' Otherwise Types are not the same
-Value1Type = LeftType
-Value2Type = RightType
-GoSub ScaleSmallNumberOnStack ' Convert smaller of Value1Type(Rightside) or Value2Type(Leftside) type to the largest type
-
-Select Case Largesttype
-    Case 7, 8 ' Same 4 byte values
-        GoTo NotEqualSameType4
-    Case 9, 10 ' Same 8 byte values
-        GoTo NotEqualSameType8
-    Case 11 ' Same FFP values
-        GoTo NotEqualSameFFP
-    Case 12 'Same Double values
-        GoTo NotEqualSameFP8
-End Select
-
-' Both are 1 byte
-NotEqualSameType1:
-' Both are 1 byte (8 bits)
-A$ = "LDA": B$ = "#$FF": C$ = "Default is True": GoSub AO
-A$ = "LDB": B$ = "1,S": C$ = "Right value2 is 8 bits": GoSub AO
-' Right is an 8 bit value
-A$ = "CMPB": B$ = ",S+": C$ = "Compare Left value1 is an 8 bit value, move stack": GoSub AO
-A$ = "BNE": B$ = ">": C$ = "Skip if NotEqual": GoSub AO
-A$ = "CLRA": C$ = "Flag as false": GoSub AO
-Z$ = "!": A$ = "STA": B$ = ",S": GoSub AO
-Return
-
-' One is 1 byte, the other is 2 bytes
-NotEqualMaxType2:
-A$ = "LDX": B$ = "#$FFFF": C$ = "Default is True": GoSub AO
-If LeftType < 5 Then
-    ' Left is 1 byte and right is 2 bytes                     v1=1,S & 2,S - v2=,S
-    A$ = "LDB": B$ = ",S+": C$ = "Get V2 8 bit value, move the stack": GoSub AO
-    A$ = "SEX": C$ = "D = B": GoSub AO
-    A$ = "SUBD": B$ = ",S": C$ = "Subtract v1 16 bit value, move the stack": GoSub AO
-    A$ = "CMPD": B$ = "#$0000": C$ = "TSTD": GoSub AO
-Else
-    ' Left is 2 bytes and right is 1 byte                      v1=2,S - v2 =,S & 1,S
-    A$ = "LDB": B$ = "2,S": C$ = "Get V1 8 bit value": GoSub AO
-    A$ = "SEX": C$ = "D = B": GoSub AO
-    A$ = "SUBD": B$ = ",S+": C$ = "Subtract v2 16 bit value, move the stack": GoSub AO
-    A$ = "CMPD": B$ = "#$0000": C$ = "TSTD": GoSub AO
-End If
-A$ = "BNE": B$ = ">": C$ = "Skip if NotEqual": GoSub AO
-A$ = "LDX": B$ = "#$0000": C$ = "Set as False": GoSub AO
-Z$ = "!": A$ = "STX": B$ = ",S+": C$ = "Save X and move the stack forward, we only need to save the result as an 8 bit value": GoSub AO
-Return
-
-' Both are 2 bytes
-NotEqualSameType2:
-A$ = "LDA": B$ = "#$FF": C$ = "Default is True": GoSub AO
-A$ = "LDX": B$ = ",S++": C$ = "D = left 16 bit value1": GoSub AO
-A$ = "CMPX": B$ = ",S+": C$ = "Compare with right 16 bit value2, move the stack": GoSub AO
-A$ = "BNE": B$ = ">": C$ = "Skip if NotEqual": GoSub AO
-A$ = "CLRA": C$ = "Flag as false": GoSub AO
-Z$ = "!": A$ = "STA": B$ = ",S": GoSub AO
-Return
-
-' Both are 4 bytes
-NotEqualSameType4: '
-A$ = "LDA": B$ = "#$FF": C$ = "Default is True": GoSub AO
-A$ = "LDX": B$ = ",S": C$ = "Get the left MSWord 32 bit value": GoSub AO
-A$ = "CMPx": B$ = "4,S": C$ = "Compare with right MSWord 32 bit value": GoSub AO
-A$ = "BNE": B$ = ">": C$ = "If Not Equal, Exit with True": GoSub AO
-A$ = "LDX": B$ = "2,S": C$ = "Get the left LSWord 32 bit value": GoSub AO
-A$ = "CMPX": B$ = "6,S": C$ = "Compare with right MSWord 32 bit value": GoSub AO
-A$ = "BNE": B$ = ">": C$ = "Skip if NotEqual": GoSub AO
-A$ = "CLRA": C$ = "Flag as false": GoSub AO
-Z$ = "!": A$ = "LEAS": B$ = "7,S": C$ = "Move the stack forward": GoSub AO
-A$ = "STA": B$ = ",S": C$ = "Save A and move the stack forward, we only need to save the result as an 8 bit value": GoSub AO
-GoSub AO
-Return
-
-' Both are 8 bytes
-NotEqualSameType8:
-A$ = "LDA": B$ = "#$FF": C$ = "Default is True": GoSub AO
-A$ = "LDX": B$ = ",S": C$ = "Get the left MSWord 64 bit value": GoSub AO
-A$ = "CMPX": B$ = "8,S": C$ = "Compare with right Word 64 bit value": GoSub AO
-A$ = "BNE": B$ = ">": C$ = "If Not Equal, Exit with True": GoSub AO
-A$ = "LDX": B$ = "2,S": C$ = "Get the left LSWord 64 bit value": GoSub AO
-A$ = "CMPX": B$ = "10,S": C$ = "Compare with right MSWord 64 bit value": GoSub AO
-A$ = "BNE": B$ = ">": C$ = "If Not Equal, Exit with True": GoSub AO
-A$ = "LDX": B$ = "4,S": C$ = "Get the left MSWord 64 bit value": GoSub AO
-A$ = "CMPX": B$ = "12,S": C$ = "Compare with right MSWord 64 bit value": GoSub AO
-A$ = "BNE": B$ = ">": C$ = "If Not Equal, Exit with True": GoSub AO
-A$ = "LDX": B$ = "6,S": C$ = "Get the left LSWord 64 bit value": GoSub AO
-A$ = "CMPX": B$ = "14,S": C$ = "Compare with right MSWord 64 bit value": GoSub AO
-A$ = "BNE": B$ = ">": C$ = "Skip if NotEqual": GoSub AO
-A$ = "CLRA": C$ = "Flag as false": GoSub AO
-Z$ = "!": A$ = "LEAS": B$ = "15,S": C$ = "Move the stack forward": GoSub AO
-A$ = "STA": B$ = ",S": C$ = "Save A and move the stack forward, we only need to save the result as an 8 bit value": GoSub AO
-GoSub AO
-Return
-
-' Both are FP 3 bytes in FFP format
-NotEqualSameFFP:
-A$ = "LDX": B$ = "#$FFFF": C$ = "Default is True": GoSub AO
-A$ = "JSR": B$ = "FFP_CMP_Stack": C$ = "Compare FFP Value1 @ 3,S with Value 2 @ ,S sets the 6809 flags Z, N, and C": GoSub AO
-A$ = "BNE": B$ = ">": C$ = "Skip if NotEqual": GoSub AO
-A$ = "LDX": B$ = "#$0000": C$ = "Set as False": GoSub AO
-Z$ = "!": A$ = "LEAS": B$ = "4,S": C$ = "Move the stack forward": GoSub AO
-A$ = "STX": B$ = ",S+": C$ = "Save X and move the stack forward, we only need to save the result as an 8 bit value": GoSub AO
-GoSub AO
-Return
-
-' Both are FP 10 bytes
-NotEqualSameFP8:
-A$ = "LDX": B$ = "#$FFFF": C$ = "Default is True": GoSub AO
-A$ = "JSR": B$ = "Double_CMP_Stack": C$ = "Compare Double Value1 @ 10,S with Value 2 @ ,S sets the 6809 flags Z, N, and C": GoSub AO
-A$ = "BNE": B$ = ">": C$ = "Skip if NotEqual": GoSub AO
-A$ = "LDX": B$ = "#$0000": C$ = "Set as False": GoSub AO
-Z$ = "!": A$ = "LEAS": B$ = "18,S": C$ = "Move the stack forward": GoSub AO
-A$ = "STX": B$ = ",S+": C$ = "Save X and move the stack forward, we only need to save the result as an 8 bit value": GoSub AO
-GoSub AO
-Return
-
-' 0 = False
-' $FF & non zero = True
-NumFunctionLessOrEqual:
-Z$ = "; Doing Function LessOrEqual": GoSub AO
+NumFunctionGreaterOrEqual:
+Z$ = "; Doing Function GreaterOrEqual": GoSub AO
 Z$ = "; LeftType=" + Str$(LeftType): GoSub AO
 Z$ = "; RightType=" + Str$(RightType): GoSub AO
 ' Have to deal with signed and unsigned values when comparing
@@ -1336,7 +1350,7 @@ Return
 LessOrEqualSameFFP:
 A$ = "LDX": B$ = "#$FFFF": C$ = "Default is True": GoSub AO
 A$ = "JSR": B$ = "FFP_CMP_Stack": C$ = "Compare FFP Value1 @ ,S with Value 2 @ 3,S sets the 6809 flags Z, N, and C": GoSub AO
-A$ = "BLE": B$ = ">": C$ = "Skip if LessOrEqual": GoSub AO
+A$ = "BGE": B$ = ">": C$ = "Skip if GreaterOrEqual": GoSub AO
 A$ = "LDX": B$ = "#$0000": C$ = "Set as False": GoSub AO
 Z$ = "!": A$ = "LEAS": B$ = "4,S": C$ = "Move the stack forward": GoSub AO
 A$ = "STX": B$ = ",S+": C$ = "Save X and move the stack forward, we only need to save the result as an 8 bit value": GoSub AO
@@ -1346,7 +1360,7 @@ Return
 LessOrEqualSameFP8:
 A$ = "LDX": B$ = "#$FFFF": C$ = "Default is True": GoSub AO
 A$ = "JSR": B$ = "Double_CMP_Stack": C$ = "Compare Double Value1 @ ,S with Value 2 @ 10,S sets the 6809 flags Z, N, and C": GoSub AO
-A$ = "BLE": B$ = ">": C$ = "Skip if LessOrEqual": GoSub AO
+A$ = "BGE": B$ = ">": C$ = "Skip if GreaterOrEqual": GoSub AO
 A$ = "LDX": B$ = "#$0000": C$ = "Set as False": GoSub AO
 Z$ = "!": A$ = "LEAS": B$ = "18,S": C$ = "Move the stack forward": GoSub AO
 A$ = "STX": B$ = ",S+": C$ = "Save X and move the stack forward, we only need to save the result as an 8 bit value": GoSub AO
@@ -1354,8 +1368,12 @@ Return
 
 ' 0 = False
 ' $FF & non zero = True
-NumFunctionGreaterOrEqual:
-Z$ = "; Doing Function GreaterOrEqual": GoSub AO
+' NumFunctionGreaterOrEqual:
+' Z$ = "; Doing Function GreaterOrEqual": GoSub AO
+' Z$ = "; LeftType=" + Str$(LeftType): GoSub AO
+' Z$ = "; RightType=" + Str$(RightType): GoSub AO
+NumFunctionLessOrEqual:
+Z$ = "; Doing Function LessOrEqual": GoSub AO
 Z$ = "; LeftType=" + Str$(LeftType): GoSub AO
 Z$ = "; RightType=" + Str$(RightType): GoSub AO
 ' Have to deal with signed and unsigned values when comparing
@@ -1705,7 +1723,7 @@ Return
 GreaterOrEqualSameFFP:
 A$ = "LDX": B$ = "#$FFFF": C$ = "Default is True": GoSub AO
 A$ = "JSR": B$ = "FFP_CMP_Stack": C$ = "Compare FFP Value1 @ ,S with Value 2 @ 3,S sets the 6809 flags Z, N, and C": GoSub AO
-A$ = "BGE": B$ = ">": C$ = "Skip if GreaterOrEqual": GoSub AO
+A$ = "BLE": B$ = ">": C$ = "Skip if LessOrEqual": GoSub AO
 A$ = "LDX": B$ = "#$0000": C$ = "Set as False": GoSub AO
 Z$ = "!": A$ = "LEAS": B$ = "4,S": C$ = "Move the stack forward": GoSub AO
 A$ = "STX": B$ = ",S+": C$ = "Save X and move the stack forward, we only need to save the result as an 8 bit value": GoSub AO
@@ -1715,7 +1733,7 @@ Return
 GreaterOrEqualSameFP8:
 A$ = "LDX": B$ = "#$FFFF": C$ = "Default is True": GoSub AO
 A$ = "JSR": B$ = "Double_CMP_Stack": C$ = "Compare Double Value1 @ ,S with Value 2 @ 10,S sets the 6809 flags Z, N, and C": GoSub AO
-A$ = "BGE": B$ = ">": C$ = "Skip if GreaterOrEqual": GoSub AO
+A$ = "BLE": B$ = ">": C$ = "Skip if LessOrEqual": GoSub AO
 A$ = "LDX": B$ = "#$0000": C$ = "Set as False": GoSub AO
 Z$ = "!": A$ = "LEAS": B$ = "18,S": C$ = "Move the stack forward": GoSub AO
 A$ = "STX": B$ = ",S+": C$ = "Save X and move the stack forward, we only need to save the result as an 8 bit value": GoSub AO

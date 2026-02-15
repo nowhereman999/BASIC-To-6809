@@ -13,30 +13,30 @@ Screen_Size_HIG153    EQU $7080
 ; Line colour will have it's colour in the high nibble and the low nibble at this point
 SET_HIG153:
 DoSet_HIG153:
-        PSHS    A,X             ; Save x & y coordinate on the stack
+        PSHS    X               ; Save x & y coordinate on the stack
         LDB     #BytesPerRow_HIG153 ; MUL A by the number of bytes per row
         MUL      
         ADDD    BEGGRP          ; Add the Video Start Address
-        EXG     D,U             ; X has the row to start on
-        LDD     1,S             ; Get the x co-ordinate
+        EXG     D,X             ; D now has the x co-ordinate, X now has the row to start on
         LSRA
         RORB
-        LSRB                    ; B = D/4 
-        LEAU    D,U             ; U now has the value of y * 128 + x/4 (we now have our screen location)
-        LDB     2,S             ; B = the pixel number
+        LSRB                    ; B = D/4
+
+        ABX                     ; X now has the value of y * 128 + x/4 (we now have our screen location)
+        LDB     1,S             ; B = the pixel number
         ANDB    #%00000011      ; B = Pixel value (0 to 3)
-        LDA     ,U              ; Get existing pixels in this byte from the screen
-        LDX     #PixelTable0_HIG153 ; U points to the table of pixels to erase
-        ANDA    B,X             ; Clear out the our pixel
-        LDX     #PixelTable1_HIG153 ; U points to the table of pixel values
+        LDA     ,X              ; Get existing pixels in this byte from the screen
+        LDU     #PixelTable0_HIG153 ; U points to the table of pixels to erase
+        ANDA    B,U             ; Clear out the our pixel
+        LDU     #PixelTable1_HIG153 ; U points to the table of pixel values
         LSLB
         LSLB                    ; X = pixel number * 4
-        ABX                     ; Move X in the table
+        LEAU    B,U             ; Move X in the table
         LDB     LineColour      ; B = colour value of 0,1,2 or 3
         ANDB    #%00000011      ; Make sure the colour is 0 to 3
-        ORA     B,X             ; Or original Byte value with the pixel the user wants to set
-        STA     ,U              ; Write new byte to the screen
-        PULS    A,X,PC            ; Restore D,X & U and return
+        ORA     B,U             ; Or original Byte value with the pixel the user wants to set
+        STA     ,X              ; Write new byte to the screen
+        PULS    X,PC            ; Restore X and return
 
 PixelTable0_HIG153:
         FCB     %00111111 Pixel 0

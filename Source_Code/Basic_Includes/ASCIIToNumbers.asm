@@ -554,6 +554,7 @@ Mul10AddDigitN_MUL_StackCarry:
         ;   1,S = saved digit
         ;   2,S = saved width
         ;   3,S..4,S = saved Y
+        ;   5,S..6,S = saved U
         ;   ... return address below
         ; ----------------------------------------------------
         ; Compute X = U + (width-1)  (point X at LSB)

@@ -1489,7 +1489,7 @@ Do Until v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A)
         ' Value in brackets is on the stack
         ' NumBits = number of bits (8 or 16)
         ' NumDims = Number of dimensions
-        If NumDims = 1 And NVTArrayType < 5 Then
+        If NumDims = 1 And InsideArrayType = NT_UByte  Then
             ' This is a quick and easy location to calc and store
             A$ = "PULS": B$ = "B": C$ = "Array pointer, Fix the stack": GoSub AO
             A$ = "LDX": B$ = "#_ArrayNum_" + NV$ + "+1": C$ = "The array starts here": GoSub AO
@@ -1556,7 +1556,7 @@ Do Until v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A)
         Select Case NVTArrayType:
             Case 1, 2, 3, 4 ' 8 bit integer
                 A$ = "LDX": B$ = "DATAPointer": C$ = "Get the DATA pointer current value": GoSub AO
-                A$ = "JSR": B$ = "ASCII_To_S8_Stack": C$ = "Convert ASCII text @X to a 16 bit number @,S": GoSub AO
+                A$ = "JSR": B$ = "ASCII_To_S8_Stack": C$ = "Convert ASCII text @X to a 8 bit number @,S": GoSub AO
                 A$ = "PULS": B$ = "B": C$ = "Number to store in array, fix the stack": GoSub AO
                 A$ = "STB": B$ = "[,S++]": C$ = "Save the byte and fix the stack": GoSub AO
                 A$ = "LDD": B$ = "Temp3": C$ = "D = location the ASCII # ended, after a comma": GoSub AO
@@ -1620,7 +1620,7 @@ Do Until v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A)
         Select Case NumType:
             Case 1, 2, 3, 4 ' 8 bit integer
                 A$ = "LDX": B$ = "DATAPointer": C$ = "Get the DATA pointer current value": GoSub AO
-                A$ = "JSR": B$ = "ASCII_To_S8_Stack": C$ = "Convert ASCII text @X to a 16 bit number @,S": GoSub AO
+                A$ = "JSR": B$ = "ASCII_To_S8_Stack": C$ = "Convert ASCII text @X to a 8 bit number @,S": GoSub AO
                 A$ = "PULS": B$ = "B": C$ = "pull 1 byte off the stack": GoSub AO
                 A$ = "STB": B$ = "_Var_" + NumericVariable$(v): C$ = "Store B to Variable": GoSub AO
                 A$ = "LDD": B$ = "Temp3": C$ = "D = location the ASCII # ended, after a comma": GoSub AO
@@ -1834,7 +1834,7 @@ If count = 0 Then
             Select Case NumType:
                 Case 1, 2, 3, 4 ' 8 bit integer
                     A$ = "LDX": B$ = "#_StrVar_PF00": C$ = "X = source starts address": GoSub AO
-                    A$ = "JSR": B$ = "ASCII_To_S8_Stack": C$ = "Convert ASCII text @X to a 16 bit number @,S": GoSub AO
+                    A$ = "JSR": B$ = "ASCII_To_S8_Stack": C$ = "Convert ASCII text @X to a 8 bit number @,S": GoSub AO
                     A$ = "PULS": B$ = "B": C$ = "pull 1 byte off the stack": GoSub AO
                     A$ = "STB": B$ = "_Var_" + NumericVariable$(v): C$ = "Store B to Variable": GoSub AO
                 Case 5, 6 ' 16 bit integer
@@ -1974,7 +1974,7 @@ If count = 0 Then
             Select Case NVTArrayType:
                 Case 1, 2, 3, 4 ' 8 bit integer
                     A$ = "LDX": B$ = "#_StrVar_PF00": C$ = "X = source starts address": GoSub AO
-                    A$ = "JSR": B$ = "ASCII_To_S8_Stack": C$ = "Convert ASCII text @X to a 16 bit number @,S": GoSub AO
+                    A$ = "JSR": B$ = "ASCII_To_S8_Stack": C$ = "Convert ASCII text @X to a 8 bit number @,S": GoSub AO
                     A$ = "PULS": B$ = "B": C$ = "Number to store in array, fix the stack": GoSub AO
                     A$ = "STB": B$ = "[,S++]": C$ = "Save the byte and fix the stack": GoSub AO
                 Case 5, 6 ' 16 bit integer
@@ -2155,7 +2155,7 @@ Do Until v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A)
             Select Case NumType:
                 Case 1, 2, 3, 4 ' 8 bit integer
                     A$ = "LDX": B$ = "Temp1": C$ = "X = current start address of the input text": GoSub AO
-                    A$ = "JSR": B$ = "ASCII_To_S8_Stack": C$ = "Convert ASCII text @X to a 16 bit number @,S": GoSub AO
+                    A$ = "JSR": B$ = "ASCII_To_S8_Stack": C$ = "Convert ASCII text @X to a 8 bit number @,S": GoSub AO
                     A$ = "PULS": B$ = "B": C$ = "pull 1 byte off the stack": GoSub AO
                     A$ = "STB": B$ = "_Var_" + NumericVariable$(v): C$ = "Store B to Variable": GoSub AO
                     A$ = "LDD": B$ = "Temp3": C$ = "D = location the ASCII # started": GoSub AO
@@ -2306,7 +2306,7 @@ Do Until v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A)
             Select Case NVTArrayType:
                 Case 1, 2, 3, 4 ' 8 bit integer
                     A$ = "LDX": B$ = "Temp1": C$ = "X = current start address of the input text": GoSub AO
-                    A$ = "JSR": B$ = "ASCII_To_S8_Stack": C$ = "Convert ASCII text @X to a 16 bit number @,S": GoSub AO
+                    A$ = "JSR": B$ = "ASCII_To_S8_Stack": C$ = "Convert ASCII text @X to a 8 bit number @,S": GoSub AO
                     A$ = "PULS": B$ = "B": C$ = "Number to store in array, fix the stack": GoSub AO
                     A$ = "STB": B$ = "[,S++]": C$ = "Save the byte and fix the stack": GoSub AO
                     A$ = "LDD": B$ = "Temp3": C$ = "D = location the ASCII # started": GoSub AO

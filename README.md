@@ -10,6 +10,12 @@ https://github.com/nowhereman999/BASIC-To-6809/blob/main/Manual.pdf
 For more info check out the blog post here:
 https://wordpress.com/post/nowhereman999.wordpress.com/5054
 
+V 5.11
+- Fixed a major bug with comparisons of types that are not floating point, where the < & > were reversed
+  Previously you can only trust + or <>, now all types are compared correctly.  The code produced is efficient and works well
+  but the compiler is doing some double negatives while generating the 6809 code which really should be cleaned up (one day) 
+- Fixed a specific bug with READing DATA into an array that is exactly 256 elements (0 to 255) as 8 bit values
+
 V 5.1
 - Fixed a big bug in the CASE code where it could crash if one of the CASEes did a GOTO/RETURN
 - Fixed a bug that was messing up the stack doing string comparisons
