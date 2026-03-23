@@ -178,7 +178,14 @@ Else
         Case 9, 10
             Num = 8
         Case 11
-            Num = 3
+        Select Case FloatType
+            Case 0:
+                ' Handle 3 byte FFP
+                    Num = 3
+            Case 1:
+                ' Handle 5 byte FP5
+                    Num = 5
+        End Select
         Case 12
             Num = 10
     End Select
@@ -252,7 +259,14 @@ Else
         Case 9, 10
             Num = 8
         Case 11
-            Num = 3
+        Select Case FloatType
+            Case 0:
+                ' Handle 3 byte FFP
+                    Num = 3
+            Case 1:
+                ' Handle 5 byte FP5
+                    Num = 5
+        End Select
         Case 12
             Num = 10
     End Select
@@ -303,10 +317,20 @@ Select Case NVT
         A$ = "STU": B$ = NV$ + "+6": C$ = "Save Numeric variable": GoSub AO
         A$ = "LDU": B$ = "#" + NV$ + "+6": C$ = "Address to save variable": GoSub AO
         A$ = "PSHU": B$ = "D,X,Y": C$ = "Blast Numeric variable": GoSub AO
-    Case 11 ' 3 byte variable
+    Case 11 ' Singlevariable
+        Select Case FloatType
+            Case 0:
+                ' Handle 3 byte FFP
         A$ = "PULS": B$ = "B,X": C$ = "Get the 3 byte Fast Float value off the stack, fix the stack": GoSub AO
         A$ = "STB": B$ = NV$: C$ = "Save Numeric variable": GoSub AO
         A$ = "STX": B$ = NV$ + "+1": C$ = "Save Numeric variable": GoSub AO
+            Case 1:
+                ' Handle 5 byte FP5
+        A$ = "PULS": B$ = "B,X,U": C$ = "Get the 5 byte value off the stack, fix the stack": GoSub AO
+        A$ = "STB": B$ = NV$: C$ = "Save Numeric variable": GoSub AO
+        A$ = "STX": B$ = NV$ + "+1": C$ = "Save Numeric variable": GoSub AO
+        A$ = "STU": B$ = NV$ + "+3": C$ = "Save Numeric variable": GoSub AO
+        End Select
     Case 12 ' 10 byte variable
         A$ = "PULS": B$ = "D,X,Y,U": C$ = "Pull the first 8 bytes off the stack": GoSub AO
         A$ = "STU": B$ = NV$ + "+6": C$ = "Save U at destination address + 6": GoSub AO

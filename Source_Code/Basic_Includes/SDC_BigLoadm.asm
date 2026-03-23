@@ -8,15 +8,6 @@ SDCBankPointer  FDB     _StrVar_PF00
 SDCByteCount    RMB     1               ; Counter for writing bytes
 SDCBlockCount   RMB     1               ; Counter for number of 512 byte blocks to load
 SDCBigLoadM:
-* Check and disable any high speed options
-        LDA     >CoCoHardware           ; Get the CoCo Hardware info byte
-        BPL     >                       ; If bit 7 is clear then skip forward it's a 6809
-        FCB     $11,$3D,%00000000       ; otherwise, put the 6309 in emulation mode.  This is LDMD  #%00000000
-!       RORA                            ; Move bit 0 to the Carry bit
-        BCC     >                       ; if the Carry bit is clear, then not a CoCo 3, skip ahead
-        STA     >$FFD8                 ; Put CoCo 3 in Regular speed mode
-!
-
 * Lowercase m: which doesn't have a size length check
 ; Put "m:" at the start of the filename
         LDX     #_StrVar_PF00+1 ; Get the start of the filename string
@@ -62,9 +53,9 @@ SDCBigLoadM:
         STU     SDCJumpBack+1
         BRA     SDCGet512Bytes  ; Fill the block map buffer with info of where data is stored in memory
 @ComBackHere:
-!       LDA     <$48            ; [4] Poll status byte, required for the first byte of each 512 byte sector (get ready to read the next buffer)
-        ASRA                    ; [2] Shift the BUSY bit to the carry
-        LBCC    SDCBigLoadmDone ;[5 if not taken, 6 if it is taken] Done if BUSY bit is cleared (End of File) (jump to play the buffer and end)
+!       LDA     <$48            ; Poll status byte, required for the first byte of each 512 byte sector (get ready to read the next buffer)
+        ASRA                    ; Shift the BUSY bit to the carry
+        LBCC    SDCBigLoadmDone ; Done if BUSY bit is cleared (End of File) (jump to play the buffer and end)
         BEQ     <
 
         LDX     SDCBankPointer  ; Get the version number of the file
@@ -143,7 +134,6 @@ SDCBigLoadmDone:
 
 BigLoadmSDCStack:
         LDS     #$FFFF          ; Restore the Stack pointer (self mod)
-        JSR     SetCPUSpeed     ; Set the CPU Speed back to what the user wants
         LDB     #$3A
         STB     $FFA2           ; Restore normal Bank 2 = $4000
         PULS    CC,DP,PC        ; Restore CC & DP & return

@@ -332,6 +332,90 @@ Sub DoubleToCustomFloat (x As Double) ' , result AS STRING)
     Byte3 = sig16 And &HFF
 End Sub
 
+Sub DoubleToFP5 (x As Double)
+    ' Output:
+    '   Byte1 = Sign|Exponent (7-bit signed)
+    '   Byte2..Byte5 = Mantissa (32-bit, MSB..LSB)
+    '
+    ' Declare these somewhere (e.g. SHARED) or adapt to return a string:
+    '   DIM SHARED Byte1 AS _UNSIGNED _BYTE, Byte2 AS _UNSIGNED _BYTE, Byte3 AS _UNSIGNED _BYTE
+    '   DIM SHARED Byte4 AS _UNSIGNED _BYTE, Byte5 AS _UNSIGNED _BYTE
+
+    Dim signByte As _Unsigned _Byte
+    Dim av As Double
+
+    ' Zero
+    If x = 0# Then
+        Byte1 = 0: Byte2 = 0: Byte3 = 0: Byte4 = 0: Byte5 = 0
+        Exit Sub
+    End If
+
+    ' Sign
+    If x < 0# Then
+        signByte = &H80
+        av = -x
+    Else
+        signByte = 0
+        av = x
+    End If
+
+    ' NaN check (QB64: NaN is the only value where x<>x)
+    If x <> x Then
+        ' No dedicated NaN in FP5: clamp to max
+        Byte1 = signByte Or &H3F
+        Byte2 = &HFF: Byte3 = &HFF: Byte4 = &HFF: Byte5 = &HFF
+        Exit Sub
+    End If
+
+    ' exp = floor(log2(av))
+    Dim exp1 As Long
+    Dim lg As Double
+    lg = Log(av) / Log(2#)
+    exp1 = Fix(lg)
+    If lg < exp1 Then exp1 = exp1 - 1
+
+    ' mant = round(av * 2^(31-exp))
+    Dim mantD As Double
+    mantD = av * (2# ^ (31 - exp1))
+
+    Dim mant As _Unsigned _Integer64
+    mant = Fix(mantD + 0.5#) ' round-to-nearest
+
+    ' If rounding overflowed to 2^32, renormalize
+    If mant = 4294967296## Then
+        mant = 2147483648## ' 2^31
+        exp1 = exp1 + 1
+    End If
+
+    ' Range check for 7-bit signed exponent (-64..+63)
+    If exp1 > 63 Then
+        Byte1 = signByte Or &H3F
+        Byte2 = &HFF: Byte3 = &HFF: Byte4 = &HFF: Byte5 = &HFF
+        Exit Sub
+    End If
+    If exp1 < -64 Then
+        Byte1 = 0: Byte2 = 0: Byte3 = 0: Byte4 = 0: Byte5 = 0
+        Exit Sub
+    End If
+
+    ' Pack exponent as 7-bit two's complement into low 7 bits
+    Dim exp7 As _Unsigned _Byte
+    exp7 = (exp1 And &H7F)
+
+    Byte1 = signByte Or exp7
+
+    ' Pack mantissa big-endian (Byte2=MSB ... Byte5=LSB)
+    Byte2 = (mant \ 16777216) And &HFF ' /2^24
+    Byte3 = (mant \ 65536) And &HFF ' /2^16
+    Byte4 = (mant \ 256) And &HFF ' /2^8
+    Byte5 = mant And &HFF
+End Sub
+
+Function IsBoolOnStack% (Tok$)
+    IsBoolOnStack% = 0
+    If Len(Tok$) = 0 Then Exit Function
+    If Asc(Left$(Tok$, 1)) = TK_BOOL_ONSTACK Then IsBoolOnStack% = -1
+End Function
 
 ' Returns -1 (true) if the operator is left-associative
 ' Returns  0 (false) if right-associative
@@ -394,7 +478,7 @@ Function IsStringToken% (t$)
     If k = TK_SpecialChar Then
         If Len(t$) >= 2 And Asc(Mid$(t$, 2, 1)) = TK_Quote Then IsStringToken% = -1: Exit Function
     End If
-    If k = &HF9 Then IsStringToken% = -1: Exit Function ' your "string already on 6809 stack" marker
+    If k = TK_STR_ONSTACK Then IsStringToken% = -1: Exit Function ' your "string already on 6809 stack" marker
     IsStringToken% = 0
 End Function
 
@@ -466,44 +550,44 @@ Function GetMSB& (inputVal As _Integer64)
 End Function
 
 ' Returns -1 if Expression$ is a STRING expression, 0 if not
-FUNCTION ExprIsString% (E$)
-    DIM p AS LONG
-    DIM t AS INTEGER, c AS INTEGER
+Function ExprIsString% (E$)
+    Dim p As Long
+    Dim t As Integer, c As Integer
 
     p = 1
-    DO WHILE p <= LEN(E$)
-        t = ASC(MID$(E$, p, 1))
+    Do While p <= Len(E$)
+        t = Asc(Mid$(E$, p, 1))
 
         ' Direct string starters
-        IF t = &HF1 OR t = &HF3 OR t = &HFD THEN
+        If t = &HF1 Or t = &HF3 Or t = &HFD Then
             ExprIsString% = -1
-            EXIT FUNCTION
-        END IF
+            Exit Function
+        End If
 
         ' Special-char token (F5, next byte is the character)
-        IF t = &HF5 THEN
-            IF p + 1 > LEN(E$) THEN EXIT DO
-            c = ASC(MID$(E$, p + 1, 1))
+        If t = &HF5 Then
+            If p + 1 > Len(E$) Then Exit Do
+            c = Asc(Mid$(E$, p + 1, 1))
 
             ' Skip whitespace and leading parentheses:  F5 ' '  or  F5 '('
-            IF c = 32 OR c = 9 OR c = 40 THEN
+            If c = 32 Or c = 9 Or c = 40 Then
                 p = p + 2
-                _CONTINUE
-            END IF
+                _Continue
+            End If
 
             ' Quoted literal starts with: F5 '"'
-            IF c = 34 THEN
+            If c = 34 Then
                 ExprIsString% = -1
-                EXIT FUNCTION
-            END IF
+                Exit Function
+            End If
 
             ' Some other special char: stop scanning
-            EXIT DO
-        END IF
+            Exit Do
+        End If
 
         ' Anything else: stop scanning
-        EXIT DO
-    LOOP
+        Exit Do
+    Loop
 
     ExprIsString% = 0
-END FUNCTION
+End Function

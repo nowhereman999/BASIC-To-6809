@@ -15,12 +15,9 @@ GetInput:
         DEC     CURPOS+1        ; Set next position to print on screen on top of the cursor
         BNE     >               ; ""
         DEC     CURPOS          ; ""
-;!       JSR     InKey           ; Get input
 !       JSR     KEYIN
         TSTA                    ; was a key pressed?
         BEQ     <               ; If not then get some more
-;        CMPA    #$03            ; Was the Break key pressed?
-;        BEQ     EXITProgram     ; If so then leave the program
         CMPA    #$08            ; Was the Backspace key pressed?
         BNE     >               ; Skip forword if not
         TSTB                    ; Check buffer size counter
@@ -28,9 +25,9 @@ GetInput:
         DECB                    ; Decrement the buffer size counter
         LEAU    -1,U            ; Decrement the buffer pointer
         JSR     PrintA_On_Screen   ; Go print A on screen @ Cursor Position
-        LDA     #$60            ; Load A with a space
+        LDA     #$60            ; Load A with a blank
         LDX     CURPOS          ; X = current cursor position
-        STA     1,X             ; Save the space in the buffer
+        STA     1,X             ; Save the blank on the screen
         BRA     @Loop1          ; Go get another keypress
 !       JSR     PrintA_On_Screen   ; Go print A on screen @ Cursor Position
         CMPA    #$0D            ; Was the Enter key pressed?

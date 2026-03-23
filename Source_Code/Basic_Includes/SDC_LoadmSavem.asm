@@ -10,41 +10,34 @@
 ; 3, 4        Load address            EXEC address
 
 SDCLoadM0:
-* Check and disable any high speed options
-        LDA     >CoCoHardware           ; Get the CoCo Hardware info byte
-        BPL     >                       ; If bit 7 is clear then skip forward it's a 6809
-        FCB     $11,$3D,%00000000       ; otherwise, put the 6309 in emulation mode.  This is LDMD  #%00000000
-!       RORA                            ; Move bit 0 to the Carry bit
-        BCC     >                       ; if the Carry bit is clear, then not a CoCo 3, skip ahead
-        STA     >$FFD8                 ; Put CoCo 3 in Regular speed mode
-!       CLRA                    ; Read mode
-        JSR     SDCOpenFile     ; Open the file, A = File read mode (0) or write mode (1), B = File number (0 or 1)
+        CLRA                            ; Read mode
+        JSR     SDCOpenFile             ; Open the file, A = File read mode (0) or write mode (1), B = File number (0 or 1)
 SDC_GetMLBlock0:
-        JSR     SDCGetByteB0    ; Get the next byte in file 0 and return with it in B
+        JSR     SDCGetByteB0            ; Get the next byte in file 0 and return with it in B
         TSTB
-        BEQ     SDC_DoPREAMBLE0  ; Skip ahead if it's a PREAMBLE
+        BEQ     SDC_DoPREAMBLE0         ; Skip ahead if it's a PREAMBLE
 ; If we get here then we have reached the end of the file
 ; Postamble
-        CMPB    #$FF            ; Make sure it's the post-amble flag
-        BNE     SDC_DiskErrorBadMLFile     ; Bad file format if not
-        BSR     SDC_GetWordD0    ; Read next two bytes into D
-        CMPD    #$0000          ; Make sure it's two zero bytes
-        BNE     SDC_DiskErrorBadMLFile     ; Bad file format if not
-        BSR     SDC_GetWordD0    ; Read next two bytes into D
-        ADDD    _Var_PF10       ; D = D + LOADM Offset amount    
-        JMP     SDC_CloseFile0  ; File has been LOADMed into memory, Close the file 0 & return
+        CMPB    #$FF                    ; Make sure it's the post-amble flag
+        BNE     SDC_DiskErrorBadMLFile  ; Bad file format if not
+        BSR     SDC_GetWordD0           ; Read next two bytes into D
+        CMPD    #$0000                  ; Make sure it's two zero bytes
+        BNE     SDC_DiskErrorBadMLFile  ; Bad file format if not
+        BSR     SDC_GetWordD0           ; Read next two bytes into D
+        ADDD    _Var_PF10               ; D = D + LOADM Offset amount    
+        JMP     SDC_CloseFile0          ; File has been LOADMed into memory, Close the file 0 & return
 
 SDC_DoPREAMBLE0:
-        BSR     SDC_GetWordD0    ; Read next two bytes into D    
-        TFR     D,X             ; X = Length of data block
-        BSR     SDC_GetWordD0    ; Read next two bytes into D
-        ADDD    _Var_PF10       ; D = D + LOADM Offset amount    
-        TFR     D,U             ; U = Load address
-!       JSR     SDCGetByteB0   ; Get a byte from the file in B
-        STB     ,U+             ; Save the byte to memory
-        LEAX    -1,X            ; Decrement the counter
-        BNE     <               ; Keep looping until we've copied all the bytes
-        BRA     SDC_GetMLBlock0 ; Go read the next block
+        BSR     SDC_GetWordD0           ; Read next two bytes into D    
+        TFR     D,X                     ; X = Length of data block
+        BSR     SDC_GetWordD0           ; Read next two bytes into D
+        ADDD    _Var_PF10               ; D = D + LOADM Offset amount    
+        TFR     D,U                     ; U = Load address
+!       JSR     SDCGetByteB0            ; Get a byte from the file in B
+        STB     ,U+                     ; Save the byte to memory
+        LEAX    -1,X                    ; Decrement the counter
+        BNE     <                       ; Keep looping until we've copied all the bytes
+        BRA     SDC_GetMLBlock0         ; Go read the next block
 
 ; Read next two bytes from the open file into D
 SDC_GetWordD0:
@@ -53,13 +46,7 @@ SDC_GetWordD0:
         JMP     SDCGetByteB0    ; Get the next byte in file 0 in B and return, D now has the WORD from the file
 
 SDCLoadM1:
-        LDA     >CoCoHardware           ; Get the CoCo Hardware info byte
-        BPL     >                       ; If bit 7 is clear then skip forward it's a 6809
-        FCB     $11,$3D,%00000000       ; otherwise, put the 6309 in emulation mode.  This is LDMD  #%00000000
-!       RORA                            ; Move bit 0 to the Carry bit
-        BCC     >                       ; if the Carry bit is clear, then not a CoCo 3, skip ahead
-        STA     >$FFD8                 ; Put CoCo 3 in Regular speed mode
-!       CLRA                    ; Read mode
+        CLRA                    ; Read mode
         JSR     SDCOpenFile     ; Open the file, A = File read mode (0) or write mode (1), B = File number (0 or 1)
 SDC_GetMLBlock1:
         JSR     SDCGetByteB1    ; Get the next byte in file 1 and return with it in B
@@ -118,13 +105,7 @@ SDC_DiskErrorBadMLFile:
 ; 4,S = End Address
 ; 2,S = EXECute Address
 SDCSaveM0:
-        LDA     >CoCoHardware           ; Get the CoCo Hardware info byte
-        BPL     >                       ; If bit 7 is clear then skip forward it's a 6809
-        FCB     $11,$3D,%00000000       ; otherwise, put the 6309 in emulation mode.  This is LDMD  #%00000000
-!       RORA                            ; Move bit 0 to the Carry bit
-        BCC     >                       ; if the Carry bit is clear, then not a CoCo 3, skip ahead
-        STA     >$FFD8                 ; Put CoCo 3 in Regular speed mode
-!       LDA     #$01            ; Open the file in write mode
+        LDA     #$01            ; Open the file in write mode
         JSR     SDCOpenFile     ; Open the file, A = File read mode (0) or write mode (1), B = File number (0 or 1)
 ; Write Preamble
         CLRB
@@ -160,13 +141,7 @@ SDCSaveM0:
         JMP     SDC_CloseFile0  ; Close the file 0 and return
 
 SDCSaveM1:
-        LDA     >CoCoHardware           ; Get the CoCo Hardware info byte
-        BPL     >                       ; If bit 7 is clear then skip forward it's a 6809
-        FCB     $11,$3D,%00000000       ; otherwise, put the 6309 in emulation mode.  This is LDMD  #%00000000
-!       RORA                            ; Move bit 0 to the Carry bit
-        BCC     >                       ; if the Carry bit is clear, then not a CoCo 3, skip ahead
-        STA     >$FFD8                 ; Put CoCo 3 in Regular speed mode
-!       LDA     #$01            ; Open the file in write mode
+        LDA     #$01            ; Open the file in write mode
         JSR     SDCOpenFile     ; Open the file, A = File read mode (0) or write mode (1), B = File number (0 or 1)
 ; Write Preamble
         CLRB

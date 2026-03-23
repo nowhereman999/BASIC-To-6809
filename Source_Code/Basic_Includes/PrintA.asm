@@ -1,4 +1,4 @@
-; Commands to Print to the width 40 screen @ $0E00
+; Commands to Print to the width 32 screen @ $0400
 
 PrintA_On_Screen:
 * PUT CHARACTER ON THE SCREEN

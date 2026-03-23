@@ -12,9 +12,6 @@ Dim NumericVariable$(100000)
 Dim NumericVariableCount As Integer
 Dim NumericVarType(65535) As _Byte ' Holds the type of every variable
 
-Dim FloatVariable$(100000)
-Dim FloatVariableCount As Integer
-
 Dim NumericArrayBits(100000) As Integer
 Dim NumericArrayVariables$(100000), NumericArrayDimensions(100000) As Integer, NumericArrayDimensionsVal$(100000)
 Dim NumericArrayType(65535) As _Byte ' Holds the type of every Numeric Array
@@ -406,7 +403,7 @@ If count = 0 Then
     Print "Compiler has no options given to it"
     System
 End If
-nt = 0: newp = 0: endp = 0: StringArraySize = 16: AutoStart = 0
+nt = 0: newp = 0: endp = 0: StringArraySize = 16: AutoStart = 0: FloatType = 0: KeepTempFiles = 0:
 Optimize = 2 ' Default to optimize level 2
 For check = 1 To count
     N$ = Command$(check)
@@ -414,10 +411,12 @@ For check = 1 To count
     If LCase$(Left$(N$, 2)) = "-s" Then StringArraySize = Val(Right$(N$, Len(N$) - 2)): GoTo CheckNextCMDOption
     If LCase$(Left$(N$, 2)) = "-o" Then Optimize = Val(Right$(N$, Len(N$) - 2)): GoTo CheckNextCMDOption
     If LCase$(Left$(N$, 2)) = "-v" Then Verbose = Val(Right$(N$, Len(N$) - 2)): GoTo CheckNextCMDOption
+    If LCase$(Left$(N$, 2)) = "-k" Then KeepTempFiles = 1: GoTo CheckNextCMDOption
     If LCase$(Left$(N$, 2)) = "-p" Then ProgramStart$ = Right$(N$, Len(N$) - 2): GoTo CheckNextCMDOption
     If LCase$(Left$(N$, 2)) = "-f" Then Font$ = Right$(N$, Len(N$) - 2): GoTo CheckNextCMDOption
     If LCase$(Left$(N$, 2)) = "-a" Then AutoStart = 1: GoTo CheckNextCMDOption
     If LCase$(Left$(N$, 7)) = "-dragon" Then Dragon = 1: GoTo CheckNextCMDOption
+    If LCase$(Left$(N$, 2)) = "-m" Then FloatType = Val(Right$(N$, Len(N$) - 2)): GoTo CheckNextCMDOption
     ' check if we got a file name yet if so then the next filename will be output
     OutName$ = N$
     CheckNextCMDOption:
@@ -450,7 +449,6 @@ x = 0
 INx = 0
 lc = 0
 LineCount = 0
-FloatVariableCount = 0 ' Floating Point variable name count
 StringVariableCounter = 0 ' String variable name count
 ConstCount = 0 ' CONST name count
 CommandsUsedCounter = 0 ' Counter for unique commmands used
@@ -830,10 +828,6 @@ If Verbose > 0 Then
     For ii = 0 To StringCommandsFoundCount - 1
         Print StringCommandsFound$(ii)
     Next ii
-    Print "Floating Point Variables Used:"
-    For ii = 0 To FloatVariableCount - 1
-        Print FloatVariable$(ii)
-    Next ii
     Print "Numeric Variables Used:"
     For ii = 0 To NumericVariableCount - 1
         Print NumericVariable$(ii)
@@ -1100,7 +1094,7 @@ While OP <= filesize
                     End If
                 End If
             End If
-        Case &HF3, &HF4: ' Found a string or fating point variable
+        Case &HF3: ' Found a string
             OP = OP + 2
         Case &HF5 ' Found a special character
             OP = OP + 1
@@ -1152,7 +1146,7 @@ While x <= filesize
                 INArray(c) = v: c = c + 1 'write byte to ouput array
                 v = Array(x): x = x + 1 ' get a byte
                 INArray(c) = v: c = c + 1 'write byte to ouput array
-            Case &HF2, &HF3, &HF4: ' Found a numeric or string or Floating point variable
+            Case &HF2, &HF3: ' Found a numeric or string variable
                 v = Array(x): x = x + 1 ' get a byte
                 INArray(c) = v: c = c + 1 'write byte to ouput array
                 v = Array(x): x = x + 1 ' get a byte
@@ -1360,11 +1354,22 @@ While x <= filesize
                         Case &H23 ' Found a #
                             If Array(x) = &HF5 And Array(x + 1) = Asc("#") Then ' #   _Float use Double
                                 Temp$ = "Math_IEEE_754_Double_64bit": GoSub AddIncludeTemp ' Add code for Selecting the audio muxer and to turn it on or off
+                                Select Case FloatType
+                                    Case 0
+                                        Temp$ = "Math_IEEE_754_Double_64bit_FFP_Convertion": GoSub AddIncludeTemp ' Add code for my 3 byte fast floating point math conversion
+                                    Case 1
+                                        Temp$ = "Math_IEEE_754_Double_64bit_FP5_Convertion": GoSub AddIncludeTemp ' Add code for 5 byte Single floating point math conversion
+                                End Select
                                 Temp$ = "Math_Integer64": GoSub AddIncludeTemp ' Add code for 64 bit math, some routines use integer 64 Add/Subtract
                                 x = x + 2
                             End If
-                        Case Else ' If unknown, probably should add a FFP
-                            Temp$ = "Math_Fast_Floating_Point": GoSub AddIncludeTemp ' Add code for my 3 byte fast floating point math routines
+                        Case Else ' If unknown, probably should add a Single
+                            Select Case FloatType
+                                Case 0
+                                    Temp$ = "Math_Fast_Floating_Point": GoSub AddIncludeTemp ' Add code for my 3 byte fast floating point math routines
+                                Case 1
+                                    Temp$ = "Math_Floating_Point5": GoSub AddIncludeTemp ' Add code for 5 byte Single floating point math routines
+                            End Select
                     End Select
                 End If
             Case &HFB: ' Found a DEF FN Function
@@ -1572,11 +1577,6 @@ Wend
 Open "NumericVariablesUsed.txt" For Output As #1
 For i = 0 To NumericVariableCount - 1
     Print #1, NumericVariable$(i)
-Next i
-Close #1
-Open "FloatingPointVariablesUsed.txt" For Output As #1
-For i = 0 To FloatVariableCount - 1
-    Print #1, FloatVariable$(i)
 Next i
 Close #1
 Open "StringVariablesUsed.txt" For Output As #1
@@ -1907,8 +1907,17 @@ Print #1, "; Numeric Variables Used:"; NumericVariableCount - 1
 For ii = 1 To NumericVariableCount - 1 ' 0 is the Timer Variable, but we don't want to clear it so we mannually enter it above
     Select Case NumericVarType(ii)
         Case 0
-            VSize = 3
-            Temp$ = "Default size as a FastFloat"
+            Select Case FloatType
+                Case 0:
+                    ' Handle 3 byte FFP
+                    Temp$ = "Default size as a FastFloat, 3 bytes"
+                    VSize = 3
+                Case 1:
+                    ' Handle 5 byte FP5
+                    Temp$ = "Default size as Single 5 byte"
+                    VSize = 5
+            End Select
+
             NumericVarType(ii) = 11
         Case 1 To 4 ' Variable size is 1 byte
             VSize = 1
@@ -1922,9 +1931,17 @@ For ii = 1 To NumericVariableCount - 1 ' 0 is the Timer Variable, but we don't w
         Case 9, 10 ' Variable is 8 bytes
             VSize = 8
             Temp$ = "Integer64"
-        Case 11 ' Variable is 3 bytes
-            VSize = 3
-            Temp$ = "FastFloat"
+        Case 11 ' Variable is Single
+            Select Case FloatType
+                Case 0:
+                    ' Handle 3 byte FFP
+                    VSize = 3
+                    Temp$ = "FastFloat, 3 Byte version"
+                Case 1:
+                    ' Handle 5 byte FP5
+                    VSize = 5
+                    Temp$ = "Single 5 Byte version"
+            End Select
         Case 12 ' Variable is 10 bytes
             VSize = 10
             Temp$ = "Double"
@@ -2208,10 +2225,20 @@ If NumArrayVarsUsedCounter > 0 Then
         Print #1,
         If NumericArrayBits(ii) = 8 Then StoreAs$ = "FCB" Else StoreAs$ = "FDB"
         Select Case NumericArrayType(ii)
-            Case 0 ' Arraysize is 3 bytes - Default is FFP 3 byte fast floating point
-                NumericArrayType(ii) = 11 ' force the type to FFP format
-                Temp$ = "3*" ' Default is three bytes per element FFP
-                Bytes$ = "3 bytes": Format$ = "Fast Floating Point"
+            Case 0
+                NumericArrayType(ii) = 11 ' Default type to Sinble format
+                Select Case FloatType
+                    Case 0:
+                        ' Handle 3 byte FFP
+                        ' Arraysize is 3 bytes - Default is FFP 3 byte fast floating point
+                        Temp$ = "3*" ' Default is three bytes per element FFP
+                        Bytes$ = "3 bytes": Format$ = "Fast Floating Point"
+                    Case 1:
+                        ' Handle 5 byte FP5
+                        ' Arraysize is 5 bytes - Default is FFP 5 byte Single floating point
+                        Temp$ = "5*" ' Default is three bytes per element FFP
+                        Bytes$ = "5 bytes": Format$ = "Single Floating Point"
+                End Select
             Case 1 To 4 ' Arraysize is 1 byte
                 Temp$ = "" ' 1 byte per element
                 Bytes$ = "1 byte": Format$ = "8 Bit Integer"
@@ -2224,9 +2251,19 @@ If NumArrayVarsUsedCounter > 0 Then
             Case 9, 10 ' Arraysize is 8 bytes
                 Temp$ = "8*" ' Eight bytes per element
                 Bytes$ = "8 bytes": Format$ = "64 bit Integer"
-            Case 11 ' Arraysize is 3 bytes -  FFP 3 byte fast floating point
-                Temp$ = "3*" ' Three bytes per element
-                Bytes$ = "3 bytes": Format$ = "Fast Floating Point"
+            Case 11 ' Arraysize is Singlet floating point
+                Select Case FloatType
+                    Case 0:
+                        ' Handle 3 byte FFP
+                        ' Arraysize is 3 bytes - Default is FFP 3 byte fast floating point
+                        Temp$ = "3*" ' Three bytes per element
+                        Bytes$ = "3 bytes": Format$ = "Fast Floating Point"
+                    Case 1:
+                        ' Handle 5 byte FP5
+                        ' Arraysize is 5 bytes - Default is FFP 5 byte Single floating point
+                        Temp$ = "5*" ' Default is three bytes per element FFP
+                        Bytes$ = "5 bytes": Format$ = "Single Floating Point"
+                End Select
             Case 12 ' Arraysize is 8 bytes
                 Temp$ = "10*" ' Eight bytes per element
                 Bytes$ = "10 bytes": Format$ = "Double Floating Point"
@@ -2434,7 +2471,12 @@ Next ii
 For ii = 1 To NumericVariableCount - 1 ' 0 is the Timer Variable, but we don't want to clear it so we mannually enter it above
     Select Case NumericVarType(ii)
         Case 0 ' Deafult size is Single
-            Temp$ = "Math_Fast_Floating_Point": GoSub AddIncludeTemp ' Add code for my 3 byte fast floating point math routines
+            Select Case FloatType
+                Case 0
+                    Temp$ = "Math_Fast_Floating_Point": GoSub AddIncludeTemp ' Add code for my 3 byte fast floating point math routines
+                Case 1
+                    Temp$ = "Math_Floating_Point5": GoSub AddIncludeTemp ' Add code for 5 byte Single floating point math routines
+            End Select
         Case 1 To 4 ' Variable size is 1 byte
             ' 6809 can handle these pretty much directly
         Case 5, 6 ' Variable is 2 bytes
@@ -2443,10 +2485,21 @@ For ii = 1 To NumericVariableCount - 1 ' 0 is the Timer Variable, but we don't w
             Temp$ = "Math_Integer32": GoSub AddIncludeTemp ' Add code for 32 bit math
         Case 9, 10 ' Variable is 8 bytes
             Temp$ = "Math_Integer64": GoSub AddIncludeTemp ' Add code for 64 bit math
-        Case 11 ' Variable is 3 bytes
-            Temp$ = "Math_Fast_Floating_Point": GoSub AddIncludeTemp ' Add code for my 3 byte fast floating point math routines
+        Case 11 ' Variable is Sinlge
+            Select Case FloatType
+                Case 0
+                    Temp$ = "Math_Fast_Floating_Point": GoSub AddIncludeTemp ' Add code for my 3 byte fast floating point math routines
+                Case 1
+                    Temp$ = "Math_Floating_Point5": GoSub AddIncludeTemp ' Add code for 5 byte Single floating point math routines
+            End Select
         Case 12 ' Variable is 8 bytes
             Temp$ = "Math_IEEE_754_Double_64bit": GoSub AddIncludeTemp ' Add code for Selecting the audio muxer and to turn it on or off
+            Select Case FloatType
+                Case 0
+                    Temp$ = "Math_IEEE_754_Double_64bit_FFP_Convertion": GoSub AddIncludeTemp ' Add code for my 3 byte fast floating point math conversion
+                Case 1
+                    Temp$ = "Math_IEEE_754_Double_64bit_FP5_Convertion": GoSub AddIncludeTemp ' Add code for 5 byte Single floating point math conversion
+            End Select
             Temp$ = "Math_Integer64": GoSub AddIncludeTemp ' Add code for 64 bit math, some routines use integer 64 Add/Subtract
         Case 14 To 29 ' Variable is 2 bytes
             ' Add library for these special short floats
@@ -2457,7 +2510,12 @@ Next ii
 For ii = 0 To NumArrayVarsUsedCounter - 1
     Select Case NumericArrayType(ii)
         Case 0 ' Deafult size is Single
-            Temp$ = "Math_Fast_Floating_Point": GoSub AddIncludeTemp ' Add code for my 3 byte fast floating point math routines
+            Select Case FloatType
+                Case 0
+                    Temp$ = "Math_Fast_Floating_Point": GoSub AddIncludeTemp ' Add code for my 3 byte fast floating point math routines
+                Case 1
+                    Temp$ = "Math_Floating_Point5": GoSub AddIncludeTemp ' Add code for 5 byte Single floating point math routines
+            End Select
         Case 1 To 4 ' Variable size is 1 byte
             ' 6809 can handle these pretty much directly
         Case 5, 6 ' Variable is 2 bytes
@@ -2467,9 +2525,20 @@ For ii = 0 To NumArrayVarsUsedCounter - 1
         Case 9, 10 ' Variable is 8 bytes
             Temp$ = "Math_Integer64": GoSub AddIncludeTemp ' Add code for 64 bit math
         Case 11 ' Variable is 3 bytes
-            Temp$ = "Math_Fast_Floating_Point": GoSub AddIncludeTemp ' Add code for my 3 byte fast floating point math routines
+            Select Case FloatType
+                Case 0
+                    Temp$ = "Math_Fast_Floating_Point": GoSub AddIncludeTemp ' Add code for my 3 byte fast floating point math routines
+                Case 1
+                    Temp$ = "Math_Floating_Point5": GoSub AddIncludeTemp ' Add code for 5 byte Single floating point math routines
+            End Select
         Case 12 ' Variable is 8 bytes
             Temp$ = "Math_IEEE_754_Double_64bit": GoSub AddIncludeTemp ' Add code for Selecting the audio muxer and to turn it on or off
+            Select Case FloatType
+                Case 0
+                    Temp$ = "Math_IEEE_754_Double_64bit_FFP_Convertion": GoSub AddIncludeTemp ' Add code for my 3 byte fast floating point math conversion
+                Case 1
+                    Temp$ = "Math_IEEE_754_Double_64bit_FP5_Convertion": GoSub AddIncludeTemp ' Add code for 5 byte Single floating point math conversion
+            End Select
             Temp$ = "Math_Integer64": GoSub AddIncludeTemp ' Add code for 64 bit math, some routines use integer 64 Add/Subtract
         Case 14 To 29 ' Variable is 2 bytes
             ' Add library for these special short floats
@@ -2494,17 +2563,34 @@ For ii = 0 To GeneralCommandsFoundCount - 1
         Temp$ = "GetJoyD": GoSub AddIncludeTemp ' Add code to quickly get the Joystick values and set the values of 0,31 or 63
     End If
     If Temp$ = "DATA" Then
-        Temp$ = "ASCIIToNumbers": GoSub AddIncludeTemp ' Inlcude code to convert ASCII numbers to other formats (Integer/ FFP...)
+        Select Case FloatType
+            Case 0
+                Temp$ = "ASCIIToNumbers_FFP": GoSub AddIncludeTemp ' Inlcude code to convert ASCII numbers to other formats (Integer/ FFP...)
+            Case 1
+                Temp$ = "ASCIIToNumbers_FP5": GoSub AddIncludeTemp ' Inlcude code to convert ASCII numbers to other formats (Integer/ FFP...)
+        End Select
     End If
     If Temp$ = "INPUT" Then
-        '        Temp$ = "KeyboardInput": GoSub AddIncludeTemp
         If Dragon = 1 Then
             Temp$ = "InkeyDragon": GoSub AddIncludeTemp ' Add the Dragon Inkey library
+            Temp$ = "INPUTCode": GoSub AddIncludeTemp
         Else
-            Temp$ = "Inkey": GoSub AddIncludeTemp ' Add the CoCo Inkey library
+            Temp$ = "Inkey": GoSub AddIncludeTemp ' Add the CoCo inkey library
+            Select Case WidthVal$
+                Case "32"
+                    Temp$ = "INPUTCode": GoSub AddIncludeTemp ' Add the CoCo Input for regular 32 column screen library
+                Case "40", "64", "80"
+                    Temp$ = "CoCo3_INPUTCode_WIDTH40Plus": GoSub AddIncludeTemp ' Add the CoCo Input for WIDTH 40,64,80 column screen library
+                Case Else
+                    Temp$ = "INPUTCode": GoSub AddIncludeTemp
+            End Select
         End If
-        Temp$ = "INPUTCode": GoSub AddIncludeTemp
-        Temp$ = "ASCIIToNumbers": GoSub AddIncludeTemp ' Inlcude code to convert ASCII numbers to other formats (Integer/ FFP...)
+        Select Case FloatType
+            Case 0
+                Temp$ = "ASCIIToNumbers_FFP": GoSub AddIncludeTemp ' Inlcude code to convert ASCII numbers to other formats (Integer/ FFP...)
+            Case 1
+                Temp$ = "ASCIIToNumbers_FP5": GoSub AddIncludeTemp ' Inlcude code to convert ASCII numbers to other formats (Integer/ FFP...)
+        End Select
         Temp$ = "DecimalStringToD": GoSub AddIncludeTemp ' Add commands for converting decimal numbers to D
     End If
     If Temp$ = "LOADM" Then
@@ -2573,7 +2659,7 @@ For ii = 0 To StringCommandsFoundCount - 1
         Temp$ = "SDC_Comm": GoSub AddIncludeTemp
         Temp$ = "SDC_CompilerCode": GoSub AddIncludeTemp
         Temp$ = "SDC_FileAccess": GoSub AddIncludeTemp
-        '        Temp$ = "SDCVersionCheck": GoSub AddIncludeTemp
+        '  Temp$ = "SDCVersionCheck": GoSub AddIncludeTemp
     End If
 Next ii
 For ii = 0 To NumericCommandsFoundCount - 1
@@ -2592,7 +2678,7 @@ For ii = 0 To NumericCommandsFoundCount - 1
         Temp$ = "SDC_Comm": GoSub AddIncludeTemp
         Temp$ = "SDC_CompilerCode": GoSub AddIncludeTemp
         Temp$ = "SDC_FileAccess": GoSub AddIncludeTemp
-        '        Temp$ = "SDCVersionCheck": GoSub AddIncludeTemp
+        '  Temp$ = "SDCVersionCheck": GoSub AddIncludeTemp
     End If
     If Temp$ = "JOYSTK" Then
         Temp$ = "Joystick": GoSub AddIncludeTemp 'Add code to handle analog Joystick input
@@ -2617,6 +2703,9 @@ Else
 End If
 Temp$ = "Print_Serial": GoSub AddIncludeTemp
 Temp$ = "Math_Integer16": GoSub AddIncludeTemp ' 16 bit MUL and DIV
+If FloatType = 1 Then
+    Temp$ = "Math_Integer32": GoSub AddIncludeTemp ' 32 bit MUL and DIV needed for FP5 math
+End If
 Temp$ = "Math_Variables": GoSub AddIncludeTemp ' Math_Integer16 needs this
 Temp$ = "SquareRoot": GoSub AddIncludeTemp
 Temp$ = "CPUSpeed": GoSub AddIncludeTemp
@@ -2964,7 +3053,7 @@ A$ = "STD": B$ = "_Var_Timer": C$ = "Use Basic's Timer as a starting point for t
 A$ = "STD": B$ = "Seed1": C$ = "Save TIMER value as the Random number seed value": GoSub AO
 
 If SDCPLAY = 1 Or SDCVersionCheck = 1 Then ' If we are doing any SDC streaming check the version as it must be V127 or higher
-    A$ = "JSR": B$ = "CheckSDCFirmwareVersion": C$ = "Check the version of the SDC controller must be > v126": GoSub AO
+'    A$ = "JSR": B$ = "CheckSDCFirmwareVersion": C$ = "Check the version of the SDC controller must be > v126": GoSub AO
 End If
 
 ' Address    Interrupt    CoCo 2 Vector    CoCo 3 Vector
@@ -3071,7 +3160,6 @@ System 1 ' End with flag of 1 = All went OK
 ' &HF1 = String Arrays
 ' &HF2 = Regular Numeric Variable
 ' &HF3 = Regular String Variable
-' &HF4 = Floating Point Variable
 ' &HF5 = Special characters like a EOL, colon, comma, semi colon, quote, brackets
 
 ' &HFB = DEF FN Function
@@ -3764,7 +3852,6 @@ SkipCheckingSpecialCommands:
 ' &HF1 = String Arrays
 ' &HF2 = Regular Numeric Variable
 ' &HF3 = Regular String Variable
-' &HF4 = Floating Point Variable
 ' &HF5 = Special characters like a EOL, colon, comma, semi colon, quote, brackets
 
 ' &HFB = DEF FN Function
@@ -4089,7 +4176,7 @@ While i <= Len(Expression$)
             v = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(v): i = i + 1 ' Copy MSB of Array ID
             v = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(v): i = i + 1 ' Copy LSB of Array ID
             v = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(v): i = i + 1 ' Copy # of dimensions
-        Case &HF2, &HF3, &HF4: ' Found a numeric or string or floating point variable
+        Case &HF2, &HF3: ' Found a numeric or string
             v = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(v): i = i + 1 ' Copy MSB of variable ID
             v = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(v): i = i + 1 ' Copy LSB of variable ID
         Case &HF5 ' Found a special character
@@ -4150,7 +4237,6 @@ Wend
 ' &HF1 = String Arrays
 ' &HF2 = Regular Numeric Variable
 ' &HF3 = Regular String Variable
-' &HF4 = Floating Point Variable
 ' &HF5 = Special characters like a EOL, colon, comma, semi colon, quote, brackets
 
 ' &HFC = Operator Command
@@ -4362,26 +4448,14 @@ While i <= Len(Expression$)
                         Test$ = UCase$(Temp$) ' Make it all capital letters
                         If Test$ = "TIMER" Then Temp$ = "Timer" ' make sure the Timer variable is always the same
                         If Len(Temp$) > 3 Then
-                            If Left$(Temp$, 3) = "FP_" Then
-                                ' We found a floating point variable
-                                GoSub AddFloatingPointVariable ' Add Floating Point variable Temp$ to the Floating Point variable List
-                                If Found = 1 Then
-                                    Num = ii: GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSB
-                                    Tokenized$ = Tokenized$ + Chr$(&HF4) + Chr$(MSB) + Chr$(LSB)
-                                Else
-                                    Num = FloatVariableCount - 1: GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSB
-                                    Tokenized$ = Tokenized$ + Chr$(&HF4) + Chr$(MSB) + Chr$(LSB)
-                                End If
+                            GoSub CheckVarForSpecial ' If variable Temp$ ends with special tokens which temp change their Type, we must ignore them
+                            GoSub AddNumericVariable ' Add variable Temp$ to the Numeric variable List
+                            If Found = 1 Then
+                                Num = ii: GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSB
+                                Tokenized$ = Tokenized$ + Chr$(&HF2) + Chr$(MSB) + Chr$(LSB)
                             Else
-                                GoSub CheckVarForSpecial ' If variable Temp$ ends with special tokens which temp change their Type, we must ignore them
-                                GoSub AddNumericVariable ' Add variable Temp$ to the Numeric variable List
-                                If Found = 1 Then
-                                    Num = ii: GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSB
-                                    Tokenized$ = Tokenized$ + Chr$(&HF2) + Chr$(MSB) + Chr$(LSB)
-                                Else
-                                    Num = NumericVariableCount - 1: GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSB
-                                    Tokenized$ = Tokenized$ + Chr$(&HF2) + Chr$(MSB) + Chr$(LSB)
-                                End If
+                                Num = NumericVariableCount - 1: GoSub NumToMSBLSBString ' Convert number in num to 16 bit value in MSB$ & LSB$ and MSB & LSB
+                                Tokenized$ = Tokenized$ + Chr$(&HF2) + Chr$(MSB) + Chr$(LSB)
                             End If
                         Else
                             GoSub CheckVarForSpecial ' If variable Temp$ ends with special tokens which temp change their Type, we must ignore them
@@ -4428,7 +4502,7 @@ While i <= Len(Expression$)
             v = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(v): i = i + 1 ' Copy MSB of Array ID
             v = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(v): i = i + 1 ' Copy LSB of Array ID
             v = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(v): i = i + 1 ' Copy # of dimensions
-        Case &HF2, &HF3, &HF4: ' Found a numeric or string or floating point variable
+        Case &HF2, &HF3: ' Found a numeric or string variable
             v = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(v): i = i + 1 ' Copy MSB of variable ID
             v = Asc(Mid$(Expression$, i, 1)): Tokenized$ = Tokenized$ + Chr$(v): i = i + 1 ' Copy LSB of variable ID
         Case &HF5 ' Found a special character
@@ -4650,7 +4724,7 @@ Select Case v
         GenExpression$ = GenExpression$ + Chr$(Array(x)): x = x + 1 ' Copy MSB of Array ID
         GenExpression$ = GenExpression$ + Chr$(Array(x)): x = x + 1 ' Copy LSB of Array ID
         GenExpression$ = GenExpression$ + Chr$(Array(x)): x = x + 1 ' Copy # of dimensions
-    Case &HF2, &HF3, &HF4: ' Found a numeric or string or floating point variable
+    Case &HF2, &HF3: ' Found a numeric or string
         GenExpression$ = GenExpression$ + Chr$(Array(x)): x = x + 1 ' Copy MSB of variable ID
         GenExpression$ = GenExpression$ + Chr$(Array(x)): x = x + 1 ' Copy LSB of variable ID
     Case &HF5 ' Found a special character
@@ -4678,19 +4752,6 @@ For ii = 0 To NumericVariableCount
 Next ii
 NumericVariable$(NumericVariableCount) = Temp$
 NumericVariableCount = NumericVariableCount + 1
-Return
-
-' Found a Floating Point variable, add it to the list
-AddFloatingPointVariable:
-Found = 0
-For ii = 0 To FloatVariableCount
-    If FloatVariable$(ii) = Temp$ Then
-        Found = 1
-        Return
-    End If
-Next ii
-FloatVariable$(FloatVariableCount) = Temp$
-FloatVariableCount = FloatVariableCount + 1
 Return
 
 ' Found a string variable, add it to the list
@@ -5341,7 +5402,12 @@ If Array(x) = Asc("&") Or Array(x) = Asc("~") Or Array(x) = Asc("!") Then
     End If
     If Array(x) = Asc("!") Then ' !(None) Single '(Default size)
         '        Temp$ = "Math_FloatingPointLB": GoSub AddIncludeTemp ' Add code for Lennart Benschop's Floating point math routines
-        Temp$ = "Math_Fast_Floating_Point": GoSub AddIncludeTemp ' Add code for my Fast Floating Point math routines
+        Select Case FloatType
+            Case 0
+                Temp$ = "Math_Fast_Floating_Point": GoSub AddIncludeTemp ' Add code for my 3 byte fast floating point math routines
+            Case 1
+                Temp$ = "Math_Floating_Point5": GoSub AddIncludeTemp ' Add code for 5 byte Single floating point math routines
+        End Select
         x = x + 1
         GoTo DoneCheckType
     End If
@@ -5352,6 +5418,12 @@ Else
     ' Might be a #
     If Array(x) = &HF5 And Array(x + 1) = Asc("#") Then ' #    use Double
         Temp$ = "Math_IEEE_754_Double_64bit": GoSub AddIncludeTemp ' Add code for Selecting the audio muxer and to turn it on or off
+        Select Case FloatType
+            Case 0
+                Temp$ = "Math_IEEE_754_Double_64bit_FFP_Convertion": GoSub AddIncludeTemp ' Add code for my 3 byte fast floating point math conversion
+            Case 1
+                Temp$ = "Math_IEEE_754_Double_64bit_FP5_Convertion": GoSub AddIncludeTemp ' Add code for 5 byte Single floating point math conversion
+        End Select
         Temp$ = "Math_Integer64": GoSub AddIncludeTemp ' Add code for 64 bit math, some routines use integer 64 Add/Subtract
         x = x + 2
     End If

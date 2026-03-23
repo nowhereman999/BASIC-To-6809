@@ -1081,7 +1081,14 @@ While RPNEntry <= RPNLast
                             Case 9, 10
                                 Num = 8
                             Case 11
-                                Num = 3
+        Select Case FloatType
+            Case 0:
+                ' Handle 3 byte FFP
+                    Num = 3
+            Case 1:
+                ' Handle 5 byte FP5
+                    Num = 5
+        End Select
                             Case 12
                                 Num = 10
                         End Select
@@ -1142,7 +1149,14 @@ While RPNEntry <= RPNLast
                             Case 9, 10
                                 Num = 8
                             Case 11
-                                Num = 3
+        Select Case FloatType
+            Case 0:
+                ' Handle 3 byte FFP
+                    Num = 3
+            Case 1:
+                ' Handle 5 byte FP5
+                    Num = 5
+        End Select
                             Case 12
                                 Num = 10
                         End Select
@@ -1219,7 +1233,15 @@ While RPNEntry <= RPNLast
                             Case 5, 6:   Num = 2
                             Case 7, 8:   Num = 4
                             Case 9, 10:  Num = 8
-                            Case 11:     Num = 3
+                            Case 11
+        Select Case FloatType
+            Case 0:
+                ' Handle 3 byte FFP
+                    Num = 3
+            Case 1:
+                ' Handle 5 byte FP5
+                    Num = 5
+        End Select
                             Case 12:     Num = 10
                         End Select
                         GoSub NumAsString: Temp$ = Num$
@@ -2340,9 +2362,18 @@ Select Case NumberType
         A$ = "LDU": B$ = ",U": C$ = "Get the 7th & 8th byte value on the stack": GoSub AO
         A$ = "PSHS": B$ = "D,X,Y,U": C$ = "Save the 8 byte value on the stack": GoSub AO
     Case 11 ' 3 byte variable
+        Select Case FloatType
+            Case 0:
+                ' Handle 3 byte FFP
         A$ = "LDU": B$ = "#_Var_" + NumericVariable$(Num): GoSub AO
         A$ = "PULU": B$ = "B,X": C$ = "Get the 3 byte value of the variable": GoSub AO
         A$ = "PSHS": B$ = "B,X": C$ = "Save the 3 byte value on the stack": GoSub AO
+            Case 1:
+                ' Handle 5 byte FP5
+        A$ = "LDU": B$ = "#_Var_" + NumericVariable$(Num): GoSub AO
+        A$ = "PULU": B$ = "B,X,Y": C$ = "Get the 5 byte value of the variable": GoSub AO
+        A$ = "PSHS": B$ = "B,X,Y": C$ = "Save the 5 byte value on the stack": GoSub AO
+        End Select
     Case 12 ' 10 byte variable
         A$ = "LDU": B$ = "#_Var_" + NumericVariable$(Num) + "+2": GoSub AO
         A$ = "PULU": B$ = "D,X,Y": C$ = "Get the first 6 bytes of data, move U past the data": GoSub AO

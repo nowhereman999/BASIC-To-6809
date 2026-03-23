@@ -790,7 +790,7 @@ If v >= Asc("0") And v <= Asc("9") Or (v = Asc("&") And Array(x) = Asc("H")) The
         End If
         A$ = "DECB": C$ = "Decrement the counter": GoSub AO
         A$ = "BNE": B$ = "<": C$ = "Loop until all data is copied to the destination string": GoSub AO
-            Z$ = "@Done": GoSub AO: GoSub AO
+        Z$ = "@Done": GoSub AO: GoSub AO
     Else
         ' Printing to a normal Text screen
         Select Case LastType
@@ -971,62 +971,62 @@ Select Case v
 
 
 
-    Case &H23 ' Printing # somewhere other than the text screen , PRINT #-3,"Hello, World!"
-        v = Array(x): x = x + 1
-        If v = &H30 Then
-            v = Array(x): x = x + 1
-            If v = &HF5 Then
+            Case &H23 ' Printing # somewhere other than the text screen , PRINT #-3,"Hello, World!"
                 v = Array(x): x = x + 1
-                If v <> &H2C Then
-                    Print "Can't print the value after # on";: GoTo FoundError
-                Else
-                    ' If it is Print #0, then print to text screen
-                    PrintD$ = "Print_D": PrintA$ = "PrintA_On_Screen": PrintDev$ = " on screen"
-                    GoTo GetSectionToPrint
-                End If
-            End If
-        End If
-        If v = &HFC Then
-            v = Array(x): x = x + 1
-            If v = &H2D Then
-                ' Printing #-
-                v = Array(x): x = x + 1
-                If v = &H32 Then
-                    ' Print #-2
+                If v = &H30 Then
                     v = Array(x): x = x + 1
                     If v = &HF5 Then
                         v = Array(x): x = x + 1
                         If v <> &H2C Then
-                            Print "Print command should have a comma after # on";: GoTo FoundError
+                            Print "Can't print the value after # on";: GoTo FoundError
                         Else
-                            PrintD$ = "PRINT_D_Serial": PrintA$ = "AtoSerialPort": PrintDev$ = " to printer"
+                            ' If it is Print #0, then print to text screen
+                            PrintD$ = "Print_D": PrintA$ = "PrintA_On_Screen": PrintDev$ = " on screen"
                             GoTo GetSectionToPrint
                         End If
                     End If
                 End If
-                If v = &H33 Then
-                    ' Print #-3
+                If v = &HFC Then
                     v = Array(x): x = x + 1
-                    If v = &HF5 Then
+                    If v = &H2D Then
+                        ' Printing #-
                         v = Array(x): x = x + 1
-                        If v <> &H2C Then
-                            Print "Print command should have a comma after # on";: GoTo FoundError
-                        Else
-                            If Gmode > 99 Then
-                                ' Print to the CoCo 3 graphic screen
-                                PrintCC3 = 1
-                            Else
-                                ' Print to the CoCo 2 graphic screen
-                                PrintCC3 = 0
+                        If v = &H32 Then
+                            ' Print #-2
+                            v = Array(x): x = x + 1
+                            If v = &HF5 Then
+                                v = Array(x): x = x + 1
+                                If v <> &H2C Then
+                                    Print "Print command should have a comma after # on";: GoTo FoundError
+                                Else
+                                    PrintD$ = "PRINT_D_Serial": PrintA$ = "AtoSerialPort": PrintDev$ = " to printer"
+                                    GoTo GetSectionToPrint
+                                End If
                             End If
-                            PrintD$ = "PRINT_D_Graphics_Screen_" + GModeName$(Gmode): PrintA$ = "AtoGraphics_Screen_" + GModeName$(Gmode): PrintDev$ = " to graphic screen"
-                            GoTo GetSectionToPrint
+                        End If
+                        If v = &H33 Then
+                            ' Print #-3
+                            v = Array(x): x = x + 1
+                            If v = &HF5 Then
+                                v = Array(x): x = x + 1
+                                If v <> &H2C Then
+                                    Print "Print command should have a comma after # on";: GoTo FoundError
+                                Else
+                                    If Gmode > 99 Then
+                                        ' Print to the CoCo 3 graphic screen
+                                        PrintCC3 = 1
+                                    Else
+                                        ' Print to the CoCo 2 graphic screen
+                                        PrintCC3 = 0
+                                    End If
+                                    PrintD$ = "PRINT_D_Graphics_Screen_" + GModeName$(Gmode): PrintA$ = "AtoGraphics_Screen_" + GModeName$(Gmode): PrintDev$ = " to graphic screen"
+                                    GoTo GetSectionToPrint
+                                End If
+                            End If
                         End If
                     End If
                 End If
-            End If
-        End If
-        Print "Can't handle printing to other devices on";: GoTo FoundError
+                Print "Can't handle printing to other devices on";: GoTo FoundError
     
 
 

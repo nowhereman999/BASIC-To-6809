@@ -5,12 +5,15 @@ Dim ProcessRPNStack$(1000)
 
 ' - Now REM's are removed from everyline after the line is sent to the .asm file as it is, so the compiler won't have to deal with them.
 ' Tokens for variables types and Commands
-Const TK_NumericArray = &HF0 '      (5 Bytes) F0,MSB,LSB,Type,# Of Elements
+Const TK_NumericArray = &HF0 '      (5 Bytes) F0,MSB,LSB,#Dimensions,ElemType
 Const TK_StrArray = &HF1 '          (4 Bytes) F1, MSB, LSB, # Of Elements
 Const TK_NumericVar = &HF2 '        (4 Bytes) F2,MSB,LSB,Type
 Const TK_StringVar = &HF3 '         (3 Bytes) F3, MSB, LSB
 Const TK_SpecialChar = &HF5 '       (2 Bytes) like a EOL, colon, comma, semi colon, quote, brackets (2 Bytes) 2nd bytes for EOL = TK_EOL : = TK_Colon , =  TK_Comma ; = TK_SemiColon " =  TK_Quote
 
+Const TK_ADDR_ONSTACK = &HF7 ' pointer/address already on 6809 stack (UInt16)
+Const TK_BOOL_ONSTACK = &HF8
+Const TK_STR_ONSTACK = &HF9
 Const TK_Def_Function = &HFB '      (3 Bytes) FB, MSB, LSB
 Const TK_OperatorCommand = &HFC '   (2 Bytes) FC, Operator
 Const TK_StringCommand = &HFD '     (3 Bytes) FD, MSB, LSB
@@ -46,12 +49,11 @@ Const OP_LE = &H61
 Const OP_GE = &H62
 Const OP_ARRLOAD = &H70 ' numeric array element load   (FC 70 argCount)
 Const OP_STRARRLOAD = &H71 ' string  array element load   (FC 71 argCount)
-Const OP_ARRPTR      = &H72 ' FC 72 argCount  (numeric array element address -> UInt16)
-Const OP_STRARRPTR   = &H73 ' FC 73 argCount  (string  array element address -> UInt16)
+Const OP_ARRPTR = &H72 ' FC 72 argCount  (numeric array element address -> UInt16)
+Const OP_STRARRPTR = &H73 ' FC 73 argCount  (string  array element address -> UInt16)
 Const OP_LITTYPEPUSH = &H74 ' FC 74 type    (temporary literal-type hint scope begin)
-Const OP_LITTYPEPOP  = &H75 ' FC 75         (temporary literal-type hint scope end)
-Const OP_FORCENVT     = &H76 ' FC 76 type    (force top-of-stack to NVT)
-Const TK_ADDR_ONSTACK = &HF7  ' pointer/address already on 6809 stack (UInt16)
+Const OP_LITTYPEPOP = &H75 ' FC 75         (temporary literal-type hint scope end)
+Const OP_FORCENVT = &H76 ' FC 76 type    (force top-of-stack to NVT)
 
 ' Variable Type Constants
 Const NT_Bit = 1
@@ -70,41 +72,64 @@ Const NT_Extended = 13
 Const NT_ShortFloat = 14
 Const NT_UShortFloat = 15
 
-' Stuff for CASE handling
-CONST MAX_SELECT_NEST = 64
-DIM SHARED SelIsString(MAX_SELECT_NEST) AS INTEGER ' Flag whether this is a SELECT CASE String$ or not
-DIM SHARED SelHitVar$(MAX_SELECT_NEST)   ' name like "__SelHit01" for EVERYCASE, else ""
-DIM SHARED CaseItem$(256)
-DIM SHARED CaseItemCount
+Dim FoldLeft$
+Dim FoldRight$
+Dim FoldN1 As _Integer64
+Dim FoldN2 As _Integer64
+Dim FoldAbsN1 As _Integer64
+Dim FoldAbsN2 As _Integer64
+Dim FoldQ As _Integer64
+Dim FoldR As _Integer64
+Dim FoldSign As Integer
 
-DIM ii AS INTEGER
+' ============================================================
+' SELECT / CASE nesting state
+' Keep ALL per-SELECT arrays the same size
+' ============================================================
+Const MAX_SELECT_NEST = 1000
+Dim SELECTStack(MAX_SELECT_NEST) As Integer
+Dim SELECTStackPointer As Integer
+Dim Shared SelIsString(MAX_SELECT_NEST) As Integer ' Flag whether this is a SELECT CASE String$ or not
+Dim Shared SelHitVar$(MAX_SELECT_NEST) ' name like "__SelHit01" for EVERYCASE, else ""
+Dim MainCase$(MAX_SELECT_NEST)
+Dim CaseCount(MAX_SELECT_NEST) As Integer
+Dim EvCase(MAX_SELECT_NEST) As Integer
+Dim CaseElseFlag(MAX_SELECT_NEST) As Integer
+Dim Shared CaseItem$(256)
+Dim Shared CaseItemCount
+Dim CaseListIndex As Integer
+Dim CaseListIndex2 As Integer
 
-Dim VarptrDepth as Integer
+Dim ii As Integer
+Dim x As Long
+Dim y As Long
+Dim v As Long
+
+Dim VarptrDepth As Integer
 Dim DOStack(1000) As Integer
 Dim WHILEStack(1000) As Integer
-Dim SELECTSTack(1000) As Integer
 Dim DatatypeStack(100, 100) As _Unsigned _Byte
 Dim DStackPointer(100) As Integer
 Dim LargestDataType(100) As _Unsigned _Byte
 
 Dim Array(270000) As _Unsigned _Byte
 Dim DataArray(270000) As _Unsigned _Byte
-Dim DataArrayCount As Integer
+Dim DataArrayCount As _Unsigned Long
 Dim Expression(1000) As _Byte ' Array containing the expression to be evaluated
 
 Dim NumericVariable$(100000)
-Dim NumericVariableCount As Integer
-
-Dim FloatVariable$(100000)
-Dim FloatVariableCount As Integer
+Dim NumericVariableCount As _Unsigned Long
 
 Dim NumericArrayBits(100000) As Integer
 Dim NumericArrayVariables$(100000), NumericArrayDimensions(100000) As Integer
 
 Dim StringArrayBits(100000) As Integer
 Dim StringVariable$(100000)
-Dim StringVariableCounter As Integer
+Dim StringVariableCounter As _Unsigned Long
 Dim StringArrayVariables$(100000), StringArrayDimensions(100000) As Integer
+
+Dim NumericArrayVarsUsedCounter As _Unsigned Long
+Dim StringArrayVarsUsedCounter As _Unsigned Long
 
 Dim Expression$(100)
 
@@ -125,14 +150,14 @@ Dim StringCommandsFound$(2000)
 Dim StringCommandsFoundCount As Integer
 
 Dim Sprite$(255)
-Dim SpriteHeight(255)
-Dim SpriteNumberOfFrames(255)
+Dim SpriteHeight(255) As Integer
+Dim SpriteNumberOfFrames(255) As Integer
 
 Dim Sample$(255)
-Dim SampleStart(255)
-Dim SampleStartBlock(255)
-Dim SampleNumberOfBLKs(255)
-Dim SampleLength(255)
+Dim SampleStart(255) As Long
+Dim SampleStartBlock(255) As Long
+Dim SampleNumberOfBLKs(255) As Integer
+Dim SampleLength(255) As Long
 
 ' No More
 ' PSET
@@ -143,6 +168,8 @@ Dim SampleLength(255)
 ' Add
 ' GCLEAR
 ' GCOPY
+Dim Gmode As _Unsigned _Byte
+Dim GmodePage As _Unsigned _Byte
 
 Dim DefLabel$(10000)
 Dim DefVar(1000) As Integer
@@ -163,7 +190,7 @@ Dim FORSTack(10000)
 Dim IFSTack(10000) As Integer 'If Stack
 Dim ElseStack(10000) As Integer ' Else Stack
 Dim ELSELocation(10000) As Integer 'Flag if the IF has an ELSE
-Dim ElseIfIndex(10000) As Integer  ' 0 = first alternate entry (ELSE), 1.. = ELSEIF chain labels
+Dim ElseIfIndex(10000) As Integer ' 0 = first alternate entry (ELSE), 1.. = ELSEIF chain labels
 
 Dim ForceLitType As Integer ' If non-zero, unsuffixed numeric literals default to this type during expression parsing
 
@@ -181,9 +208,163 @@ Dim FPbyte(5) As _Byte
 
 ' Float converstion stuff
 Dim Shared Exponent As Integer
-Dim Shared Byte1 As _Byte, Byte2 As _Byte, Byte3 As _Byte, Byte4 As _Byte
+Dim Shared Byte1 As _Byte, Byte2 As _Byte, Byte3 As _Byte, Byte4 As _Byte, Byte5 As _Byte
 Dim big_endian As String * 8
 Dim NumDouble As Double
+
+' Used more than once
+Dim A$
+Dim Z$
+Dim ProcessRPNStackPointer As Integer
+Dim Temp$
+Dim NVT As Integer
+Dim Check$
+Dim LastType As Integer
+Dim Arg1$
+Dim LeftType As Integer
+Dim Emit$
+Dim ManualType As Integer
+Dim ResultType As Integer
+Dim InsideArrayType As Integer
+Dim RightType As Integer
+Dim GenExpression$
+Dim Value2$
+Dim DimCounter As Integer
+Dim Tok$
+Dim Value1$
+Dim TokType As Integer
+Dim Temp1$
+Dim CheckIfTrue$
+Dim LargestType As Integer
+Dim TempTok$
+Dim CompareType$(20)
+Dim OppositeCompareType$(20)
+Dim NV$
+Dim NumDims As Integer
+Dim Sp As Integer
+Dim NumBits As Integer
+Dim NumberType As Integer
+Dim IdxBits As Integer
+Dim IdxNVT As Integer
+Dim Found As Integer
+Dim OrigLastType As Integer
+Dim Tmp$
+Dim Value1Type As Integer
+Dim Value2Type As Integer
+Dim C$
+Dim I$
+Dim Between$
+Dim ArrBits As Integer
+Dim PushedType As Integer
+Dim InBracket As Integer
+Dim Start As _Unsigned Long
+Dim StrTok$
+Dim PrintD$
+Dim NumVarNumber As Integer
+Dim PendingPush$
+Dim PendingRegs$
+Dim Num$
+Dim IsStrFlag%
+Dim Addr As _Offset
+Dim DOStackPointer As Integer
+Dim NVTArrayType As Integer
+Dim PrintCC3 As Integer
+Dim TempVal As Integer
+Dim ENDIFCheck As Integer
+Dim T0 As Integer
+Dim FileNumber$
+Dim ResolvedType%
+Dim N$
+Dim IFProc As Integer
+Dim TempNext$
+Dim LineLabel$
+Dim K%
+Dim SelNum$
+Dim CaseNumber$
+Dim Ch$
+Dim Lit$
+Dim CharTok$
+Dim LenTok$
+Dim NumType As Integer
+Dim One$
+Dim DefLabelCount As Integer
+Dim DefVarCount As Integer
+Dim OK%
+Dim ScanPos As Integer
+Dim IFNum$
+Dim Regs$
+Dim RPNEntry As Integer
+Dim RPNLast As Integer
+Dim EIdx As Integer
+Dim FName$
+Dim Q$
+Dim U As Integer
+Dim Check As Integer
+Dim CurType As Integer
+Dim EIdx$
+Dim ONType$
+Dim T%
+Dim Count As Integer
+Dim FORStackPointer As Integer
+Dim HasOROverall%
+Dim IdxVal As Integer
+Dim IFSP As Integer
+Dim TopOp As Integer
+Dim WHILEStackPointer As Integer
+Dim EndPos As Integer
+Dim Length As Long
+Dim PointAtTo As Integer
+Dim Q%
+Dim ContinueLine As Integer
+'Dim IsLastAndInIF%
+'Dim IsLastOrInIF%
+Dim RemStart As Integer
+Dim StringVar$
+Dim HasAndOverall%
+Dim I7%
+Dim TType As Integer
+Dim V1 As Integer
+Dim VOld As Integer
+
+
+' Used only once
+Dim FORCount As Integer
+Dim IFCount As Integer
+Dim DOCount As Integer
+Dim WHILECount As Integer
+Dim SELECTCount As Integer
+Dim FixSpot As Integer
+Dim NextCaseNumber$
+Dim CaseTemp$
+Dim NextKind As Integer
+Dim CurE As Integer
+Dim CurE$
+Dim eNext As Integer
+Dim eNext$
+Dim BaseType As Integer
+Dim NVTType As Integer
+Dim BaseT As Integer
+Dim NVTExponent As Integer
+Dim CompareOp As Integer
+Dim MainCase$
+Dim Brackets As Integer
+Dim Blink As Integer
+Dim Underline As Integer
+Dim Box As Integer
+Dim FirstGMode As Integer
+Dim GScreenStart As Long
+Dim ShowInputCount As Integer
+Dim TempChar$
+Dim ConvertVal$
+Dim PushRegs$
+Dim PullRegs$
+Dim OutPush$
+Dim OutPull$
+Dim RegsRaw$
+Dim AmountToCopy As Integer
+Dim EndX As Integer
+Dim P%
+Dim Op$
 
 ' Comparison values & opposites
 CompareType$(0) = "BEQ": OppositeCompareType$(0) = "BNE"

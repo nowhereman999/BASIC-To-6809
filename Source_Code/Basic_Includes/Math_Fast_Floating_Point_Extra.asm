@@ -1023,25 +1023,15 @@ FFP_LOG:
       PULL_FFP    FFP_Log_TEMP_X    ; PULL Variable off the stack
 ;
 ; Get EXP and MANT and put mantissa into [1,2]
-      LDA   ,U                ; U is pointer to FFP_Log_TEMP_X used in the MACRO PULL_FFP above
-      CLRB                    ; Sign byte = 0
-      LSLA                    ; Get sign bit in the carry
-      RORB                    ; Move sign bit to bit 7 of B
-      STB   FFP_SIGN          ; Save the sign
-; Save unbiased exponent e in FFP_Log_E_SInt (signed 8-bit).
-      ASRA                    ; A = 8 bit signed exponent
-;      STA   FFP_EXPonent      ; signed 8-bit exponent               
+; FFP_Log_TEMP_X holds x
+      LDA   FFP_Log_TEMP_X      ; sign/exp
+      LSLA
+      ASRA                     ; A = unbiased exponent (signed)     
       STA   FFP_Log_E_SInt    ; store EXP (or convert to signed)
-; Copy mantissa of FFP_Log_TEMP_X to FFP_MANT & FFP_RESULT
-      LDX   FFP_Log_TEMP_X+1  ; Get the Mantissa
-      STX   FFP_MANT          ; Save mantissa in FFP_MANT
-      STX   RESULT+1          ; Save mantissa for RESULT
-; Force mantissa m into [1,2] by setting EXP to "1.0" exponent when packing
-      LDA   FFP_SIGN          ; keep exponent as zero 
-      STA   RESULT            ; RESULT has the new 3 byte FFP value, RESULT at @U, U points there
+; copy mantissa into m
+      LDX   FFP_Log_TEMP_X+1
 ;
-; Copy RESULT to FFP_Log_M
-      STA   FFP_Log_M
+      CLR   FFP_Log_M           ; make m positive, exponent=0
       STX   FFP_Log_M+1
 ;
 ; Now m is in [1,2]. If m >= sqrt(2), divide by 2 and increase e by 1,
@@ -1050,10 +1040,14 @@ FFP_LOG:
 ;
       PUSH_FFP FFP_SQRT2      ; PUSH push sqrt(2) onto the stack
 ;
-      JSR   FFP_SUB           ; m - sqrt(2)
-      LDA   ,S                ; A = the Sign of the result
-      LEAS  3,S               ; Fix the stack
-      BMI   FFP_Log_M_OK      ; if m - sqrt(2) < 0, m < sqrt(2) => OK
+      JSR   FFP_CMP_Stack     ; Compare FFP Value1 @ 3,S with Value2 @ ,S sets the 6809 flags Z, N, and C
+      LEAS  6,S
+      BLO   FFP_Log_M_OK
+;
+;      JSR   FFP_SUB           ; m - sqrt(2)
+;      LDA   ,S                ; A = the Sign of the result
+;      LEAS  3,S               ; Fix the stack
+;      BMI   FFP_Log_M_OK      ; if m - sqrt(2) < 0, m < sqrt(2) => OK
 ; else m >= sqrt(2): m = m/2, e = e + 1
       PUSH_FFP FFP_Half       ; PUSH FFP_Half onto the stack
       PUSH_FFP FFP_Log_M      ; PUSH m onto the stack

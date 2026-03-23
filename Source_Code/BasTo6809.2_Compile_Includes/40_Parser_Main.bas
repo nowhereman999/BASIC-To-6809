@@ -51,7 +51,7 @@ While p <= Len(Expression$)
         ' OPERANDS: Copy to output as-is
         ' ====================================================
         Case TK_NumericArray
-            ' Copy the 5-byte array descriptor token (F0,MSB,LSB,Type,#Elems) into RPN as ONE entry
+            ' Copy the 5-byte array descriptor token (F0,MSB,LSB,#Dimensions,ElemType) into RPN as ONE entry
             ArrNumTemp = Asc(Mid$(Expression$, p + 1, 1)) * 256 + Asc(Mid$(Expression$, p + 2, 1))
             Emit$ = Mid$(Expression$, p, 5): GoSub RPN_Emit
             p = p + 5
@@ -221,42 +221,39 @@ While p <= Len(Expression$)
                     p = p + 2
                     ExpectValue = 0
                 Case TK_Comma ' "," (token is F5 2C)
-                    ' Only treat comma as "next dimension" when it's a top-level comma in THIS array paren
-                    If ParenSP >= 0 And ParenIsArray(ParenSP) <> 0 And ParenInnerDepth(ParenSP) = 0 Then
-                        ' flush ops up to '('
+                    ' Comma separates arguments/dimensions only when it is at the top level
+                    ' of the CURRENT paren group.
+                    If ParenSP >= 0 And ParenInnerDepth(ParenSP) = 0 Then
+                        ' Flush operators up to '('
                         While RPNStackPointer >= 0 And RPNStack(RPNStackPointer) <> &H28
                             Emit$ = Chr$(TK_OperatorCommand) + Chr$(RPNStack(RPNStackPointer)): GoSub RPN_Emit
                             RPNStackPointer = RPNStackPointer - 1
                         Wend
-
-                        ' If this comma separates ARRAY indices at the top level, force the completed index expression
-                        ' to the proper width immediately (right after it is produced on the stack).
-                        If ParenSP >= 0 Then
-                            If ParenIsArray(ParenSP) <> 0 Then
-                                If ParenInnerDepth(ParenSP) = 0 Then
-                                    ArrBits = 16
-                                    If ParenIsArray(ParenSP) = 1 Then
-                                        ArrBits = NumericArrayBits(ParenArrayNum(ParenSP))
-                                    ElseIf ParenIsArray(ParenSP) = 2 Then
-                                        ArrBits = StringArrayBits(ParenArrayNum(ParenSP))
-                                    End If
-                                    If ArrBits = 8 Then
-                                        Emit$ = Chr$(TK_OperatorCommand) + Chr$(OP_FORCENVT) + Chr$(NT_UByte): GoSub RPN_Emit
-                                    Else
-                                        Emit$ = Chr$(TK_OperatorCommand) + Chr$(OP_FORCENVT) + Chr$(NT_UInt16): GoSub RPN_Emit
-                                    End If
-                                End If
+                        ' ONLY for real arrays, force completed index expression width now
+                        If ParenIsArray(ParenSP) = 1 Or ParenIsArray(ParenSP) = 2 Then
+                            ArrBits = 16
+                            If ParenIsArray(ParenSP) = 1 Then
+                                ArrBits = NumericArrayBits(ParenArrayNum(ParenSP))
+                            ElseIf ParenIsArray(ParenSP) = 2 Then
+                                ArrBits = StringArrayBits(ParenArrayNum(ParenSP))
+                            End If
+                            If ArrBits = 8 Then
+                                Emit$ = Chr$(TK_OperatorCommand) + Chr$(OP_FORCENVT) + Chr$(NT_UByte): GoSub RPN_Emit
+                            Else
+                                Emit$ = Chr$(TK_OperatorCommand) + Chr$(OP_FORCENVT) + Chr$(NT_UInt16): GoSub RPN_Emit
                             End If
                         End If
-
+                        ' Count one more argument for BOTH arrays and functions
                         ParenArgCount(ParenSP) = ParenArgCount(ParenSP) + 1
                         p = p + 2
                         ExpectValue = -1
                     Else
-                        ' otherwise treat as normal special char
+                        ' not a top-level argument separator for this paren group
                         RPNOutput$(RPNLast) = RPNOutput$(RPNLast) + Chr$(TK_SpecialChar) + Chr$(v)
                         p = p + 2
                     End If
+
+
                 Case TK_Quote ' string literal
                     TempTok$ = Chr$(TK_SpecialChar) + Chr$(TK_Quote)
                     p = p + 2
@@ -387,7 +384,8 @@ While p <= Len(Expression$)
             If p + 1 > Len(Expression$) Then Print "Error: string command truncated on";: GoTo FoundError
             FuncTok$ = FuncTok$ + Mid$(Expression$, p, 2)
             p = p + 2 ' now p points to the next token after cmdHi/cmdLo
-
+            cmd16 = Asc(Mid$(FuncTok$, 2, 1)) * 256 + Asc(Mid$(FuncTok$, 3, 1))
+            
             ' If followed by "(" then this is a function call: emit at ")"
             If p + 1 <= Len(Expression$) Then
                 If Asc(Mid$(Expression$, p, 1)) = TK_SpecialChar And Asc(Mid$(Expression$, p + 1, 1)) = &H28 Then
@@ -634,17 +632,62 @@ While RPNEntry <= RPNLast
             ProcessRPNStackPointer = ProcessRPNStackPointer + 1
             ProcessRPNStack$(ProcessRPNStackPointer) = i$
         Case TK_NumericVar
-            ' STRICT EVAL: push operand NOW so order is preserved
+            ' If the NEXT RPN token is a command that needs the original token,
+            ' do NOT evaluate this variable yet.
+            If RPNEntry < RPNLast Then
+                TempNext$ = RPNOutput$(RPNEntry + 1)
+                If Len(TempNext$) >= 3 Then
+                    If Asc(Left$(TempNext$, 1)) = TK_NumericCommand Then
+                        cmd16 = Asc(Mid$(TempNext$, 2, 1)) * 256 + Asc(Mid$(TempNext$, 3, 1))
+                        If cmd16 = VARPTR_CMD Then
+                            ProcessRPNStackPointer = ProcessRPNStackPointer + 1
+                            ProcessRPNStack$(ProcessRPNStackPointer) = i$
+                            GoTo NumericVarDone
+                        End If
+                    End If
+                    If Asc(Left$(TempNext$, 1)) = TK_StringCommand Then
+                        cmd16 = Asc(Mid$(TempNext$, 2, 1)) * 256 + Asc(Mid$(TempNext$, 3, 1))
+                        Select Case cmd16
+                            Case MID_CMD, LEFT_CMD, RIGHT_CMD, STRING_CMD, CHR_CMD
+                                ' Leave token untouched so the string-command handler
+                                ' can push/convert it exactly how it wants.
+                                ProcessRPNStackPointer = ProcessRPNStackPointer + 1
+                                ProcessRPNStack$(ProcessRPNStackPointer) = i$
+                                GoTo NumericVarDone
+                        End Select
+                    End If
+                End If
+            End If
+            ' Normal behavior: evaluate the variable's value now
             Temp$ = i$: GoSub PushOneValueTokenOnStack
             ProcessRPNStackPointer = ProcessRPNStackPointer + 1
-            ' Mark "already on 6809 stack" with its numeric type
             ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(PushedType)
+        NumericVarDone:
+
         Case TK_StringVar
+            ' If the NEXT RPN token is VARPTR(argcnt), do NOT evaluate this variable now.
+            ' VARPTR needs the original variable token, not the string contents.
+            If RPNEntry < RPNLast Then
+                TempNext$ = RPNOutput$(RPNEntry + 1)
+                If Len(TempNext$) >= 4 Then
+                    If Asc(Left$(TempNext$, 1)) = TK_NumericCommand Then
+                        cmd16 = Asc(Mid$(TempNext$, 2, 1)) * 256 + Asc(Mid$(TempNext$, 3, 1))
+                        If cmd16 = VARPTR_CMD Then
+                            ProcessRPNStackPointer = ProcessRPNStackPointer + 1
+                            ProcessRPNStack$(ProcessRPNStackPointer) = i$
+                            GoTo StringVarDone
+                        End If
+                    End If
+                End If
+            End If
+            ' Normal behavior: evaluate the string value now
             ' STRICT EVAL: push operand NOW so order is preserved
             Temp$ = i$: GoSub PushOneStringTokenOnStack
             ProcessRPNStackPointer = ProcessRPNStackPointer + 1
             ' Mark "string already on 6809 stack"
-            ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HF9)
+            ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(TK_STR_ONSTACK)
+            StringVarDone:
+
         Case TK_DEFFunction
             'Different variables will go directly on the new stack
             ProcessRPNStackPointer = ProcessRPNStackPointer + 1
@@ -674,7 +717,7 @@ While RPNEntry <= RPNLast
 
                     ' Push "string already on 6809 stack" marker (so + concat and final result work)
                     ProcessRPNStackPointer = ProcessRPNStackPointer + 1
-                    ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HF9)
+                    ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(TK_STR_ONSTACK)
 
                     GoTo SpecialCharDone
                 End If
@@ -704,7 +747,7 @@ While RPNEntry <= RPNLast
                     If ProcessRPNStackPointer < 0 Then Exit Select
                     tNVT = 0
                     If Len(i$) >= 3 Then tNVT = Asc(Mid$(i$, 3, 1))
-                    If tNVT = 0 Then Return
+                    If tNVT = 0 Then Exit Select
 
                     ' Current type of top-of-stack value is stored in the ProcessRPNStack marker
                     CurType = Asc(Right$(ProcessRPNStack$(ProcessRPNStackPointer), 1))
@@ -716,9 +759,15 @@ While RPNEntry <= RPNLast
                         GoSub ConvertLastType2NVT
                         CurType = tNVT
                     End If
-
                     ' Update marker type
-                    ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(CurType)
+                    Select Case Asc(Left$(ProcessRPNStack$(ProcessRPNStackPointer), 1))
+                        Case TK_BOOL_ONSTACK
+                            ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(TK_BOOL_ONSTACK) + Chr$(0) + Chr$(0) + Chr$(CurType)
+                        Case TK_ADDR_ONSTACK
+                            ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(TK_ADDR_ONSTACK) + Chr$(0) + Chr$(0) + Chr$(CurType)
+                        Case Else
+                            ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(CurType)
+                    End Select
 
                 Case OP_LITTYPEPOP
                     ' Operator token: FC 75
@@ -753,7 +802,7 @@ While RPNEntry <= RPNLast
                         A$ = "JSR": B$ = "StrConcat2": C$ = "Stub: string concat; pushes string result": GoSub AO
 
                         ' Mark result as "string already on 6809 stack"
-                        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HF9)
+                        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(TK_STR_ONSTACK)
                         GoTo PLUS_Done
                     End If
 
@@ -854,29 +903,41 @@ While RPNEntry <= RPNLast
                         LeftType = Asc(Right$(Value1$, 1))
                         RightType = Asc(Right$(Value2$, 1))
                         If RightType + LeftType > 255 Then
-                            ' Both are literal, Divide the literal values and push the result to the stack
-                            Num = Val(Left$(Value1$, Len(Value1$) - 1)) / Val(Left$(Value2$, Len(Value2$) - 1))
-                            GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-                            If RightType > LeftType Then
-                                resultType = RightType
+                            ' Both are literal constants
+                            If LeftType < (NT_Single + 128) And RightType < (NT_Single + 128) Then
+                                ' Both literals are NON-floating: use integer rounded divide folding
+                                FoldLeft$ = Left$(Value1$, Len(Value1$) - 1)
+                                FoldRight$ = Left$(Value2$, Len(Value2$) - 1)
+                                GoSub FoldIntegerDivideRounded
+                                GoSub NumAsString ' Convert number in Num to a string without spaces as Num$
+                                If RightType > LeftType Then
+                                    resultType = RightType
+                                Else
+                                    resultType = LeftType
+                                End If
                             Else
-                                resultType = LeftType
+                                ' At least one literal is floating: use real division folding
+                                Num = Val(Left$(Value1$, Len(Value1$) - 1)) / Val(Left$(Value2$, Len(Value2$) - 1))
+                                GoSub NumAsString ' Convert number in Num to a string without spaces as Num$
+                                If RightType > LeftType Then
+                                    resultType = RightType
+                                Else
+                                    resultType = LeftType
+                                End If
+                                If resultType < (NT_Single + 128) Then resultType = NT_Single + 128
                             End If
-                            If resultType < (NT_Single + 128) Then resultType = NT_Single + 128 ' / always returns floating
                             ProcessRPNStackPointer = ProcessRPNStackPointer - 1
                             ProcessRPNStack$(ProcessRPNStackPointer) = Num$ + Chr$(resultType)
                         Else
-                        GoSub PutValuesOnStack ' Put Value1 & Value2 on the stack LeftType=Value1 Type & RightType=Value2 Type, Set LargestType
-                        If Largesttype < NT_Single Then Largesttype = NT_Single ' / forces float (use \ for integer division)
-                        GoSub NumFunctionDivide
+                            GoSub PutValuesOnStack ' Put Value1 & Value2 on the stack LeftType=Value1 Type & RightType=Value2 Type, Set LargestType
+                            GoSub NumFunctionDivideSmart
                             ' Result is on the 6809 stack, flag it here
                             ProcessRPNStackPointer = ProcessRPNStackPointer + 1
                             ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(Largesttype)
                         End If
                     Else
                         GoSub PutValuesOnStack ' Put Value1 & Value2 on the stack LeftType=Value1 Type & RightType=Value2 Type, Set LargestType
-                        If Largesttype < NT_Single Then Largesttype = NT_Single ' / forces float (use \ for integer division)
-                        GoSub NumFunctionDivide
+                        GoSub NumFunctionDivideSmart
                         ProcessRPNStackPointer = ProcessRPNStackPointer + 1
                         ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(Largesttype)
                     End If
@@ -897,7 +958,7 @@ While RPNEntry <= RPNLast
     ' STRICT-EVAL: operand already on the 6809 stack?
     ' ------------------------------------------------------------
     If Len(Value2$) > 0 Then
-        If Asc(Left$(Value2$, 1)) = &HFA Then
+        If Asc(Left$(Value2$, 1)) = &HFA Or Asc(Left$(Value2$, 1)) = TK_BOOL_ONSTACK Then
             ' Numeric value already on 6809 stack; just negate it
             LeftType = Asc(Right$(Value2$, 1))
             GoSub NumFunctionNEG
@@ -944,7 +1005,7 @@ While RPNEntry <= RPNLast
                         RightType = Asc(Right$(Value2$, 1))
                         If RightType + LeftType > 255 Then
                             ' Both are literal, Divide the literal values and push the result to the stack
-                            Num = Val(Left$(Value1$, Len(Value1$) - 1)) / Val(Left$(Value2$, Len(Value2$) - 1))
+                            Num = Val(Left$(Value1$, Len(Value1$) - 1)) \ Val(Left$(Value2$, Len(Value2$) - 1))
                             GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
                             If RightType > LeftType Then
                                 resultType = RightType
@@ -1058,8 +1119,42 @@ While RPNEntry <= RPNLast
                             ' Result is on the 6809 stack, flag it here
 
                             If InIFCondition% <> 0 Then
-                                ' Only short-circuit AND if the *whole* IF has no OR at all.
+                                ' Only short-circuit AND if the *whole* IF has no OR at all
+                                ' AND both operands of this AND are already boolean results.
                                 If HasOrOverall% = 0 Then
+                                    If IsBoolOnStack%(Value1$) <> 0 And IsBoolOnStack%(Value2$) <> 0 Then
+                                        UsedANDShortCircuit% = -1
+
+                                        If IsLastANDInIF%(RPNEntry) = 0 Then
+                                            ' --- MIDDLE AND in pure-AND IF ---
+                                            A$ = "LDB": B$ = ",S+": C$ = "Pop boolean result for AND": GoSub AO
+                                            A$ = "LBEQ": B$ = IFFalseLabel$: C$ = "Short-circuit AND: if FALSE jump to ELSE/END IF": GoSub AO
+                                            A$ = "PSHS": B$ = "B": C$ = "Re-push boolean when TRUE so stack is unchanged": GoSub AO
+                                        Else
+                                            ' --- LAST AND in a pure-AND IF ---
+                                            A$ = "LDB": B$ = ",S+": C$ = "Pop final boolean result for AND-only IF": GoSub AO
+                                            A$ = "LBEQ": B$ = IFFalseLabel$: C$ = "Final AND test: if FALSE jump to ELSE/END IF": GoSub AO
+                                            ' Do NOT re-push; stack is back to its pre-condition height.
+                                        End If
+                                    End If
+                                End If
+                            End If
+                            ProcessRPNStackPointer = ProcessRPNStackPointer + 1
+                            If IsBoolOnStack%(Value1$) <> 0 And IsBoolOnStack%(Value2$) <> 0 Then
+                                ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(TK_BOOL_ONSTACK) + Chr$(0) + Chr$(0) + Chr$(NT_Byte)
+                            Else
+                                ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(Largesttype)
+                            End If
+                        End If
+                    Else
+                        GoSub PutValuesOnStack
+                        GoSub NumFunctionAnd
+
+                        If InIFCondition% <> 0 Then
+                            ' Only short-circuit AND if the *whole* IF has no OR at all
+                            ' AND both operands of this AND are already boolean results.
+                            If HasOrOverall% = 0 Then
+                                If IsBoolOnStack%(Value1$) <> 0 And IsBoolOnStack%(Value2$) <> 0 Then
                                     UsedANDShortCircuit% = -1
 
                                     If IsLastANDInIF%(RPNEntry) = 0 Then
@@ -1069,43 +1164,20 @@ While RPNEntry <= RPNLast
                                         A$ = "PSHS": B$ = "B": C$ = "Re-push boolean when TRUE so stack is unchanged": GoSub AO
                                     Else
                                         ' --- LAST AND in a pure-AND IF ---
-                                        ' Final IF test: FALSE → ELSE/END IF, TRUE → fall through to THEN.
                                         A$ = "LDB": B$ = ",S+": C$ = "Pop final boolean result for AND-only IF": GoSub AO
                                         A$ = "LBEQ": B$ = IFFalseLabel$: C$ = "Final AND test: if FALSE jump to ELSE/END IF": GoSub AO
                                         ' Do NOT re-push; stack is back to its pre-condition height.
                                     End If
                                 End If
                             End If
-
-                            ProcessRPNStackPointer = ProcessRPNStackPointer + 1
-                            ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(Largesttype)
-                        End If
-                    Else
-                        GoSub PutValuesOnStack
-                        GoSub NumFunctionAnd
-
-                        If InIFCondition% <> 0 Then
-                            ' Only short-circuit AND if the *whole* IF has no OR at all.
-                            If HasOrOverall% = 0 Then
-                                UsedANDShortCircuit% = -1
-
-                                If IsLastANDInIF%(RPNEntry) = 0 Then
-                                    ' --- MIDDLE AND in pure-AND IF ---
-                                    A$ = "LDB": B$ = ",S+": C$ = "Pop boolean result for AND": GoSub AO
-                                    A$ = "LBEQ": B$ = IFFalseLabel$: C$ = "Short-circuit AND: if FALSE jump to ELSE/END IF": GoSub AO
-                                    A$ = "PSHS": B$ = "B": C$ = "Re-push boolean when TRUE so stack is unchanged": GoSub AO
-                                Else
-                                    ' --- LAST AND in a pure-AND IF ---
-                                    ' Final IF test: FALSE → ELSE/END IF, TRUE → fall through to THEN.
-                                    A$ = "LDB": B$ = ",S+": C$ = "Pop final boolean result for AND-only IF": GoSub AO
-                                    A$ = "LBEQ": B$ = IFFalseLabel$: C$ = "Final AND test: if FALSE jump to ELSE/END IF": GoSub AO
-                                    ' Do NOT re-push; stack is back to its pre-condition height.
-                                End If
-                            End If
                         End If
 
                         ProcessRPNStackPointer = ProcessRPNStackPointer + 1
-                        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(Largesttype)
+                        If IsBoolOnStack%(Value1$) <> 0 And IsBoolOnStack%(Value2$) <> 0 Then
+                            ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(TK_BOOL_ONSTACK) + Chr$(0) + Chr$(0) + Chr$(NT_Byte)
+                        Else
+                            ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(Largesttype)
+                        End If
                     End If
 
                 Case OP_OR ' OR
@@ -1137,6 +1209,37 @@ While RPNEntry <= RPNLast
 
                             ' --- NEW: short-circuit OR for IF conditions (no LEAS) ---
                             If InIFCondition% <> 0 Then
+                                If IsBoolOnStack%(Value1$) <> 0 And IsBoolOnStack%(Value2$) <> 0 Then
+                                    UsedORShortCircuit% = -1
+
+                                    If IsLastORInIF%(RPNEntry) = 0 Then
+                                        ' --- MIDDLE OR (another OR still to come) ---
+                                        A$ = "LDB": B$ = ",S+": C$ = "Pop boolean result for OR": GoSub AO
+                                        A$ = "LBNE": B$ = IFTrueLabel$: C$ = "Short-circuit OR: if TRUE jump to THEN": GoSub AO
+                                        A$ = "PSHS": B$ = "B": C$ = "Re-push boolean when FALSE so stack is unchanged": GoSub AO
+                                    Else
+                                        ' --- LAST OR in the whole IF expression ---
+                                        ' This OR does the final IF test for any expression with OR.
+                                        A$ = "LDB": B$ = ",S+": C$ = "Pop final boolean result for OR in IF": GoSub AO
+                                        A$ = "LBEQ": B$ = IFFalseLabel$: C$ = "Final OR test: FALSE → ELSE/END IF": GoSub AO
+                                        ' If TRUE (non-zero) we just fall through to _IFTrue_xx
+                                    End If
+                                End If
+                            End If
+
+                            ProcessRPNStackPointer = ProcessRPNStackPointer + 1
+                            If IsBoolOnStack%(Value1$) <> 0 And IsBoolOnStack%(Value2$) <> 0 Then
+                                ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(TK_BOOL_ONSTACK) + Chr$(0) + Chr$(0) + Chr$(NT_Byte)
+                            Else
+                                ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(Largesttype)
+                            End If
+                        End If
+                    Else
+                        GoSub PutValuesOnStack
+                        GoSub NumFunctionOr
+                        ' --- NEW: short-circuit OR for IF conditions (no LEAS) ---
+                        If InIFCondition% <> 0 Then
+                            If IsBoolOnStack%(Value1$) <> 0 And IsBoolOnStack%(Value2$) <> 0 Then
                                 UsedORShortCircuit% = -1
 
                                 If IsLastORInIF%(RPNEntry) = 0 Then
@@ -1152,33 +1255,13 @@ While RPNEntry <= RPNLast
                                     ' If TRUE (non-zero) we just fall through to _IFTrue_xx
                                 End If
                             End If
-
-                            ProcessRPNStackPointer = ProcessRPNStackPointer + 1
+                        End If
+                        ProcessRPNStackPointer = ProcessRPNStackPointer + 1
+                        If IsBoolOnStack%(Value1$) <> 0 And IsBoolOnStack%(Value2$) <> 0 Then
+                            ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(TK_BOOL_ONSTACK) + Chr$(0) + Chr$(0) + Chr$(NT_Byte)
+                        Else
                             ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(Largesttype)
                         End If
-                    Else
-                        GoSub PutValuesOnStack
-                        GoSub NumFunctionOr
-                        ' --- NEW: short-circuit OR for IF conditions (no LEAS) ---
-                        If InIFCondition% <> 0 Then
-                            UsedORShortCircuit% = -1
-
-                            If IsLastORInIF%(RPNEntry) = 0 Then
-                                ' --- MIDDLE OR (another OR still to come) ---
-                                A$ = "LDB": B$ = ",S+": C$ = "Pop boolean result for OR": GoSub AO
-                                A$ = "LBNE": B$ = IFTrueLabel$: C$ = "Short-circuit OR: if TRUE jump to THEN": GoSub AO
-                                A$ = "PSHS": B$ = "B": C$ = "Re-push boolean when FALSE so stack is unchanged": GoSub AO
-                            Else
-                                ' --- LAST OR in the whole IF expression ---
-                                ' This OR does the final IF test for any expression with OR.
-                                A$ = "LDB": B$ = ",S+": C$ = "Pop final boolean result for OR in IF": GoSub AO
-                                A$ = "LBEQ": B$ = IFFalseLabel$: C$ = "Final OR test: FALSE → ELSE/END IF": GoSub AO
-                                ' If TRUE (non-zero) we just fall through to _IFTrue_xx
-                            End If
-                        End If
-
-                        ProcessRPNStackPointer = ProcessRPNStackPointer + 1
-                        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(Largesttype)
                     End If
                 Case OP_XOR ' XOR
                     If ProcessRPNStackPointer > 0 Then
@@ -1367,12 +1450,14 @@ DoneNOT:
                     Z$="; After DimI loop of OP_ARRLOAD":gosub AO
                     If NumericArrayDimensions(ArrNum) = 1 And IdxBits = 8 And ElemType < 5 Then
                         ' index is a byte at ,S
-                        Z$="; Here3:":gosub Ao
-                        A$ = "LDB": B$ = ",S": C$ = "Index (8-bit)": GoSub AO
+                        ' index is a byte at ,S
+                        Z$="; Here3A:":gosub Ao
+                        A$ = "PULS": B$ = "B": C$ = "B = Index (8-bit), move the stack": GoSub AO
                         A$ = "LDX": B$ = "#_ArrayNum_" + NumericArrayVariables$(ArrNum) + "+1": C$ = "Array data starts here": GoSub AO
                         A$ = "ABX": C$ = "X = base + index": GoSub AO
-                        A$ = "LDB": B$ = ",X": C$ = "Load 1-byte element": GoSub AO
-                        A$ = "STB": B$ = ",S": C$ = "Replace index with value": GoSub AO
+                    '    A$ = "LDB": B$ = ",X": C$ = "Load 1-byte element": GoSub AO
+                    '    A$ = "STB": B$ = ",S": C$ = "Replace index with value": GoSub AO
+                        A$ = "PSHS": B$ = "X": C$ = "Save the location the array is pointing at on the stack": GoSub AO
                         LastType = ElemType
                     Else
                         ' A = BytesPerEntry
@@ -1388,7 +1473,14 @@ DoneNOT:
                             Case 9, 10
                                 Num = 8
                             Case 11
-                                Num = 3
+        Select Case FloatType
+            Case 0:
+                ' Handle 3 byte FFP
+                    Num = 3
+            Case 1:
+                ' Handle 5 byte FP5
+                    Num = 5
+        End Select
                             Case 12
                                 Num = 10
                         End Select
@@ -1454,7 +1546,14 @@ DoneNOT:
                             Case 9, 10
                                 Num = 8
                             Case 11
-                                Num = 3
+        Select Case FloatType
+            Case 0:
+                ' Handle 3 byte FFP
+                    Num = 3
+            Case 1:
+                ' Handle 5 byte FP5
+                    Num = 5
+        End Select
                             Case 12
                                 Num = 10
                         End Select
@@ -1538,7 +1637,15 @@ LastType = TokType
                             Case 5, 6:   Num = 2
                             Case 7, 8:   Num = 4
                             Case 9, 10:  Num = 8
-                            Case 11:     Num = 3
+                            Case 11
+        Select Case FloatType
+            Case 0:
+                ' Handle 3 byte FFP
+                    Num = 3
+            Case 1:
+                ' Handle 5 byte FP5
+                    Num = 5
+        End Select
                             Case 12:     Num = 10
                         End Select
                         GoSub NumAsString: Temp$ = Num$
@@ -1692,9 +1799,9 @@ LastType = TokType
                     End If
                     ' Mark result on ProcessRPN stack.
                     ' IMPORTANT: your numeric code uses &HFA marker. For strings you should use a different marker.
-                    ' We'll use &HF9 as "string result already on stack" (pick any free byte you like).
+                    ' We'll use TK_STR_ONSTACK as "string result already on stack" (pick any free byte you like).
                     ProcessRPNStackPointer = ProcessRPNStackPointer + 1
-                    ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HF9)
+                    ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(TK_STR_ONSTACK)
 
                 Case OP_STRARRPTR
                     ' Token is: FC 73 argCount
@@ -1792,11 +1899,29 @@ LastType = TokType
             ' STRICT EVAL for numeric literals:
             ' literal tokens start with '0'..'9' or '.' or '&' (hex)
             If (check >= 48 And check <= 57) Or check = 46 Or check = 38 Then
+                ' Numeric literal.
+                ' If the NEXT token is a string command that needs to control how the
+                ' numeric argument is pushed/converted, do NOT evaluate it yet.
+                If RPNEntry < RPNLast Then
+                    TempNext$ = RPNOutput$(RPNEntry + 1)
+                    If Len(TempNext$) >= 3 Then
+                        If Asc(Left$(TempNext$, 1)) = TK_StringCommand Then
+                            cmd16 = Asc(Mid$(TempNext$, 2, 1)) * 256 + Asc(Mid$(TempNext$, 3, 1))
+                            Select Case cmd16
+                                Case MID_CMD, LEFT_CMD, RIGHT_CMD, STRING_CMD, CHR_CMD
+                                    ProcessRPNStackPointer = ProcessRPNStackPointer + 1
+                                    ProcessRPNStack$(ProcessRPNStackPointer) = i$
+                                    GoTo NumericLiteralDone
+                            End Select
+                        End If
+                    End If
+                End If
+                ' Normal behavior: evaluate the literal now
                 Temp$ = i$: GoSub PushOneValueTokenOnStack
                 ProcessRPNStackPointer = ProcessRPNStackPointer + 1
                 ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(PushedType)
+            NumericLiteralDone:
             Else
-                ' Non-numeric token, keep old behavior
                 ProcessRPNStackPointer = ProcessRPNStackPointer + 1
                 ProcessRPNStack$(ProcessRPNStackPointer) = i$
             End If
@@ -1807,12 +1932,16 @@ Wend
 If ProcessRPNStackPointer > -1 Then
     ' value on the RPN stack needs to go on the 6809 stack
     Value1$ = ProcessRPNStack$(ProcessRPNStackPointer)
-    If Left$(Value1$, 1) = Chr$(&HFA) Then
+    If Left$(Value1$, 1) = Chr$(&HFA) Or Left$(Value1$, 1) = Chr$(TK_BOOL_ONSTACK) Then
         ' value is already on the stack
         LastType = Asc(Right$(Value1$, 1))
         Return
     End If
-    If Left$(Value1$, 1) = Chr$(&HF9) Then
+    If Left$(Value1$, 1) = Chr$(TK_ADDR_ONSTACK) Then
+        LastType = NT_UInt16
+        Return
+    End If
+    If Left$(Value1$, 1) = Chr$(TK_STR_ONSTACK) Then
         ' string result already produced by StrArrayLoadElem
         LastType = 13 ' or whatever you use to mean "string"
         Return
@@ -1837,24 +1966,33 @@ If ProcessRPNStackPointer > -1 Then
     'NVT = RightType ' NVT=Numeric Variable Type
 
     ' Value1
+    t0 = Asc(Left$(Value1$, 1))
+
     If RightType > 128 Then
-        ' We have a literal type to put on the stack
         NumberType = RightType - 128
         Num = Val(Left$(Value1$, Len(Value1$) - 1))
-        GoSub LiteralOnStack ' Copy a literal number on the stack, NumberType=Numerical Type (Format), Num = the number value
+        GoSub LiteralOnStack
         RightType = RightType - 128
-    Else ' Regular number variable
+        LastType = RightType
+
+    ElseIf t0 = TK_NumericVar Then
         NumVarNumber = Asc(Mid$(Value1$, 2, 1)) * 256 + Asc(Mid$(Value1$, 3, 1))
         NumberType = Asc(Mid$(Value1$, Len(Value1$) - 1, 1))
-        GoSub PutVarOnStack 'Put NumVarNumber on the stack where NumVarNumber = Numeric Variable Number with NumberType = Type of number
+        If NumberType = 0 Then NumberType = NumericVarType(NumVarNumber)
+        GoSub PutVarOnStack
         If Asc(Mid$(Value1$, Len(Value1$), 1)) <> 0 Then
-            LastType = Asc(Mid$(Value1$, Len(Value1$) - 1, 1))
+            LastType = NumberType
             NVT = Asc(Right$(Value1$, 1))
-            ' Convert LastType @,S to (Numeric Variable Type) NVT @S, will only change it, if they differ
             GoSub ConvertLastType2NVT
+            LastType = NVT
+        Else
+            LastType = NumberType
         End If
+
+    Else
+        Print "Error: unexpected final numeric token on expression stack"
+        GoTo FoundError
     End If
-    LastType = RightType
 End If
 Return
 
@@ -1901,7 +2039,7 @@ Select Case CompareOp
 End Select
 
 ' Pop 2 operands from ProcessRPNStack and DO NOT push a result
-ProcessRPNStackPointer = ProcessRPNStackPointer - 2
+'ProcessRPNStackPointer = ProcessRPNStackPointer - 2
 
 ' We did not leave a result on the expression stack; LastDataTypeSize is irrelevant here.
 LastDataTypeSize = 0
@@ -2003,7 +2141,8 @@ If (IsStrLeft% Or IsStrRight%) Then
 
     ' Collapse 2 RPN tokens -> 1 boolean marker
     ProcessRPNStackPointer = ProcessRPNStackPointer - 1
-    ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(3)
+'    ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(3)
+    ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(TK_BOOL_ONSTACK) + Chr$(0) + Chr$(0) + Chr$(NT_Byte)
     Return
 End If
 
@@ -2057,7 +2196,8 @@ If RightType + LeftType > 255 Then
 
     ' 2 tokens consumed -> 1 boolean marker
     ProcessRPNStackPointer = ProcessRPNStackPointer - 1
-    ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(3)
+'    ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(3)
+    ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(TK_BOOL_ONSTACK) + Chr$(0) + Chr$(0) + Chr$(NT_Byte)
     Return
 End If
 
@@ -2118,7 +2258,8 @@ End Select
 ' PutValuesOnStack already consumed the 2 operand tokens,
 ' so we just push a single result marker.
 ProcessRPNStackPointer = ProcessRPNStackPointer + 1
-ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(3)
+'ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(3)
+ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(TK_BOOL_ONSTACK) + Chr$(0) + Chr$(0) + Chr$(NT_Byte)
 Return
 
 ' ------------------------------------------------------------
@@ -2147,7 +2288,8 @@ End If
 first% = Asc(Left$(Temp$, 1))
 
 ' Case 1: already-on-stack numeric marker (&HFA)
-If first% = &HFA Then
+'If first% = &HFA Then
+If first% = &HFA Or first% = TK_BOOL_ONSTACK Then
     ResolvedType% = Asc(Right$(Temp$, 1))
     Return
 End If
@@ -2189,7 +2331,7 @@ Return
 ' Exit : IsStrFlag% = -1 if string value, 0 otherwise
 ' Recognizes:
 '   TK_StringVar (F3 ...)
-'   &HF9 marker (your "string already on 6809 stack")
+'   TK_STR_ONSTACK marker (your "string already on 6809 stack")
 '   String literal token (F5 22 ... F5 22)
 ' ------------------------------------------------------------
 IsStringToken:
@@ -2205,7 +2347,7 @@ If t% = TK_StringVar Then
 End If
 
 ' Marker for "string already on stack"
-If t% = &HF9 Then
+If t% = TK_STR_ONSTACK Then
     IsStrFlag% = -1
     Return
 End If
@@ -2247,7 +2389,7 @@ Return
 PushOneStringTokenOnStack:
 If Len(Temp$) = 0 Then Print "Error: empty string token on";: GoTo FoundError
 t% = Asc(Left$(Temp$, 1))
-If t% = &HF9 Then
+If t% = TK_STR_ONSTACK Then
     ' Already on 6809 stack (your string result marker)
     Return
 End If
@@ -2291,13 +2433,14 @@ System
 ' ------------------------------------------------------------
 PushOneValueTokenOnStack:
 If Len(Temp$) = 0 Then Print "Error: empty token in PushOneValueTokenOnStack on";: GoTo FoundError
-
-If Asc(Left$(Temp$, 1)) = &HFA Then
+If Asc(Left$(Temp$, 1)) = TK_STR_ONSTACK Then
+    Print "Error: string value used where numeric value expected on";: GoTo FoundError
+End If
+If Asc(Left$(Temp$, 1)) = &HFA Or Asc(Left$(Temp$, 1)) = TK_BOOL_ONSTACK Then
     ' already on 6809 stack
     PushedType = Asc(Right$(Temp$, 1))
     Return
 End If
-
 If Asc(Left$(Temp$, 1)) = TK_ADDR_ONSTACK Then
     ' address already on 6809 stack, don't push anything
     PushedType = NT_UInt16
@@ -2436,6 +2579,15 @@ Select Case NumberType
         A$ = "PSHS": B$ = "D,X,Y,U": C$ = "Save D,X,Y,U on the stack, (_Integer64)": GoSub AO
         Return
     Case NT_UInt64
+        VarInt64 = Num
+        addr = VarPtr(VarInt64)
+        A$ = "LDD": B$ = "#$" + Right$("0" + Hex$(Peek(addr + 7)), 2) + Right$("0" + Hex$(Peek(addr + 6)), 2): C$ = "D is a 16 bit MSW (64 bit Unsigned Integer64)": GoSub AO
+        A$ = "LDX": B$ = "#$" + Right$("0" + Hex$(Peek(addr + 5)), 2) + Right$("0" + Hex$(Peek(addr + 4)), 2): C$ = "X is a 16 bit MIDW": GoSub AO
+        A$ = "LDY": B$ = "#$" + Right$("0" + Hex$(Peek(addr + 3)), 2) + Right$("0" + Hex$(Peek(addr + 2)), 2): C$ = "Y is a 16 bit MIDW": GoSub AO
+        A$ = "LDU": B$ = "#$" + Right$("0" + Hex$(Peek(addr + 1)), 2) + Right$("0" + Hex$(Peek(addr)), 2): C$ = "U is a 16 bit LSW": GoSub AO
+        A$ = "PSHS": B$ = "D,X,Y,U": C$ = "Save D,X,Y,U on the stack, (_UnSigned _Integer64)": GoSub AO
+        Return
+
         Dim B(7) As _Unsigned _Byte
         Dim R1 As Integer
         i$ = NodeValue$(ParseLayer, CurrentASTNodeIdx(ParseLayer))
@@ -2462,11 +2614,22 @@ Select Case NumberType
         A$ = "PSHS": B$ = "D,X,Y,U": C$ = "Save D,X,Y,U on the stack, (_UnSigned _Integer64)": GoSub AO
         Return
     Case NT_Single
-        Num$ = Str$(Num): Z$ = "; " + Num$ + " Is a 3 Byte floating point number from E-19 to E+19 (Single) ! or none format": GoSub AO
-        DoubleToCustomFloat Num ' convert the num to New 3 byte float foramt as Byte1,Byte2,Byte3
-        A$ = "LDB": B$ = "#$" + Right$("0" + Hex$(Byte1), 2): C$ = "A is byte 1 of the fast floating point number": GoSub AO
-        A$ = "LDX": B$ = "#$" + Right$("0" + Hex$(Byte2), 2) + Right$("0" + Hex$(Byte3), 2): C$ = "X is a Byte 2 & Byte 3 of the fast floating point number": GoSub AO
-        A$ = "PSHS": B$ = "B,X": C$ = "Save A,X on the stack, (Fast Floating Point format)": GoSub AO
+        Num$ = Str$(Num): Z$ = "; " + Num$ + " Is a Single number from E-19 to E+19 (Single) ! or none format": GoSub AO
+        Select Case FloatType
+            Case 0:
+                ' Handle 3 byte FFP
+                DoubleToCustomFloat Num ' convert the num to New 3 byte float foramt as Byte1,Byte2,Byte3
+                A$ = "LDB": B$ = "#$" + Right$("0" + Hex$(Byte1), 2): C$ = "A is byte 1 of the fast floating point number": GoSub AO
+                A$ = "LDX": B$ = "#$" + Right$("0" + Hex$(Byte2), 2) + Right$("0" + Hex$(Byte3), 2): C$ = "X is a Byte 2 & Byte 3 of the fast floating point number": GoSub AO
+                A$ = "PSHS": B$ = "B,X": C$ = "Save A,X on the stack, (Fast Floating Point format)": GoSub AO
+            Case 1:
+                ' Handle 5 byte FP5
+                DoubleToFP5 Num ' convert the num to 5 byte float foramt as Byte1,Byte2,Byte3,Byte4,Byte5
+                A$ = "LDB": B$ = "#$" + Right$("0" + Hex$(Byte1), 2): C$ = "A is byte 1 of the fast floating point number": GoSub AO
+                A$ = "LDX": B$ = "#$" + Right$("0" + Hex$(Byte2), 2) + Right$("0" + Hex$(Byte3), 2): C$ = "X is a Byte 2 & Byte 3 of the fast floating point number": GoSub AO
+                A$ = "LDU": B$ = "#$" + Right$("0" + Hex$(Byte4), 2) + Right$("0" + Hex$(Byte5), 2): C$ = "X is a Byte 2 & Byte 3 of the fast floating point number": GoSub AO
+                A$ = "PSHS": B$ = "B,X,U": C$ = "Save A,X,U on the stack, (FP5 Floating Point format)": GoSub AO
+        End Select
         Return
     Case NT_Double
         NumDouble = Num ' convert the _Float to Double
@@ -2530,7 +2693,8 @@ ProcessRPNStackPointer = ProcessRPNStackPointer - 1
 ' STRICT-EVAL FIX
 If Len(Value2$) > 0 Then
     Select Case Asc(Left$(Value2$, 1))
-        Case &HFA
+        'Case &HFA
+        Case &HFA, TK_BOOL_ONSTACK
             LeftType = Asc(Right$(Value2$, 1))
             Largesttype = LeftType
             Return
@@ -2544,22 +2708,36 @@ End If
 ' Value2
 LeftType = Asc(Right$(Value2$, 1))
 If LeftType = 0 And Len(Value2$) >= 4 Then LeftType = Asc(Mid$(Value2$, 4, 1)) ' use the assigned value
+
+t0 = Asc(Left$(Value2$, 1))
+
 If LeftType > 128 Then
     ' We have a literal type to put on the stack
     NumberType = LeftType - 128
     Num = Val(Left$(Value2$, Len(Value2$) - 1))
     GoSub LiteralOnStack
     LeftType = LeftType - 128
-Else
+
+ElseIf t0 = TK_NumericVar Then
     NumVarNumber = Asc(Mid$(Value2$, 2, 1)) * 256 + Asc(Mid$(Value2$, 3, 1))
     NumberType = Asc(Mid$(Value2$, Len(Value2$) - 1, 1))
+    If NumberType = 0 Then NumberType = NumericVarType(NumVarNumber)
     GoSub PutVarOnStack
+
     If Asc(Mid$(Value2$, Len(Value2$), 1)) <> 0 Then
-        LastType = Asc(Mid$(Value2$, Len(Value2$) - 1, 1))
+        LastType = NumberType
         NVT = Asc(Right$(Value2$, 1))
         GoSub ConvertLastType2NVT
+        LeftType = NVT
+    Else
+        LeftType = NumberType
     End If
+
+Else
+    Print "Error: unexpected numeric token in PutValue2OnStack"
+    GoTo FoundError
 End If
+
 Largesttype = LeftType
 Return
 
@@ -2574,8 +2752,10 @@ Value2$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = Pro
 Value1$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
 V1OnStack% = 0
 V2OnStack% = 0
-If Asc(Left$(Value1$, 1)) = &HFA Or Asc(Left$(Value1$, 1)) = TK_ADDR_ONSTACK Then V1OnStack% = -1
-If Asc(Left$(Value2$, 1)) = &HFA Or Asc(Left$(Value2$, 1)) = TK_ADDR_ONSTACK Then V2OnStack% = -1
+'If Asc(Left$(Value1$, 1)) = &HFA Or Asc(Left$(Value1$, 1)) = TK_ADDR_ONSTACK Then V1OnStack% = -1
+'If Asc(Left$(Value2$, 1)) = &HFA Or Asc(Left$(Value2$, 1)) = TK_ADDR_ONSTACK Then V2OnStack% = -1
+If Asc(Left$(Value1$, 1)) = &HFA Or Asc(Left$(Value1$, 1)) = TK_BOOL_ONSTACK Or Asc(Left$(Value1$, 1)) = TK_ADDR_ONSTACK Then V1OnStack% = -1
+If Asc(Left$(Value2$, 1)) = &HFA Or Asc(Left$(Value2$, 1)) = TK_BOOL_ONSTACK Or Asc(Left$(Value2$, 1)) = TK_ADDR_ONSTACK Then V2OnStack% = -1
 
 ' ------------------------------------------------------------
 ' Determine numeric types even if already on stack
@@ -2654,13 +2834,26 @@ Return
 'If Asc(Left$(Tok$, 1)) = &HFA Then TokType = Asc(Right$(Tok$, 1)): Return
 'TokType = Asc(Right$(Tok$, 1))
 'If TokType = 0 Then
-'    If Len(Tok$) >= 4 Then TokType = Asc(Mid$(Tok$, 4, 1))
+'    If Len(Tok$) >= 5 Then TokType = Asc(Mid$(Tok$, 5, 1))
 'End If
 'If TokType > 128 Then TokType = TokType - 128
 'Return
 
 GetTokenTypeOnly:
 If Len(Tok$) = 0 Then TokType = 0: Return
+If Asc(Left$(Tok$, 1)) = TK_STR_ONSTACK Then
+    TokType = 13
+    Return
+End If
+If Asc(Left$(Tok$, 1)) = TK_ADDR_ONSTACK Then
+    TokType = NT_UInt16
+    Return
+End If
+'If Asc(Left$(Tok$, 1)) = &HFA Then
+If Asc(Left$(Tok$, 1)) = &HFA Or Asc(Left$(Tok$, 1)) = TK_BOOL_ONSTACK Then
+    TokType = Asc(Right$(Tok$, 1))
+    Return
+End If
 TokType = Asc(Right$(Tok$, 1))
 
 ' Literal numbers are stored as: "123" + Chr$(Type+128)
@@ -2678,26 +2871,17 @@ If t0 = TK_NumericVar Then
     If Len(Tok$) >= 4 Then baseType = Asc(Mid$(Tok$, 4, 1))
     nvtType = 0
     If Len(Tok$) >= 5 Then nvtType = Asc(Right$(Tok$, 1))
-    ' Prefer explicit manual type, otherwise base type
     TokType = nvtType
     If TokType = 0 Then TokType = baseType
-    ' If still unknown, fall back to var table
     If TokType = 0 Then TokType = NumericVarType(VarNum)
     Return
 End If
 
-' Numeric array token: F0, MSB, LSB, ElemType, #Elems
+' Numeric array token: F0, MSB, LSB, #Dimensions, ElemType
 If t0 = TK_NumericArray Then
-    ArrNum = Asc(Mid$(Tok$, 2, 1)) * 256 + Asc(Mid$(Tok$, 3, 1))
     TokType = 0
-    If Len(Tok$) >= 4 Then TokType = Asc(Mid$(Tok$, 4, 1))
-    If TokType = 0 Then TokType = NumericArrayBits(ArrNum)
+    If Len(Tok$) >= 5 Then TokType = Asc(Mid$(Tok$, 5, 1))
     Return
-End If
-
-' Default: if last byte is 0, try byte 4 (old behavior)
-If TokType = 0 Then
-    If Len(Tok$) >= 4 Then TokType = Asc(Mid$(Tok$, 4, 1))
 End If
 Return
 
@@ -2705,15 +2889,25 @@ Return
 ' Helper: push numeric token Tok$ onto 6809 stack
 ' ------------------------------------------------------------
 PushTokenNumeric:
-If Len(Tok$) = 0 Then TokType = 0: Return
-If Asc(Left$(Tok$, 1)) = &HFA Or Asc(Left$(Tok$, 1)) = TK_ADDR_ONSTACK Then
+If Len(Tok$) = 0 Then
+    TokType = 0
+    Return
+End If
+
+If Asc(Left$(Tok$, 1)) = TK_STR_ONSTACK Then
+    Print "Error: string value used where numeric value expected on";: GoTo FoundError
+End If
+
+If Asc(Left$(Tok$, 1)) = &HFA Or Asc(Left$(Tok$, 1)) = TK_BOOL_ONSTACK Or Asc(Left$(Tok$, 1)) = TK_ADDR_ONSTACK Then
     TokType = Asc(Right$(Tok$, 1))
     Return
 End If
+
 TokType = Asc(Right$(Tok$, 1))
 If TokType = 0 Then
     If Len(Tok$) >= 4 Then TokType = Asc(Mid$(Tok$, 4, 1))
 End If
+
 If TokType > 128 Then
     NumberType = TokType - 128
     Num = Val(Left$(Tok$, Len(Tok$) - 1))
@@ -2721,39 +2915,30 @@ If TokType > 128 Then
     TokType = NumberType
     Return
 End If
-'NumVarNumber = Asc(Mid$(Tok$, 2, 1)) * 256 + Asc(Mid$(Tok$, 3, 1))
-'NumberType = Asc(Mid$(Tok$, Len(Tok$) - 1, 1))
-'GoSub PutVarOnStack
-'If Asc(Mid$(Tok$, Len(Tok$), 1)) <> 0 Then
-'    LastType = Asc(Mid$(Tok$, Len(Tok$) - 1, 1))
-'    NVT = Asc(Right$(Tok$, 1))
-'    GoSub ConvertLastType2NVT
-'    TokType = NVT
-'Else
-'    TokType = NumberType
-'End If
-'Return
 
+t0 = Asc(Left$(Tok$, 1))
 
-' ... inside PushTokenNumeric, when handling TK_NumericVar ...
-NumVarNumber = Asc(Mid$(Tok$, 2, 1)) * 256 + Asc(Mid$(Tok$, 3, 1))
-' Base type is the 2nd-last byte for your 5-byte var tokens
-NumberType = Asc(Mid$(Tok$, Len(Tok$) - 1, 1))
-If NumberType = 0 Then NumberType = NumericVarType(NumVarNumber)
-GoSub PutVarOnStack ' pushes the variable value using NumberType
-' If manual type requested (last byte), convert
-NVT_Save = NVT
-NVT = Asc(Right$(Tok$, 1))
-If NVT <> 0 Then
-    LastType = NumberType
-    GoSub ConvertLastType2NVT
-    TokType = NVT
+If t0 = TK_NumericVar Then
+    NumVarNumber = Asc(Mid$(Tok$, 2, 1)) * 256 + Asc(Mid$(Tok$, 3, 1))
+    NumberType = Asc(Mid$(Tok$, Len(Tok$) - 1, 1))
+    If NumberType = 0 Then NumberType = NumericVarType(NumVarNumber)
+    GoSub PutVarOnStack
+
+    NVT_Save = NVT
+    NVT = Asc(Right$(Tok$, 1))
+    If NVT <> 0 Then
+        LastType = NumberType
+        GoSub ConvertLastType2NVT
+        TokType = NVT
+    Else
+        TokType = NumberType
+    End If
+    NVT = NVT_Save
+    Return
 Else
-    TokType = NumberType
+    Print "Error: unexpected numeric token in PushTokenNumeric"
+    GoTo FoundError
 End If
-NVT = NVT_Save
-Return
-
 
 ' Save the value of a numeric variable on the stack
 ' &HF0 = Numeric Array Variable (5 bytes)    F0,MSB,LSB,# Of Elements,Type
@@ -2779,10 +2964,19 @@ Select Case NumberType
         A$ = "PULU": B$ = "D,X,Y": C$ = "Get the 6 of the 8 byte value of the variable": GoSub AO
         A$ = "LDU": B$ = ",U": C$ = "Get the 7th & 8th byte value on the stack": GoSub AO
         A$ = "PSHS": B$ = "D,X,Y,U": C$ = "Save the 8 byte value on the stack": GoSub AO
-    Case 11 ' 3 byte variable
+    Case 11 ' Single
+        Select Case FloatType
+            Case 0:
+                ' Handle 3 byte FFP
         A$ = "LDU": B$ = "#_Var_" + NumericVariable$(Num): GoSub AO
         A$ = "PULU": B$ = "B,X": C$ = "Get the 3 byte value of the variable": GoSub AO
         A$ = "PSHS": B$ = "B,X": C$ = "Save the 3 byte value on the stack": GoSub AO
+            Case 1:
+                ' Handle 5 byte FP5
+        A$ = "LDU": B$ = "#_Var_" + NumericVariable$(Num): GoSub AO
+        A$ = "PULU": B$ = "B,X,Y": C$ = "Get the 5 byte value of the variable": GoSub AO
+        A$ = "PSHS": B$ = "B,X,Y": C$ = "Save the 5 byte value on the stack": GoSub AO
+        End Select
     Case 12 ' 10 byte variable
         A$ = "LDU": B$ = "#_Var_" + NumericVariable$(Num) + "+2": GoSub AO
         A$ = "PULU": B$ = "D,X,Y": C$ = "Get the first 6 bytes of data, move U past the data": GoSub AO

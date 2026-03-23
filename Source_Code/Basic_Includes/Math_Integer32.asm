@@ -23,8 +23,6 @@ Add_4ByteTo4Byte:
 	LEAS 	4,S   	; Adjust stack pointer, S now points to the 4-byte result
 	JMP	    ,Y	    ; Return (,S now has the resulting value)
 
-
-
 ; Subtract two 4-byte values on the stack (32-bit)
 ; Computes: Value1 @ 4,S - Value2 @ ,S
 ; Assumes each 32-bit value is big-endian: [b3 b2 b1 b0] (b0 = LSB)
@@ -83,7 +81,7 @@ Negate_64A:
     RTS
 
 ; 32-bit Multiplication on 6809
-; Inputs: ,S (4 bytes), 8,S (4 bytes)
+; Inputs: ,S (4 bytes), 4,S (4 bytes)
 ; Output: S=S+4, 4 byte (32 bit) value is at ,S also full 64 bit value is @ RESULT
 ;
 ; Case 1: Two Signed Integers
@@ -173,7 +171,7 @@ A_POSITIVE_32@:
 	JSR 	Negate_64A      ; Negate the big number
 !	BRA	    Mul_FixStack_32 ; Return
 
-; Case 4: Two Unsigned Integers
+; Case 4: Two Unsigned 32 bit Integers
 Mul_UnSigned_Both_32:
 	PULS	D			; Get return address off the stack
 	STD	    Mul_Return_32+1		; Self mod return address
@@ -183,7 +181,7 @@ Mul_FixStack_32:
 ; 1) Fix the stack
 ; 2) Copy Result on the stack
 ; 3) Return
-	LEAS	4,S			; Move stack forward 8 bytes
+	LEAS	4,S			; Move stack forward 4 bytes
 	LDD	    RESULT+4
 	STD	    ,S
 	LDD	    RESULT+6
@@ -476,7 +474,7 @@ PRINT_Un32Bit2:
 ; Code does division of Value1/Value2 where:
 ; Value1 is stored at 4,S (Dividend)
 ; Value2 is stored at ,S  (Divisor)
-; After Division the stack is moved forward 8 bytes and the result (Quotient) is stored at ,S
+; After Division the stack is moved forward 4 bytes and the result (Quotient) is stored at ,S
 ;
 ; These are the routines to call depending on your needs:
 ; Signed Divisor, Unsigned Dividend:

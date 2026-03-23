@@ -33,15 +33,12 @@ If v = TK_GeneralCommand Then
             ' END SELECT
             ' If there was NO CASE ELSE, we must emit the final "no more cases" label
             ' so the last failed CASE has somewhere to land.
-            IF CaseElseFlag = 0 THEN
+            IF CaseElseFlag(SELECTStackPointer) = 0 THEN
                 CaseCount(SELECTStackPointer) = CaseCount(SELECTStackPointer) + 1
-
                 Num = SELECTStack(SELECTStackPointer): GoSub Make2DigitNum
                 SelNum$ = Num$
-
                 Num = CaseCount(SELECTStackPointer): GoSub Make2DigitNum
                 CaseNumber$ = SelNum$ + "_" + Num$
-
                 Z$ = "_CaseCheck_" + CaseNumber$: C$ = "No more CASEs": GoSub AO
             END IF
 
@@ -52,7 +49,12 @@ If v = TK_GeneralCommand Then
 
             ' reset per-select state
             CaseCount(SELECTStackPointer) = 0
+            EvCase(SELECTStackPointer) = 0
+            CaseElseFlag(SELECTStackPointer) = 0
+            SelIsString(SELECTStackPointer) = 0
             SelHitVar$(SELECTStackPointer) = ""
+            MainCase$(SELECTStackPointer) = ""
+            SELECTStack(SELECTStackPointer) = 0
             SELECTStackPointer = SELECTStackPointer - 1
 
             GoTo SkipUntilEOLColon

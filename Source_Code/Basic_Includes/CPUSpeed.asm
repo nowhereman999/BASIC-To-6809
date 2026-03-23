@@ -41,3 +41,16 @@ SetSpeed1:
         STB     >$FFD8                  ; Put CoCo 3 in Normal speed mode
         RTS
 CPUSpeed        FCB     $00             ; current value the user wants the computer to run at (default = 0 Max speed)
+CPUSpeedBackup  FCB     $00             ; Temp byte to record the current speed the user requested
+
+; Backup the speed the CoCo is currently set at and set it to Normal speed
+Speed_Normal:
+        LDB     CPUSpeed                ; Get the current CPU Speed
+        STB     CPUSpeedBackup          ; Save it so it can be restored
+        LDB     #1                      ; Set it to normal
+        BRA     SetCPUSpeedB            ; Go set the CPU speed and return
+
+; Restore the CPU speed and mode back to what the user set 
+Speed_Restore:
+        LDB     CPUSpeedBackup          ; Get the saved speed value
+        BRA     SetCPUSpeed             ; Go set the CPU speed and return

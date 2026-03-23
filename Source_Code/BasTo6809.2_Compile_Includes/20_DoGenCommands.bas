@@ -2,12 +2,12 @@
 ' Jump to the general command pointed at by v
 JumpToGeneralCommand:
 Select Case GeneralCommands$(v)
-' New commands
+    ' New commands
 
 
 
 
-' Commands tested good
+    ' Commands tested good
     Case "ATTR"
         GoTo DoATTR
     Case "AUDIO"
@@ -154,6 +154,9 @@ Select Case GeneralCommands$(v)
     Case "STOP"
         GoTo DoSTOP
 
+    Case "SYSTEM"
+        GoTo DoSYSTEM
+
     Case "TIMER"
         GoTo DoTIMER
 
@@ -189,9 +192,9 @@ DoATTR:
 GoSub GetExpressionB4Comma: x = x + 2 ' Get the expression before a Comma, & move past it
 GoSub ParseNumericExpression_UByte ' Parse Number and return with value as Unsigned value in B
 A$ = "ANDB": B$ = "#%00000111": C$ = "Make sure value is from 0 to 7": GoSub AO
-A$ = "LSLB": B$ = "@POKE+1": C$ = "Save location where to poke in memory below (Self mod)": GoSub AO
-A$ = "LSLB": B$ = "@POKE+1": C$ = "Save location where to poke in memory below (Self mod)": GoSub AO
-A$ = "LSLB": B$ = "@POKE+1": C$ = "Save location where to poke in memory below (Self mod)": GoSub AO
+A$ = "LSLB": C$ = "Move bits left": GoSub AO
+A$ = "LSLB": C$ = "Move bits left": GoSub AO
+A$ = "LSLB": C$ = "Move bits left": GoSub AO
 A$ = "PSHS": B$ = "B": C$ = "Save Forground colour on the stack": GoSub AO
 'x in the array will now be pointing just past the ,
 ' Get background palette # number in B
@@ -207,7 +210,7 @@ A$ = "ORB": B$ = ",S+": C$ = "B = Forground and Background colour palettes": GoS
 Blink = Array(x): x = x + 1 ' get the Blink flag
 x = x + 2 ' consume the F5 & comma
 Underline = Array(x): x = x + 1 ' get the Underline flag
-If Blink = Asc("1") and Underline = Asc("1") Then
+If Blink = Asc("1") And Underline = Asc("1") Then
     ' Blink & Underline
     A$ = "ORB": B$ = "#%11000000": C$ = "Set the blink & Underline attribute bits": GoSub AO
 Else
@@ -220,7 +223,7 @@ Else
         A$ = "ORB": B$ = "#%01000000": C$ = "Set the Underline attribute bit": GoSub AO
     End If
 End If
-A$ = "STB": B$ = "AttributeByte": C$ = "Save the new attribute value":Gosub AO
+A$ = "STB": B$ = "AttributeByte": C$ = "Save the new attribute value": GoSub AO
 Return
 
 DoLPOKE:
@@ -247,7 +250,7 @@ GoSub ParseNumericExpression_UByte ' Parse Number and return with value as Unsig
 A$ = "JSR": B$ = "SDC_CloseFileB": C$ = "Close file # in B": GoSub AO
 Return ' Return with D = the value in the INT
 
-' SDC_SETPOS0(x) 
+' SDC_SETPOS0(x)
 ' set the position in a open file # at position x
 ' # is 0 or 1
 ' x is a Long (32 bit) unsinged integer
@@ -268,7 +271,7 @@ A$ = "STB": B$ = "4,X": C$ = "Save the byte offset in the sector": GoSub AO
 A$ = "JSR": B$ = "SDC_ReadBuffer0": C$ = "Fill buffer 0 from the the SDC file 0": GoSub AO
 Return
 
-' SDC_SETPOS1(x) 
+' SDC_SETPOS1(x)
 ' set the position in a open file # at position x
 ' # is 0 or 1
 ' x is a Long (32 bit) unsinged integer
@@ -496,6 +499,8 @@ A$ = "STD": B$ = "ViewPortY": C$ = "Set the y viewport value": GoSub AO
 A$ = "JSR": B$ = ViewPlayfield$(Playfield): C$ = "Scroll the screen": GoSub AO
 Return
 
+' SYSTEM and STOP will end the program in an endless loop
+DoSYSTEM:
 DoSTOP:
 A$ = "BRA": B$ = "*": C$ = "Endless Loop": GoSub AO
 GoTo SkipUntilEOLColon ' Skip until we find an EOL or colon then return
@@ -542,7 +547,7 @@ A$ = "PSHS": B$ = "CC": C$ = "Save the CC": GoSub AO
 A$ = "ORCC": B$ = "#$50": C$ = "Disable the interrupts": GoSub AO
 A$ = "LDX": B$ = "#10": C$ = "X = 10": GoSub AO
 'A$ = "EXG": B$ = "D,X": C$ = "D now = 10, X is the number given by the user": GoSub AO
-A$ = "PSHS": B$= "D,X": C$="Push values on the stack": GoSub AO
+A$ = "PSHS": B$ = "D,X": C$ = "Push values on the stack": GoSub AO
 A$ = "JSR": B$ = "DIV_U16": C$ = "Do 2,S / ,S Unisgned 16 bit Division": GoSub AO
 A$ = "PULS": B$ = "D": C$ = "Get result in D": GoSub AO
 A$ = "SUBD": B$ = "#1": C$ = "D=D-1, the overhead of the Divide could be around 10 ms, so make up for it": GoSub AO
@@ -581,35 +586,22 @@ Else
 End If
 Return
 
+
+
 DoLOADM:
 GoSub GetExpressionB4CommaEOL 'Handle an expression that ends with a comma or EOL, skip brackets
 GoSub ParseStringExpression ' Parse the String Expression, value will end up on the stack @ ,S
-v = Array(x): x = x + 1
-'Print #1, "; GetSectionToLOADM, v=$"; Hex$(v)
-If v = &HF5 Then
-    ' Found a special character
-    v = Array(x): x = x + 1
-    If v = &H2C Then ' Handle a comma on the LOADM line
-        GoSub GetExpressionB4EOL 'Handle an expression that ends with a colon or End of a Line
-        GoSub ParseNumericExpression_Int16 ' Parse Number and return with value as Signed value in D
-        A$ = "STD": B$ = "_Var_PF10": C$ = "Store D at _Var_PF10 as the LOADM offset value": GoSub AO
-    Else
-        A$ = "CLR": B$ = "_Var_PF10": C$ = "Set _Var_PF10 to zero as the LOADM offset value": GoSub AO
-        A$ = "CLR": B$ = "_Var_PF10+1": C$ = "Set _Var_PF10 to zero as the LOADM offset value": GoSub AO
-    End If
-    If v = &H0D Or v = &H3A Then ' Handle EOL/Colon
-        GoTo OpenLoadm ' Do LOADM
-    End If
+If Array(x) <> &HF5 Then Print "Problem with the end of the LOADM command on";: GoTo FoundError
+If Array(x + 1) = &H2C Then
+    ' Found a comma add the offset
+    x = x + 2 ' consume the ,
+    GoSub GetExpressionB4EOL 'Handle an expression that ends with a colon or End of a Line
+    GoSub ParseNumericExpression_UInt16 ' Parse Number and return with value as Unsigned value in D
+    A$ = "STD": B$ = "_Var_PF10": C$ = "Store D at _Var_PF10 as the LOADM offset value": GoSub AO
+Else
+    A$ = "CLR": B$ = "_Var_PF10": C$ = "Set _Var_PF10 to zero as the LOADM offset value": GoSub AO
+    A$ = "CLR": B$ = "_Var_PF10+1": C$ = "Set _Var_PF10 to zero as the LOADM offset value": GoSub AO
 End If
-Print "Error, Not sure how to handle LOADM filename on line "; linelabel$; " v = $"; Hex$(v), Chr$(v)
-Print "x-2 = $"; Hex$(Array(x - 2))
-Print "x-1 = $"; Hex$(Array(x - 1))
-Print "x   = $"; Hex$(Array(x))
-Print "x+1 = $"; Hex$(Array(x + 1))
-Print "x+2 = $"; Hex$(Array(x + 2))
-Print "x+3 = $"; Hex$(Array(x + 3))
-System
-OpenLoadm:
 A$ = "JSR": B$ = "FixFileName": C$ = "Format _StrVar_PF00 to proper disk filename format in memory at DNAMBF": GoSub AO
 A$ = "LDU": B$ = "#DNAMBF": C$ = "U points at the filename to open": GoSub AO
 ' Open the the File pointed at by U
@@ -633,7 +625,7 @@ A$ = "JSR": B$ = "InitFile": C$ = "Prep open file for reading": GoSub AO
 ' Do a LOADM command
 ' File must already be Initialized
 ' *** Enter with: Y pointing at the FATBLx associated with the drive DCDRV
-' * Loads a  Machine Language file from the disk
+' * Loads a Machine Language file from the disk
 ' Adds the 16 bit value stored in _Var_PF10 to the Load Address and the EXEC address
 A$ = "JSR": B$ = "DiskLOADM": C$ = "Load the ML program": GoSub AO
 Return ' we have reached the end of the line return
@@ -663,7 +655,7 @@ If v = &H2C Then
     'we have a comma so we should get the next value after the comma
     ' In BASIC this value would be where an ML program would be located
     GoSub GetExpressionB4EOL 'Get an expression that ends with a colon or End of a Line in Expression$
-'GoSub ParseNumericExpression_UInt16 ' Parse Number and return with value as Unsigned value in D
+    'GoSub ParseNumericExpression_UInt16 ' Parse Number and return with value as Unsigned value in D
 End If
 A$ = "JSR": B$ = "ClearVariables": C$ = "Go clear the variables": GoSub AO
 GoTo SkipUntilEOLColon ' Skip until we find an EOL or colon then return
@@ -805,7 +797,7 @@ If v = &HFF Then
                 ' Get the sprite #
                 ' Get the numeric value before a colon or End of Line in D
                 GoSub GetExpressionB4EOL 'Handle an expression that ends with a colon or End of a Line
-GoSub ParseNumericExpression_UByte ' Parse Number and return with value as Unsigned value in B
+                GoSub ParseNumericExpression_UByte ' Parse Number and return with value as Unsigned value in B
                 A$ = "JSR": B$ = "SpriteBOff": C$ = "Jump to code to turn off sprite B": GoSub AO
             End If
             Return
@@ -814,17 +806,17 @@ GoSub ParseNumericExpression_UByte ' Parse Number and return with value as Unsig
             ' Get the Sprite #
             ' Get the numeric value before comma in D
             GoSub GetExpressionB4Comma: x = x + 2 ' Get the expression before a Comma, & move past it
-GoSub ParseNumericExpression_UByte ' Parse Number and return with value as Unsigned value in B
+            GoSub ParseNumericExpression_UByte ' Parse Number and return with value as Unsigned value in B
             A$ = "PSHS": B$ = "B": C$ = "Save the sprite #": GoSub AO
             ' Get the x co-ordinate
             ' Get the numeric value before comma in D
             GoSub GetExpressionB4Comma: x = x + 2 ' Get the expression before a Comma, & move past it
-GoSub ParseNumericExpression_UInt16 ' Parse Number and return with value as Unsigned value in D
+            GoSub ParseNumericExpression_UInt16 ' Parse Number and return with value as Unsigned value in D
             A$ = "PSHS": B$ = "D": C$ = "Save the x co-ordinate": GoSub AO
             ' Get the y co-ordinate
             ' Get the numeric value before a colon or End of Line in D
             GoSub GetExpressionB4EOL 'Handle an expression that ends with a colon or End of a Line
-GoSub ParseNumericExpression_UInt16 ' Parse Number and return with value as Unsigned value in D
+            GoSub ParseNumericExpression_UInt16 ' Parse Number and return with value as Unsigned value in D
             A$ = "PSHS": B$ = "D": C$ = "Save the y co-ordinate": GoSub AO
             A$ = "JSR": B$ = "SpriteLocate": C$ = "Change the screen location of the sprite": GoSub AO
             A$ = "LEAS": B$ = "5,S": C$ = "Fix the Stack": GoSub AO
@@ -835,7 +827,7 @@ GoSub ParseNumericExpression_UInt16 ' Parse Number and return with value as Unsi
             ' Get the Sprite #
             ' Get the numeric value before comma or EOL in D
             GoSub GetExpressionB4SemiComEOL ' Get an Expression before a semi colon, a comma or an EOL, don't move past them
-GoSub ParseNumericExpression_UByte ' Parse Number and return with value as Unsigned value in B
+            GoSub ParseNumericExpression_UByte ' Parse Number and return with value as Unsigned value in B
             A$ = "PSHS": B$ = "B": C$ = "Save the Sprite #": GoSub AO
             ' Check if we just found at comma
             If Array(x) = &HF5 And Array(x + 1) = Asc(",") Then
@@ -844,7 +836,7 @@ GoSub ParseNumericExpression_UByte ' Parse Number and return with value as Unsig
                 ' Get the frame #
                 ' Get the numeric value before a colon or End of Line in D
                 GoSub GetExpressionB4EOL 'Handle an expression that ends with a colon or End of a Line
-GoSub ParseNumericExpression_UByte ' Parse Number and return with value as Unsigned value in B
+                GoSub ParseNumericExpression_UByte ' Parse Number and return with value as Unsigned value in B
             Else
                 ' Move past the EOL
                 x = x + 2
@@ -862,14 +854,14 @@ GoSub ParseNumericExpression_UByte ' Parse Number and return with value as Unsig
             ' Save the background behind the sprite # given
             ' Get the numeric value before a colon or End of Line in D
             GoSub GetExpressionB4EOL 'Handle an expression that ends with a colon or End of a Line
-GoSub ParseNumericExpression_UByte ' Parse Number and return with value as Unsigned value in B
+            GoSub ParseNumericExpression_UByte ' Parse Number and return with value as Unsigned value in B
             A$ = "JSR": B$ = "BackupSpriteB": C$ = "Jump to code to Backup Sprite B": GoSub AO
             Return
         Case ERASE_CMD
             ' Ersae the sprite # given and restore what was behind it
             ' Get the numeric value before a colon or End of Line in D
             GoSub GetExpressionB4EOL 'Handle an expression that ends with a colon or End of a Line
-GoSub ParseNumericExpression_UByte ' Parse Number and return with value as Unsigned value in B
+            GoSub ParseNumericExpression_UByte ' Parse Number and return with value as Unsigned value in B
             A$ = "JSR": B$ = "EraseSpriteB": C$ = "Jump to code to Erase SpriteB and restore it's background": GoSub AO
             Return
         Case Else
@@ -903,7 +895,7 @@ If Array(x) = &HF5 And Array(x + 1) = Asc(",") Then
     ' Get the frame #
     ' Get the numeric value before a colon or End of Line in D
     GoSub GetExpressionB4EOL: x = x + 2 'Handle an expression that ends with an End of a Line, & move past it
-GoSub ParseNumericExpression_UByte ' Parse Number and return with value as Unsigned value in B
+    GoSub ParseNumericExpression_UByte ' Parse Number and return with value as Unsigned value in B
 Else
     ' Move past the EOL
     x = x + 2
@@ -958,7 +950,7 @@ If v = &HFF Then
     Select Case v
         Case LOOP_CMD ' Loop the sample
             GoSub GetExpressionB4EOL 'Handle an expression that ends with a colon or End of a Line
-GoSub ParseNumericExpression_UByte ' Parse Number and return with value as Unsigned value in B
+            GoSub ParseNumericExpression_UByte ' Parse Number and return with value as Unsigned value in B
             A$ = "LDX": B$ = "#CC3SamplesStartBLKTable": C$ = "X points at the start of the table": GoSub AO
             A$ = "LSLB": C$ = "* 2": GoSub AO
             A$ = "LSLB": C$ = "* 4 (four bytes per entry)": GoSub AO
@@ -980,7 +972,7 @@ GoSub ParseNumericExpression_UByte ' Parse Number and return with value as Unsig
             Return
         Case SINGLE_CMD ' Play the audio sample without looping
             GoSub GetExpressionB4EOL 'Handle an expression that ends with a colon or End of a Line
-GoSub ParseNumericExpression_UByte ' Parse Number and return with value as Unsigned value in B
+            GoSub ParseNumericExpression_UByte ' Parse Number and return with value as Unsigned value in B
             A$ = "LDX": B$ = "#CC3SamplesStartBLKTable": C$ = "X points at the start of the table": GoSub AO
             A$ = "LSLB": C$ = "* 2": GoSub AO
             A$ = "LSLB": C$ = "* 4 (four bytes per entry)": GoSub AO
@@ -1222,80 +1214,80 @@ v = Array(x): x = x + 1: v$ = Chr$(v)
 While Array(x) <> TK_SpecialChar
     v = Array(x): x = x + 1: v$ = v$ + Chr$(v)
 Wend
-SELECT CASE v$
-    CASE "32" ' Switch from graphics mode to regular 32 character screen
-            ' Use the regular 32 char text screen
-            A$ = "LDX": B$ = "#$0400": C$ = "Text screen starts here": GoSub AO
-            A$ = "STX": B$ = "BEGGRP": C$ = "Update the Screen starting location": GoSub AO
-            A$ = "LDA": B$ = "#$0F": C$ = "$0F Back to Text Mode for the CoCo 3": GoSub AO
-            A$ = "STA": B$ = "$FF9C": C$ = "Neccesary for CoCo 3 GIME to use this mode": GoSub AO
-            ' Go to CoCo 3 Text mode
-            A$ = "LDA": B$ = "#$CC": GoSub AO
-            A$ = "STA": B$ = "$FF90": GoSub AO
-            A$ = "LDD": B$ = "#$0000": GoSub AO
-            A$ = "STD": B$ = "$FF98": GoSub AO
-            A$ = "STD": B$ = "$FF9A": GoSub AO
-            A$ = "STD": B$ = "$FF9E": GoSub AO
-            A$ = "LDD": B$ = "#$0FE0": GoSub AO
-            A$ = "STD": B$ = "$FF9C": GoSub AO
-            A$ = "LDA": B$ = "#Internal_Alphanumeric": C$ = "A = Text mode requested": GoSub AO
-            ' Update the Graphic mode and the screen viewer location
-            A$ = "JSR": B$ = "SetGraphicModeA": C$ = "Go setup the mode": GoSub AO
-            A$ = "LDA": B$ = "BEGGRP": C$ = "Get the MSB of the Screen starting location": GoSub AO
-            A$ = "LSRA": C$ = "Divide by 2 - 512 bytes per start location": GoSub AO
-            A$ = "JSR": B$ = "SetGraphicsStartA": C$ = "Go set the address of the screen": GoSub AO
-        Case "40"
-            ' Use the CoCo 3 40 column text screen
-'            A$ = "LDX": B$ = "#$0E00": C$ = "Text screen starts here": GoSub AO
-'            A$ = "STX": B$ = "BEGGRP": C$ = "Update the Screen starting location": GoSub AO
-            Z$ = "; $FF98 = 0x00100011 - Text Mode,Extra Descenders,Colour,60 Hz,8 lines per character": GoSub AO
-            Z$ = "; $FF99 = 0x01100101 - 40 Column mode": GoSub AO
-            ' A$ = "LDA": B$ = "#%00100011": GoSub AO
-            ' A$ = "LDB": B$ = "#%01100101": GoSub AO
-            A$ = "LDD": B$ = "#$2365": GoSub AO
-            A$ = "STD": B$ = "$FF98": GoSub AO
-            A$ = "LDD": B$ = "#$0000": GoSub AO
-            A$ = "STD": B$ = "$FF9A": C$ = "Border color register - BRDR & 2 Meg Vertual 512k Bank": GoSub AO
-            A$ = "STA": B$ = "$FF9C": C$ = "Vertical scroll register - VSC": GoSub AO
-            A$ = "STA": B$ = "$FF9F": C$ = "Clear the Horizontal register": GoSub AO
-            '$FF9D-$FF9E Vertical offset register
-            A$ = "LDD": B$ = "#$" + Hex$((&H38 * &H2000 + &HE00) / 8): GoSub AO
-            A$ = "STD": B$ = "$FF9D": C$ = "Vertical offset register": GoSub AO
-        Case "64"
-            ' Use the CoCo 3 64 column text screen
-'            A$ = "LDX": B$ = "#$0E00": C$ = "Text screen starts here": GoSub AO
-'            A$ = "STX": B$ = "BEGGRP": C$ = "Update the Screen starting location": GoSub AO
-            Z$ = "; $FF98 = 0x00100011 - Text Mode,Extra Descenders,Colour,60 Hz,8 lines per character": GoSub AO
-            Z$ = "; $FF99 = 0x01111001 - 64 Column mode": GoSub AO
-            ' A$ = "LDA": B$ = "#%00100011": GoSub AO
-            ' A$ = "LDB": B$ = "#%01100101": GoSub AO
-            A$ = "LDD": B$ = "#$2371": GoSub AO
-            A$ = "STD": B$ = "$FF98": GoSub AO
-            A$ = "LDD": B$ = "#$0000": GoSub AO
-            A$ = "STD": B$ = "$FF9A": C$ = "Border color register - BRDR & 2 Meg Vertual 512k Bank": GoSub AO
-            A$ = "STA": B$ = "$FF9C": C$ = "Vertical scroll register - VSC": GoSub AO
-            A$ = "STA": B$ = "$FF9F": C$ = "Clear the Horizontal register": GoSub AO
-            '$FF9D-$FF9E Vertical offset register
-            A$ = "LDD": B$ = "#$" + Hex$((&H38 * &H2000 + &HE00) / 8): GoSub AO
-            A$ = "STD": B$ = "$FF9D": C$ = "Vertical offset register": GoSub AO
-        Case "80"
-            ' Use the CoCo 3 80 column text screen
-'            A$ = "LDX": B$ = "#$0E00": C$ = "Text screen starts here": GoSub AO
-'            A$ = "STX": B$ = "BEGGRP": C$ = "Update the Screen starting location": GoSub AO
-            Z$ = "; $FF98 = 0x00100011 - Text Mode,Extra Descenders,Colour,60 Hz,8 lines per character": GoSub AO
-            Z$ = "; $FF99 = 0x01110101 - 80 Column mode": GoSub AO
-            ' A$ = "LDA": B$ = "#%00100011": GoSub AO
-            ' A$ = "LDB": B$ = "#%01100101": GoSub AO
-            A$ = "LDD": B$ = "#$2375": GoSub AO
-            A$ = "STD": B$ = "$FF98": GoSub AO
-            A$ = "LDD": B$ = "#$0000": GoSub AO
-            A$ = "STD": B$ = "$FF9A": C$ = "Border color register - BRDR & 2 Meg Vertual 512k Bank": GoSub AO
-            A$ = "STA": B$ = "$FF9C": C$ = "Vertical scroll register - VSC": GoSub AO
-            A$ = "STA": B$ = "$FF9F": C$ = "Clear the Horizontal register": GoSub AO
-            '$FF9D-$FF9E Vertical offset register
-            A$ = "LDD": B$ = "#$" + Hex$((&H38 * &H2000 + &HE00) / 8): GoSub AO
-            A$ = "STD": B$ = "$FF9D": C$ = "Vertical offset register": GoSub AO
-END SELECT
+Select Case v$
+    Case "32" ' Switch from graphics mode to regular 32 character screen
+        ' Use the regular 32 char text screen
+        A$ = "LDX": B$ = "#$0400": C$ = "Text screen starts here": GoSub AO
+        A$ = "STX": B$ = "BEGGRP": C$ = "Update the Screen starting location": GoSub AO
+        A$ = "LDA": B$ = "#$0F": C$ = "$0F Back to Text Mode for the CoCo 3": GoSub AO
+        A$ = "STA": B$ = "$FF9C": C$ = "Neccesary for CoCo 3 GIME to use this mode": GoSub AO
+        ' Go to CoCo 3 Text mode
+        A$ = "LDA": B$ = "#$CC": GoSub AO
+        A$ = "STA": B$ = "$FF90": GoSub AO
+        A$ = "LDD": B$ = "#$0000": GoSub AO
+        A$ = "STD": B$ = "$FF98": GoSub AO
+        A$ = "STD": B$ = "$FF9A": GoSub AO
+        A$ = "STD": B$ = "$FF9E": GoSub AO
+        A$ = "LDD": B$ = "#$0FE0": GoSub AO
+        A$ = "STD": B$ = "$FF9C": GoSub AO
+        A$ = "LDA": B$ = "#Internal_Alphanumeric": C$ = "A = Text mode requested": GoSub AO
+        ' Update the Graphic mode and the screen viewer location
+        A$ = "JSR": B$ = "SetGraphicModeA": C$ = "Go setup the mode": GoSub AO
+        A$ = "LDA": B$ = "BEGGRP": C$ = "Get the MSB of the Screen starting location": GoSub AO
+        A$ = "LSRA": C$ = "Divide by 2 - 512 bytes per start location": GoSub AO
+        A$ = "JSR": B$ = "SetGraphicsStartA": C$ = "Go set the address of the screen": GoSub AO
+    Case "40"
+        ' Use the CoCo 3 40 column text screen
+        '            A$ = "LDX": B$ = "#$0E00": C$ = "Text screen starts here": GoSub AO
+        '            A$ = "STX": B$ = "BEGGRP": C$ = "Update the Screen starting location": GoSub AO
+        Z$ = "; $FF98 = 0x00100011 - Text Mode,Extra Descenders,Colour,60 Hz,8 lines per character": GoSub AO
+        Z$ = "; $FF99 = 0x01100101 - 40 Column mode": GoSub AO
+        ' A$ = "LDA": B$ = "#%00100011": GoSub AO
+        ' A$ = "LDB": B$ = "#%01100101": GoSub AO
+        A$ = "LDD": B$ = "#$2365": GoSub AO
+        A$ = "STD": B$ = "$FF98": GoSub AO
+        A$ = "LDD": B$ = "#$0000": GoSub AO
+        A$ = "STD": B$ = "$FF9A": C$ = "Border color register - BRDR & 2 Meg Vertual 512k Bank": GoSub AO
+        A$ = "STA": B$ = "$FF9C": C$ = "Vertical scroll register - VSC": GoSub AO
+        A$ = "STA": B$ = "$FF9F": C$ = "Clear the Horizontal register": GoSub AO
+        '$FF9D-$FF9E Vertical offset register
+        A$ = "LDD": B$ = "#$" + Hex$((&H38 * &H2000 + &HE00) / 8): GoSub AO
+        A$ = "STD": B$ = "$FF9D": C$ = "Vertical offset register": GoSub AO
+    Case "64"
+        ' Use the CoCo 3 64 column text screen
+        '            A$ = "LDX": B$ = "#$0E00": C$ = "Text screen starts here": GoSub AO
+        '            A$ = "STX": B$ = "BEGGRP": C$ = "Update the Screen starting location": GoSub AO
+        Z$ = "; $FF98 = 0x00100011 - Text Mode,Extra Descenders,Colour,60 Hz,8 lines per character": GoSub AO
+        Z$ = "; $FF99 = 0x01111001 - 64 Column mode": GoSub AO
+        ' A$ = "LDA": B$ = "#%00100011": GoSub AO
+        ' A$ = "LDB": B$ = "#%01100101": GoSub AO
+        A$ = "LDD": B$ = "#$2371": GoSub AO
+        A$ = "STD": B$ = "$FF98": GoSub AO
+        A$ = "LDD": B$ = "#$0000": GoSub AO
+        A$ = "STD": B$ = "$FF9A": C$ = "Border color register - BRDR & 2 Meg Vertual 512k Bank": GoSub AO
+        A$ = "STA": B$ = "$FF9C": C$ = "Vertical scroll register - VSC": GoSub AO
+        A$ = "STA": B$ = "$FF9F": C$ = "Clear the Horizontal register": GoSub AO
+        '$FF9D-$FF9E Vertical offset register
+        A$ = "LDD": B$ = "#$" + Hex$((&H38 * &H2000 + &HE00) / 8): GoSub AO
+        A$ = "STD": B$ = "$FF9D": C$ = "Vertical offset register": GoSub AO
+    Case "80"
+        ' Use the CoCo 3 80 column text screen
+        '            A$ = "LDX": B$ = "#$0E00": C$ = "Text screen starts here": GoSub AO
+        '            A$ = "STX": B$ = "BEGGRP": C$ = "Update the Screen starting location": GoSub AO
+        Z$ = "; $FF98 = 0x00100011 - Text Mode,Extra Descenders,Colour,60 Hz,8 lines per character": GoSub AO
+        Z$ = "; $FF99 = 0x01110101 - 80 Column mode": GoSub AO
+        ' A$ = "LDA": B$ = "#%00100011": GoSub AO
+        ' A$ = "LDB": B$ = "#%01100101": GoSub AO
+        A$ = "LDD": B$ = "#$2375": GoSub AO
+        A$ = "STD": B$ = "$FF98": GoSub AO
+        A$ = "LDD": B$ = "#$0000": GoSub AO
+        A$ = "STD": B$ = "$FF9A": C$ = "Border color register - BRDR & 2 Meg Vertual 512k Bank": GoSub AO
+        A$ = "STA": B$ = "$FF9C": C$ = "Vertical scroll register - VSC": GoSub AO
+        A$ = "STA": B$ = "$FF9F": C$ = "Clear the Horizontal register": GoSub AO
+        '$FF9D-$FF9E Vertical offset register
+        A$ = "LDD": B$ = "#$" + Hex$((&H38 * &H2000 + &HE00) / 8): GoSub AO
+        A$ = "STD": B$ = "$FF9D": C$ = "Vertical offset register": GoSub AO
+End Select
 Return
 
 DoCLS:
@@ -1315,7 +1307,7 @@ Return
 
 DoON:
 GoSub GetExpressionB4EOLOrCommand 'Handle an expression that ends with a colon or End of a Line or another command like TO or STEP
-    GoSub ParseNumericExpression_UByte ' Parse Number and return with value as Unsigned value in B
+GoSub ParseNumericExpression_UByte ' Parse Number and return with value as Unsigned value in B
 v = Array(x): x = x + 1
 If v = &HFF Then
     v = Array(x) * 256 + Array(x + 1): x = x + 2
@@ -1336,9 +1328,9 @@ Else
     Print "Error, Not an ON GOTO or ON GOSUB on";: GoTo FoundError
 End If
 DoneOn$ = "@" + ONType$ + "DoneOn" 'Pointer to the code after the Jump/JSR list
-A$ = "TSTB": C$ = "Check if B is zero": gosub ao
+A$ = "TSTB": C$ = "Check if B is zero": GoSub AO
 A$ = "BEQ": B$ = DoneOn$: C$ = "If B = 0 then skip to the next line": GoSub AO
-A$ = "DECB": C$ = "Jump list starts at zero": gosub ao
+A$ = "DECB": C$ = "Jump list starts at zero": GoSub AO
 A$ = "BRA": B$ = ">": C$ = "Skip past the address list": GoSub AO
 Print #1, "@"; ONType$; "List"
 c = 0
@@ -1374,6 +1366,7 @@ Return
 DoDATA:
 ' Add the data on this line to the DataArray, keeping track of the location/size with DataArrayCount
 ' DATA lines are special lines that may conatin spaces
+v = 0
 Do Until v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A) Or v = &H27
     v = Array(x): x = x + 1
     If v = &H2C Then
@@ -1448,6 +1441,7 @@ v = Array(x): x = x + 1 ' move past the &0D or &H3A
 Return
 
 DoREAD:
+v = 0
 Do Until v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A)
     v = Array(x): x = x + 1
     If v = &HF0 Then
@@ -1489,7 +1483,7 @@ Do Until v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A)
         ' Value in brackets is on the stack
         ' NumBits = number of bits (8 or 16)
         ' NumDims = Number of dimensions
-        If NumDims = 1 And InsideArrayType = NT_UByte  Then
+        If NumDims = 1 And InsideArrayType = NT_UByte Then
             ' This is a quick and easy location to calc and store
             A$ = "PULS": B$ = "B": C$ = "Array pointer, Fix the stack": GoSub AO
             A$ = "LDX": B$ = "#_ArrayNum_" + NV$ + "+1": C$ = "The array starts here": GoSub AO
@@ -1509,7 +1503,14 @@ Do Until v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A)
                 Case 9, 10
                     Num = 8
                 Case 11
-                    Num = 3
+                    Select Case FloatType
+                        Case 0:
+                            ' Handle 3 byte FFP
+                            Num = 3
+                        Case 1:
+                            ' Handle 5 byte FP5
+                            Num = 5
+                    End Select
                 Case 12
                     Num = 10
             End Select
@@ -1590,16 +1591,30 @@ Do Until v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A)
                 A$ = "STD": B$ = "DATAPointer": C$ = "Save the updated pointer": GoSub AO
             Case 11 ' FFP format
                 A$ = "LDX": B$ = "DATAPointer": C$ = "Get the DATA pointer current value": GoSub AO
-                A$ = "JSR": B$ = "ASCII_To_FFP": C$ = "Convert ASCII text @X to a FFP number @,S": GoSub AO
-                A$ = "PULS": B$ = "B,X,U": C$ = "pull 3 bytes off the stack and U = address where to store the result, fixed stack": GoSub AO
-                A$ = "STB": B$ = ",U": C$ = "Save the MSWord": GoSub AO
-                A$ = "STX": B$ = "1,U": C$ = "Save the LSWord": GoSub AO
+                Select Case FloatType
+                    Case 0:
+                        A$ = "JSR": B$ = "ASCII_To_FFP": C$ = "Convert ASCII text @X to a FFP number @,S": GoSub AO
+                        A$ = "PULS": B$ = "B,X,U": C$ = "pull 3 bytes off the stack and U = address where to store the result, fixed stack": GoSub AO
+                        A$ = "STB": B$ = ",U": C$ = "Save the MSWord": GoSub AO
+                        A$ = "STX": B$ = "1,U": C$ = "Save the LSWord": GoSub AO
+                    Case 1:
+                        A$ = "JSR": B$ = "ASCII_To_FP5": C$ = "Convert ASCII text @X to a FP5 number @,S": GoSub AO
+                        A$ = "PULS": B$ = "B,X,Y,U": C$ = "pull 5 bytes off the stack and U = address where to store the result, fixed stack": GoSub AO
+                        A$ = "LEAU": B$ = "5,U": C$ = "Move pointer": GoSub AO
+                        A$ = "PSHU": B$ = "B,X,Y": C$ = "Save the 5 byte FP5 value": GoSub AO
+                End Select
                 A$ = "LDD": B$ = "Temp3": C$ = "D = location the ASCII # ended, after a comma": GoSub AO
                 A$ = "STD": B$ = "DATAPointer": C$ = "Save the updated pointer": GoSub AO
             Case 12 ' Double format
                 A$ = "LDX": B$ = "DATAPointer": C$ = "Get the DATA pointer current value": GoSub AO
-                A$ = "JSR": B$ = "ASCII_To_FFP": C$ = "Convert ASCII text @X to a FFP number @,S": GoSub AO
-                A$ = "JSR": B$ = "FFP_To_Double": C$ = "Convert FFP at ,S to 10 byte Double at ,S": GoSub AO
+                Select Case FloatType
+                    Case 0:
+                        A$ = "JSR": B$ = "ASCII_To_FFP": C$ = "Convert ASCII text @X to a FFP number @,S": GoSub AO
+                        A$ = "JSR": B$ = "FFP_To_Double": C$ = "Convert FFP at ,S to 10 byte Double at ,S": GoSub AO
+                    Case 1:
+                        A$ = "JSR": B$ = "ASCII_To_FP5": C$ = "Convert ASCII text @X to a FP5 number @,S": GoSub AO
+                        A$ = "JSR": B$ = "FP5_To_Double": C$ = "Convert FP5 at ,S to 10 byte Double at ,S": GoSub AO
+                End Select
                 A$ = "LDU": B$ = "10,S": C$ = "U = Address where to store the 10 byte Double number": GoSub AO
                 A$ = "PULS": B$ = "D,X,Y": C$ = "pull 3 words off the stack, move stack": GoSub AO
                 A$ = "STD": B$ = ",U": C$ = "Save the 1st Word": GoSub AO
@@ -1651,16 +1666,30 @@ Do Until v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A)
                 A$ = "STD": B$ = "DATAPointer": C$ = "Save the updated pointer": GoSub AO
             Case 11 ' FFP format
                 A$ = "LDX": B$ = "DATAPointer": C$ = "Get the DATA pointer current value": GoSub AO
-                A$ = "JSR": B$ = "ASCII_To_FFP": C$ = "Convert ASCII text @X to a FFP number @,S": GoSub AO
-                A$ = "PULS": B$ = "B,X": C$ = "pull 3 bytes off the stack": GoSub AO
-                A$ = "LDU": B$ = "#_Var_" + NumericVariable$(v) + "+3": C$ = "U points to Variable +3": GoSub AO
-                A$ = "PSHU": B$ = "B,X": C$ = "store B,X": GoSub AO
+                Select Case FloatType
+                    Case 0:
+                        A$ = "JSR": B$ = "ASCII_To_FFP": C$ = "Convert ASCII text @X to a FFP number @,S": GoSub AO
+                        A$ = "PULS": B$ = "B,X": C$ = "pull 3 bytes off the stack": GoSub AO
+                        A$ = "LDU": B$ = "#_Var_" + NumericVariable$(v) + "+3": C$ = "U points to Variable +3": GoSub AO
+                        A$ = "PSHU": B$ = "B,X": C$ = "store B,X": GoSub AO
+                    Case 1:
+                        A$ = "JSR": B$ = "ASCII_To_FP5": C$ = "Convert ASCII text @X to a FP5 number @,S": GoSub AO
+                        A$ = "PULS": B$ = "B,X,Y": C$ = "pull 3 bytes off the stack": GoSub AO
+                        A$ = "LDU": B$ = "#_Var_" + NumericVariable$(v) + "+5": C$ = "U points to Variable +5": GoSub AO
+                        A$ = "PSHU": B$ = "B,X,Y": C$ = "store B,X,Y": GoSub AO
+                End Select
                 A$ = "LDD": B$ = "Temp3": C$ = "D = location the ASCII # ended, after a comma": GoSub AO
                 A$ = "STD": B$ = "DATAPointer": C$ = "Save the updated pointer": GoSub AO
             Case 12 ' Double format
                 A$ = "LDX": B$ = "DATAPointer": C$ = "Get the DATA pointer current value": GoSub AO
-                A$ = "JSR": B$ = "ASCII_To_FFP": C$ = "Convert ASCII text @X to a FFP number @,S": GoSub AO
-                A$ = "JSR": B$ = "FFP_To_Double": C$ = "Convert FFP at ,S to 10 byte Double at ,S": GoSub AO
+                Select Case FloatType
+                    Case 0:
+                        A$ = "JSR": B$ = "ASCII_To_FFP": C$ = "Convert ASCII text @X to a FFP number @,S": GoSub AO
+                        A$ = "JSR": B$ = "FFP_To_Double": C$ = "Convert FFP at ,S to 10 byte Double at ,S": GoSub AO
+                    Case 1:
+                        A$ = "JSR": B$ = "ASCII_To_FP5": C$ = "Convert ASCII text @X to a FP5 number @,S": GoSub AO
+                        A$ = "JSR": B$ = "FP5_To_Double": C$ = "Convert FP5 at ,S to 10 byte Double at ,S": GoSub AO
+                End Select
                 A$ = "PULL_DBL": B$ = " _Var_" + NumericVariable$(v): C$ = "Save Doouble on the stack to the variable": GoSub AO
                 A$ = "LDD": B$ = "Temp3": C$ = "D = location the ASCII # ended, after a comma": GoSub AO
                 A$ = "STD": B$ = "DATAPointer": C$ = "Save the updated pointer": GoSub AO
@@ -1857,14 +1886,28 @@ If count = 0 Then
                     A$ = "PSHU": B$ = "D,X,Y": C$ = "store D,X,Y into the variable space": GoSub AO
                 Case 11 ' FFP format
                     A$ = "LDX": B$ = "#_StrVar_PF00": C$ = "X = source starts address": GoSub AO
-                    A$ = "JSR": B$ = "ASCII_To_FFP": C$ = "Convert ASCII text @X to a FFP number @,S": GoSub AO
-                    A$ = "PULS": B$ = "B,X": C$ = "pull 3 bytes off the stack": GoSub AO
-                    A$ = "LDU": B$ = "#_Var_" + NumericVariable$(v) + "+3": C$ = "U points to Variable +3": GoSub AO
-                    A$ = "PSHU": B$ = "B,X": C$ = "store B,X": GoSub AO
+                    Select Case FloatType
+                        Case 0:
+                            A$ = "JSR": B$ = "ASCII_To_FFP": C$ = "Convert ASCII text @X to a FFP number @,S": GoSub AO
+                            A$ = "PULS": B$ = "B,X": C$ = "pull 3 bytes off the stack": GoSub AO
+                            A$ = "LDU": B$ = "#_Var_" + NumericVariable$(v) + "+3": C$ = "U points to Variable +3": GoSub AO
+                            A$ = "PSHU": B$ = "B,X": C$ = "store B,X": GoSub AO
+                        Case 1:
+                            A$ = "JSR": B$ = "ASCII_To_FP5": C$ = "Convert ASCII text @X to a FP5 number @,S": GoSub AO
+                            A$ = "PULS": B$ = "B,X,Y": C$ = "pull 5 bytes off the stack": GoSub AO
+                            A$ = "LDU": B$ = "#_Var_" + NumericVariable$(v) + "+5": C$ = "U points to Variable +5": GoSub AO
+                            A$ = "PSHU": B$ = "B,X,Y": C$ = "store B,X,Y": GoSub AO
+                    End Select
                 Case 12 ' Double format
                     A$ = "LDX": B$ = "#_StrVar_PF00": C$ = "X = source starts address": GoSub AO
-                    A$ = "JSR": B$ = "ASCII_To_FFP": C$ = "Convert ASCII text @X to a FFP number @,S": GoSub AO
-                    A$ = "JSR": B$ = "FFP_To_Double": C$ = "Convert FFP at ,S to 10 byte Double at ,S": GoSub AO
+                    Select Case FloatType
+                        Case 0:
+                            A$ = "JSR": B$ = "ASCII_To_FFP": C$ = "Convert ASCII text @X to a FFP number @,S": GoSub AO
+                            A$ = "JSR": B$ = "FFP_To_Double": C$ = "Convert FFP at ,S to 10 byte Double at ,S": GoSub AO
+                        Case 1:
+                            A$ = "JSR": B$ = "ASCII_To_FP5": C$ = "Convert ASCII text @X to a FP5 number @,S": GoSub AO
+                            A$ = "JSR": B$ = "FP5_To_Double": C$ = "Convert FP5 at ,S to 10 byte Double at ,S": GoSub AO
+                    End Select
                     A$ = "PULL_DBL": B$ = " _Var_" + NumericVariable$(v): C$ = "Save Doouble on the stack to the variable": GoSub AO
             End Select
         Else
@@ -1927,7 +1970,14 @@ If count = 0 Then
                     Case 9, 10
                         Num = 8
                     Case 11
-                        Num = 3
+                        Select Case FloatType
+                            Case 0:
+                                ' Handle 3 byte FFP
+                                Num = 3
+                            Case 1:
+                                ' Handle 5 byte FP5
+                                Num = 5
+                        End Select
                     Case 12
                         Num = 10
                 End Select
@@ -2000,14 +2050,28 @@ If count = 0 Then
                     A$ = "STU": B$ = "6,Y": C$ = "Store 4th Word": GoSub AO
                 Case 11 ' FFP format
                     A$ = "LDX": B$ = "#_StrVar_PF00": C$ = "X = source starts address": GoSub AO
-                    A$ = "JSR": B$ = "ASCII_To_FFP": C$ = "Convert ASCII text @X to a FFP number @,S": GoSub AO
-                    A$ = "PULS": B$ = "B,X,U": C$ = "pull 3 bytes off the stack and U = address where to store the result, fixed stack": GoSub AO
-                    A$ = "STB": B$ = ",U": C$ = "Save the MSWord": GoSub AO
-                    A$ = "STX": B$ = "1,U": C$ = "Save the LSWord": GoSub AO
+                    Select Case FloatType
+                        Case 0:
+                            A$ = "JSR": B$ = "ASCII_To_FFP": C$ = "Convert ASCII text @X to a FFP number @,S": GoSub AO
+                            A$ = "PULS": B$ = "B,X,U": C$ = "pull 3 bytes off the stack and U = address where to store the result, fixed stack": GoSub AO
+                            A$ = "STB": B$ = ",U": C$ = "Save the MSWord": GoSub AO
+                            A$ = "STX": B$ = "1,U": C$ = "Save the LSWord": GoSub AO
+                        Case 1:
+                            A$ = "JSR": B$ = "ASCII_To_FP5": C$ = "Convert ASCII text @X to a FP5 number @,S": GoSub AO
+                            A$ = "PULS": B$ = "B,X,Y,U": C$ = "pull 5 bytes off the stack and U = address where to store the result, fixed stack": GoSub AO
+                            A$ = "LEAU": B$ = "5,U": C$ = "Move pointer": GoSub AO
+                            A$ = "PSHU": B$ = "B,X,Y": C$ = "Save the 5 byte FP5 value": GoSub AO
+                    End Select
                 Case 12 ' Double format
                     A$ = "LDX": B$ = "#_StrVar_PF00": C$ = "X = source starts address": GoSub AO
-                    A$ = "JSR": B$ = "ASCII_To_FFP": C$ = "Convert ASCII text @X to a FFP number @,S": GoSub AO
-                    A$ = "JSR": B$ = "FFP_To_Double": C$ = "Convert FFP at ,S to 10 byte Double at ,S": GoSub AO
+                    Select Case FloatType
+                        Case 0:
+                            A$ = "JSR": B$ = "ASCII_To_FFP": C$ = "Convert ASCII text @X to a FFP number @,S": GoSub AO
+                            A$ = "JSR": B$ = "FFP_To_Double": C$ = "Convert FFP at ,S to 10 byte Double at ,S": GoSub AO
+                        Case 1:
+                            A$ = "JSR": B$ = "ASCII_To_FP5": C$ = "Convert ASCII text @X to a FP5 number @,S": GoSub AO
+                            A$ = "JSR": B$ = "FP5_To_Double": C$ = "Convert FP5 at ,S to 10 byte Double at ,S": GoSub AO
+                    End Select
                     A$ = "LDU": B$ = "10,S": C$ = "U = Address where to store the 10 byte Double number": GoSub AO
                     A$ = "PULS": B$ = "D,X,Y": C$ = "pull 3 words off the stack, move stack": GoSub AO
                     A$ = "STD": B$ = ",U": C$ = "Save the 1st Word": GoSub AO
@@ -2186,16 +2250,30 @@ Do Until v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A)
                     A$ = "STD": B$ = "Temp1": C$ = "Update where to start looking for the next entry (after the last comma)": GoSub AO
                 Case 11 ' FFP format
                     A$ = "LDX": B$ = "Temp1": C$ = "X = current start address of the input text": GoSub AO
-                    A$ = "JSR": B$ = "ASCII_To_FFP": C$ = "Convert ASCII text @X to a FFP number @,S": GoSub AO
-                    A$ = "PULS": B$ = "B,X": C$ = "pull 3 bytes off the stack": GoSub AO
-                    A$ = "LDU": B$ = "#_Var_" + NumericVariable$(v) + "+3": C$ = "U points to Variable +3": GoSub AO
-                    A$ = "PSHU": B$ = "B,X": C$ = "store B,X": GoSub AO
+                    Select Case FloatType
+                        Case 0:
+                            A$ = "JSR": B$ = "ASCII_To_FFP": C$ = "Convert ASCII text @X to a FFP number @,S": GoSub AO
+                            A$ = "PULS": B$ = "B,X": C$ = "pull 3 bytes off the stack": GoSub AO
+                            A$ = "LDU": B$ = "#_Var_" + NumericVariable$(v) + "+3": C$ = "U points to Variable +3": GoSub AO
+                            A$ = "PSHU": B$ = "B,X": C$ = "store B,X": GoSub AO
+                        Case 1:
+                            A$ = "JSR": B$ = "ASCII_To_FP5": C$ = "Convert ASCII text @X to a FP5 number @,S": GoSub AO
+                            A$ = "PULS": B$ = "B,X,Y": C$ = "pull 5 bytes off the stack": GoSub AO
+                            A$ = "LDU": B$ = "#_Var_" + NumericVariable$(v) + "+5": C$ = "U points to Variable +5": GoSub AO
+                            A$ = "PSHU": B$ = "B,X,Y": C$ = "store B,X,Y": GoSub AO
+                    End Select
                     A$ = "LDD": B$ = "Temp3": C$ = "D = location the ASCII # started": GoSub AO
                     A$ = "STD": B$ = "Temp1": C$ = "Update where to start looking for the next entry (after the last comma)": GoSub AO
                 Case 12 ' Double format
                     A$ = "LDX": B$ = "Temp1": C$ = "X = current start address of the input text": GoSub AO
-                    A$ = "JSR": B$ = "ASCII_To_FFP": C$ = "Convert ASCII text @X to a FFP number @,S": GoSub AO
-                    A$ = "JSR": B$ = "FFP_To_Double": C$ = "Convert FFP at ,S to 10 byte Double at ,S": GoSub AO
+                    Select Case FloatType
+                        Case 0:
+                            A$ = "JSR": B$ = "ASCII_To_FFP": C$ = "Convert ASCII text @X to a FFP number @,S": GoSub AO
+                            A$ = "JSR": B$ = "FFP_To_Double": C$ = "Convert FFP at ,S to 10 byte Double at ,S": GoSub AO
+                        Case 1:
+                            A$ = "JSR": B$ = "ASCII_To_FP5": C$ = "Convert ASCII text @X to a FP5 number @,S": GoSub AO
+                            A$ = "JSR": B$ = "FP5_To_Double": C$ = "Convert FP5 at ,S to 10 byte Double at ,S": GoSub AO
+                    End Select
                     A$ = "PULL_DBL": B$ = " _Var_" + NumericVariable$(v): C$ = "Save Doouble on the stack to the variable": GoSub AO
                     A$ = "LDD": B$ = "Temp3": C$ = "D = location the ASCII # started": GoSub AO
                     A$ = "STD": B$ = "Temp1": C$ = "Update where to start looking for the next entry (after the last comma)": GoSub AO
@@ -2259,7 +2337,14 @@ Do Until v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A)
                     Case 9, 10
                         Num = 8
                     Case 11
-                        Num = 3
+                        Select Case FloatType
+                            Case 0:
+                                ' Handle 3 byte FFP
+                                Num = 3
+                            Case 1:
+                                ' Handle 5 byte FP5
+                                Num = 5
+                        End Select
                     Case 12
                         Num = 10
                 End Select
@@ -2340,16 +2425,30 @@ Do Until v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A)
                     A$ = "STD": B$ = "Temp1": C$ = "Update where to start looking for the next entry (after the last comma)": GoSub AO
                 Case 11 ' FFP format
                     A$ = "LDX": B$ = "Temp1": C$ = "X = current start address of the input text": GoSub AO
-                    A$ = "JSR": B$ = "ASCII_To_FFP": C$ = "Convert ASCII text @X to a FFP number @,S": GoSub AO
-                    A$ = "PULS": B$ = "B,X,U": C$ = "pull 3 bytes off the stack and U = address where to store the result, fixed stack": GoSub AO
-                    A$ = "STB": B$ = ",U": C$ = "Save the MSWord": GoSub AO
-                    A$ = "STX": B$ = "1,U": C$ = "Save the LSWord": GoSub AO
+                    Select Case FloatType
+                        Case 0:
+                            A$ = "JSR": B$ = "ASCII_To_FFP": C$ = "Convert ASCII text @X to a FFP number @,S": GoSub AO
+                            A$ = "PULS": B$ = "B,X,U": C$ = "pull 3 bytes off the stack and U = address where to store the result, fixed stack": GoSub AO
+                            A$ = "STB": B$ = ",U": C$ = "Save the MSWord": GoSub AO
+                            A$ = "STX": B$ = "1,U": C$ = "Save the LSWord": GoSub AO
+                        Case 1:
+                            A$ = "JSR": B$ = "ASCII_To_FP5": C$ = "Convert ASCII text @X to a FP5 number @,S": GoSub AO
+                            A$ = "PULS": B$ = "B,X,Y,U": C$ = "pull 5 bytes off the stack and U = address where to store the result, fixed stack": GoSub AO
+                            A$ = "LEAU": B$ = "5,U": C$ = "Move pointer": GoSub AO
+                            A$ = "PSHU": B$ = "B,X,Y": C$ = "Save the 5 byte FP5 value": GoSub AO
+                    End Select
                     A$ = "LDD": B$ = "Temp3": C$ = "D = location the ASCII # started": GoSub AO
                     A$ = "STD": B$ = "Temp1": C$ = "Update where to start looking for the next entry (after the last comma)": GoSub AO
                 Case 12 ' Double format
                     A$ = "LDX": B$ = "Temp1": C$ = "X = current start address of the input text": GoSub AO
-                    A$ = "JSR": B$ = "ASCII_To_FFP": C$ = "Convert ASCII text @X to a FFP number @,S": GoSub AO
-                    A$ = "JSR": B$ = "FFP_To_Double": C$ = "Convert FFP at ,S to 10 byte Double at ,S": GoSub AO
+                    Select Case FloatType
+                        Case 0:
+                            A$ = "JSR": B$ = "ASCII_To_FFP": C$ = "Convert ASCII text @X to a FFP number @,S": GoSub AO
+                            A$ = "JSR": B$ = "FFP_To_Double": C$ = "Convert FFP at ,S to 10 byte Double at ,S": GoSub AO
+                        Case 1:
+                            A$ = "JSR": B$ = "ASCII_To_FP5": C$ = "Convert ASCII text @X to a FP5 number @,S": GoSub AO
+                            A$ = "JSR": B$ = "FP5_To_Double": C$ = "Convert FP5 at ,S to 10 byte Double at ,S": GoSub AO
+                    End Select
                     A$ = "LDU": B$ = "10,S": C$ = "U = Address where to store the 10 byte Double number": GoSub AO
                     A$ = "PULS": B$ = "D,X,Y": C$ = "pull 3 words off the stack, move stack": GoSub AO
                     A$ = "STD": B$ = ",U": C$ = "Save the 1st Word": GoSub AO
@@ -2557,14 +2656,14 @@ If Gmode < 100 Then
     A$ = "LDX": B$ = "#$" + GModeScreenSize$(Gmode): C$ = "Get the Size of a graphics screen": GoSub AO
     A$ = "PSHS": B$ = "D,X": C$ = "Save the two 16 bit WORDS on the stack, to be multiplied": GoSub AO
     A$ = "JSR": B$ = "MUL16": C$ = "16 bit multiply ,S * 2,S D = high 16 bits of the result, X and ,S = low 16 bits": GoSub AO
-    A$ = "LEAU": B$ = "$" + GModeStartAddress$(Gmode)+",X": C$ = "U = Destination screen location": GoSub AO
+    A$ = "LEAU": B$ = "$" + GModeStartAddress$(Gmode) + ",X": C$ = "U = Destination screen location": GoSub AO
 
     A$ = "CLRA": C$ = "Clear MSB": GoSub AO
     A$ = "LDB": B$ = "2,S": C$ = "Get the Source Graphics Page #": GoSub AO
     A$ = "LDX": B$ = "#$" + GModeScreenSize$(Gmode): C$ = "Get the Size of a graphics screen": GoSub AO
     A$ = "PSHS": B$ = "D,X": C$ = "Save the two 16 bit WORDS on the stack, to be multiplied": GoSub AO
     A$ = "JSR": B$ = "MUL16": C$ = "16 bit multiply ,S * 2,S D = high 16 bits of the result, X and ,S = low 16 bits": GoSub AO
-    A$ = "LEAX": B$ = "$" + GModeStartAddress$(Gmode)+",X": C$ = "X = Source screen location": GoSub AO
+    A$ = "LEAX": B$ = "$" + GModeStartAddress$(Gmode) + ",X": C$ = "X = Source screen location": GoSub AO
      
     A$ = "LEAS": B$ = "5,S": C$ = "Fix the stack": GoSub AO
     A$ = "LDD": B$ = "#$" + GModeScreenSize$(Gmode): C$ = "Get the Size of a graphics screen": GoSub AO
@@ -2657,7 +2756,7 @@ Else
     GScreenStart = Val("&H" + GModeStartAddress$(Gmode)) ' Get screen start location
     v1 = Val("&H" + GModeScreenSize$(Gmode)) ' v1 = The screen size
     ' We are starting from the normal Text screen location
-    
+
     A$ = "CLRA": C$ = "Get the screen Page #": GoSub AO
     A$ = "LDB": B$ = "GModePage": C$ = "Get the screen Page #": GoSub AO
     A$ = "BEQ": B$ = ">": C$ = "If first page then skip calc where to set the graphics page viewer": GoSub AO
@@ -2795,8 +2894,8 @@ Else
     A$ = "CLRA": C$ = "D=B": GoSub AO
     A$ = "LDB": B$ = "GModePage": C$ = "Get the screen Page #": GoSub AO
     A$ = "BEQ": B$ = "@Skip1": C$ = "If first page skip ahead, else calc where to set the graphics page viewer": GoSub AO
-'    A$ = "LDD": B$ = "#$" + GModeStartAddress$(Gmode): C$ = "A = the location in RAM to start the graphics screen": GoSub AO
-'    A$ = "BRA": B$ = "@UpdateScreenStart": C$ = "Go update the screen start location"
+    '    A$ = "LDD": B$ = "#$" + GModeStartAddress$(Gmode): C$ = "A = the location in RAM to start the graphics screen": GoSub AO
+    '    A$ = "BRA": B$ = "@UpdateScreenStart": C$ = "Go update the screen start location"
     A$ = "LDX": B$ = "#$" + GModeScreenSize$(Gmode): C$ = "X = the screen size": GoSub AO
     A$ = "PSHS": B$ = "D,X": C$ = "Save the two 16 bit WORDS on the stack, to be multiplied": GoSub AO
     A$ = "JSR": B$ = "MUL16": C$ = "16 bit multiply ,S * 2,S D = high 16 bits of the result, X and ,S = low 16 bits": GoSub AO
@@ -2897,35 +2996,81 @@ GoTo SkipUntilEOLColon ' Skip until we find an EOL or colon then return
 ' ------------------------------------------------------------
 ' Helper: split CaseTemp$ into CaseItem$(1..CaseItemCount)
 ' Splits only commas at top level (depth=0, not in quotes)
+' IMPORTANT: works on TOKENIZED expressions, so special chars
+' are 2-byte tokens: TK_SpecialChar + token-id
 ' Input : CaseTemp$
 ' Output: CaseItemCount, CaseItem$()
 ' ------------------------------------------------------------
 SplitTopLevelCommas:
 CaseItemCount = 0
-DIM depth AS INTEGER: depth = 0
-DIM inQ AS INTEGER: inQ = 0
-DIM startPos AS INTEGER: startPos = 1
-DIM i AS INTEGER
-DIM ch AS INTEGER
 
-FOR i = 1 TO LEN(CaseTemp$)
-    ch = ASC(MID$(CaseTemp$, i, 1))
-    IF ch = 34 THEN inQ = NOT inQ  ' quote "
-    IF inQ = 0 THEN
-        IF ch = 40 THEN depth = depth + 1 ' (
-        IF ch = 41 THEN IF depth > 0 THEN depth = depth - 1 ' )
-        IF ch = 44 AND depth = 0 THEN ' comma ,
-            CaseItemCount = CaseItemCount + 1
-            CaseItem$(CaseItemCount) = LTRIM$(RTRIM$(MID$(CaseTemp$, startPos, i - startPos)))
-            startPos = i + 1
-        END IF
-    END IF
-NEXT
+Dim depth As Integer
+Dim inQ As Integer
+Dim startPos As Integer
+Dim i As Integer
+Dim ch As Integer
+Dim ch2 As Integer
+Dim item$
 
+depth = 0
+inQ = 0
+startPos = 1
+i = 1
+Do While i <= Len(CaseTemp$)
+    ch = Asc(Mid$(CaseTemp$, i, 1))
+    If ch = TK_SpecialChar Then
+        If i + 1 > Len(CaseTemp$) Then
+            Print "Error: truncated special char token in CASE list on";
+            GoTo FoundError
+        End If
+        ch2 = Asc(Mid$(CaseTemp$, i + 1, 1))
+        ' Quote token
+        If ch2 = TK_Quote Then
+            inQ = Not inQ
+            i = i + 2
+            GoTo SplitNextChar
+        End If
+        If inQ = 0 Then
+            ' Open bracket token
+            If ch2 = &H28 Then
+                depth = depth + 1
+                i = i + 2
+                GoTo SplitNextChar
+            End If
+            ' Close bracket token
+            If ch2 = &H29 Then
+                If depth > 0 Then depth = depth - 1
+                i = i + 2
+                GoTo SplitNextChar
+            End If
+            ' Top-level comma token: split HERE, consuming both bytes
+            If ch2 = TK_Comma And depth = 0 Then
+                CaseItemCount = CaseItemCount + 1
+                item$ = Mid$(CaseTemp$, startPos, i - startPos)
+                CaseItem$(CaseItemCount) = LTrim$(RTrim$(item$))
+                If Len(CaseItem$(CaseItemCount)) = 0 Then
+                    Print "Error: empty expression in CASE list on";
+                    GoTo FoundError
+                End If
+                startPos = i + 2
+                i = i + 2
+                GoTo SplitNextChar
+            End If
+        End If
+        i = i + 2
+        GoTo SplitNextChar
+    End If
+    i = i + 1
+    SplitNextChar:
+Loop
 CaseItemCount = CaseItemCount + 1
-CaseItem$(CaseItemCount) = LTRIM$(RTRIM$(MID$(CaseTemp$, startPos)))
-RETURN
-
+item$ = Mid$(CaseTemp$, startPos)
+CaseItem$(CaseItemCount) = LTrim$(RTrim$(item$))
+If Len(CaseItem$(CaseItemCount)) = 0 Then
+    Print "Error: empty expression in CASE list on";
+    GoTo FoundError
+End If
+Return
 
 ' ============================================================
 ' DoSELECT:  SELECT CASE <expr>   or   SELECT EVERYCASE <expr>
@@ -2933,33 +3078,38 @@ RETURN
 DoSELECT:
 SELECTCount = SELECTCount + 1
 SELECTStackPointer = SELECTStackPointer + 1
+If SELECTStackPointer > MAX_SELECT_NEST Then
+    Print "Error, SELECT CASE nesting too deep on";
+    GoTo FoundError
+End If
+
 SELECTStack(SELECTStackPointer) = SELECTCount
 
-CaseElseFlag = 0
+CaseElseFlag(SELECTStackPointer) = 0
 CaseCount(SELECTStackPointer) = 0
 SelHitVar$(SELECTStackPointer) = ""
 
 ' Next token must be TK_GeneralCommand ($FF) then CASE or EVERYCASE
 v = Array(x): x = x + 1
-IF v <> &HFF THEN PRINT "Error, SELECT needs a CASE or EVERYCASE command on";: GOTO FoundError
+If v <> &HFF Then Print "Error, SELECT needs a CASE or EVERYCASE command on";: GoTo FoundError
 
 CaseType = Array(x) * 256 + Array(x + 1): x = x + 2
-IF CaseType <> CASE_CMD AND CaseType <> EVERYCASE_CMD THEN
-    PRINT "Error, SELECT needs a CASE or EVERYCASE command on";: GOTO FoundError
-END IF
+If CaseType <> CASE_CMD And CaseType <> EVERYCASE_CMD Then
+    Print "Error, SELECT needs a CASE or EVERYCASE command on";: GoTo FoundError
+End If
 
-IF CaseType = EVERYCASE_CMD THEN
+If CaseType = EVERYCASE_CMD Then
     EvCase(SELECTStackPointer) = 1
-ELSE
+Else
     EvCase(SELECTStackPointer) = 0
-END IF
+End If
 
 ' Grab the main expression after SELECT CASE/EVERYCASE
 GoSub GetExpressionB4EOL
 
 MainCase$(SELECTStackPointer) = Expression$
 
-SelIsString(SELECTStackPointer) = ExprIsString%(Expression$)
+SelIsString(SELECTStackPointer) = ExprIsString% (Expression$)
 
 ' If EVERYCASE: create a stable per-SELECT flag variable and clear it
 IF EvCase(SELECTStackPointer) = 1 THEN
@@ -2989,16 +3139,21 @@ END IF
 ' Build current and next case labels
 CaseNumber$ = SelNum$
 Num = CaseCount(SELECTStackPointer): GoSub Make2DigitNum
-CaseNumber$ = CaseNumber$ + "_" + Num$              ' e.g. 01_01
+CaseNumber$ = CaseNumber$ + "_" + Num$
 
 Num = CaseCount(SELECTStackPointer) + 1: GoSub Make2DigitNum
-NextCaseNumber$ = SelNum$ + "_" + Num$              ' e.g. 01_02
+NextCaseNumber$ = SelNum$ + "_" + Num$
 
 Z$ = "_CaseCheck_" + CaseNumber$: C$ = "Start of this CASE check": GoSub AO
 
-' CASE ELSE?
+' Always remember where this CASE expression starts
+Start = x
+
+' ------------------------------------------------------------
+' CASE ELSE
+' ------------------------------------------------------------
 IF Array(x) = &HFF AND (Array(x + 1) * 256 + Array(x + 2)) = ELSE_CMD THEN
-    CaseElseFlag = 1
+    CaseElseFlag(SELECTStackPointer) = 1
     Z$ = "; CASE ELSE for SELECT " + SelNum$: GoSub AO
     GoSub SkipUntilEOLColon
 
@@ -3011,7 +3166,9 @@ IF Array(x) = &HFF AND (Array(x + 1) * 256 + Array(x + 2)) = ELSE_CMD THEN
     RETURN
 END IF
 
-' --- CASE IS <op> <expr> ?  (numeric only)
+' ------------------------------------------------------------
+' CASE IS <op> <expr>   (numeric only)
+' ------------------------------------------------------------
 IF SelIsString(SELECTStackPointer) = 0 THEN
     IF Array(x) = &HFF AND (Array(x + 1) * 256 + Array(x + 2)) = IS_CMD THEN
         CheckIfTrue$ = MainCase$(SELECTStackPointer) + CHR$(Array(x + 3)) + CHR$(Array(x + 4))
@@ -3023,7 +3180,6 @@ IF SelIsString(SELECTStackPointer) = 0 THEN
         A$ = "LDA": B$ = ",S+": C$ = "CASE IS: result; fix stack": GoSub AO
         A$ = "LBEQ": B$ = "_CaseCheck_" + NextCaseNumber$: C$ = "False -> next CASE": GoSub AO
 
-        ' True -> mark hit for EVERYCASE
         IF EvCase(SELECTStackPointer) = 1 THEN
             A$ = "LDB": B$ = "#1": C$ = "EVERYCASE: set hit flag": GoSub AO
             A$ = "STB": B$ = "_Var_" + SelHitVar$(SELECTStackPointer): C$ = "": GoSub AO
@@ -3033,14 +3189,20 @@ IF SelIsString(SELECTStackPointer) = 0 THEN
     END IF
 END IF
 
-' --- CASE <a> TO <b> ? (numeric only)
+' ------------------------------------------------------------
+' CASE <a> TO <b>   (numeric only)
+' ------------------------------------------------------------
 IF SelIsString(SELECTStackPointer) = 0 THEN
-    Start = x
+    x = Start
     Found = 0
     v = 0
+
     DO UNTIL (v = &HF5 AND Array(x) = &H0D)
         v = Array(x): x = x + 1
-        IF v = &HFF AND (Array(x) * 256 + Array(x + 1)) = TO_CMD THEN Found = 1: EXIT DO
+        IF v = &HFF AND (Array(x) * 256 + Array(x + 1)) = TO_CMD THEN
+            Found = 1
+            EXIT DO
+        END IF
     LOOP
     IF v = &HF5 THEN v = Array(x): x = x + 1
 
@@ -3056,13 +3218,16 @@ IF SelIsString(SELECTStackPointer) = 0 THEN
 
         ' Temporarily terminate before TO so GetExpressionB4EOL reads the start value
         FixSpot = x - 1
-        Temp1 = Array(FixSpot): Temp2 = Array(FixSpot + 1)
-        Array(FixSpot) = &HF5: Array(FixSpot + 1) = &H0D
+        Temp1 = Array(FixSpot)
+        Temp2 = Array(FixSpot + 1)
+        Array(FixSpot) = &HF5
+        Array(FixSpot + 1) = &H0D
 
         x = Start
         GoSub GetExpressionB4EOL: x = x + 3
 
-        Array(FixSpot) = Temp1: Array(FixSpot + 1) = Temp2
+        Array(FixSpot) = Temp1
+        Array(FixSpot + 1) = Temp2
 
         ' MainCase >= start
         Expression$ = MainCase$(SELECTStackPointer) + CHR$(&HFC) + CHR$(&H3E) + CHR$(&HFC) + CHR$(&H3D) + Expression$
@@ -3087,57 +3252,51 @@ IF SelIsString(SELECTStackPointer) = 0 THEN
 
         RETURN
     END IF
-End IF
+END IF
 
-' --- Regular CASE with optional comma list
+' ------------------------------------------------------------
+' Regular CASE with optional comma list
+' ------------------------------------------------------------
 x = Start
 GoSub GetExpressionB4EOL: x = x + 2
 CaseTemp$ = Expression$
 
+Expression$ = CaseTemp$
 GoSub SplitTopLevelCommas
+
+IF CaseItemCount < 1 THEN
+    PRINT "Error: CASE missing expression on";: GOTO FoundError
+END IF
 
 ' ============================================================
 ' STRING SELECT/CASE handling
 ' ============================================================
 IF SelIsString(SELECTStackPointer) <> 0 THEN
 
-    ' CASE lists and single CASE items are handled the same way:
-    ' test each item with "="; if any match -> execute case body; else -> next CASE check
+CaseListIndex2 = 1
+DO WHILE CaseListIndex2 <= CaseItemCount
 
-    ' Create a shared success label for this CASE
-'    Z$ = "_DOCase_" + CaseNumber$: C$ = "String CASE matched -> execute CASE body": GoSub AO
+    ' Safety: strip accidental leading CASE/EVERYCASE token from THIS item
+    IF LEN(CaseItem$(CaseListIndex2)) >= 3 THEN
+        IF ASC(LEFT$(CaseItem$(CaseListIndex2), 1)) = TK_GeneralCommand THEN
+            TempCmd% = ASC(MID$(CaseItem$(CaseListIndex2), 2, 1)) * 256 + ASC(MID$(CaseItem$(CaseListIndex2), 3, 1))
+            IF TempCmd% = CASE_CMD OR TempCmd% = EVERYCASE_CMD THEN
+                CaseItem$(CaseListIndex2) = MID$(CaseItem$(CaseListIndex2), 4)
+            END IF
+        END IF
+    END IF
 
-    FOR ii2 = 1 TO CaseItemCount
+    Expression$ = MainCase$(SELECTStackPointer) + CHR$(&HFC) + CHR$(&H3D) + CaseItem$(CaseListIndex2)
+    GoSub ParseExpression
 
-        ' Build expression:  <MainStringExpr> = <CaseItem>
-        ' This relies on ParseExpression already supporting string "="
+    A$ = "LDA": B$ = ",S+": C$ = "CASE string: result; fix stack": GoSub AO
+    A$ = "LBNE": B$ = "_DOCase_" + CaseNumber$: C$ = "True -> execute CASE": GoSub AO
 
+    CaseListIndex2 = CaseListIndex2 + 1
+LOOP
 
-	            ' Safety: If we somehow captured a leading CASE/EVERYCASE command token,
-	            ' strip it so ParseExpression never sees a general-command inside the
-	            ' expression.
-	            IF LEN(CaseItem$(ii2)) >= 3 THEN
-	                IF ASC(LEFT$(CaseItem$(ii2), 1)) = TK_GeneralCommand THEN
-	                    TempCmd% = ASC(MID$(CaseItem$(ii2), 2, 1)) * 256 + ASC(MID$(CaseItem$(ii2), 3, 1))
-	                    IF TempCmd% = CASE_CMD OR TempCmd% = EVERYCASE_CMD THEN
-	                        CaseItem$(ii2) = MID$(Expression$, 4)
-	                    END IF
-	                END IF
-	            END IF
+    A$ = "LBRA": B$ = "_CaseCheck_" + NextCaseNumber$: C$ = "No string items matched -> next CASE": GoSub AO
 
-        Expression$ = MainCase$(SELECTStackPointer) + CHR$(&HFC) + CHR$(&H3D) + CaseItem$(ii2)
-
-        GoSub ParseExpression
-
-        ' ParseExpression must leave a boolean result on the stack like your numeric path
-        A$ = "LDA": B$ = ",S+": C$ = "CASE string: result; fix stack": GoSub AO
-        A$ = "LBNE": B$ = "_DOCase_" + CaseNumber$: C$ = "True -> execute CASE": GoSub AO
-    NEXT
-
-    ' No items matched -> next CASE
-    A$ = "JMP": B$ = "_CaseCheck_" + NextCaseNumber$: C$ = "No string items matched -> next CASE": GoSub AO
-
-    ' Success label: mark hit-flag for EVERYCASE (if needed), then RETURN so case body follows
     Z$ = "_DOCase_" + CaseNumber$: C$ = "Execute CASE body (string)": GoSub AO
 
     IF EvCase(SELECTStackPointer) = 1 THEN
@@ -3148,34 +3307,29 @@ IF SelIsString(SELECTStackPointer) <> 0 THEN
     RETURN
 END IF
 
+' ============================================================
+' NUMERIC SELECT/CASE handling
+' ============================================================
 IF CaseItemCount > 1 THEN
-    ' Multiple items: if any equals, do this CASE, else next CASE
     Z$ = "; CASE list (" + LTRIM$(STR$(CaseItemCount)) + " items)": GoSub AO
-
-    ' Create a shared success label for this CASE
-    Z$ = "_DOCase_" + CaseNumber$: C$ = "Any list item matched -> execute CASE body": GoSub AO
-
-    ' We will emit checks first, then jump to next if none matched.
-    ' So: generate checks that jump to _DOCase_.. when true.
-    FOR ii = 1 TO CaseItemCount
-        Expression$ = MainCase$(SELECTStackPointer) + CHR$(&HFC) + CHR$(&H3D) + CaseItem$(ii)
+    CaseListIndex = 1
+    DO WHILE CaseListIndex <= CaseItemCount
+        Expression$ = MainCase$(SELECTStackPointer) + CHR$(&HFC) + CHR$(&H3D) + CaseItem$(CaseListIndex)
         GoSub ParseExpression
         A$ = "LDA": B$ = ",S+": C$ = "CASE list: result; fix stack": GoSub AO
         A$ = "LBNE": B$ = "_DOCase_" + CaseNumber$: C$ = "True -> execute CASE": GoSub AO
-    NEXT
-
+        CaseListIndex = CaseListIndex + 1
+    LOOP
     A$ = "LBRA": B$ = "_CaseCheck_" + NextCaseNumber$: C$ = "No items matched -> next CASE": GoSub AO
-
-    ' Now the success label is already emitted above; set hit flag here for EVERYCASE
+    Z$ = "_DOCase_" + CaseNumber$: C$ = "Any list item matched -> execute CASE body": GoSub AO
     IF EvCase(SELECTStackPointer) = 1 THEN
         A$ = "LDB": B$ = "#1": C$ = "EVERYCASE: set hit flag": GoSub AO
         A$ = "STB": B$ = "_Var_" + SelHitVar$(SELECTStackPointer): C$ = "": GoSub AO
     END IF
-
     RETURN
 END IF
 
-' Single item compare
+' Single numeric item compare
 Expression$ = MainCase$(SELECTStackPointer) + CHR$(&HFC) + CHR$(&H3D) + CaseItem$(1)
 GoSub ParseExpression
 A$ = "LDA": B$ = ",S+": C$ = "CASE: result; fix stack": GoSub AO
@@ -3187,9 +3341,6 @@ IF EvCase(SELECTStackPointer) = 1 THEN
 END IF
 
 RETURN
-
-
-
 
 DoEVERYCASE: ' &H5F
 Color 14
@@ -3462,22 +3613,25 @@ Select Case NVT_Main
         A$ = "STY": B$ = "FOR_CheckB_" + Num$ + "+20": C$ = "Save the value to compare with (self mod below)": GoSub AO
         A$ = "STU": B$ = "FOR_CheckB_" + Num$ + "+29": C$ = "Save the value to compare with (self mod below)": GoSub AO
     Case 11 ' FFP
-        A$ = "PULS": B$ = "B,X": C$ = "Get the 3 byte FFP TO value off the stack": GoSub AO
-        A$ = "STB": B$ = "FOR_Check_" + Num$ + "+1": C$ = "Self mod B value": GoSub AO
-        A$ = "STX": B$ = "FOR_Check_" + Num$ + "+3": C$ = "Self mod X value": GoSub AO
+        Select Case FloatType
+            Case 0:
+                A$ = "PULS": B$ = "B,X": C$ = "Get the 3 byte FFP TO value off the stack": GoSub AO
+                A$ = "STB": B$ = "FOR_Check_" + Num$ + "+1": C$ = "Self mod B value": GoSub AO
+                A$ = "STX": B$ = "FOR_Check_" + Num$ + "+3": C$ = "Self mod X value": GoSub AO
+            Case 1:
+                A$ = "PULS": B$ = "B,X,U": C$ = "Get the 5 byte FP5 TO value off the stack": GoSub AO
+                A$ = "STB": B$ = "FOR_Check_" + Num$ + "+1": C$ = "Self mod B value": GoSub AO
+                A$ = "STX": B$ = "FOR_Check_" + Num$ + "+3": C$ = "Self mod X value": GoSub AO
+                A$ = "STU": B$ = "FOR_Check_" + Num$ + "+6": C$ = "Self mod U value": GoSub AO
+        End Select
     Case 12 ' Double
         A$ = "PULS": B$ = "D,X,U": C$ = "Get the Double TO value off the stack": GoSub AO
         A$ = "STD": B$ = "FOR_Check_" + Num$ + "+9": C$ = "Self mod Sign and EXP MSbits": GoSub AO
         A$ = "STX": B$ = "FOR_Check_" + Num$ + "+12": C$ = "Self mod EXP LSbits & Mantissa MSbits": GoSub AO
         A$ = "STU": B$ = "FOR_Check_" + Num$ + "+15": C$ = "Self mod Mantissa midbits": GoSub AO
-        '        A$ = "STD": B$ = "FOR_CheckB_" + Num$ + "+9": C$ = "Self mod Sign and EXP MSbits": GoSub AO
-        '        A$ = "STX": B$ = "FOR_CheckB_" + Num$ + "+12": C$ = "Self mod EXP LSbits & Mantissa MSbits": GoSub AO
-        '        A$ = "STU": B$ = "FOR_CheckB_" + Num$ + "+15": C$ = "Self mod Mantissa midbits": GoSub AO
         A$ = "PULS": B$ = "D,X": C$ = "Get the Double TO value off the stack": GoSub AO
         A$ = "STD": B$ = "FOR_Check_" + Num$ + "+1": C$ = "Self mod Mantissa midbits": GoSub AO
         A$ = "STX": B$ = "FOR_Check_" + Num$ + "+4": C$ = "Self mod Mantissa LSbits": GoSub AO
-        '        A$ = "STD": B$ = "FOR_CheckB_" + Num$ + "+1": C$ = "Self mod Mantissa midbits": GoSub AO
-        '        A$ = "STX": B$ = "FOR_CheckB_" + Num$ + "+4": C$ = "Self mod Mantissa LSbits": GoSub AO
     Case Else
         ' Add code to handle sizes larger
         Z$ = "***Type is too large***": GoSub AO
@@ -3504,7 +3658,12 @@ If Array(x) = TK_GeneralCommand Then
             Case 9, 10 ' un/signed 64 bit integer
                 A$ = "PULS": B$ = "D,X,Y,U": C$ = "Get the STEP for this FOR off the stack": GoSub AO
             Case 11 ' FFP
-                A$ = "PULS": B$ = "B,X": C$ = "Get the 3 byte FFP STEP value off the stack": GoSub AO
+            Select Case FloatType
+                Case 0:
+                    A$ = "PULS": B$ = "B,X": C$ = "Get the 3 byte FFP STEP value off the stack": GoSub AO
+                Case 1:
+                    A$ = "PULS": B$ = "B,X,U": C$ = "Get the 5 byte FP5 STEP value off the stack": GoSub AO
+            End Select
             Case 12 ' Double
                 A$ = "PULS": B$ = "D,X,Y,U": C$ = "Get the 10 byte STEP value off the stack, Leave LSWord on the stack": GoSub AO
             Case Else
@@ -3530,8 +3689,15 @@ Else
             A$ = "LEAY": B$ = ",X": C$ = "No STEP for this FOR so set default step value to 1": GoSub AO
             A$ = "LEAU": B$ = "1,X": C$ = "No STEP for this FOR so set default step value to 1": GoSub AO
         Case 11 ' FFP
-            A$ = "LDB": B$ = "#$00": C$ = "No STEP for this FOR so set default step value to 1": GoSub AO
-            A$ = "LDX": B$ = "#$8000": C$ = "No STEP for this FOR so set default step value to 1": GoSub AO
+            Select Case FloatType
+                Case 0:
+                    A$ = "LDB": B$ = "#$00": C$ = "No STEP for this FOR so set default step value to 1": GoSub AO
+                    A$ = "LDX": B$ = "#$8000": C$ = "No STEP for this FOR so set default step value to 1": GoSub AO
+                Case 1:
+                    A$ = "LDB": B$ = "#$00": C$ = "No STEP for this FOR so set default step value to 1": GoSub AO
+                    A$ = "LDX": B$ = "#$8000": C$ = "No STEP for this FOR so set default step value to 1": GoSub AO
+                    A$ = "LDU": B$ = "#$0000": C$ = "No STEP for this FOR so set default step value to 1": GoSub AO
+            End Select
         Case 12 ' Double
             A$ = "LDD": B$ = "#$0000": C$ = "No STEP for this FOR so set default step value to 1": GoSub AO
             A$ = "PSHS": B$ = "D": C$ = "Save LSWord of the mantissa of step value 1 on the stack": GoSub AO
@@ -3551,7 +3717,7 @@ If Num < 10 Then Num$ = "0" + Num$
 Select Case NVT_Main
     Case 1, 2, 3, 4 ' un/signed 8 bit integer
         A$ = "STB": B$ = "FOR_ADB_" + Num$ + "+1": C$ = "Save the value to ADDB for each FOR/NEXT loop (self mod below)": GoSub AO
-        A$ = "ROLB": C$ = "Move sign bit of FFP to the carry": GoSub AO
+        A$ = "ROLB": C$ = "Move sign bit of to the carry": GoSub AO
     Case 5, 6 ' un/signed 16 bit integer
         A$ = "STD": B$ = "FOR_ADD_" + Num$ + "+1": C$ = "Save the value to ADDD for each FOR/NEXT loop (self mod below)": GoSub AO
         A$ = "ROLA": C$ = "Move sign bit to the carry": GoSub AO
@@ -3571,10 +3737,19 @@ Select Case NVT_Main
         A$ = "STA": B$ = "@DoAdd4+1": C$ = "Save value to ADCA for each FOR/NEXT loop (self mod below)": GoSub AO
         A$ = "STU": B$ = "@DoAdd6+1": C$ = "Save value to ADCA for each FOR/NEXT loop (self mod below)": GoSub AO
     Case 11 ' FFP
-        ' Amount to add for each step is already in B & X
-        A$ = "STB": B$ = "FOR_ADD_" + Num$ + "+1": C$ = "Save the STEP value to ADD for each FOR/NEXT loop (self mod below)": GoSub AO
-        A$ = "ROLB": C$ = "Move sign bit of FFP to the carry": GoSub AO
-        A$ = "STX": B$ = "FOR_ADD_" + Num$ + "+3": C$ = "Save the STEP value to ADD for each FOR/NEXT loop (self mod below)": GoSub AO
+        Select Case FloatType
+                Case 0:
+                    ' Amount to add for each step is already in B & X
+                    A$ = "STB": B$ = "FOR_ADD_" + Num$ + "+1": C$ = "Save the STEP value to ADD for each FOR/NEXT loop (self mod below)": GoSub AO
+                    A$ = "ROLB": C$ = "Move sign bit of FFP to the carry": GoSub AO
+                    A$ = "STX": B$ = "FOR_ADD_" + Num$ + "+3": C$ = "Save the STEP value to ADD for each FOR/NEXT loop (self mod below)": GoSub AO
+                Case 1:
+                    ' Amount to add for each step is already in B,X,U
+                    A$ = "STB": B$ = "FOR_ADD_" + Num$ + "+1": C$ = "Save the STEP value to ADD for each FOR/NEXT loop (self mod below)": GoSub AO
+                    A$ = "ROLB": C$ = "Move sign bit of FFP to the carry": GoSub AO
+                    A$ = "STX": B$ = "FOR_ADD_" + Num$ + "+3": C$ = "Save the STEP value to ADD for each FOR/NEXT loop (self mod below)": GoSub AO
+                    A$ = "STU": B$ = "FOR_ADD_" + Num$ + "+6": C$ = "Save the STEP value to ADD for each FOR/NEXT loop (self mod below)": GoSub AO 
+                End Select
     Case 12 ' Double
         Z$ = "; Save the STEP value to ADD for each FOR/NEXT loop (self mod below)": GoSub AO
         A$ = "STD": B$ = "FOR_ADD_" + Num$ + "+9": C$ = "Self mod Sign and EXP MSbits": GoSub AO
@@ -3788,51 +3963,103 @@ Select Case NVT_Main
         A$ = "LBGT": B$ = "NEXTDone_" + Num$: C$ = "Jump past NEXT": GoSub AO
 
     Case 11 ' FFP
-        'Push the compare (TO) value on the stack (self modified above)
-        Z$ = "FOR_Check_" + Num$: GoSub AO
-        A$ = "LDB": B$ = "#$AA": C$ = "Self mod TO value above": GoSub AO
-        A$ = "LDX": B$ = "#$BBCC": C$ = "Self mod TO value above": GoSub AO
-        A$ = "PSHS": B$ = "B,X": C$ = "Put number to compare on the stack": GoSub AO
+        Select Case FloatType
+            Case 0:
+                'Push the compare (TO) value on the stack (self modified above)
+                Z$ = "FOR_Check_" + Num$: GoSub AO
+                A$ = "LDB": B$ = "#$AA": C$ = "Self mod TO value above": GoSub AO
+                A$ = "LDX": B$ = "#$BBCC": C$ = "Self mod TO value above": GoSub AO
+                A$ = "PSHS": B$ = "B,X": C$ = "Put number to compare on the stack": GoSub AO
 
-        A$ = "LDU": B$ = "#_Var_" + NumericVariable$(CompVar): C$ = "Get the variable needed for this NEXT command": GoSub AO
-        A$ = "PULU": B$ = "B,X": C$ = "Get variable amount": GoSub AO
-        A$ = "PSHS": B$ = "B,X": C$ = "Put number to add on the stack": GoSub AO
-        ' Compare them
-        A$ = "JSR": B$ = "FFP_CMP_Stack": C$ = "Compare FFP Value1 @ ,S with Value 2 @ 3,S sets the 6809 flags Z, N, and C": GoSub AO
-        Z$ = "FOR_Branch_" + Num$: GoSub AO
-        A$ = "BGT": B$ = "@FOR_KeepGoing": C$ = "Branch type (Self modified) will be changed depending on a add or subtract signed/unsigned": GoSub AO
+                A$ = "LDU": B$ = "#_Var_" + NumericVariable$(CompVar): C$ = "Get the variable needed for this NEXT command": GoSub AO
+                A$ = "PULU": B$ = "B,X": C$ = "Get variable amount": GoSub AO
+                A$ = "PSHS": B$ = "B,X": C$ = "Put number to add on the stack": GoSub AO
+                ' Compare them
+                A$ = "JSR": B$ = "FFP_CMP_Stack": C$ = "Compare FFP Value1 @ ,S with Value 2 @ 3,S sets the 6809 flags Z, N, and C": GoSub AO
+                Z$ = "FOR_Branch_" + Num$: GoSub AO
+                A$ = "BGT": B$ = "@FOR_KeepGoing": C$ = "Branch type (Self modified) will be changed depending on a add or subtract signed/unsigned": GoSub AO
 
-        'Do the last ADD then jump past NEXT
-        A$ = "BNE": B$ = ">": GoSub AO
-        A$ = "LEAS": B$ = "6,S": C$ = "Fix the Stack": GoSub AO
-        A$ = "JMP": B$ = "NEXTDone_" + Num$: C$ = "Jump past NEXT": GoSub AO
-        Z$ = "!": A$ = "LDB": B$ = "FOR_ADD_" + Num$ + "+1": GoSub AO
-        A$ = "LDX": B$ = "FOR_ADD_" + Num$ + "+3": GoSub AO
-        A$ = "PSHS": B$ = "B,X": C$ = "Put number to add on the stack": GoSub AO
-        A$ = "JSR": B$ = "FFP_ADD": C$ = "Add this amount each iteration of the FOR loop (self modded when the FOR is setup)": GoSub AO
-        A$ = "PULS": B$ = "B,X": C$ = "Get result of add, move the stack": GoSub AO
-        A$ = "LDU": B$ = "#_Var_" + NumericVariable$(CompVar) + "+3": C$ = "Get the variable used for this NEXT command": GoSub AO
-        A$ = "PSHU": B$ = "B,X": C$ = "Save the updated variable": GoSub AO
-        A$ = "LEAS": B$ = "3,S": C$ = "Fix the Stack": GoSub AO
-        A$ = "JMP": B$ = "NEXTDone_" + Num$: C$ = "Jump past NEXT": GoSub AO
+                'Do the last ADD then jump past NEXT
+                A$ = "BNE": B$ = ">": GoSub AO
+                A$ = "LEAS": B$ = "6,S": C$ = "Fix the Stack": GoSub AO
+                A$ = "JMP": B$ = "NEXTDone_" + Num$: C$ = "Jump past NEXT": GoSub AO
+                Z$ = "!": A$ = "LDB": B$ = "FOR_ADD_" + Num$ + "+1": GoSub AO
+                A$ = "LDX": B$ = "FOR_ADD_" + Num$ + "+3": GoSub AO
+                A$ = "PSHS": B$ = "B,X": C$ = "Put number to add on the stack": GoSub AO
+                A$ = "JSR": B$ = "FFP_ADD": C$ = "Add this amount each iteration of the FOR loop (self modded when the FOR is setup)": GoSub AO
+                A$ = "PULS": B$ = "B,X": C$ = "Get result of add, move the stack": GoSub AO
+                A$ = "LDU": B$ = "#_Var_" + NumericVariable$(CompVar) + "+3": C$ = "Get the variable used for this NEXT command": GoSub AO
+                A$ = "PSHU": B$ = "B,X": C$ = "Save the updated variable": GoSub AO
+                A$ = "LEAS": B$ = "3,S": C$ = "Fix the Stack": GoSub AO
+                A$ = "JMP": B$ = "NEXTDone_" + Num$: C$ = "Jump past NEXT": GoSub AO
 
-        ' Do another NEXT Loop
-        Z$ = "@FOR_KeepGoing": GoSub AO
-        Z$ = "FOR_ADD_" + Num$: GoSub AO
-        A$ = "LDB": B$ = "#$DD": C$ = "Self mod STEP amount above": GoSub AO
-        A$ = "LDX": B$ = "#$EEFF": C$ = "Self mod STEP amount above": GoSub AO
-        A$ = "PSHS": B$ = "B,X": C$ = "Put STEP amount on the stack": GoSub AO
-        A$ = "JSR": B$ = "FFP_ADD": C$ = "Add this amount each iteration of the FOR loop (self modded when the FOR is setup)": GoSub AO
-        A$ = "LEAU": B$ = ",S": C$ = "U points at the Stack": GoSub AO
-        A$ = "PULU": B$ = "B,X": C$ = "Get result of add": GoSub AO
-        A$ = "LDU": B$ = "#_Var_" + NumericVariable$(CompVar) + "+3": C$ = "Get the variable used for this NEXT command": GoSub AO
-        A$ = "PSHU": B$ = "B,X": C$ = "Save the updated variable": GoSub AO
+                ' Do another NEXT Loop
+                Z$ = "@FOR_KeepGoing": GoSub AO
+                Z$ = "FOR_ADD_" + Num$: GoSub AO
+                A$ = "LDB": B$ = "#$DD": C$ = "Self mod STEP amount above": GoSub AO
+                A$ = "LDX": B$ = "#$EEFF": C$ = "Self mod STEP amount above": GoSub AO
+                A$ = "PSHS": B$ = "B,X": C$ = "Put STEP amount on the stack": GoSub AO
+                A$ = "JSR": B$ = "FFP_ADD": C$ = "Add this amount each iteration of the FOR loop (self modded when the FOR is setup)": GoSub AO
+                A$ = "LEAU": B$ = ",S": C$ = "U points at the Stack": GoSub AO
+                A$ = "PULU": B$ = "B,X": C$ = "Get result of add": GoSub AO
+                A$ = "LDU": B$ = "#_Var_" + NumericVariable$(CompVar) + "+3": C$ = "Get the variable used for this NEXT command": GoSub AO
+                A$ = "PSHU": B$ = "B,X": C$ = "Save the updated variable": GoSub AO
 
-        ' Make sure we are not passed the TO value, if we are then exit FOR loop
-        A$ = "JSR": B$ = "FFP_CMP_Stack": C$ = "Compare FFP Value1 @ ,S with Value 2 @ 3,S sets the 6809 flags Z, N, and C": GoSub AO
-        A$ = "LEAS": B$ = "6,S": C$ = "Fix the Stack": GoSub AO
-        Z$ = "FOR_BranchB_" + Num$: GoSub AO
-        A$ = "LBLT": B$ = "NEXTDone_" + Num$: C$ = "Jump past NEXT": GoSub AO
+                ' Make sure we are not passed the TO value, if we are then exit FOR loop
+                A$ = "JSR": B$ = "FFP_CMP_Stack": C$ = "Compare FFP Value1 @ ,S with Value 2 @ 3,S sets the 6809 flags Z, N, and C": GoSub AO
+                A$ = "LEAS": B$ = "6,S": C$ = "Fix the Stack": GoSub AO
+                Z$ = "FOR_BranchB_" + Num$: GoSub AO
+                A$ = "LBLT": B$ = "NEXTDone_" + Num$: C$ = "Jump past NEXT": GoSub AO
+            Case 1: ' FP5
+                'Push the compare (TO) value on the stack (self modified above)
+                Z$ = "FOR_Check_" + Num$: GoSub AO
+                A$ = "LDB": B$ = "#$AA": C$ = "Self mod TO value above": GoSub AO
+                A$ = "LDX": B$ = "#$BBCC": C$ = "Self mod TO value above": GoSub AO
+                A$ = "LDU": B$ = "#$DDEE": C$ = "Self mod TO value above": GoSub AO
+                A$ = "PSHS": B$ = "B,X,U": C$ = "Put number to compare on the stack": GoSub AO
+
+                A$ = "LDU": B$ = "#_Var_" + NumericVariable$(CompVar): C$ = "Get the variable needed for this NEXT command": GoSub AO
+                A$ = "PULU": B$ = "B,X,Y": C$ = "Get variable amount": GoSub AO
+                A$ = "PSHS": B$ = "B,X,Y": C$ = "Put number to add on the stack": GoSub AO
+                ' Compare them
+                A$ = "JSR": B$ = "FP5_CMP_Stack": C$ = "Compare FP5 Value1 @ 5,S with Value2 @ ,S sets the 6809 flags Z, N, and C": GoSub AO
+                Z$ = "FOR_Branch_" + Num$: GoSub AO
+                A$ = "BGT": B$ = "@FOR_KeepGoing": C$ = "Branch type (Self modified) will be changed depending on a add or subtract signed/unsigned": GoSub AO
+
+                'Do the last ADD then jump past NEXT
+                A$ = "BNE": B$ = ">": GoSub AO
+                A$ = "LEAS": B$ = "10,S": C$ = "Fix the Stack": GoSub AO
+                A$ = "JMP": B$ = "NEXTDone_" + Num$: C$ = "Jump past NEXT": GoSub AO
+                Z$ = "!": A$ = "LDB": B$ = "FOR_ADD_" + Num$ + "+1": GoSub AO
+                A$ = "LDX": B$ = "FOR_ADD_" + Num$ + "+3": GoSub AO
+                A$ = "LDU": B$ = "FOR_ADD_" + Num$ + "+6": GoSub AO
+                A$ = "PSHS": B$ = "B,X,U": C$ = "Put number to add on the stack": GoSub AO
+                A$ = "JSR": B$ = "FP5_ADD": C$ = "Add this amount each iteration of the FOR loop (self modded when the FOR is setup)": GoSub AO
+                A$ = "PULS": B$ = "B,X,Y": C$ = "Get result of add, move the stack": GoSub AO
+                A$ = "LDU": B$ = "#_Var_" + NumericVariable$(CompVar) + "+5": C$ = "Get the variable used for this NEXT command": GoSub AO
+                A$ = "PSHU": B$ = "B,X,Y": C$ = "Save the updated variable": GoSub AO
+                A$ = "LEAS": B$ = "5,S": C$ = "Fix the Stack": GoSub AO
+                A$ = "JMP": B$ = "NEXTDone_" + Num$: C$ = "Jump past NEXT": GoSub AO
+
+                ' Do another NEXT Loop
+                Z$ = "@FOR_KeepGoing": GoSub AO
+                Z$ = "FOR_ADD_" + Num$: GoSub AO
+                A$ = "LDB": B$ = "#$DD": C$ = "Self mod STEP amount above": GoSub AO
+                A$ = "LDX": B$ = "#$EEFF": C$ = "Self mod STEP amount above": GoSub AO
+                A$ = "LDU": B$ = "#$EEFF": C$ = "Self mod STEP amount above": GoSub AO
+                A$ = "PSHS": B$ = "B,X,U": C$ = "Put STEP amount on the stack": GoSub AO
+                A$ = "JSR": B$ = "FP5_ADD": C$ = "Add this amount each iteration of the FOR loop (self modded when the FOR is setup)": GoSub AO
+                A$ = "LEAU": B$ = ",S": C$ = "U points at the Stack": GoSub AO
+                A$ = "PULU": B$ = "B,X,Y": C$ = "Get result of add": GoSub AO
+                A$ = "LDU": B$ = "#_Var_" + NumericVariable$(CompVar) + "+5": C$ = "Get the variable used for this NEXT command": GoSub AO
+                A$ = "PSHU": B$ = "B,X,Y": C$ = "Save the updated variable": GoSub AO
+
+                ' Make sure we are not passed the TO value, if we are then exit FOR loop
+                A$ = "JSR": B$ = "FP5_CMP_Stack": C$ = "Compare FP5 Value1 @ 5,S with Value2 @ ,S sets the 6809 flags Z, N, and C": GoSub AO
+                A$ = "LEAS": B$ = "10,S": C$ = "Fix the Stack": GoSub AO
+                Z$ = "FOR_BranchB_" + Num$: GoSub AO
+                A$ = "LBLT": B$ = "NEXTDone_" + Num$: C$ = "Jump past NEXT": GoSub AO
+        End Select
     Case 12 ' Double
         'Push the compare on the stack
         Z$ = "FOR_Check_" + Num$: GoSub AO
@@ -3988,10 +4215,15 @@ If v >= Asc("0") And v <= Asc("9") Or (v = Asc("&") And Array(x) = Asc("H")) The
                 GoSub ConvertLastType2NVT
                 A$ = "JSR": B$ = "U64_TO_DECSTR": C$ = "Convert unsigned 64 bit number @,S to a numeric string on the stack": GoSub AO
             Case 11
-                NVT = NT_Single ' Set the sign value as FFP
+                NVT = NT_Single ' Set the sign value as Single
                 GoSub ConvertLastType2NVT
-                A$ = "JSR": B$ = "FFP_TO_DECSTR": C$ = "Convert 3 Byte FFP number @,S to a numeric string on the stack": GoSub AO
-            Case 12
+                Select Case FloatType
+                    Case 0:
+                        A$ = "JSR": B$ = "FFP_TO_DECSTR": C$ = "Convert 3 Byte FFP number @,S to a numeric string on the stack": GoSub AO
+                    Case 1:
+                        A$ = "JSR": B$ = "FP5_TO_DECSTR": C$ = "Convert 5 Byte FP5 number @,S to a numeric string on the stack": GoSub AO
+                End Select
+             Case 12
                 NVT = NT_Double ' Set the sign value as Double
                 GoSub ConvertLastType2NVT
                 A$ = "JSR": B$ = "DB_TO_DECSTR": C$ = "Convert 10 byte Double number @,S to a numeric string on the stack": GoSub AO
@@ -4031,7 +4263,12 @@ If v >= Asc("0") And v <= Asc("9") Or (v = Asc("&") And Array(x) = Asc("H")) The
             Case 10
                 A$ = "JSR": B$ = "PRINT_Un64Bit": C$ = "Print 64 bit UnSigned, number is on the stack": GoSub AO
             Case 11
-                A$ = "JSR": B$ = "Print_FFP": C$ = "Print 3 byte FFP, number is on the stack": GoSub AO
+                Select Case FloatType
+                    Case 0:
+                        A$ = "JSR": B$ = "Print_FFP": C$ = "Print 3 byte FFP, number is on the stack": GoSub AO
+                    Case 1:
+                        A$ = "JSR": B$ = "Print_FP5": C$ = "Print 5 byte FP5, number is on the stack": GoSub AO
+                End Select
             Case 12
                 A$ = "JSR": B$ = "PRINT_DOUBLE": C$ = "Print 10 byte double, number is on the stack": GoSub AO
         End Select
@@ -4084,7 +4321,12 @@ Select Case v
                 Case 11
                     NVT = NT_Single ' Set the sign value as FFP
                     GoSub ConvertLastType2NVT
-                    A$ = "JSR": B$ = "FFP_TO_DECSTR": C$ = "Convert 3 Byte FFP number @,S to a numeric string on the stack": GoSub AO
+                    Select Case FloatType
+                        Case 0:
+                            A$ = "JSR": B$ = "FFP_TO_DECSTR": C$ = "Convert 3 Byte FFP number @,S to a numeric string on the stack": GoSub AO
+                        Case 1:
+                            A$ = "JSR": B$ = "FP5_TO_DECSTR": C$ = "Convert 5 Byte FP5 number @,S to a numeric string on the stack": GoSub AO
+                    End Select
                 Case 12
                     NVT = NT_Double ' Set the sign value as Double
                     GoSub ConvertLastType2NVT
@@ -4125,7 +4367,12 @@ Select Case v
                 Case 10
                     A$ = "JSR": B$ = "PRINT_Un64Bit": C$ = "Print 64 bit UnSigned, number is on the stack": GoSub AO
                 Case 11
-                    A$ = "JSR": B$ = "Print_FFP": C$ = "Print 3 byte FFP, number is on the stack": GoSub AO
+                    Select Case FloatType
+                        Case 0:
+                            A$ = "JSR": B$ = "Print_FFP": C$ = "Print 3 byte FFP, number is on the stack": GoSub AO    
+                        Case 1:
+                            A$ = "JSR": B$ = "Print_FP5": C$ = "Print 5 byte FP5, number is on the stack": GoSub AO
+                    End Select
                 Case 12
                     A$ = "JSR": B$ = "PRINT_DOUBLE": C$ = "Print 10 byte double, number is on the stack": GoSub AO
             End Select

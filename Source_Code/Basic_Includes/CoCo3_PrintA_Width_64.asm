@@ -18,7 +18,7 @@ LA30A:
       LDB   AttributeByte
       LDA   ,S          ; Get the character to print on screen
       CMPA  #$08        ; Is it a backspace?
-      BNE   LA31D
+      BNE   >           ; If not skip forward
       CMPX  #$E00       * Start of the screen?
       BEQ   LA35D       * Retore the registers and return
       LDA   #' '        * Blank
@@ -26,25 +26,28 @@ LA30A:
       DEC   W_CURPOS
       DEC   W_CURPOS
       BRA   LA344       ; update cursor and exit
-LA31D:
-      CMPA  #$0D        ; Enter Key?
-      BNE   LA32F       ; Not print normal character
-LA323:
-      LDA   #' '        * Blank
+!     CMPA  #$0D        ; Enter Key?
+      BLO   LA35D       ; Special control character, EXIT
+      BNE   LA32F       ; If not print normal character
+!     LDA   #' '        * Blank
       STD   ,X++
       INC   W_CURPOS
       INC   W_CURPOS
       LDA   W_CURPOS
       CMPA  #TextCols*2
-      BNE   LA323       ; If not then clear the rest of this line
-      CLR   W_CURPOS      ; X = 0
-      INC   W_CURPOS+1    ; Move to the next line
+      BNE   <           ; If not then clear the rest of this line
+@NextRow:
+      CLR   W_CURPOS    ; X = 0
+      INC   W_CURPOS+1  ; Move to the next line
       BRA   LA344       ; update cursor and exit
 ; Not the Enter Key
 LA32F:
       STD   ,X++
       INC   W_CURPOS
       INC   W_CURPOS
+      LDA   W_CURPOS
+      CMPA  #TextCols*2
+      BEQ   @NextRow    ; We just printed the last character of this row
 LA344:  
       CMPX  #$0E00+TextCols*2*TextRows      * End of screen?
       BLO   LA35D

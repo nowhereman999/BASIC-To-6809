@@ -65,10 +65,15 @@ End If
 A$ = "END": B$ = "START": GoSub AO
 Close #1
 
+
+
+
+
+
 ' ------------------------------------------------------------
 ' Peephole optimization: comment out redundant PSHS/PULS pairs
-'   PSHS B  ...comments/blank...  PULS B
-'   PSHS D  ...comments/blank...  PULS D
+'   PSHS <regs>  ...comments/blank...  PULS <same regs>
+' Works with multi-register lists: B,X,Y  or  A,X,U  etc.
 ' ------------------------------------------------------------
 If Optimize > 0 Then
     fileName$ = OutName$
@@ -76,66 +81,85 @@ If Optimize > 0 Then
     Open fileName$ For Input As #1
     Open "temp.asm" For Output As #2
 
-    pendingReg$ = ""       ' "B" or "D" when we have a pending PSHS
-    pendingPush$ = ""      ' the PSHS line we are holding
-    between$ = ""          ' buffered blank/comment lines between PSHS and PULS
+    pendingRegs$ = "" ' normalized reg list for pending PSHS (e.g. "A,X,U")
+    pendingPush$ = "" ' held PSHS line
+    between$ = "" ' buffered blank/comment lines between PSHS and PULS
 
     Do While Not EOF(1)
         Line Input #1, line$
 
-        ' Helper classification
         t$ = LTrim$(line$)
         isBlankOrComment = (t$ = "") Or (Left$(t$, 1) = ";") Or (Left$(t$, 1) = "*")
 
-        ' Detect "PSHS B" or "PSHS D" (single-register only)
-        regPush$ = ""
-        If t$ <> "" Then
-            If UCase$(Left$(t$, 4)) = "PSHS" Then
-                p% = 5
-                While p% <= Len(t$) And Mid$(t$, p%, 1) = " ": p% = p% + 1: Wend
-                If p% <= Len(t$) Then
-                    ' read operand token up to space/comma/;/*
-                    q% = p%
-                    While q% <= Len(t$)
-                        ch$ = Mid$(t$, q%, 1)
-                        If ch$ = " " Or ch$ = "," Or ch$ = ";" Or ch$ = "*" Then Exit While
-                        q% = q% + 1
-                    Wend
-                    tok$ = Mid$(t$, p%, q% - p%)
-                    ' ensure it's only B or D, and not PSHS B,X etc.
-                    If (tok$ = "B" Or tok$ = "D") Then
-                        ' verify next non-space is comment or end (no extra operands)
-                        r% = q%
-                        While r% <= Len(t$) And Mid$(t$, r%, 1) = " ": r% = r% + 1: Wend
-                        If r% > Len(t$) Or Mid$(t$, r%, 1) = ";" Or Mid$(t$, r%, 1) = "*" Then
-                            regPush$ = tok$
-                        End If
-                    End If
-                End If
-            End If
-        End If
+        ' -----------------------------------------
+        ' Parse PSHS/PULS register list (if present)
+        ' -----------------------------------------
+        pushRegs$ = ""
+        pullRegs$ = ""
 
-        ' Detect "PULS B" or "PULS D" (single-register only)
-        regPull$ = ""
+        ' local helper: extract reg list after opcode, stop at ; or *
+        ' and normalize by removing spaces, uppercasing, collapsing commas.
+        ' (keeps order exactly as written)
         If t$ <> "" Then
-            If UCase$(Left$(t$, 4)) = "PULS" Then
+            op$ = UCase$(Left$(t$, 4))
+            If op$ = "PSHS" Or op$ = "PULS" Then
                 p% = 5
                 While p% <= Len(t$) And Mid$(t$, p%, 1) = " ": p% = p% + 1: Wend
                 If p% <= Len(t$) Then
                     q% = p%
                     While q% <= Len(t$)
                         ch$ = Mid$(t$, q%, 1)
-                        If ch$ = " " Or ch$ = "," Or ch$ = ";" Or ch$ = "*" Then Exit While
+                        If ch$ = ";" Or ch$ = "*" Then Exit While
                         q% = q% + 1
                     Wend
-                    tok$ = Mid$(t$, p%, q% - p%)
-                    If (tok$ = "B" Or tok$ = "D") Then
-                        r% = q%
-                        While r% <= Len(t$) And Mid$(t$, r%, 1) = " ": r% = r% + 1: Wend
-                        If r% > Len(t$) Or Mid$(t$, r%, 1) = ";" Or Mid$(t$, r%, 1) = "*" Then
-                            regPull$ = tok$
-                        End If
+                    regsRaw$ = Mid$(t$, p%, q% - p%)
+
+                    ' normalize: uppercase, remove spaces/tabs, collapse multiple commas
+                    regs$ = ""
+                    For i7% = 1 To Len(regsRaw$)
+                        ch$ = Mid$(regsRaw$, i7%, 1)
+                        If ch$ <> " " And ch$ <> Chr$(9) Then regs$ = regs$ + UCase$(ch$)
+                    Next
+
+                    ' trim leading/trailing commas
+                    Do While Left$(regs$, 1) = ",": regs$ = Mid$(regs$, 2): Loop
+                    Do While Len(regs$) > 0 And Right$(regs$, 1) = ",": regs$ = Left$(regs$, Len(regs$) - 1): Loop
+
+                    '                    ' collapse consecutive commas
+                    '                    Do While InStr(regs$, ",,") > 0
+                    '                        regs$ = Replace$(regs$, ",,", ",")
+                    '                    Loop
+
+                    ' validate: only allow register tokens separated by commas
+                    ' allowed tokens: A,B,CC,DP,D,X,Y,U,PC,S
+                    ok% = -1
+                    If regs$ <> "" Then
+                        ok% = 0
+                        tmp$ = regs$ + "," ' sentinel
+                        tok$ = ""
+                        For i7% = 1 To Len(tmp$)
+                            ch$ = Mid$(tmp$, i7%, 1)
+                            If ch$ = "," Then
+                                If tok$ = "" Then ok% = 0: Exit For
+                                Select Case tok$
+                                    Case "A", "B", "CC", "DP", "D", "X", "Y", "U", "PC", "S"
+                                        ' ok
+                                    Case Else
+                                        ok% = 0: Exit For
+                                End Select
+                                tok$ = ""
+                            Else
+                                tok$ = tok$ + ch$
+                            End If
+                        Next
                     End If
+
+                    If ok% <> 0 Then
+                        regs$ = "" ' invalid -> treat as not a PSHS/PULS pattern
+                    End If
+
+                    If op$ = "PSHS" Then pushRegs$ = regs$
+                    If op$ = "PULS" Then pullRegs$ = regs$
                 End If
             End If
         End If
@@ -143,26 +167,27 @@ If Optimize > 0 Then
         ' ----------------------------
         ' State machine
         ' ----------------------------
-        If pendingReg$ = "" Then
+        If pendingRegs$ = "" Then
             ' No pending PSHS
-            If regPush$ <> "" Then
-                pendingReg$ = regPush$
+            If pushRegs$ <> "" Then
+                pendingRegs$ = pushRegs$
                 pendingPush$ = line$
                 between$ = ""
             Else
                 Print #2, line$
             End If
         Else
-            ' We have a pending PSHS (B or D)
+            ' We have a pending PSHS
             If isBlankOrComment Then
                 between$ = between$ + line$ + Chr$(10)
-            ElseIf regPull$ = pendingReg$ And regPull$ <> "" Then
-                ' Matched: comment out both PSHS and PULS (semicolon in column 1)
-                If Left$(pendingPush$, 1) <> ";" Then pendingPush$ = ";" + pendingPush$
+            ElseIf pullRegs$ <> "" And pullRegs$ = pendingRegs$ Then
+                ' Matched: comment out both PSHS and PULS
+                outPush$ = pendingPush$
                 outPull$ = line$
+                If Left$(outPush$, 1) <> ";" Then outPush$ = ";" + outPush$
                 If Left$(outPull$, 1) <> ";" Then outPull$ = ";" + outPull$
 
-                Print #2, pendingPush$
+                Print #2, outPush$
 
                 ' emit buffered lines
                 tmp$ = between$
@@ -176,8 +201,7 @@ If Optimize > 0 Then
 
                 Print #2, outPull$
 
-                ' clear pending
-                pendingReg$ = ""
+                pendingRegs$ = ""
                 pendingPush$ = ""
                 between$ = ""
             Else
@@ -193,13 +217,13 @@ If Optimize > 0 Then
                     tmp$ = Mid$(tmp$, k% + 1)
                 Loop
 
-                pendingReg$ = ""
+                pendingRegs$ = ""
                 pendingPush$ = ""
                 between$ = ""
 
-                ' Now process current line again (could be a new PSHS)
-                If regPush$ <> "" Then
-                    pendingReg$ = regPush$
+                ' process current line as new potential PSHS
+                If pushRegs$ <> "" Then
+                    pendingRegs$ = pushRegs$
                     pendingPush$ = line$
                     between$ = ""
                 Else
@@ -210,7 +234,7 @@ If Optimize > 0 Then
     Loop
 
     ' EOF: flush any pending PSHS + buffered lines
-    If pendingReg$ <> "" Then
+    If pendingRegs$ <> "" Then
         Print #2, pendingPush$
         tmp$ = between$
         Do While Len(tmp$) > 0
@@ -232,7 +256,6 @@ End If
 If KeepTempFiles = 0 Then
     'Erase the temp files
     Kill "NumericVariablesUsed.txt"
-    Kill "FloatingPointVariablesUsed.txt"
     Kill "StringVariablesUsed.txt"
     Kill "GeneralCommandsFound.txt"
     Kill "StringCommandsFound.txt"

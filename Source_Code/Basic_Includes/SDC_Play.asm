@@ -18,14 +18,8 @@ SDC_DAC         EQU     $FF20   ; $FF20 the built in 6 bit DAC
 ;SDC_DAC         EQU     $FF7B   ; $FF7B is Orchestra 90/CoCo Flash — 8-bit Right channel DAC
 
 SDCPLAY:
-* Check and disable any high speed options
-        LDA     >CoCoHardware           ; Get the CoCo Hardware info byte
-        BPL     >                       ; If bit 7 is clear then skip forward it's a 6809
-        FCB     $11,$3D,%00000000       ; otherwise, put the 6309 in emulation mode.  This is LDMD  #%00000000
-!       RORA                            ; Move bit 0 to the Carry bit
-        BCC     >                       ; if the Carry bit is clear, then not a CoCo 3, skip ahead
-        STA     >$FFD8                  ; Put CoCo 3 in Regular speed mode
-!
+; Disable any high speed options
+        JSR     Speed_Normal            ; Backup the speed the CoCo is currently set at and set it to Normal speed
 * Lowercase m: which doesn't have a size length check
 
         CLRB                            ; B = 0 to set analog audio
@@ -81,7 +75,7 @@ SDCPLAY:
 
 ; Since we want to go backwards we will start with buffer 1
 ; Fill buffer 1
-        LDB     #128            ; A = 0
+        LDB     #128          ; A = 0
         LDS     #SDCBuffer1+512 ; [4] S = the end of buffer 1+1
 !       LDU     <$4A            ; Get two samples in U
         LDX     <$4A            ; Get two samples in X
@@ -305,14 +299,14 @@ PlayAudioBuff0:
         STA     <SDC_DAC        ; [4] Send byte to the DAC
 
         BITB    #$40            ; [2] Test row with the BREAK key
-        BEQ     SDCBreak       ; [3] Exit if BREAK is pressed
+        BEQ     SDCBreak        ; [3] Exit if BREAK is pressed
         LDA     1,Y             ; [5] Get a byte from buffer
         NOP                     ; [2] Waste CPU cycles, one byte
         LDY     #SDCBuffer1+512 ; [4] Y = end of Buffer 1+1
         STA     <SDC_DAC        ; [4] Send byte to the DAC
 * Done playing 512 Samples
         NOP                     ; [2] Waste CPU cycles, one byte 
-        LBRA    PlayAudioBuff1 ; [5] big loop again +13 above
+        LBRA    PlayAudioBuff1  ; [5] big loop again +13 above
 
 SDCBreak:
         LDB     #$D0            ; Send abort I/O command..
@@ -363,6 +357,6 @@ SDCAudioPlayDone:
 
 PlaySDCStack:
         LDS     #$FFFF          ; Restore the Stack pointer (self mod)
-        JSR     SetCPUSpeed     ; Set the CPU Speed back to what the user wants
+        JSR     Speed_Restore   ; Restore the CPU Speed back to what the user set
         PULS    CC,DP           ; Restore CC & DP
         BRA     AnalogMuxOff    ; DISABLE ANA MUX AND RETURN

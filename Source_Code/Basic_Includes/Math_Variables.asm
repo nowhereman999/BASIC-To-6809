@@ -20,6 +20,9 @@ Short1_02	RMB 1   ; Reserve 1 byte
 Short1_03	RMB 1   ; Reserve 1 byte
 Short1_04	RMB 1   ; Reserve 1 byte
 Short1_05	RMB 1   ; Reserve 1 byte
+Short1_06	RMB 1   ; Reserve 1 byte
+Short1_07	RMB 1   ; Reserve 1 byte
+Short1_08	RMB 1   ; Reserve 1 byte
 
 ; 64 Bit Integer Stuff
 Temp_Dividend   EQU Big8_01   ; dividend/multiplicand - Value1

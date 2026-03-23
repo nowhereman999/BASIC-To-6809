@@ -5,7 +5,7 @@ If count = 0 Then
     Print "Compiler has no options given to it"
     System
 End If
-nt = 0: newp = 0: endp = 0: StringArraySize = 255: KeepTempFiles = 0: AutoStart = 0
+nt = 0: newp = 0: endp = 0: StringArraySize = 255: KeepTempFiles = 0: AutoStart = 0: FloatType = 0
 Optimize = 2 ' Default to optimize level 2
 For check = 1 To count
     N$ = Command$(check)
@@ -16,6 +16,7 @@ For check = 1 To count
     If LCase$(Left$(N$, 2)) = "-k" Then KeepTempFiles = 1: GoTo CheckNextCMDOption
     If LCase$(Left$(N$, 2)) = "-a" Then AutoStart = 1: GoTo CheckNextCMDOption
     If LCase$(Left$(N$, 2)) = "-r" Then Ret2Basic = 1: GoTo CheckNextCMDOption
+    If LCase$(Left$(N$, 2)) = "-m" Then FloatType = Val(Right$(N$, Len(N$) - 2)): GoTo CheckNextCMDOption
     ' check if we got a file name yet if so then the next filename will be output
     OutName$ = N$
     CheckNextCMDOption:
@@ -92,12 +93,6 @@ Open "NumericVariablesUsed.txt" For Input As #1
 While EOF(1) = 0
     Input #1, NumericVariable$(NumericVariableCount)
     NumericVariableCount = NumericVariableCount + 1
-Wend
-Close #1
-Open "FloatingPointVariablesUsed.txt" For Input As #1
-While EOF(1) = 0
-    Input #1, FloatVariable$(FloatVariableCount)
-    FloatVariableCount = FloatVariableCount + 1
 Wend
 Close #1
 StringVariableCounter = 0

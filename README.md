@@ -10,9 +10,31 @@ https://github.com/nowhereman999/BASIC-To-6809/blob/main/Manual.pdf
 For more info check out the blog post here:
 https://wordpress.com/post/nowhereman999.wordpress.com/5054
 
+V 5.2
+- Added New -m option that allows the user to select 3 byte or 5 byte floating point math with Type Single
+  -m0 is 3 byte fast floating point option
+  -m1 is 5 byte floating point option which is slower but more accurate than the 3 byte option
+- Fixed a bug where printing to 40,64 or 80 width screen could print a weird character if a control character is used
+- Fixed the INPUT command with WIDTH 40,64 & 80 mode
+- Fixed a bug with string commands that have commas in them (they were being treated like arrays)
+- Fixed a bug with VARPTR() given a numeric variable or string variable was using the value and not the address of the variable
+- Fixed a bug with variables that started with "FP_" as they were used in an older version of the compiler to identify floating
+  point variables.  This is no longer needed and that code has been removed so variables that start with "FP_" will work as
+  any other variable
+- Fixed a bug with MID$() if the start and length values were not Unisgned Byte format, it wouldn't give the correct value
+- Fixed a bug if there were comments after the LOADM command and it had an LOADM used an offset value
+- Fixed a bug with the CASE command not handling comma separated values properly
+- Fixed a bug with the IF command while doing logical operations like IF (X AND 1) = 1 THEN
+- Made the compiler smarter and faster when doing division of integers it will now do integer division instead of the old method
+  of converting the numbers to floating point then doing the division and converting the result back to integer.
+
+V 5.12
+- Fixed a bug that would corrupt the stack handling 8 bit arrays with 8 bit values
+- Optimized the set command (every graphic command uses set, so the more optized the better) for some high res screens
+
 V 5.11
 - Fixed a major bug with comparisons of types that are not floating point, where the < & > were reversed
-  Previously you can only trust + or <>, now all types are compared correctly.  The code produced is efficient and works well
+  Previously you can only trust = or <>, now all types are compared correctly.  The code produced is efficient and works well
   but the compiler is doing some double negatives while generating the 6809 code which really should be cleaned up (one day) 
 - Fixed a specific bug with READing DATA into an array that is exactly 256 elements (0 to 255) as 8 bit values
 

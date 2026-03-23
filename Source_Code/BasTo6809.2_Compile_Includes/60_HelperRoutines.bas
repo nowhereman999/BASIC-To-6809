@@ -1,3 +1,66 @@
+FoldIntegerDivideRounded:
+' Inputs:
+'   FoldLeft$  = left literal text
+'   FoldRight$ = right literal text
+' Output:
+'   Num        = folded numeric result
+'
+' Rounding rule used here:
+'   round to nearest integer
+'   exact .5 rounds away from zero
+'
+' Examples:
+'   5 / 2   = 3
+'   -5 / 2  = -3
+'   7 / 3   = 2
+'   -7 / 3  = -2
+
+FoldN1 = Val(FoldLeft$)
+FoldN2 = Val(FoldRight$)
+
+If FoldN2 = 0 Then
+    Error_Happened = 1
+    Error_Message$ = "Division by zero while folding constant / expression"
+    Return
+End If
+
+' Work out sign of final result
+FoldSign = 1
+If FoldN1 < 0 Then FoldSign = -FoldSign
+If FoldN2 < 0 Then FoldSign = -FoldSign
+
+' Absolute values
+If FoldN1 < 0 Then
+    FoldAbsN1 = -FoldN1
+Else
+    FoldAbsN1 = FoldN1
+End If
+
+If FoldN2 < 0 Then
+    FoldAbsN2 = -FoldN2
+Else
+    FoldAbsN2 = FoldN2
+End If
+
+' Integer quotient and remainder using positive magnitudes
+FoldQ = FoldAbsN1 \ FoldAbsN2
+FoldR = FoldAbsN1 Mod FoldAbsN2
+
+' Round to nearest, halves away from zero:
+' if 2*remainder >= divisor, bump quotient
+If FoldR <> 0 Then
+    If FoldR + FoldR >= FoldAbsN2 Then
+        FoldQ = FoldQ + 1
+    End If
+End If
+
+' Restore sign
+If FoldSign < 0 Then FoldQ = -FoldQ
+
+Num = FoldQ
+Return
+
+
 ' Gets the General Command number, returns with number in ii, Found=1 if found and Found=0 if not found
 FindGenCommandNumber:
 Found = 0
@@ -169,7 +232,7 @@ If p + 2 <= Len(Expression$) Then
         Case "~%%"
             ManualType = NT_UByte: p = p + 3: Return
         Case "~&&"
-            ' Too large for 32-bit integer literals: default to Single (FFP).
+            ' Too large for 32-bit integer literals: default to Single.
             ' Use explicit suffixes (e.g., ~&& or &&) if you truly want 64-bit integer literals.
             ManualType = NT_Single: p = p + 3: Return
     End Select

@@ -29,16 +29,6 @@ SDCOpenFile:
         LDA     #'n'            ; n is for writing to a file
 !       JSR     SDCSetName      ; Add letter in A & ":" to the beginning of the name in _StrVar_PF00 final version 
                                 ; will be stored at _StrVar_PF01 and will be null terminted and U pointing at the start
-
-* Check and disable any high speed options
-        LDA     >CoCoHardware           ; Get the CoCo Hardware info byte
-        BPL     >                       ; If bit 7 is clear then skip forward it's a 6809
-        FCB     $11,$3D,%00000000       ; otherwise, put the 6309 in emulation mode.  This is LDMD  #%00000000
-!       RORA                            ; Move bit 0 to the Carry bit
-        BCC     >                       ; if the Carry bit is clear, then not a CoCo 3, skip ahead
-        STA     >$FFD8                 ; Put CoCo 3 in Regular speed mode
-!
-
         LDX     #$0000
         LDA     1,S             ; Get the file number
         BNE     >               ; if it is <> 0 then we are opening file 1
@@ -66,17 +56,17 @@ SDCSetFilenameOpen:
         JSR     SDC_ReadBuffer0 ; Read the first 256 bytes of the file into the buffer
         BRA     SDCOpenDone     ; We are done
 !       JSR     SDC_ReadBuffer1 ; Read the first 256 bytes of the file into the buffer
-SDCOpenDone
+SDCOpenDone:
         PULS    D,PC            ; Restore and return
 
 ; Send B to the SDC file 0 buffer, when the buffer reaches 256 bytes, it will be written to the SDC
 SDCPutByteB0:
-        PSHS    D,X,U              ; Save everything
-        STB     [SDC_BufferPointer0] ; Store the byte in the buffer
-        INC     SDC_BufferPointer0+1 ; Increment the buffer pointer LSB
-        BNE     >                  ; If the buffer pointer is 256 bytes, write the buffer to the SDC
-        BSR     SDC_WriteBuffer0   ; Write the buffer to the SDC
-!       PULS    D,X,U,PC           ; Restore everything and return
+        PSHS    D,X,U                   ; Save everything
+        STB     [SDC_BufferPointer0]    ; Store the byte in the buffer
+        INC     SDC_BufferPointer0+1    ; Increment the buffer pointer LSB
+        BNE     >                       ; If the buffer pointer is 256 bytes, write the buffer to the SDC
+        BSR     SDC_WriteBuffer0        ; Write the buffer to the SDC
+!       PULS    D,X,U,PC                ; Restore everything and return
 
 ; Write a buffer to the SDC file 0, this is called when the buffer is full
 SDC_WriteBuffer0:
@@ -104,12 +94,13 @@ SDCReachedMaxFilesize:
 
 ; Send B to the SDC file 1 buffer, when the buffer reaches 256 bytes, it will be written to the SDC
 SDCPutByteB1:
-        PSHS    D,X,U              ; Save everything
-        STB     [SDC_BufferPointer1] ; Store the byte in the buffer
-        INC     SDC_BufferPointer1+1 ; Increment the buffer pointer LSB
-        BNE     >                  ; If the buffer pointer is 256 bytes, write the buffer to the SDC
-        BSR     SDC_WriteBuffer1   ; Write the buffer to the SDC
-!       PULS    D,X,U,PC           ; Restore everything and return
+        PSHS    D,X,U                   ; Save everything
+        STB     [SDC_BufferPointer1]    ; Store the byte in the buffer
+; Disable any high speed options
+        INC     SDC_BufferPointer1+1    ; Increment the buffer pointer LSB
+        BNE     >                       ; If the buffer pointer is 256 bytes, write the buffer to the SDC
+        BSR     SDC_WriteBuffer1        ; Write the buffer to the SDC
+!       PULS    D,X,U,PC                ; Restore everything and return
 
 ; Write a buffer to the SDC file 1, this is called when the buffer is full
 SDC_WriteBuffer1:
@@ -210,7 +201,6 @@ SDC_CloseFile:
         CLR     2,U             ; Null terminate the filename - just "M:"
         JSR     CommSDC         ; Send the command to the SDC
         LBCS    SDCError        ; SDC Error, go show the error and halt program
-        JSR     SetCPUSpeed     ; Set the CPU Speed back to what the user wants
         PULS    D,X,U,PC        ; Restore everything and return
 
 ; Close file 1
@@ -417,15 +407,16 @@ SDCSetName:
 ; Put controller in Command mode:
 ; This changes the mode the CoCo SDC work in.  It is now ready for direct communication
 CheckSDCFirmwareVersion:
-        LDA    #$C0            ; Add $C0 and the file number
+        LDA    #$C0             ; Add $C0 and the file number
         LDB     #$56            ; Command to get
         JSR     CommSDC         ; Send the command to the SDC
         BCS     SDCError        ; SDC Error, go show the error and halt program
+!       JSR     Speed_Normal    ; Backup the speed the CoCo is currently set at and set it to Normal speed
         LDD     >$FF4A          ; Get the 16 bit BCD value       
         CMPD    #$0127          ; Get 16 bit BCD number (we need version 127 or > to stream with command 'm:')
-        BLO     SDCNeedsUpdate ; If we are < 127 then upgrade firmware message
+        BLO     SDCNeedsUpdate  ; If we are < 127 then upgrade firmware message
 * Good firmware version, continue as normal
-        RTS
+        JMP     Speed_Restore   ; Restore the CPU speed and mode back to what the user set & Return
 
 * Show upgrade needed message and infinate loop
 SDCNeedsUpdate:
@@ -434,7 +425,8 @@ SDCNeedsUpdate:
         BEQ     >               ; if it is zero then we are done
         JSR     PrintA_On_Screen ; Go print A on screen
         BRA     <               ; If not counted down to zero then loop
-!       CLR     >$FF40          ; put SDC controller back in floppy mode
+!       JSR     Speed_Normal    ; Backup the speed the CoCo is currently set at and set it to Normal speed
+        CLR     >$FF40          ; put SDC controller back in floppy mode
         BRA     *               ; Infinate loop
 SDCUpdateMessage:
         FCN     'SDC FIRMWARE NEEDS TO BE UPDATEDTO ATLEAST VERSION 127'
@@ -508,13 +500,14 @@ SDCReset:
     LDB   #$AA      * First parameter $AA
     LDX   #$5500    * Second parameter to $55
     JSR   CommSDC   * Send to the CoCoSDC
-    LDY   #5000     * Loop is 8 cycles, at double speed on a CoCo3 each cycle is 0.0000005586592179 seconds, * 8 cycles = 0.000004469273743, 20msec = 3580 loops
+    JSR   Speed_Normal ; Backup the speed the CoCo is currently set at and set it to Normal speed
+    LDY   #5000   * Loop is 8 cycles, at double speed on a CoCo3 each cycle is 0.0000005586592179 seconds, * 8 cycles = 0.000004469273743, 20msec = 3580 loops
 !   LEAY  -1,Y      * countdown of 5000, to give us a little extra time (just in case)
     BNE   <         * Loop until Y is zero
 *  A read of param registers 1 and 2 should return 'PM'
     LDD   PREG1     * $FF49 param register 1, $FF4A param register 2
-* D should now = "PM" you can do a test here if you want to make sure the controller is in the Program Mode
-    LDA   #'G'      * Write "G" to exit program mode and do a soft reset of the controller
+    LDA   #'G'      * Write "G" to exit program mode and do a soft reset of the SDC controller
     STA   STATREG   * Send directly to $FF48
-    RTS
+* D should now = "PM" you can do a test here if you want to make sure the controller is in the Program Mode
+    JMP   Speed_Restore  ; Restore the CPU speed and mode back to what the user set & Return
 

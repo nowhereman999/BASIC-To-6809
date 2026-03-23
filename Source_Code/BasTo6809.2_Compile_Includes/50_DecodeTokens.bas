@@ -1,7 +1,8 @@
 
 ' Return with decoded command/variable in Temp$
 ' Tokens for variables type:
-' &HF0 = Numeric Arrays           (4 Bytes)
+' &HF0 = Numeric Arrays           (5 Bytes)
+'        F0,MSB,LSB,#Dimensions,ElemType
 ' &HF1 = String Arrays            (3 Bytes)
 ' &HF2 = Regular Numeric Variable (3 Bytes)
 ' &HF3 = Regular String Variable  (3 Bytes)
@@ -18,8 +19,8 @@ Temp$ = ""
 If v = TK_NumericArray Then 'Numeric Array Variable
     v = Array(x) * 256 + Array(x + 1): x = x + 2
     Temp$ = NumericArrayVariables$(v)
-    T = Array(x): x = x + 1 'T= Type of numeric elements in the array
-    v = Array(x): x = x + 1 'v= number of elements in the array
+    v = Array(x): x = x + 1 'v = number of dimensions in the array
+    T = Array(x): x = x + 1 'T = type of numeric elements in the array
     Return
 End If
 If v = TK_StrArray Then 'String Array Variable

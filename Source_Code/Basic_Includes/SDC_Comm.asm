@@ -41,7 +41,12 @@ CMDMODE        equ       $43                control latch value to enable comman
 ;CMDEX          equ       $C0                extended command
 ;CMDEXD         equ       $E0                extended command with data block
 
-CommSDC:       pshs      u,y,x,a,cc         preserve resgisters
+CommSDC:
+               PSHS      B
+; Disable any high speed options
+               JSR       Speed_Normal       ; Backup the speed the CoCo is currently set at and set it to Normal speed
+               PULS      B
+               pshs      u,y,x,a,cc         preserve resgisters
                lsr       ,s                 shift carry flag out of saved CC
 
 * Put controller in Command mode
@@ -126,8 +131,12 @@ rxChunk        ldu       ,y                 read one chunk...
                clrb                         status code for SUCCESS, clear carry
 
 * Exit
-cmdExit        rol       ,s                 rotate carry into saved CC on stack
+cmdExit:
+               rol       ,s                 rotate carry into saved CC on stack
+               PSHS      B
                clr       -10,y              end command mode
+               JSR       Speed_Restore      ; Restore the CPU Speed back to what the user set
+               PULS      B
                puls      cc,a,x,y,u,pc      restore irq masks, update carry and return
 
 *--------------------------------------------------------------------------

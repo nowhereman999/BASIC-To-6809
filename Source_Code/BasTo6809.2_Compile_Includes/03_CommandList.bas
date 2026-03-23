@@ -92,8 +92,6 @@ Check$ = "COCOMP3_CYCLE_MODE_SETTING": GoSub FindNumCommandNumber ' Gets the Num
 COCOMP3_CYCLE_MODE_SETTING_CMD = ii
 Check$ = "COCOMP3_SELECT_BUT_NO_PLAY": GoSub FindNumCommandNumber ' Gets the Numeric Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
 COCOMP3_SELECT_BUT_NO_PLAY_CMD = ii
-Check$ = "COCOMP3_SELECT_BUT_NO_PLAY": GoSub FindNumCommandNumber ' Gets the Numeric Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
-COCOMP3_SELECT_BUT_NO_PLAY_CMD = ii
 Check$ = "COCOMP3_GET_CURRENT_TRACK": GoSub FindNumCommandNumber ' Gets the Numeric Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
 COCOMP3_GET_CURRENT_TRACK_CMD = ii
 Check$ = "COCOMP3_PLAY_TRACK_NUMBER": GoSub FindNumCommandNumber ' Gets the Numeric Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
@@ -164,8 +162,6 @@ Check$ = "RND": GoSub FindNumCommandNumber ' Gets the Numeric Command number of 
 RND_CMD = ii
 Check$ = "SDC_DIRPAGE": GoSub FindNumCommandNumber ' Gets the Numeric Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
 SDC_DIRPAGE_CMD=ii
-Check$ = "SDC_GETBYTE": GoSub FindNumCommandNumber ' Gets the Numeric Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
-SDC_GETBYTE_CMD=ii
 Check$ = "SDC_GETBYTE": GoSub FindNumCommandNumber ' Gets the Numeric Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
 SDC_GETBYTE_CMD=ii
 Check$ = "SDC_INITDIR": GoSub FindNumCommandNumber ' Gets the Numeric Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found

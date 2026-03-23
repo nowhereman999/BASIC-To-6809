@@ -8,8 +8,8 @@ If (LeftType = 5 Or LeftType = 6) And (RightType = 5 Or RightType = 6) Then GoTo
 If LeftType < 7 And RightType < 7 Then GoTo EqualMaxType2 ' One is 1 byte the other is 2 byte
 If (LeftType = 7 Or LeftType = 8) And (RightType = 7 Or RightType = 8) Then GoTo EqualSameType4 ' Both are a byte size of 4
 If (LeftType = 9 Or LeftType = 10) And (RightType = 9 Or RightType = 10) Then GoTo EqualSameType8 ' Both are a byte size of 8
-If LeftType = 11 And RightType = 11 Then GoTo EqualSameFFP ' Both are FP 3 bytes
-If LeftType = 12 And RightType = 12 Then GoTo EqualSameFP8 ' Both are FP 8 bytes
+If LeftType = 11 And RightType = 11 Then GoTo EqualSameSingle ' Both are Single
+If LeftType = 12 And RightType = 12 Then GoTo EqualSameDouble ' Both are Double
 
 ' Otherwise Types are not the same
 Value1Type = LeftType
@@ -21,10 +21,10 @@ Select Case Largesttype
         GoTo EqualSameType4
     Case 9, 10 ' Same 8 byte values
         GoTo EqualSameType8
-    Case 11 ' Same FFP values
-        GoTo EqualSameFFP
+    Case 11 ' Same Single values
+        GoTo EqualSameSingle
     Case 12 'Same Double values
-        GoTo EqualSameFP8
+        GoTo EqualSameDouble
 End Select
 
 ' Both are 1 byte
@@ -108,19 +108,32 @@ A$ = "STA": B$ = ",S": C$ = "Save A and move the stack forward, we only need to 
 GoSub AO
 Return
 
-' Both are FP 3 bytes in FFP format
-EqualSameFFP:
+' Both are Single format
+EqualSameSingle:
 A$ = "LDX": B$ = "#$FFFF": C$ = "Default is True": GoSub AO
-A$ = "JSR": B$ = "FFP_CMP_Stack": C$ = "Compare FFP Value1 @ ,S with Value 2 @ 3,S sets the 6809 flags Z, N, and C": GoSub AO
-A$ = "BEQ": B$ = ">": C$ = "Skip if Equal": GoSub AO
-A$ = "LDX": B$ = "#$0000": C$ = "Set as False": GoSub AO
-Z$ = "!": A$ = "LEAS": B$ = "4,S": C$ = "Move the stack forward": GoSub AO
-A$ = "STX": B$ = ",S+": C$ = "Save X and move the stack forward, we only need to save the result as an 8 bit value": GoSub AO
-GoSub AO
-Return
+Select Case FloatType
+    Case 0:
+        ' Handle 3 byte FFP
+        A$ = "JSR": B$ = "FFP_CMP_Stack": C$ = "Compare FFP Value1 @ ,S with Value 2 @ 3,S sets the 6809 flags Z, N, and C": GoSub AO
+        A$ = "BEQ": B$ = ">": C$ = "Skip if Equal": GoSub AO
+        A$ = "LDX": B$ = "#$0000": C$ = "Set as False": GoSub AO
+        Z$ = "!": A$ = "LEAS": B$ = "4,S": C$ = "Move the stack forward": GoSub AO
+        A$ = "STX": B$ = ",S+": C$ = "Save X and move the stack forward, we only need to save the result as an 8 bit value": GoSub AO
+        GoSub AO
+        Return
+    Case 1:
+        ' Handle 5 byte FP5
+        A$ = "JSR": B$ = "FP5_CMP_Stack": C$ = "Compare FP5 Value1 @ ,S with Value 2 @ 5,S sets the 6809 flags Z, N, and C": GoSub AO
+        A$ = "BEQ": B$ = ">": C$ = "Skip if Equal": GoSub AO
+        A$ = "LDX": B$ = "#$0000": C$ = "Set as False": GoSub AO
+        Z$ = "!": A$ = "LEAS": B$ = "8,S": C$ = "Move the stack forward": GoSub AO
+        A$ = "STX": B$ = ",S+": C$ = "Save X and move the stack forward, we only need to save the result as an 8 bit value": GoSub AO
+        GoSub AO
+        Return
+End Select
 
-' Both are FP 10 bytes
-EqualSameFP8:
+' Both Double
+EqualSameDouble:
 A$ = "LDX": B$ = "#$FFFF": C$ = "Default is True": GoSub AO
 A$ = "JSR": B$ = "Double_CMP_Stack": C$ = "Compare Double Value1 @ ,S with Value 2 @ 10,S sets the 6809 flags Z, N, and C": GoSub AO
 A$ = "BEQ": B$ = ">": C$ = "Skip if Equal": GoSub AO
@@ -139,8 +152,8 @@ If (LeftType = 5 Or LeftType = 6) And (RightType = 5 Or RightType = 6) Then GoTo
 If LeftType < 7 And RightType < 7 Then GoTo NotEqualMaxType2 ' One is 1 byte the other is 2 byte
 If (LeftType = 7 Or LeftType = 8) And (RightType = 7 Or RightType = 8) Then GoTo NotEqualSameType4 ' Both are a byte size of 4
 If (LeftType = 9 Or LeftType = 10) And (RightType = 9 Or RightType = 10) Then GoTo NotEqualSameType8 ' Both are a byte size of 8
-If LeftType = 11 And RightType = 11 Then GoTo NotEqualSameFFP ' Both are FP 3 bytes
-If LeftType = 12 And RightType = 12 Then GoTo NotEqualSameFP8 ' Both are FP 8 bytes
+If LeftType = 11 And RightType = 11 Then GoTo NotEqualSameSingle ' Both are Single
+If LeftType = 12 And RightType = 12 Then GoTo NotEqualSameDouble ' Both are Double
 
 ' Otherwise Types are not the same
 Value1Type = LeftType
@@ -152,10 +165,10 @@ Select Case Largesttype
         GoTo NotEqualSameType4
     Case 9, 10 ' Same 8 byte values
         GoTo NotEqualSameType8
-    Case 11 ' Same FFP values
-        GoTo NotEqualSameFFP
+    Case 11 ' Same Single values
+        GoTo NotEqualSameSingle
     Case 12 'Same Double values
-        GoTo NotEqualSameFP8
+        GoTo NotEqualSameDouble
 End Select
 
 ' Both are 1 byte
@@ -237,19 +250,32 @@ A$ = "STA": B$ = ",S": C$ = "Save A and move the stack forward, we only need to 
 GoSub AO
 Return
 
-' Both are FP 3 bytes in FFP format
-NotEqualSameFFP:
+' Both are Single format
+NotEqualSameSingle:
 A$ = "LDX": B$ = "#$FFFF": C$ = "Default is True": GoSub AO
-A$ = "JSR": B$ = "FFP_CMP_Stack": C$ = "Compare FFP Value1 @ 3,S with Value 2 @ ,S sets the 6809 flags Z, N, and C": GoSub AO
-A$ = "BNE": B$ = ">": C$ = "Skip if NotEqual": GoSub AO
-A$ = "LDX": B$ = "#$0000": C$ = "Set as False": GoSub AO
-Z$ = "!": A$ = "LEAS": B$ = "4,S": C$ = "Move the stack forward": GoSub AO
-A$ = "STX": B$ = ",S+": C$ = "Save X and move the stack forward, we only need to save the result as an 8 bit value": GoSub AO
-GoSub AO
-Return
+Select Case FloatType
+    Case 0:
+        ' Handle 3 byte FFP
+        A$ = "JSR": B$ = "FFP_CMP_Stack": C$ = "Compare FFP Value1 @ 3,S with Value 2 @ ,S sets the 6809 flags Z, N, and C": GoSub AO
+        A$ = "BNE": B$ = ">": C$ = "Skip if NotEqual": GoSub AO
+        A$ = "LDX": B$ = "#$0000": C$ = "Set as False": GoSub AO
+        Z$ = "!": A$ = "LEAS": B$ = "4,S": C$ = "Move the stack forward": GoSub AO
+        A$ = "STX": B$ = ",S+": C$ = "Save X and move the stack forward, we only need to save the result as an 8 bit value": GoSub AO
+        GoSub AO
+        Return
+    Case 1:
+        ' Handle 5 byte FP5
+        A$ = "JSR": B$ = "FP5_CMP_Stack": C$ = "Compare FP5 Value1 @ ,S with Value 2 @ 5,S sets the 6809 flags Z, N, and C": GoSub AO
+        A$ = "BNE": B$ = ">": C$ = "Skip if NotEqual": GoSub AO
+        A$ = "LDX": B$ = "#$0000": C$ = "Set as False": GoSub AO
+        Z$ = "!": A$ = "LEAS": B$ = "8,S": C$ = "Move the stack forward": GoSub AO
+        A$ = "STX": B$ = ",S+": C$ = "Save X and move the stack forward, we only need to save the result as an 8 bit value": GoSub AO
+        GoSub AO
+        Return
+End Select
 
-' Both are FP 10 bytes
-NotEqualSameFP8:
+' Both are Double
+NotEqualSameDouble:
 A$ = "LDX": B$ = "#$FFFF": C$ = "Default is True": GoSub AO
 A$ = "JSR": B$ = "Double_CMP_Stack": C$ = "Compare Double Value1 @ 10,S with Value 2 @ ,S sets the 6809 flags Z, N, and C": GoSub AO
 A$ = "BNE": B$ = ">": C$ = "Skip if NotEqual": GoSub AO
@@ -299,8 +325,8 @@ If LeftType = 10 And RightType = 10 Then GoTo LessThanUnSigned8Byte
 If LeftType = 10 And RightType = 9 Then GoTo LessThanLURS8Byte
 If LeftType = 9 And RightType = 10 Then GoTo LessThanLSRU8Byte
 
-If LeftType = 11 And RightType = 11 Then GoTo LessThanSameFFP ' Both are FP 3 bytes
-If LeftType = 12 And RightType = 12 Then GoTo LessThanSameFP8 ' Both are FP 8 bytes
+If LeftType = 11 And RightType = 11 Then GoTo LessThanSameSingle ' Both are Single
+If LeftType = 12 And RightType = 12 Then GoTo LessThanSameDouble ' Both are Double
 
 ' Otherwise Types are not the same
 Value1Type = LeftType
@@ -316,10 +342,10 @@ Select Case Largesttype
         GoTo LessThanSigned8Byte
     Case 10 ' Same 8 byte Unsigned values
         GoTo LessThanUnSigned8Byte
-    Case 11 ' Same FFP values
-        GoTo LessThanSameFFP
+    Case 11 ' Same Single values
+        GoTo LessThanSameSingle
     Case 12 'Same Double values
-        GoTo LessThanSameFP8
+        GoTo LessThanSameDouble
 End Select
 
 LessThanSigned1Byte:
@@ -605,18 +631,30 @@ A$ = "STA": B$ = ",S": C$ = "Save A and move the stack forward, we only need to 
 GoSub AO
 Return
 
-' Both are FP 3 bytes in FFP format
-LessThanSameFFP:
+' Both are Single
+LessThanSameSingle:
 A$ = "LDX": B$ = "#$FFFF": C$ = "Default is True": GoSub AO
-A$ = "JSR": B$ = "FFP_CMP_Stack": C$ = "Compare FFP Value1 @ ,S with Value 2 @ 3,S sets the 6809 flags Z, N, and C": GoSub AO
-A$ = "BGT": B$ = ">": C$ = "Skip if GreaterThan": GoSub AO
-A$ = "LDX": B$ = "#$0000": C$ = "Set as False": GoSub AO
-Z$ = "!": A$ = "LEAS": B$ = "4,S": C$ = "Move the stack forward": GoSub AO
-A$ = "STX": B$ = ",S+": C$ = "Save X and move the stack forward, we only need to save the result as an 8 bit value": GoSub AO
-Return
+Select Case FloatType
+    Case 0:
+        ' Handle 3 byte FFP
+        A$ = "JSR": B$ = "FFP_CMP_Stack": C$ = "Compare FFP Value1 @ 3,S with Value 2 @ ,S sets the 6809 flags Z, N, and C": GoSub AO
+        A$ = "BGT": B$ = ">": C$ = "Skip if GreaterThan": GoSub AO
+        A$ = "LDX": B$ = "#$0000": C$ = "Set as False": GoSub AO
+        Z$ = "!": A$ = "LEAS": B$ = "4,S": C$ = "Move the stack forward": GoSub AO
+        A$ = "STX": B$ = ",S+": C$ = "Save X and move the stack forward, we only need to save the result as an 8 bit value": GoSub AO
+        Return
+    Case 1:
+        ' Handle 5 byte FP5
+        A$ = "JSR": B$ = "FP5_CMP_Stack": C$ = "Compare FP5 Value1 @ ,S with Value 2 @ 5,S sets the 6809 flags Z, N, and C": GoSub AO
+        A$ = "BGT": B$ = ">": C$ = "Skip if GreaterThan": GoSub AO
+        A$ = "LDX": B$ = "#$0000": C$ = "Set as False": GoSub AO
+        Z$ = "!": A$ = "LEAS": B$ = "8,S": C$ = "Move the stack forward": GoSub AO
+        A$ = "STX": B$ = ",S+": C$ = "Save X and move the stack forward, we only need to save the result as an 8 bit value": GoSub AO
+        Return
+End Select
 
-' Both are FP 10 bytes
-LessThanSameFP8:
+' Both are Double
+LessThanSameDouble:
 A$ = "LDX": B$ = "#$FFFF": C$ = "Default is True": GoSub AO
 A$ = "JSR": B$ = "Double_CMP_Stack": C$ = "Compare Double Value1 @ ,S with Value 2 @ 10,S sets the 6809 flags Z, N, and C": GoSub AO
 A$ = "BGT": B$ = ">": C$ = "Skip if GreaterThan": GoSub AO
@@ -666,8 +704,8 @@ If LeftType = 10 And RightType = 10 Then GoTo GreaterThanUnSigned8Byte
 If LeftType = 10 And RightType = 9 Then GoTo GreaterThanLURS8Byte
 If LeftType = 9 And RightType = 10 Then GoTo GreaterThanLSRU8Byte
 
-If LeftType = 11 And RightType = 11 Then GoTo GreaterThanSameFFP ' Both are FP 3 bytes
-If LeftType = 12 And RightType = 12 Then GoTo GreaterThanSameFP8 ' Both are FP 8 bytes
+If LeftType = 11 And RightType = 11 Then GoTo GreaterThanSameSingle ' Both are Single
+If LeftType = 12 And RightType = 12 Then GoTo GreaterThanSameDouble ' Both are Double
 
 ' Otherwise Types are not the same
 Value1Type = LeftType
@@ -683,10 +721,10 @@ Select Case Largesttype
         GoTo GreaterThanSigned8Byte
     Case 10 ' Same 8 byte Unsigned values
         GoTo GreaterThanUnSigned8Byte
-    Case 11 ' Same FFP values
-        GoTo GreaterThanSameFFP
+    Case 11 ' Same Single values
+        GoTo GreaterThanSameSingle
     Case 12 'Same Double values
-        GoTo GreaterThanSameFP8
+        GoTo GreaterThanSameDouble
 End Select
 
 GreaterThanSigned1Byte:
@@ -979,18 +1017,30 @@ A$ = "STA": B$ = ",S": C$ = "Save A and move the stack forward, we only need to 
 GoSub AO
 Return
 
-' Both are FP 3 bytes in FFP format
-GreaterThanSameFFP:
+' Both are Single format
+GreaterThanSameSingle:
 A$ = "LDX": B$ = "#$FFFF": C$ = "Default is True": GoSub AO
-A$ = "JSR": B$ = "FFP_CMP_Stack": C$ = "Compare FFP Value1 @ ,S with Value 2 @ 3,S sets the 6809 flags Z, N, and C": GoSub AO
-A$ = "BLT": B$ = ">": C$ = "Skip if LessThan": GoSub AO
-A$ = "LDX": B$ = "#$0000": C$ = "Set as False": GoSub AO
-Z$ = "!": A$ = "LEAS": B$ = "4,S": C$ = "Move the stack forward": GoSub AO
-A$ = "STX": B$ = ",S+": C$ = "Save X and move the stack forward, we only need to save the result as an 8 bit value": GoSub AO
-Return
+Select Case FloatType
+    Case 0:
+        ' Handle 3 byte FFP
+        A$ = "JSR": B$ = "FFP_CMP_Stack": C$ = "Compare FFP Value1 @ 3,S with Value 2 @ ,S sets the 6809 flags Z, N, and C": GoSub AO
+        A$ = "BLT": B$ = ">": C$ = "Skip if LessThan": GoSub AO
+        A$ = "LDX": B$ = "#$0000": C$ = "Set as False": GoSub AO
+        Z$ = "!": A$ = "LEAS": B$ = "4,S": C$ = "Move the stack forward": GoSub AO
+        A$ = "STX": B$ = ",S+": C$ = "Save X and move the stack forward, we only need to save the result as an 8 bit value": GoSub AO
+        Return
+    Case 1:
+        ' Handle 5 byte FP5
+        A$ = "JSR": B$ = "FP5_CMP_Stack": C$ = "Compare FP5 Value1 @ ,S with Value 2 @ 5,S sets the 6809 flags Z, N, and C": GoSub AO
+        A$ = "BLT": B$ = ">": C$ = "Skip if LessThan": GoSub AO
+        A$ = "LDX": B$ = "#$0000": C$ = "Set as False": GoSub AO
+        Z$ = "!": A$ = "LEAS": B$ = "8,S": C$ = "Move the stack forward": GoSub AO
+        A$ = "STX": B$ = ",S+": C$ = "Save X and move the stack forward, we only need to save the result as an 8 bit value": GoSub AO
+        Return
+End Select
 
-' Both are FP 10 bytes
-GreaterThanSameFP8:
+' Both are Double
+GreaterThanSameDouble:
 A$ = "LDX": B$ = "#$FFFF": C$ = "Default is True": GoSub AO
 A$ = "JSR": B$ = "Double_CMP_Stack": C$ = "Compare Double Value1 @ ,S with Value 2 @ 10,S sets the 6809 flags Z, N, and C": GoSub AO
 A$ = "BLT": B$ = ">": C$ = "Skip if LessThan": GoSub AO
@@ -1040,8 +1090,8 @@ If LeftType = 10 And RightType = 10 Then GoTo LessOrEqualUnSigned8Byte
 If LeftType = 10 And RightType = 9 Then GoTo LessOrEqualLURS8Byte
 If LeftType = 9 And RightType = 10 Then GoTo LessOrEqualLSRU8Byte
 
-If LeftType = 11 And RightType = 11 Then GoTo LessOrEqualSameFFP ' Both are FP 3 bytes
-If LeftType = 12 And RightType = 12 Then GoTo LessOrEqualSameFP8 ' Both are FP 8 bytes
+If LeftType = 11 And RightType = 11 Then GoTo LessOrEqualSameSingle ' Both are Single
+If LeftType = 12 And RightType = 12 Then GoTo LessOrEqualSameDouble ' Both are Double
 
 ' Otherwise Types are not the same
 Value1Type = LeftType
@@ -1057,10 +1107,10 @@ Select Case Largesttype
         GoTo LessOrEqualSigned8Byte
     Case 10 ' Same 8 byte Unsigned values
         GoTo LessOrEqualUnSigned8Byte
-    Case 11 ' Same FFP values
-        GoTo LessOrEqualSameFFP
+    Case 11 ' Same Single values
+        GoTo LessOrEqualSameSingle
     Case 12 'Same Double values
-        GoTo LessOrEqualSameFP8
+        GoTo LessOrEqualSameDouble
 End Select
 
 LessOrEqualSigned1Byte:
@@ -1346,18 +1396,30 @@ A$ = "STA": B$ = ",S": C$ = "Save A and move the stack forward, we only need to 
 GoSub AO
 Return
 
-' Both are FP 3 bytes in FFP format
-LessOrEqualSameFFP:
+' Both are Single format
+LessOrEqualSameSingle:
 A$ = "LDX": B$ = "#$FFFF": C$ = "Default is True": GoSub AO
-A$ = "JSR": B$ = "FFP_CMP_Stack": C$ = "Compare FFP Value1 @ ,S with Value 2 @ 3,S sets the 6809 flags Z, N, and C": GoSub AO
-A$ = "BGE": B$ = ">": C$ = "Skip if GreaterOrEqual": GoSub AO
-A$ = "LDX": B$ = "#$0000": C$ = "Set as False": GoSub AO
-Z$ = "!": A$ = "LEAS": B$ = "4,S": C$ = "Move the stack forward": GoSub AO
-A$ = "STX": B$ = ",S+": C$ = "Save X and move the stack forward, we only need to save the result as an 8 bit value": GoSub AO
-Return
+Select Case FloatType
+    Case 0:
+        ' Handle 3 byte FFP
+        A$ = "JSR": B$ = "FFP_CMP_Stack": C$ = "Compare FFP Value1 @ 3,S with Value 2 @ ,S sets the 6809 flags Z, N, and C": GoSub AO
+        A$ = "BGE": B$ = ">": C$ = "Skip if GreaterOrEqual": GoSub AO
+        A$ = "LDX": B$ = "#$0000": C$ = "Set as False": GoSub AO
+        Z$ = "!": A$ = "LEAS": B$ = "4,S": C$ = "Move the stack forward": GoSub AO
+        A$ = "STX": B$ = ",S+": C$ = "Save X and move the stack forward, we only need to save the result as an 8 bit value": GoSub AO
+        Return
+    Case 1:
+        ' Handle 5 byte FP5
+        A$ = "JSR": B$ = "FP5_CMP_Stack": C$ = "Compare FP5 Value1 @ ,S with Value 2 @ 5,S sets the 6809 flags Z, N, and C": GoSub AO
+        A$ = "BGE": B$ = ">": C$ = "Skip if GreaterOrEqual": GoSub AO
+        A$ = "LDX": B$ = "#$0000": C$ = "Set as False": GoSub AO
+        Z$ = "!": A$ = "LEAS": B$ = "8,S": C$ = "Move the stack forward": GoSub AO
+        A$ = "STX": B$ = ",S+": C$ = "Save X and move the stack forward, we only need to save the result as an 8 bit value": GoSub AO
+        Return
+End Select
 
-' Both are FP 10 bytes
-LessOrEqualSameFP8:
+' Both are Double
+LessOrEqualSameDouble:
 A$ = "LDX": B$ = "#$FFFF": C$ = "Default is True": GoSub AO
 A$ = "JSR": B$ = "Double_CMP_Stack": C$ = "Compare Double Value1 @ ,S with Value 2 @ 10,S sets the 6809 flags Z, N, and C": GoSub AO
 A$ = "BGE": B$ = ">": C$ = "Skip if GreaterOrEqual": GoSub AO
@@ -1406,8 +1468,8 @@ If LeftType = 10 And RightType = 10 Then GoTo GreaterOrEqualUnSigned8Byte
 If LeftType = 10 And RightType = 9 Then GoTo GreaterOrEqualLURS8Byte
 If LeftType = 9 And RightType = 10 Then GoTo GreaterOrEqualLSRU8Byte
 
-If LeftType = 11 And RightType = 11 Then GoTo GreaterOrEqualSameFFP ' Both are FP 3 bytes
-If LeftType = 12 And RightType = 12 Then GoTo GreaterOrEqualSameFP8 ' Both are FP 8 bytes
+If LeftType = 11 And RightType = 11 Then GoTo GreaterOrEqualSameSingle ' Both are Single
+If LeftType = 12 And RightType = 12 Then GoTo GreaterOrEqualSameDouble ' Both are Double
 
 ' Otherwise Types are not the same
 Value1Type = LeftType
@@ -1423,10 +1485,10 @@ Select Case Largesttype
         GoTo GreaterOrEqualSigned8Byte
     Case 10 ' Same 8 byte Unsigned values
         GoTo GreaterOrEqualUnSigned8Byte
-    Case 11 ' Same FFP values
-        GoTo GreaterOrEqualSameFFP
+    Case 11 ' Same Single values
+        GoTo GreaterOrEqualSameSingle
     Case 12 'Same Double values
-        GoTo GreaterOrEqualSameFP8
+        GoTo GreaterOrEqualSameDouble
 End Select
 
 GreaterOrEqualSigned1Byte:
@@ -1719,18 +1781,30 @@ A$ = "STA": B$ = ",S": C$ = "Save A and move the stack forward, we only need to 
 GoSub AO
 Return
 
-' Both are FP 3 bytes in FFP format
-GreaterOrEqualSameFFP:
+' Both are Single format
+GreaterOrEqualSameSingle:
 A$ = "LDX": B$ = "#$FFFF": C$ = "Default is True": GoSub AO
-A$ = "JSR": B$ = "FFP_CMP_Stack": C$ = "Compare FFP Value1 @ ,S with Value 2 @ 3,S sets the 6809 flags Z, N, and C": GoSub AO
-A$ = "BLE": B$ = ">": C$ = "Skip if LessOrEqual": GoSub AO
-A$ = "LDX": B$ = "#$0000": C$ = "Set as False": GoSub AO
-Z$ = "!": A$ = "LEAS": B$ = "4,S": C$ = "Move the stack forward": GoSub AO
-A$ = "STX": B$ = ",S+": C$ = "Save X and move the stack forward, we only need to save the result as an 8 bit value": GoSub AO
-Return
+Select Case FloatType
+    Case 0:
+        ' Handle 3 byte FFP
+        A$ = "JSR": B$ = "FFP_CMP_Stack": C$ = "Compare FFP Value1 @ 3,S with Value 2 @ ,S sets the 6809 flags Z, N, and C": GoSub AO
+        A$ = "BLE": B$ = ">": C$ = "Skip if LessOrEqual": GoSub AO
+        A$ = "LDX": B$ = "#$0000": C$ = "Set as False": GoSub AO
+        Z$ = "!": A$ = "LEAS": B$ = "4,S": C$ = "Move the stack forward": GoSub AO
+        A$ = "STX": B$ = ",S+": C$ = "Save X and move the stack forward, we only need to save the result as an 8 bit value": GoSub AO
+        Return
+    Case 1:
+        ' Handle 5 byte FP5
+        A$ = "JSR": B$ = "FP5_CMP_Stack": C$ = "Compare FP5 Value1 @ ,S with Value 2 @ 5,S sets the 6809 flags Z, N, and C": GoSub AO
+        A$ = "BLE": B$ = ">": C$ = "Skip if LessOrEqual": GoSub AO
+        A$ = "LDX": B$ = "#$0000": C$ = "Set as False": GoSub AO
+        Z$ = "!": A$ = "LEAS": B$ = "8,S": C$ = "Move the stack forward": GoSub AO
+        A$ = "STX": B$ = ",S+": C$ = "Save X and move the stack forward, we only need to save the result as an 8 bit value": GoSub AO
+        Return
+End Select
 
-' Both are FP 10 bytes
-GreaterOrEqualSameFP8:
+' Both are Double
+GreaterOrEqualSameDouble:
 A$ = "LDX": B$ = "#$FFFF": C$ = "Default is True": GoSub AO
 A$ = "JSR": B$ = "Double_CMP_Stack": C$ = "Compare Double Value1 @ ,S with Value 2 @ 10,S sets the 6809 flags Z, N, and C": GoSub AO
 A$ = "BLE": B$ = ">": C$ = "Skip if LessOrEqual": GoSub AO

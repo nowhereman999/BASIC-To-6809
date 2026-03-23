@@ -12,18 +12,15 @@ _Dest _Console
 '$Include:'./BasTo6809.2_Compile_Includes/15_Get_Expression.bas'
 
 '$Include:'./BasTo6809.2_Compile_Includes/20_DoGenCommands.bas'
-''$Include:'./BasTo6809.2_Compile_Includes/20_DoGenCommandsMinimal.bas'
+''''''$Include:'./BasTo6809.2_Compile_Includes/20_DoGenCommandsMinimal.bas'
 
 
 '$Include:'./BasTo6809.2_Compile_Includes/22_DoIF_End_and_Related.bas'
-''$Include:'./BasTo6809.2_Compile_Includes/22_DoIF_End_and_RelatedMinimal.bas'
-
-
 '$Include:'./BasTo6809.2_Compile_Includes/40_Parser_Main.bas'
 '$Include:'./BasTo6809.2_Compile_Includes/42_Parser_DoStringCmds.bas'
 
 '$Include:'./BasTo6809.2_Compile_Includes/45_Parser_DoNumericCmds.bas'
-''$Include:'./BasTo6809.2_Compile_Includes/45_Parser_DoNumericCmdsMinimal.bas'
+''''''$Include:'./BasTo6809.2_Compile_Includes/45_Parser_DoNumericCmdsMinimal.bas'
 
 
 '$Include:'./BasTo6809.2_Compile_Includes/50_DecodeTokens.bas'
@@ -42,8 +39,6 @@ _Dest _Console
 
 
 '$Include:'./BasTo6809.2_Compile_Includes/90_Subs_Function_Helpers.bas'
-
-
 
 
 

@@ -275,7 +275,7 @@ DIV_U16:
     BNE     @Div_Again      ; If we're not at zero then loop again
 ; D now has the remainder, Result of the division is in the Numerator
     TFR     D,X             ; X = the Remiander
-    BRA     DivGetResult    ; Put result on the stack and return
+    JMP     DivGetResult    ; Put result on the stack and return
 
 ; ======================================================================
 ; U8_DIVMOD_TRUNC - Unsigned 8-bit division with remainder

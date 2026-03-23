@@ -545,7 +545,8 @@ FFP_ADD_SUB:
       LEAS  3,S               ; Move the stack
       BRA   <                 ; Store and return
 @PosInfinity:
-      LDA   #%01000000        ; Flag as special
+      LDA   FFP_SIGN
+      ORA   #%01000000        ; Flag as special
       LDX   #$0000            ; Clear MSbit
       BRA   <                 ; Store and return
 
@@ -592,7 +593,7 @@ FFP_Round_U:
       INC   FFP_EXPonent
       LDA   FFP_EXPonent
       CMPA  #$40        ; Have we overflowed?
-      BLO   @Done       ; If not we are done
+      BLT   @Done       ; If not we are done
 ; Otherwise we hit +Infinity
       CLR   ,U          ; Make mantissa +Infinity
       CLR   1,U
@@ -665,7 +666,7 @@ FFP_MUL:
       LEAS  2,S         ; Move the stack
       STD   ,S          ; Save Value 2 Mantissa (we now have 16 bit value and 16 bit value on the stack)
 ; We now have Value 2 mantissa then Value 1 Mantissa on the stack
-      JSR   MUL16       ; Unsigned 16 bit multiply, 2,S * ,S then S=S+2, Low 16 bits are on the stack, D = high 16 bits
+      JSR   MUL16       ; D = MSWORD ,S & X = LSWORD of ,S * 2,S
       LDU   #FFP_MANT+4 ; Save the 32 bit result in FFP_MANT
 ; Minimal value will be: $4000 0000
 ; Maximum value will be: $FFFE 0001
@@ -799,42 +800,14 @@ FFP_DIV:
 ; Divide mantissas (16 bit result and 16 bit remainder)
 ; We will divide Value 1 / Value 2
 ;
-Do_Slow_Div EQU 1       ; 0 here = Fast using Newton-Raphson method
- IF Do_Slow_Div
-Slow_Div:
-;
-      LDD   1,S         ; Get value 2 Mantissa
-      LEAS  2,S         ; Move the stack
-      STD   ,S          ; Save Value 2 Mantissa (we now have 16 bit value 2 and 16 bit value 1 on the stack)
-;
-; Needed for the good 32 bit rotate division
-      PULS  D,X         ; D = Value 2, X = Value 1
-      LDU   #$0000
-      PSHS  X,U         ; Save a 32 bit Dividend
-      LSR   ,S
-      ROR   1,S
-      ROR   2,S
-      PSHS  D           ; Save a 16 bit Divisor
-;
-; We now have Value 2 mantissa then Value 1 Mantissa on the stack
-      JSR   DIV_U32_U16  ; Divide a 32 bit unsigned number @ 2,S with an unsigned 16 bit number at ,S
-                         ; Result as 16 bit quotient at ,S & remainder as 16 bit represents the fractional part × 2¹⁶ at 2,S
-;
-; Since we do division where the 16 bit MSbit of the dividend and the divisor are set the quotient will always be 1
-; Therefor we always need to shift left 15 bits, faster to shift right 1
-; Shift value 1 and save proper format
-      PULS  D,X
- ELSE
-;
       PULS  A,Y         ; Y = Divisor
-      LDU   1,S         ; D = Dividend
+      LDU   1,S         ; U = Dividend
       LEAS  3,S         ; fix the stack
 ;
 ;   U = dividend mantissa (Q1.15),MSB=1
 ;   Y = divisor  mantissa (Q1.15),MSB=1
 ;
       JSR   DivFast     ; Div fast using multiply 16 bit result in D
- ENDIF
 ;
 ; Now D:X = Full 32-bit fixed-point result
       LDU   #FFP_MANT+4   ; Save the 32 bit result in FFP_MANT
@@ -842,10 +815,10 @@ Slow_Div:
 ;
       JSR   FFP_Round_U ; Normalize mantissa and round 32 bit value at U, EXP will be handled along with overflow checking
       LDB   FFP_EXPonent ; Get Exponent in B
-      LSLB              ; Shift exponent left (exponent is 7 bit signed value)
-      LDA   FFP_SIGN    ; Get the sign in A
-      LSLA              ; Shift Sign bit into the carry
-      RORB              ; Fix exponent and copy carry (sign bit) into bit 7 of B
+      LSLB
+      LDA   FFP_SIGN    ; LDA in the sign bit
+      LSLA
+      RORB
       LDX   FFP_MANT    ; Get the 16 bit mantissa in X
       PSHS  B,X         ; Save Result on the stack
 @Return:
@@ -897,218 +870,153 @@ Slow_Div:
       LDA   #%11000000  ; Flag as negative special
       BRA   <
 
- IF Do_Slow_Div
-; ============================================================
-; DIV_U32_U16 - Unsigned 32-bit / 16-bit divide routine for Motorola 6809
-; Optimized 32-bit ÷ 16-bit → 16-bit quotient + full rounding bits
-;FFP_DIVIDEND EQU FFP_MANT1 ; 32-bit dividend (high 16 = mant1, low 16 = 0)
-;FFP_DIVISOR EQU FFP_MANT2 ; 16-bit divisor
-;FFP_QUOT EQU FFP_MANT ; 32-bit quotient
+; ------------------------------------------------------------
+; DivFast - Fast mantissa division using Newton-Raphson reciprocal
+;           Compatible with your MUL16 (clobbers Y).
 ;
-; Divide a 32 bit unsigned number @ 2,S with an unsigned 16 bit number at ,S
-FFP_DIVIDEND EQU FFP_MANT1 ; 32-bit dividend (high 16 = mant1, low 16 = 0)
-FFP_DIVISOR EQU FFP_MANT2 ; 16-bit divisor
-FFP_QUOT EQU FFP_MANT ; 32-bit quotient
-FFP_Remainder     EQU   FFP_Medium4_03
-;
-; Divide a 32 bit unsigned number @ 2,S with an unsigned 16 bit number at ,S
-DIV_U32_U16:
-	PULS  D		      ; Get return address
-	STD   @Return+1	      ; Self mod return address
-	PULS  D,X,U	            ; D = Value 2 (Divisor), X:U = Value 1 (Dividend)
-	STX   FFP_DIVIDEND	; Value 1 MSWord
-	STU   FFP_DIVIDEND+2	; Value 1 LSWord
-      PSHS  D                 ; Save the divisor on the stack (never changes)
-;
-	LDX   #FFP_DIVIDEND     ;
-      LDY   #Remainder        ; 
-      LDU   #FFP_QUOT 	      ; 
-; 2) Initialize quotient to zero
-;      STD   ,U
-;      STD   2,U
-; 3) Initialize remainder to zero
-	LDD   #$0000	      ; D = remainder = 0
-      STD   ,Y
-      STD   2,Y   
-;
-; 4) Loop over 64 bits          
-      LDA   #32               ; bit-count
-      STA   FFP_Temp1
-;
-DIV_U32_U16_Loop:
-; 4a) Shift dividend left by 1
-      LSL   3,X      	; clear carry & shift left, low byte, to high byte
-      ROL   2,X
-      ROL   1,X
-      ROL   ,X
-;
-; 4b) Shift remainder left by 1, bring in carry
-      ROL   3,Y      	; Shift remainder left by 1, bring in carry
-      ROL   2,Y
-      ROL   1,Y
-      ROL   ,Y
-;
-; 4c) Shift quotient left by 1
-      LSL   3,U      	; clear carry & shift left, low byte, to high byte
-      ROL   2,U
-      ROL   1,U
-      ROL   ,U
-;
-; 4d) Compare remainder vs divisor
-	LDD   ,Y
-      CMPD  #$0000
-      BHI   Do_Subtract_DIV_U32_U16       ; remainder.H > divisor.H
-      BNE   No_Subtract_DIV_U32_U16       ; remainder.H < divisor.H
-	LDD   2,Y
-	CMPD	,S                            ; Compare the remainder with the divisor
-      BLO   No_Subtract_DIV_U32_U16       ; remainder.L < divisor.L
-;
-Do_Subtract_DIV_U32_U16:
-; Subtract divisor from remainder
-	LDD   2,Y
-	SUBD	,S
-	STD   2,Y
-    	LDD   ,Y
-      SBCB  #$00
-      SBCA  #$00
-	STD   ,Y
-; Set quotient LSB to 1
-    	INC   3,U
-;
-No_Subtract_DIV_U32_U16:
-; 4e) Loop
-      DEC   FFP_Temp1
-      LBNE  DIV_U32_U16_Loop
-      LEAS  2,S         ; Fix stack
-      LDD   2,U         ; D = 16 bit quotient
-      LDX   ,Y          ; X = MSWord of Remainder
-      PSHS  D,X         ; Save it on the stack
-@Return:
-      JMP   >$FFFF      ; Return, self modified jump address
-
- ELSE
-
-; Fast FFP Mantissa Division using Newton-Raphson Reciprocal on 6809
 ; In:
-; U = dividend mantissa (Q1.15)
-; Y = divisor mantissa (Q1.15)
+;   U = dividend mantissa (Q1.15, MSB=1)
+;   Y = divisor  mantissa (Q1.15, MSB=1)
+;
 ; Out:
-; D = approx quotient mantissa (Q1.15)
+;   D:X = 32-bit quotient in Q1.31 (full precision)
+;         (Feed this to FFP_Round_U to normalize/round/adjust EXP)
+;
+; Uses temps:
+;   DIV_V (2 bytes) = saved divisor
+;   DIV_U (2 bytes) = saved dividend
+;
+; Clobbers: A,B,X,Y,U,CC
+; ------------------------------------------------------------
+
+DIV_V   RMB 2
+DIV_U   RMB 2
+
 DivFast:
-;-----------------------------------
-; 1) Build index from divisor high bits
-;-----------------------------------
-      TFR   Y,D   ; D = divisor mant
-      LSRA
-      LSRA
-      LSRA
-      LSRA
-      LSRA
-;      ANDA  #$07
-      LDX   #recip_table
-      LDA   A,X   ; table value
-      CLRB
-      TFR   D,X   ; X = table_value << 8 (Q0.16)
-;
-;-----------------------------------
-; 2) Initial reciprocal approximation (r0 from table)
-;-----------------------------------
-; (No additional operations needed here beyond lookup)
-;-----------------------------------
-; 3) t = v * r0 (Q1.15)
-;-----------------------------------
-      PSHS  X     ; op2 = r0
-      PSHS  Y     ; op1 = v
-      JSR   MUL16       ; Unsigned 16 bit multiply, 2,S * ,S then S=S+2, Low 16 bits are on the stack, D = high 16 bits
-; Minimum D can be after MUL is $4000, Max is $FFFE
-      TSTA
-      BMI   >     ; If bit 15 is already set then don't normalize it
-      LSL   1,S
-      ROL   ,S
-      ROLB
-      ROLA
-!     LDX   ,S++  ; Check value for rounding and fix the stack
-      BPL   >     ; If MSbit is clear then don't increment D skip ahead
-      INCB
-      BNE   >
-      INCA
-      BNE   >
-      LDD   #$FFFF ; Keep $FFFF as max value
-; D = t
-;
-;-----------------------------------
-; 4) r1 = r0 * (2 - t)
-;-----------------------------------
-!     PSHS  D
-      LDD   #$0000
-      SUBD  ,S++  ; D = 2 - t (unsigned)
-      PSHS  X     ; op2 = r0
-      PSHS  D     ; op1 = 2 - t
-      JSR   MUL16       ; Unsigned 16 bit multiply, 2,S * ,S then S=S+2, Low 16 bits are on the stack, D = high 16 bits
-; Minimum D can be after MUL is $4000, Max is $FFFE
-      TSTA
-      BMI   >     ; If bit 15 is already set then don't normalize it
-      LSL   1,S
-      ROL   ,S
-      ROLB
-      ROLA
-!     LDX   ,S++  ; Check value for rounding and fix the stack
-      BPL   >     ; If MSbit is clear then don't increment D skip ahead
-      INCB
-      BNE   >
-      INCA
-      BNE   >
-      LDD   #$FFFF ; Keep $FFFF as max value
-; 2nd iteration not needed for 3 Byte Fast Float 
-;-----------------------------------
-; Second iteration for better accuracy
-;-----------------------------------
-;      TFR   Y,D   ; D = v
-;      PSHS  X     ; op2 = r1
-;      PSHS  Y     ; op1 = v
-;      JSR   MUL16
-;      LEAS  2,S   ; drop low
-;; D = t
-;      PSHS  D
-;      LDD   #0
-;      SUBD  ,S++  ; D = 2 - t
-;      PSHS  X     ; op2 = r1
-;      PSHS  D     ; op1 = 2 - t
-;      JSR   MUL16
-;      LEAS  2,S   ; drop low
-;      LSLB
-;      ROLA        ; <<1
-;; D = r2 (refined reciprocal)
-;      TFR   D,X   ; X = r2 (save before overwrite)
-;;
-;-----------------------------------
-; 5) q = MulHi(U, r2) (the actual division)
-;-----------------------------------
-!     PSHS  U     ; op1 = U
-      PSHS  X     ; op2 = r2
-      JSR   MUL16 ; Unsigned 16 bit multiply, 2,S * ,S then S=S+2, Low 16 bits are on the stack, D = high 16 bits
-; Minimum D can be after MUL is $4000, Max is $FFFE
-      TSTA
-      BMI   >     ; If bit 15 is already set then don't normalize it
-      LSL   1,S
-      ROL   ,S
-      ROLB
-      ROLA
-; If we shift the final result left 1 bit, we need to decrement the FFP exponent
-      DEC   FFP_EXPonent      ; exp -=1
-!     LDX   ,S++  ; Check value for rounding and fix the stack
-      BPL   >     ; If MSbit is clear then don't increment D skip ahead
-      INCB
-      BNE   >
-      INCA
-      BNE   >
-      LDD   #$FFFF ; Keep $FFFF as max value
-; D = q ≈ U / Y in Q1.15
-!     RTS
-;
+        STY   DIV_V          ; save divisor (Y gets clobbered by MUL16)
+        STU   DIV_U          ; save dividend
+
+; ------------------------------------------------------------
+; 1) r0 from table using top bits of divisor
+; ------------------------------------------------------------
+        LDA   DIV_V          ; high byte of divisor
+        LSRA
+        LSRA
+        LSRA
+        LSRA                 ; A = (div_hi >> 5)
+        ANDA  #$07           ; MUST be 0..7 (8-entry table)
+        LDX   #recip_table
+        LDA   A,X            ; seed byte
+        CLRB
+        TFR   D,U            ; U = r0 = seed<<8 (Q0.16)
+
+; ------------------------------------------------------------
+; Iteration 1:
+;   t1 = (v*r0)>>16   (Q1.15) rounded
+;   r1 = (r0*(2-t1))>>15 (Q0.16) rounded
+; ------------------------------------------------------------
+
+; t1 = high16(divisor * r0)
+        LDD   DIV_V
+        PSHS  U              ; op2 = r0
+        PSHS  D              ; op1 = v
+        JSR   MUL16          ; D=high, low at ,S (and in X)
+
+        TST   ,S             ; round using bit15 of low
+        BPL   @NoRndT1
+        ADDD  #$0001
+        BCC   @NoRndT1
+        LDD   #$FFFF
+@NoRndT1:
+        LEAS  2,S            ; drop low word
+        ; D = t1
+
+; a1 = (2 - t1) in mod-16 form => (0 - t1)
+        PSHS  D
+        LDD   #$0000
+        SUBD  ,S++
+        ; D = a1
+
+; r1 = (r0 * a1) >> 15  => take (>>16 result) then shift full 32-bit left once
+        PSHS  U              ; op2 = r0
+        PSHS  D              ; op1 = a1
+        JSR   MUL16          ; D=high, low at ,S
+
+        ; <<1 to convert >>16 into >>15
+        LSL   1,S
+        ROL   ,S
+        ROLB
+        ROLA
+
+        TST   ,S             ; rounding after shift
+        BPL   @NoRndR1
+        ADDD  #$0001
+        BCC   @NoRndR1
+        LDD   #$FFFF
+@NoRndR1:
+        LEAS  2,S
+        TFR   D,U            ; U = r1 (Q0.16)
+
+; ------------------------------------------------------------
+; Iteration 2:
+;   t2 = (v*r1)>>16   (Q1.15) rounded
+;   r2 = (r1*(2-t2))>>15 (Q0.16) rounded
+; ------------------------------------------------------------
+
+; t2 = high16(divisor * r1)
+        LDD   DIV_V
+        PSHS  U              ; op2 = r1
+        PSHS  D              ; op1 = v
+        JSR   MUL16
+
+        TST   ,S
+        BPL   @NoRndT2
+        ADDD  #$0001
+        BCC   @NoRndT2
+        LDD   #$FFFF
+@NoRndT2:
+        LEAS  2,S
+        ; D = t2
+
+; a2 = (0 - t2)
+        PSHS  D
+        LDD   #$0000
+        SUBD  ,S++
+        ; D = a2
+
+; r2 = (r1 * a2) >> 15
+        PSHS  U              ; op2 = r1
+        PSHS  D              ; op1 = a2
+        JSR   MUL16
+
+        LSL   1,S
+        ROL   ,S
+        ROLB
+        ROLA
+
+        TST   ,S
+        BPL   @NoRndR2
+        ADDD  #$0001
+        BCC   @NoRndR2
+        LDD   #$FFFF
+@NoRndR2:
+        LEAS  2,S
+        TFR   D,U            ; U = r2 (Q0.16)
+
+; ------------------------------------------------------------
+; Final 32-bit quotient:
+;   q = dividend(Q1.15) * r2(Q0.16) => Q1.31 in D:X
+; ------------------------------------------------------------
+        LDD   DIV_U          ; dividend
+        PSHS  U              ; op2 = r2
+        PSHS  D              ; op1 = dividend
+        JSR   MUL16          ; D=high16, X=low16, low word also at ,S
+
+        LEAS  2,S            ; drop low word copy left on stack
+        RTS
+
 recip_table:
-      fcb $FF,$E3,$CC,$BA,$AA,$9D,$92,$88
- ENDIF
+        FCB   $FF,$E3,$CC,$BA,$AA,$9D,$92,$88
 
 ; Convert 3 Byte FFP at ,S to 32-bit signed integer at ,S
 FFP_TO_S32:
@@ -1879,6 +1787,7 @@ Print_FFP:
 ; Point to FFP value of 1.0   
 !     PUSH_FFP    FFP_ONE     ; FFP Value of 1.0 is now @ ,S
 ;
+HERE:
       JSR   FFP_CMP_Stack     ; Compare FFP Value1 @ 3,S with Value 2 @ ,S sets the 6809 flags Z, N, and C
       LEAS  3,S               ; Move the stack forward, so it can be filled with the FFP value of Ten
       BHS   >                 ; If x >= 1, proceed to digit extraction
@@ -2824,3 +2733,5 @@ DigitFFP_Table:
 FFP_SIXTEEN FCB   $04,$80,$00 ; 16
 
       INCLUDE ./Math_Fast_Floating_Point_Extra.asm
+
+      

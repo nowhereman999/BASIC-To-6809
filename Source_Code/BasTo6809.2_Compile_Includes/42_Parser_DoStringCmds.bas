@@ -38,7 +38,7 @@ Select Case cmd16
         A$ = "PSHS": B$ = "B": C$ = "Save the length of the string": GoSub AO: GoSub AO
         ' Replace consumed token with one string-result marker
         ProcessRPNStackPointer = ProcessRPNStackPointer + 1
-        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HF9)
+        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(TK_STR_ONSTACK)
     Case SDC_DIRLIST_CMD
         ' A$ = SDC_DIRLIST$(x) command
         If ArgCnt <> 1 Then
@@ -66,7 +66,7 @@ Select Case cmd16
         A$ = "PSHS": B$ = "B": C$ = "Save the string length on the stack": GoSub AO
         ' Replace consumed token with one string-result marker
         ProcessRPNStackPointer = ProcessRPNStackPointer + 1
-        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HF9)
+        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(TK_STR_ONSTACK)
     Case SDC_DIRLIST_CMD
         ' A$ = SDC_DIRLIST$(x) command
         If ArgCnt <> 1 Then
@@ -94,7 +94,7 @@ Select Case cmd16
         A$ = "PSHS": B$ = "B": C$ = "Save the string length on the stack": GoSub AO
         ' Replace consumed token with one string-result marker
         ProcessRPNStackPointer = ProcessRPNStackPointer + 1
-        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HF9)
+        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(TK_STR_ONSTACK)
 
 
 
@@ -126,7 +126,7 @@ Select Case cmd16
         A$ = "PSHS": B$ = "B": C$ = "Save the string length on the stack": GoSub AO
         ' Replace consumed token with one string-result marker
         ProcessRPNStackPointer = ProcessRPNStackPointer + 1
-        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HF9)
+        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(TK_STR_ONSTACK)
     Case INKEY_CMD
         If ArgCnt <> 1 Then
             Print "Error: INKEY$ expects 0 argument on";: GoTo FoundError
@@ -151,7 +151,7 @@ Select Case cmd16
 
         ' Replace consumed tokens with one string-result marker
         ProcessRPNStackPointer = ProcessRPNStackPointer + 1
-        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HF9)
+        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(TK_STR_ONSTACK)
     Case STR_CMD
         If ArgCnt <> 1 Then
             Print "Error: HEX$() expects 1 argument on";: GoTo FoundError
@@ -189,7 +189,12 @@ Select Case cmd16
             Case 11
                 NVT = NT_Single ' Set the sign value as FFP
                 GoSub ConvertLastType2NVT
-                A$ = "JSR": B$ = "FFP_TO_DECSTR": C$ = "Convert 3 Byte FFP number @,S to a numeric string on the stack": GoSub AO
+                Select Case FloatType
+                    Case 0:
+                        A$ = "JSR": B$ = "FFP_TO_DECSTR": C$ = "Convert 3 Byte FFP number @,S to a numeric string on the stack": GoSub AO
+                    Case 1:
+                        A$ = "JSR": B$ = "FP5_TO_DECSTR": C$ = "Convert 5 Byte FP5number @,S to a numeric string on the stack": GoSub AO
+                End Select
             Case 12
                 NVT = NT_Double ' Set the sign value as Double
                 GoSub ConvertLastType2NVT
@@ -197,7 +202,7 @@ Select Case cmd16
         End Select
         ' Replace consumed tokens with one string-result marker
         ProcessRPNStackPointer = ProcessRPNStackPointer + 1
-        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HF9)
+        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(TK_STR_ONSTACK)
     Case HEX_CMD
         If ArgCnt <> 1 Then
             Print "Error: HEX$() expects 1 argument on";: GoTo FoundError
@@ -216,8 +221,14 @@ Select Case cmd16
             Case 9, 10
                 A$ = "LDB": B$ = "#$08": C$ = "Eight bytes to convert to Hex": GoSub AO
             Case 11
-                A$ = "JSR": B$ = "FFP_TO_U64": C$ = "Convert 3 Byte FFP @ ,S to Unsigned 64-bit Integer @ ,S": GoSub AO
-                A$ = "LDB": B$ = "#$08": C$ = "Eight bytes to convert to Hex": GoSub AO
+                Select Case FloatType
+                    Case 0:
+                        A$ = "JSR": B$ = "FFP_TO_U64": C$ = "Convert 3 Byte FFP @ ,S to Unsigned 64-bit Integer @ ,S": GoSub AO
+                        A$ = "LDB": B$ = "#$08": C$ = "Eight bytes to convert to Hex": GoSub AO
+                    Case 1:
+                        A$ = "JSR": B$ = "FP5_TO_U64": C$ = "Convert 3 Byte FP5 @ ,S to Unsigned 64-bit Integer @ ,S": GoSub AO
+                        A$ = "LDB": B$ = "#$08": C$ = "Eight bytes to convert to Hex": GoSub AO
+                End Select
             Case 12
                 A$ = "JSR": B$ = "DB_TO_S64": C$ = "Convert 10 byte Double @ ,S to Signed 64-bit Integer @ ,S": GoSub AO
                 A$ = "LDB": B$ = "#$08": C$ = "Eight bytes to convert to Hex": GoSub AO
@@ -226,7 +237,7 @@ Select Case cmd16
         A$ = "JSR": B$ = "HexString": C$ = "Convert number @,S (B bytes long) to a Hex string on the stack": GoSub AO
         ' Replace consumed tokens with one string-result marker
         ProcessRPNStackPointer = ProcessRPNStackPointer + 1
-        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HF9)
+        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(TK_STR_ONSTACK)
     Case CHR_CMD
         If ArgCnt <> 1 Then
             Print "Error: CHR$() expects 1 argument on";: GoTo FoundError
@@ -244,7 +255,7 @@ Select Case cmd16
         A$ = "STA": B$ = ",-S": C$ = "Save a 1 on the stack as the length of this CHR$ string": GoSub AO
         ' Replace consumed tokens with one string-result marker
         ProcessRPNStackPointer = ProcessRPNStackPointer + 1
-        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HF9)
+        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(TK_STR_ONSTACK)
     Case STRING_CMD
         If ArgCnt <> 2 Then
             Print "Error: STRING$() expects 2 arguments on";: GoTo FoundError
@@ -255,7 +266,7 @@ Select Case cmd16
 
         ' Push source string first, then count so count ends up at ,S
         ' If it's a string the first character will be $F9
-        If Asc(Left$(StrTok$, 1)) = &HF9 Then
+        If Asc(Left$(StrTok$, 1)) = TK_STR_ONSTACK Then
             ' It's a string
             Temp$ = StrTok$: GoSub PushOneStringTokenOnStack
         Else
@@ -269,7 +280,7 @@ Select Case cmd16
         LastType = PushedType
         NVT = NT_UByte ' Make sure it's 0 to 255 range
         GoSub ConvertLastType2NVT
-        If Asc(Left$(StrTok$, 1)) = &HF9 Then
+        If Asc(Left$(StrTok$, 1)) = TK_STR_ONSTACK Then
             ' It's a string
             ' Call runtime/stub: consumes (string, len) and pushes string result
             A$ = "JSR": B$ = "StrString": C$ = "STRING$(count,string) -> string": GoSub AO
@@ -280,7 +291,7 @@ Select Case cmd16
         End If
         ' Replace consumed tokens with one string-result marker
         ProcessRPNStackPointer = ProcessRPNStackPointer + 1
-        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HF9)
+        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(TK_STR_ONSTACK)
     Case LEFT_CMD
         ' LEFT$ command
         If ArgCnt <> 2 Then
@@ -302,7 +313,7 @@ Select Case cmd16
             A$ = "JSR": B$ = "StrCommandLeft": C$ = "LEFT$ (string,len) -> string": GoSub AO
         ' Replace consumed tokens with one string-result marker
         ProcessRPNStackPointer = ProcessRPNStackPointer + 1
-        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HF9)
+        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(TK_STR_ONSTACK)
     Case RIGHT_CMD
         ' RIGHT$ command
         If ArgCnt <> 2 Then
@@ -324,38 +335,42 @@ Select Case cmd16
             A$ = "JSR": B$ = "StrCommandRight": C$ = "RIGHT$ (string,len) -> string": GoSub AO
         ' Replace consumed tokens with one string-result marker
         ProcessRPNStackPointer = ProcessRPNStackPointer + 1
-        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HF9)
+        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(TK_STR_ONSTACK)
     Case MID_CMD
-        ' -------- MID$ (keep your existing) --------
         If ArgCnt <> 2 And ArgCnt <> 3 Then
             Print "Error: MID$() expects 2 or 3 arguments on";: GoTo FoundError
         End If
-        ' Pop args (RIGHTMOST first): length,mid then source string
+        ' Pop args from RPN stack (rightmost first)
         If ArgCnt = 3 Then
-            LenTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+            LenTok$ = ProcessRPNStack$(ProcessRPNStackPointer)
+            ProcessRPNStackPointer = ProcessRPNStackPointer - 1
         End If
-        MidTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
-        StrTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
-        ' Push source string first, then length so length ends up at ,S
-        Temp$ = StrTok$: GoSub PushOneStringTokenOnStack
-        Temp$ = MidTok$: GoSub PushOneValueTokenOnStack
+        MidTok$ = ProcessRPNStack$(ProcessRPNStackPointer)
+        ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        StrTok$ = ProcessRPNStack$(ProcessRPNStackPointer)
+        ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        ' Push source string first
+        Temp$ = StrTok$
+        GoSub PushOneStringTokenOnStack
+        ' Push MID position, then immediately convert ONLY that value to UByte
+        Temp$ = MidTok$
+        GoSub PushOneValueTokenOnStack
         LastType = PushedType
-        NVT = NT_UByte ' Make sure it's 0 to 255 range
+        NVT = NT_UByte
         GoSub ConvertLastType2NVT
         If ArgCnt = 3 Then
-            Temp$ = LenTok$: GoSub PushOneValueTokenOnStack
+            ' Push LEN, then immediately convert ONLY that value to UByte
+            Temp$ = LenTok$
+            GoSub PushOneValueTokenOnStack
             LastType = PushedType
-            NVT = NT_UByte ' Make sure it's 0 to 255 range
+            NVT = NT_UByte
             GoSub ConvertLastType2NVT
-            ' Call runtime/stub: consumes (string, mid,len) and pushes string result
             A$ = "JSR": B$ = "StrCommandMid": C$ = "MID$ (string,mid,len) -> string": GoSub AO
         Else
-            ' Call runtime/stub: consumes (string, mid) and pushes string result
             A$ = "JSR": B$ = "StrCommandMid2Arg": C$ = "MID$ (string,mid) -> string": GoSub AO
         End If
-        ' Replace consumed tokens with one string-result marker
         ProcessRPNStackPointer = ProcessRPNStackPointer + 1
-        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HF9)
+        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(TK_STR_ONSTACK)
     Case TRIM_CMD, LTRIM_CMD, RTRIM_CMD
         ' TRIM$, LTRIM$ or RTRIM$ command
         If ArgCnt <> 1 Then
@@ -378,6 +393,6 @@ Select Case cmd16
         End Select
         ' Replace consumed tokens with one string-result marker
         ProcessRPNStackPointer = ProcessRPNStackPointer + 1
-        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HF9)
+        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(TK_STR_ONSTACK)
 End Select
 Return
