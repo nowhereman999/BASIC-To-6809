@@ -521,10 +521,12 @@ StrConcat2:
       ADDB  _StrVar_PF00      ; B = length of new concat string
       STB   ,U+
       LDB   ,Y+         ; B = length of string 1
-!     LDA   ,Y+
+      BEQ   @SkipStr1   ; if length is 0, do not copy anything
+!     LDA   ,Y+         ; start copying string 1
       STA   ,U+
       DECB
-      BNE   <           ; Copy string 1 to first on the stack
+      BNE   <           ; copy loop
+@SkipStr1:
       LDX   #_StrVar_PF00 ; Get string 2
       LDB   ,X+         ; B = length of string 1
 !     LDA   ,X+

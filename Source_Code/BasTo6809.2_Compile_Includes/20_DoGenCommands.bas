@@ -1367,7 +1367,7 @@ DoDATA:
 ' Add the data on this line to the DataArray, keeping track of the location/size with DataArrayCount
 ' DATA lines are special lines that may conatin spaces
 v = 0
-Do Until v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A) Or v = &H27
+Do Until (v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A)) Or v = &H27
     v = Array(x): x = x + 1
     If v = &H2C Then
         ' Found a comma, check for another comma in a row
@@ -1405,19 +1405,36 @@ Do Until v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A) Or v = &H27
         End If
         GoTo DoDATA
     End If
-    If (v >= Asc("0") And v <= Asc("9")) Or v = Asc("-") Or v = Asc(".") Or v = Asc("+") Then
-        'We have a number to copy
-        Z$ = "; found some numeric data": GoSub AO
-        Temp$ = ""
-        Do Until (v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A)) Or v = &H2C Or v = &H27 ' copy until we reach an EOL or comma or '
-            Temp$ = Temp$ + Chr$(v)
-            DataArray(DataArrayCount) = v: DataArrayCount = DataArrayCount + 1
-            v = Array(x): x = x + 1
-        Loop
-        If v = &H2C Then x = x - 1 ' if a comma then point at it again
+If (v >= Asc("0") And v <= Asc("9")) Or v = Asc("-") Or v = Asc(".") Or v = Asc("+") Then
+    'We have a number to copy
+    Z$ = "; found some numeric data": GoSub AO
+    Temp$ = ""
+    Do Until (v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A)) Or v = &H2C Or v = &H27 ' copy until we reach an EOL or comma or '
+        Temp$ = Temp$ + Chr$(v)
+        DataArray(DataArrayCount) = v: DataArrayCount = DataArrayCount + 1
+        v = Array(x): x = x + 1
+    Loop
+
+    If v = &H2C Then
+        ' Number ended with a comma: save comma and continue parsing this DATA line
+        x = x - 1 ' point at comma again
         DataArray(DataArrayCount) = Asc(","): DataArrayCount = DataArrayCount + 1
         GoTo DoDATA
-    Else
+    End If
+
+    If v = &H27 Then
+        ' Number ended because comment started: terminate numeric item and skip comment
+        DataArray(DataArrayCount) = Asc(","): DataArrayCount = DataArrayCount + 1
+        GoTo DoDATAFoundComment
+    End If
+
+    If v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A) Then
+        ' Number ended at end of DATA line: terminate numeric item and finish this line
+        DataArray(DataArrayCount) = Asc(","): DataArrayCount = DataArrayCount + 1
+        v = Array(x): x = x + 1 ' move past the &0D or &H3A
+        Return
+    End If
+Else
         'Otherwise copy a string until we reach a comma or EOL/Colon
         StartPos = x - 1 ' Got the start pos of the string
         Do Until (v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A)) Or v = &H2C Or v = &H27 ' copy until we reach an EOL or comma or '
@@ -1432,6 +1449,7 @@ Do Until v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A) Or v = &H27
     End If
 Loop
 If v = &H27 Then
+DoDATAFoundComment:
     ' We found an apostrophe, so ignore the rest of the line
     Do Until v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A)
         v = Array(x): x = x + 1
@@ -1950,7 +1968,7 @@ If count = 0 Then
             ' Value in brackets is on the stack
             ' NumBits = number of bits (8 or 16)
             ' NumDims = Number of dimensions
-            If NumDims = 1 And NVTArrayType < 5 Then
+            If NumDims = 1 And InsideArrayType = NT_UByte Then
                 ' This is a quick and easy location to calc and store
                 A$ = "PULS": B$ = "B": C$ = "Array pointer, Fix the stack": GoSub AO
                 A$ = "LDX": B$ = "#_ArrayNum_" + NV$ + "+1": C$ = "The array starts here": GoSub AO
@@ -2317,7 +2335,7 @@ Do Until v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A)
             ' Value in brackets is on the stack
             ' NumBits = number of bits (8 or 16)
             ' NumDims = Number of dimensions
-            If NumDims = 1 And NVTArrayType < 5 Then
+            If NumDims = 1 And InsideArrayType = NT_UByte Then
                 ' This is a quick and easy location to calc and store
                 A$ = "PULS": B$ = "B": C$ = "Array pointer, Fix the stack": GoSub AO
                 A$ = "LDX": B$ = "#_ArrayNum_" + NV$ + "+1": C$ = "The array starts here": GoSub AO

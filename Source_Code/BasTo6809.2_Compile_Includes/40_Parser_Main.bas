@@ -696,33 +696,12 @@ While RPNEntry <= RPNLast
             ' If this special-char token is a QUOTED STRING literal:  F5 22 ... F5 22
             If Len(i$) >= 4 Then
                 If Asc(Mid$(i$, 2, 1)) = TK_Quote Then
-                    ' Strip the leading F5 22 and trailing F5 22
-                    Temp$ = Mid$(i$, 3, Len(i$) - 4) ' raw string contents (can be "")
-
-                    ' Code to push this literal string onto the 6809 string stack
-                    ' Stack will have the first byte = string length then the string
-                    A$ = "BSR": B$ = "@CopyToStack": C$ = "Skip ahead": GoSub AO
-                    For ii = Len(Temp$) To 1 Step -1
-                        A$ = "FCB": B$ = "$" + Right$("0" + Hex$(Asc(Mid$(Temp$, ii, 1))), 2): C$ = Mid$(Temp$, ii, 1): GoSub AO
-                    Next ii
-                    A$ = "FCB": B$ = "$" + Right$("0" + Hex$(Len(Temp$)), 2): C$ = "Length of the string": GoSub AO
-                    Z$ = "@CopyToStack": GoSub AO
-                    A$ = "LDB": B$ = "#$" + Right$("0" + Hex$(Len(Temp$) + 1), 2): C$ = "Length of the string": GoSub AO
-                    A$ = "PULS": B$ = "U": GoSub AO
-                    Z$ = "!": A$ = "LDA": B$ = ",U+": GoSub AO
-                    A$ = "STA": B$ = ",-S": GoSub AO
-                    A$ = "DECB": GoSub AO
-                    A$ = "BNE": B$ = "<": GoSub AO
-                    Print #1, ""
-
-                    ' Push "string already on 6809 stack" marker (so + concat and final result work)
+                    ' Keep literal as token so VAL() can fold it later
                     ProcessRPNStackPointer = ProcessRPNStackPointer + 1
-                    ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(TK_STR_ONSTACK)
-
+                    ProcessRPNStack$(ProcessRPNStackPointer) = i$
                     GoTo SpecialCharDone
                 End If
             End If
-
             ' Normal special char: keep old behavior
             ProcessRPNStackPointer = ProcessRPNStackPointer + 1
             ProcessRPNStack$(ProcessRPNStackPointer) = i$
@@ -2417,7 +2396,20 @@ If t% = TK_SpecialChar Then
     If Len(Temp$) >= 2 Then
         If Asc(Mid$(Temp$, 2, 1)) = TK_Quote Then
             Lit$ = Mid$(Temp$, 3, Len(Temp$) - 4) ' inside quotes
-            A$ = "JSR": B$ = "PushStringLiteral": C$ = "Stub: " + Lit$ + "": GoSub AO
+
+            A$ = "BSR": B$ = "@CopyToStack": C$ = "Skip ahead": GoSub AO
+            For ii = Len(Lit$) To 1 Step -1
+                A$ = "FCB": B$ = "$" + Right$("0" + Hex$(Asc(Mid$(Lit$, ii, 1))), 2): C$ = Mid$(Lit$, ii, 1): GoSub AO
+            Next ii
+            A$ = "FCB": B$ = "$" + Right$("0" + Hex$(Len(Lit$)), 2): C$ = "Length of the string": GoSub AO
+            Z$ = "@CopyToStack": GoSub AO
+            A$ = "LDB": B$ = "#$" + Right$("0" + Hex$(Len(Lit$) + 1), 2): C$ = "Length of the string": GoSub AO
+            A$ = "PULS": B$ = "U": GoSub AO
+            Z$ = "!": A$ = "LDA": B$ = ",U+": GoSub AO
+            A$ = "STA": B$ = ",-S": GoSub AO
+            A$ = "DECB": GoSub AO
+            A$ = "BNE": B$ = "<": GoSub AO
+            Print #1, ""
             Return
         End If
     End If

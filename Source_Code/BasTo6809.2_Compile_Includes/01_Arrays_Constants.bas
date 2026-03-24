@@ -269,7 +269,7 @@ Dim Addr As _Offset
 Dim DOStackPointer As Integer
 Dim NVTArrayType As Integer
 Dim PrintCC3 As Integer
-Dim TempVal As Integer
+Dim TempVal As Long
 Dim ENDIFCheck As Integer
 Dim T0 As Integer
 Dim FileNumber$
@@ -323,9 +323,23 @@ Dim StringVar$
 Dim HasAndOverall%
 Dim I7%
 Dim TType As Integer
-Dim V1 As Integer
+Dim V1 As Long
 Dim VOld As Integer
 
+' --- VAL() compile-time folding helpers ---
+Dim VALFolded As Integer
+Dim VALFoldToken$
+Dim LiteralText$
+Dim NewToken$
+Dim VALAsDouble As Double
+Dim VALAsInt64 As _Integer64
+Dim TempVAL$
+Dim HasDot As Integer
+Dim HasExp As Integer
+Dim HasDExp As Integer
+Dim VALPreferredType As Integer
+Dim OldNVTForVAL As Integer
+Dim OldLastTypeForVAL As Integer
 
 ' Used only once
 Dim FORCount As Integer

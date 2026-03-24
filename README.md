@@ -10,6 +10,12 @@ https://github.com/nowhereman999/BASIC-To-6809/blob/main/Manual.pdf
 For more info check out the blog post here:
 https://wordpress.com/post/nowhereman999.wordpress.com/5054
 
+V 5.21
+- Fixed a bug in the DoREAD
+- Fixed a bug with GMODE 164 causing a hang of the compiler.  Assignment of variable needed to be LONG nor integer
+- Fixed some bugs in array 8bit/16 bit assignments
+- Sped up VAL() command to now use Integer conversion instead of always doing String to Single then Single to INT
+
 V 5.2
 - Added New -m option that allows the user to select 3 byte or 5 byte floating point math with Type Single
   -m0 is 3 byte fast floating point option

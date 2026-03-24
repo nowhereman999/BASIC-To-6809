@@ -1553,6 +1553,55 @@ Select Case cmd16
         ProcessRPNStackPointer = ProcessRPNStackPointer + 1
         ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(NT_UByte)
         Return
+
+Case VAL_CMD
+        ' ------------------------------------------------------------
+        ' VAL(x) : one argument, expects string
+        '
+        ' Phase 2:
+        '   1) Fold direct string literals at compile time
+        '   2) For non-literals, choose the best runtime numeric type
+        '      from current compiler context
+        ' ------------------------------------------------------------
+        If ArgCnt <> 1 Then
+            Print "Error: VAL() expects one argument";: GoTo FoundError
+        End If
+
+        ' Pop argument token from ProcessRPN stack
+        Arg1$ = ProcessRPNStack$(ProcessRPNStackPointer)
+        ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+
+        ' VAL requires a string argument
+        Temp$ = Arg1$: GoSub IsStringToken
+        If IsStrFlag% = 0 Then
+            Print "Error: VAL() expects a string";: GoTo FoundError
+        End If
+
+        ' Choose preferred type FIRST so compile-time folding can match
+        ' the same type the runtime conversion would have used.
+        GoSub ChooseVALPreferredType
+
+        ' ------------------------------------------------------------
+        ' FAST PATH: compile-time fold direct string literal
+        ' ------------------------------------------------------------
+        Temp$ = Arg1$: GoSub TryFoldVALStringLiteral
+        If VALFolded <> 0 Then
+            ProcessRPNStackPointer = ProcessRPNStackPointer + 1
+            ProcessRPNStack$(ProcessRPNStackPointer) = VALFoldToken$
+            Return
+        End If
+
+        ' ------------------------------------------------------------
+        ' RUNTIME PATH
+        ' ------------------------------------------------------------
+
+        Temp$ = Arg1$: GoSub PushOneStringTokenOnStack
+        GoSub EmitVALRuntimeConversion
+
+        ProcessRPNStackPointer = ProcessRPNStackPointer + 1
+        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(VALPreferredType)
+        Return
+
     Case VARPTR_CMD
         If ArgCnt <> 1 Then Print "Error: VARPTR() expects 1 argument";: GoTo FoundError
         Arg1$ = ProcessRPNStack$(ProcessRPNStackPointer)
@@ -1591,44 +1640,9 @@ Select Case cmd16
         ProcessRPNStackPointer = ProcessRPNStackPointer + 1
         ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(NT_UInt16)
         Return
-    Case VAL_CMD
-        ' VAL(x) : one arg
-        If ArgCnt <> 1 Then
-            Print "Error: VAL() expects one argument";: GoTo FoundError
-        End If
-        ' ------------------------------------------------------------
-        ' POP: pull the argument token off the ProcessRPN stack
-        ' (it should be on the top because RPN puts args before the func)
-        ' ------------------------------------------------------------
-        Arg1$ = ProcessRPNStack$(ProcessRPNStackPointer)
-        ProcessRPNStackPointer = ProcessRPNStackPointer - 1
-        ' Type check: VAL requires a string
-        Temp$ = Arg1$: GoSub IsStringToken
-        If IsStrFlag% = 0 Then
-            Print "Error: VAL() expects a string";: GoTo FoundError
-        End If
-        ' ------------------------------------------------------------
-        ' PUSH: put the argument value onto the 6809 stack
-        ' This will do the right thing for:
-        '   - string var (F3...)
-        '   - string literal (F5 22 ... F5 22)
-        '   - string result marker (TK_STR_ONSTACK) => already on 6809 stack
-        ' ------------------------------------------------------------
-        Temp$ = Arg1$: GoSub PushOneStringTokenOnStack
-        ' Call runtime: consumes string @,S and leaves length (NT_UByte) @,S
-        Select Case FloatType
-            Case 0:
-                A$ = "JSR": B$ = "NumericString_To_FFP": C$ = "Convert string @,S to FFP @,S": GoSub AO
-            Case 1:
-                A$ = "JSR": B$ = "NumericString_To_FP5": C$ = "Convert string @,S to FP5 @,S": GoSub AO
-        End Select
-        ' ------------------------------------------------------------
-        ' PUSH RESULT: replace stack top with numeric-on-6809-stack marker
-        ' Net effect: 1 arg popped, 1 result pushed.
-        ' ------------------------------------------------------------
-        ProcessRPNStackPointer = ProcessRPNStackPointer + 1
-        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(NT_Single)
-        Return
+
+
+        
     Case SGN_CMD
         If ArgCnt <> 1 Then
             Print "Error: SGN() expects one argument";: GoTo FoundError

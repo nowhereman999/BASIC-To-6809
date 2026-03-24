@@ -2665,6 +2665,10 @@ Next ii
 For ii = 0 To NumericCommandsFoundCount - 1
     Temp$ = UCase$(NumericCommandsFound$(ii))
 
+    If Temp$ = "VAL" Then
+        Temp$ = "NumericString_To_Integer": GoSub AddIncludeTemp ' The LPEEK & LPOKE routines
+    End If
+
     If Temp$ = "LPEEK" Then
         Temp$ = "LPEEK_LPOKE": GoSub AddIncludeTemp ' The LPEEK & LPOKE routines
     End If

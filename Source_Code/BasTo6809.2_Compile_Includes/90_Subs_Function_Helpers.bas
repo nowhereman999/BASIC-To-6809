@@ -411,6 +411,29 @@ Sub DoubleToFP5 (x As Double)
     Byte5 = mant And &HFF
 End Sub
 
+Function IsAllSignedDigits% (S$)
+    Dim i As Integer
+    Dim Ch$
+
+    IsAllSignedDigits% = 0
+    If Len(S$) = 0 Then Exit Function
+
+    i = 1
+    Ch$ = Mid$(S$, 1, 1)
+
+    If Ch$ = "+" Or Ch$ = "-" Then
+        If Len(S$) = 1 Then Exit Function
+        i = 2
+    End If
+
+    For i = i To Len(S$)
+        Ch$ = Mid$(S$, i, 1)
+        If Ch$ < "0" Or Ch$ > "9" Then Exit Function
+    Next i
+
+    IsAllSignedDigits% = -1
+End Function
+
 Function IsBoolOnStack% (Tok$)
     IsBoolOnStack% = 0
     If Len(Tok$) = 0 Then Exit Function

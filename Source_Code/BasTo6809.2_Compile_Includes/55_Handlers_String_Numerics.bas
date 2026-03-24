@@ -1,3 +1,309 @@
+' ------------------------------------------------------------
+' TryFoldVALStringLiteral
+'
+' Input:
+'   Temp$ = token
+'
+' Output:
+'   VALFolded = 0 if not folded
+'             = 1 if folded
+'   VALFoldToken$ = replacement numeric token when folded
+'
+' Folds only direct string literals:
+'   VAL("123")
+'   VAL("-5")
+'   VAL("3.25")
+'   VAL("1E6")
+'
+' Safe Big7 version:
+'   - exact integer fold for plain signed integer text
+'   - floating fold otherwise
+' ------------------------------------------------------------
+TryFoldVALStringLiteral:
+VALFolded = 0
+VALFoldToken$ = ""
+
+' Must be tokenized quoted string literal:
+'   F5 22 ... F5 22
+If Len(Temp$) < 4 Then Return
+If Asc(Left$(Temp$, 1)) <> TK_SpecialChar Then Return
+If Asc(Mid$(Temp$, 2, 1)) <> TK_Quote Then Return
+If Asc(Mid$(Temp$, Len(Temp$) - 1, 1)) <> TK_SpecialChar Then Return
+If Asc(Right$(Temp$, 1)) <> TK_Quote Then Return
+
+' Convert token -> plain text in LiteralText$
+GoSub DecodeStringLiteralTokenToPlainText
+
+' BASIC VAL("") returns 0
+If Len(LiteralText$) = 0 Then
+    GoSub BuildZeroLiteralToken
+    VALFoldToken$ = NewToken$
+    VALFolded = 1
+    Return
+End If
+
+TempVAL$ = UCase$(LTrim$(RTrim$(LiteralText$)))
+
+HasDot = 0
+HasExp = 0
+HasDExp = 0
+
+If InStr(TempVAL$, ".") <> 0 Then HasDot = -1
+If InStr(TempVAL$, "E") <> 0 Then HasExp = -1
+If InStr(TempVAL$, "D") <> 0 Then HasDExp = -1
+
+' If it looks floating-point, fold as Single literal
+If HasDot Or HasExp Or HasDExp Then
+    VALAsDouble = Val(TempVAL$)
+    GoSub BuildFloatingLiteralTokenFromDouble
+    VALFoldToken$ = NewToken$
+    VALFolded = 1
+    Return
+End If
+
+' If it is plain signed digits, fold as best integer type
+If IsAllSignedDigits%(TempVAL$) Then
+    VALAsInt64 = Val(TempVAL$)
+    GoSub BuildVALIntegerLiteralTokenFromPrefType
+    VALFoldToken$ = NewToken$
+    VALFolded = 1
+    Return
+End If
+
+' Otherwise, still fold using VAL() result, but as floating point
+' Example:
+'   VAL("123ABC")  -> 123
+' This keeps the fold useful without needing a full parser here.
+VALAsDouble = Val(TempVAL$)
+GoSub BuildFloatingLiteralTokenFromDouble
+VALFoldToken$ = NewToken$
+VALFolded = 1
+Return
+
+BuildVALIntegerLiteralTokenFromPrefType:
+Select Case VALPreferredType
+    Case NT_Byte, NT_UByte, NT_Int16, NT_UInt16, NT_Int32, NT_UInt32, NT_Int64, NT_UInt64
+        NVT = VALPreferredType
+    Case Else
+        ' If context says float, keep integer text but mark it as Single
+        NewToken$ = LTrim$(RTrim$(Str$(VALAsInt64))) + Chr$(NT_Single + 128)
+        Return
+End Select
+
+GoSub BuildIntegerLiteralTokenFromInt64AndType
+Return
+
+' ------------------------------------------------------------
+' DecodeStringLiteralTokenToPlainText
+'
+' Input:
+'   Temp$ = tokenized string literal: F5 22 ... F5 22
+'
+' Output:
+'   LiteralText$ = raw text inside the quotes
+' ------------------------------------------------------------
+DecodeStringLiteralTokenToPlainText:
+LiteralText$ = ""
+
+If Len(Temp$) < 4 Then Return
+If Asc(Left$(Temp$, 1)) <> TK_SpecialChar Then Return
+If Asc(Mid$(Temp$, 2, 1)) <> TK_Quote Then Return
+If Asc(Mid$(Temp$, Len(Temp$) - 1, 1)) <> TK_SpecialChar Then Return
+If Asc(Right$(Temp$, 1)) <> TK_Quote Then Return
+
+If Len(Temp$) > 4 Then
+    LiteralText$ = Mid$(Temp$, 3, Len(Temp$) - 4)
+End If
+Return
+
+' ------------------------------------------------------------
+' BuildZeroLiteralToken
+'
+' Output:
+'   NewToken$ = numeric literal token for zero
+' ------------------------------------------------------------
+BuildZeroLiteralToken:
+NewToken$ = "0" + Chr$(NT_UByte + 128)
+Return
+
+' ------------------------------------------------------------
+' BuildFloatingLiteralTokenFromDouble
+'
+' Input:
+'   VALAsDouble
+'
+' Output:
+'   NewToken$ = floating numeric literal token
+'
+' For Big7 we fold VAL("...float...") as NT_Single.
+' ------------------------------------------------------------
+BuildFloatingLiteralTokenFromDouble:
+NewToken$ = LTrim$(RTrim$(Str$(VALAsDouble))) + Chr$(NT_Single + 128)
+Return
+
+' ------------------------------------------------------------
+' BuildBestIntegerLiteralTokenFromInt64
+'
+' Input:
+'   VALAsInt64
+'
+' Output:
+'   NewToken$
+'
+' Chooses the narrowest integer type that fits.
+' ------------------------------------------------------------
+BuildBestIntegerLiteralTokenFromInt64:
+If VALAsInt64 >= 0 Then
+    If VALAsInt64 <= 255 Then
+        NVT = NT_UByte
+    ElseIf VALAsInt64 <= 65535 Then
+        NVT = NT_UInt16
+    ElseIf VALAsInt64 <= 2147483647 Then
+        NVT = NT_Int32
+    Else
+        NVT = NT_Int64
+    End If
+Else
+    If VALAsInt64 >= -128 Then
+        NVT = NT_Byte
+    ElseIf VALAsInt64 >= -32768 Then
+        NVT = NT_Int16
+    ElseIf VALAsInt64 >= -2147483648 Then
+        NVT = NT_Int32
+    Else
+        NVT = NT_Int64
+    End If
+End If
+
+GoSub BuildIntegerLiteralTokenFromInt64AndType
+Return
+
+' ------------------------------------------------------------
+' BuildIntegerLiteralTokenFromInt64AndType
+'
+' Input:
+'   VALAsInt64
+'   NVT
+'
+' Output:
+'   NewToken$
+' ------------------------------------------------------------
+BuildIntegerLiteralTokenFromInt64AndType:
+NewToken$ = LTrim$(RTrim$(Str$(VALAsInt64))) + Chr$(NVT + 128)
+Return
+
+' ------------------------------------------------------------
+' ChooseVALPreferredType
+'
+' Output:
+'   VALPreferredType = numeric type VAL() should produce at runtime
+'
+' Priority:
+'   1) ForceLitType (strongest context)
+'   2) NVT         (destination / forced numeric type)
+'   3) default to Single
+'
+' We intentionally do NOT aggressively trust LastType here because
+' in many expressions it reflects the previous token, not the true
+' destination context.
+' ------------------------------------------------------------
+ChooseVALPreferredType:
+VALPreferredType = 0
+
+' Strongest hint: ForceLitType
+If ForceLitType >= NT_Bit And ForceLitType <= NT_Double Then
+    VALPreferredType = ForceLitType
+End If
+
+' Next best hint: current destination / expected numeric type
+If VALPreferredType = 0 Then
+    If NVT >= NT_Bit And NVT <= NT_Double Then
+        VALPreferredType = NVT
+    End If
+End If
+
+' If still unknown, default to Single
+If VALPreferredType = 0 Then
+    VALPreferredType = NT_Single
+End If
+
+' For safety, map unsupported/awkward targets to better runtime choices
+Select Case VALPreferredType
+    Case NT_Bit, NT_UBit
+        VALPreferredType = NT_Int16
+
+    Case NT_ShortFloat, NT_UShortFloat
+        VALPreferredType = NT_Single
+
+    Case NT_Extended
+        VALPreferredType = NT_Double
+End Select
+
+Return
+
+' ------------------------------------------------------------
+' EmitVALRuntimeConversion
+'
+' Input:
+'   VALPreferredType
+'
+' Assumes:
+'   string is already on 6809 stack
+'
+' Emits:
+'   runtime conversion from string @,S into chosen numeric type @,S
+' ------------------------------------------------------------
+EmitVALRuntimeConversion:
+Select Case VALPreferredType
+    Case NT_Byte
+        A$ = "JSR": B$ = "NumericString_To_S8_Stack": C$ = "Convert string @,S to signed 8-bit @,S": GoSub AO
+
+    Case NT_UByte
+        A$ = "JSR": B$ = "NumericString_To_U8_Stack": C$ = "Convert string @,S to unsigned 8-bit @,S": GoSub AO
+
+    Case NT_Int16
+        A$ = "JSR": B$ = "NumericString_To_S16_Stack": C$ = "Convert string @,S to signed 16-bit @,S": GoSub AO
+
+    Case NT_UInt16
+        A$ = "JSR": B$ = "NumericString_To_U16_Stack": C$ = "Convert string @,S to unsigned 16-bit @,S": GoSub AO
+
+    Case NT_Int32
+        A$ = "JSR": B$ = "NumericString_To_S32_Stack": C$ = "Convert string @,S to signed 32-bit @,S": GoSub AO
+
+    Case NT_UInt32
+        A$ = "JSR": B$ = "NumericString_To_U32_Stack": C$ = "Convert string @,S to unsigned 32-bit @,S": GoSub AO
+
+    Case NT_Int64
+        A$ = "JSR": B$ = "NumericString_To_S64_Stack": C$ = "Convert string @,S to signed 64-bit @,S": GoSub AO
+
+    Case NT_UInt64
+        A$ = "JSR": B$ = "NumericString_To_U64_Stack": C$ = "Convert string @,S to unsigned 64-bit @,S": GoSub AO
+
+    Case NT_Double
+        Select Case FloatType
+            Case 0
+                A$ = "JSR": B$ = "NumericString_To_FFP": C$ = "Convert string @,S to FFP @,S": GoSub AO
+                A$ = "JSR": B$ = "FFP_To_Double": C$ = "Convert FFP @,S to Double @,S": GoSub AO
+            Case 1
+                A$ = "JSR": B$ = "NumericString_To_FP5": C$ = "Convert string @,S to FP5 @,S": GoSub AO
+                A$ = "JSR": B$ = "FP5_To_Double": C$ = "Convert FP5 @,S to Double @,S": GoSub AO
+        End Select
+
+    Case Else
+        ' Default floating-point path
+        VALPreferredType = NT_Single
+        Select Case FloatType
+            Case 0
+                A$ = "JSR": B$ = "NumericString_To_FFP": C$ = "Convert string @,S to FFP @,S": GoSub AO
+            Case 1
+                A$ = "JSR": B$ = "NumericString_To_FP5": C$ = "Convert string @,S to FP5 @,S": GoSub AO
+        End Select
+End Select
+Return
+
+
+
+
 
 HandleStringVariable:
 v = Array(x) * 256 + Array(x + 1): x = x + 2
@@ -158,7 +464,7 @@ GoSub ConvertLastType2NVT ' Convert LastType @,S to (Numeric Variable Type) NVT 
 ' Value in brackets is on the stack
 ' NumBits = number of bits (8 or 16)
 ' NumDims = Number of dimensions
-If NumDims = 1 And NVTArrayType < 5 Then
+If NumDims = 1 And InsideArrayType = NT_UByte Then
     ' This is a quick and easy location to calc and store
     A$ = "PULS": B$ = "B": C$ = "Array pointer, Fix the stack": GoSub AO
     A$ = "LDX": B$ = "#_ArrayNum_" + NV$ + "+1": C$ = "The array starts here": GoSub AO
