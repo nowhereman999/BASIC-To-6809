@@ -11,7 +11,7 @@ For more info check out the blog post here:
 https://wordpress.com/post/nowhereman999.wordpress.com/5054
 
 V 5.22
-- Fix a bug with IF comparinge an _Unsigned _Byte and literal values that were greater than 127
+- Fix a bug with IF comparing an _Unsigned _Byte and literal values that were greater than 127
 
 V 5.21
 - Fixed a bug in the DoREAD
