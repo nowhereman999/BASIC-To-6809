@@ -1,0 +1,17 @@
+/Users/glenhewlett/My Drive (nowhereman999@gmail.com)/Programming/CoCo_Related/_BASTo6809_Compiler_V5.2/3DRDITH1.BAS
+/Users/glenhewlett/My Drive (nowhereman999@gmail.com)/Programming/CoCo_Related/_BASTo6809_Compiler_V5.2/3DREND.BAS
+/Users/glenhewlett/My Drive (nowhereman999@gmail.com)/Programming/CoCo_Related/_BASTo6809_Compiler_V5.2/3DREND1.BAS
+/Users/glenhewlett/My Drive (nowhereman999@gmail.com)/Programming/CoCo_Related/_BASTo6809_Compiler_V5.2/3DREND2.BAS
+/Users/glenhewlett/My Drive (nowhereman999@gmail.com)/Programming/CoCo_Related/_BASTo6809_Compiler_V5.2/3DREND3.BAS
+/Users/glenhewlett/My Drive (nowhereman999@gmail.com)/Programming/CoCo_Related/_BASTo6809_Compiler_V5.2/3DREND5.BAS
+/Users/glenhewlett/My Drive (nowhereman999@gmail.com)/Programming/CoCo_Related/_BASTo6809_Compiler_V5.2/BASASSEM.BAS
+/Users/glenhewlett/My Drive (nowhereman999@gmail.com)/Programming/CoCo_Related/_BASTo6809_Compiler_V5.2/BMPVIEW1.BAS
+/Users/glenhewlett/My Drive (nowhereman999@gmail.com)/Programming/CoCo_Related/_BASTo6809_Compiler_V5.2/BTEST.BAS
+/Users/glenhewlett/My Drive (nowhereman999@gmail.com)/Programming/CoCo_Related/_BASTo6809_Compiler_V5.2/GETFSIZE.BAS
+/Users/glenhewlett/My Drive (nowhereman999@gmail.com)/Programming/CoCo_Related/_BASTo6809_Compiler_V5.2/IFTEST.BAS
+/Users/glenhewlett/My Drive (nowhereman999@gmail.com)/Programming/CoCo_Related/_BASTo6809_Compiler_V5.2/PAGEFLIP.BAS
+/Users/glenhewlett/My Drive (nowhereman999@gmail.com)/Programming/CoCo_Related/_BASTo6809_Compiler_V5.2/PPMVIEW1.BAS
+/Users/glenhewlett/My Drive (nowhereman999@gmail.com)/Programming/CoCo_Related/_BASTo6809_Compiler_V5.2/SHOWCOMP.BAS
+/Users/glenhewlett/My Drive (nowhereman999@gmail.com)/Programming/CoCo_Related/_BASTo6809_Compiler_V5.2/SHOWNTSC.BAS
+/Users/glenhewlett/My Drive (nowhereman999@gmail.com)/Programming/CoCo_Related/_BASTo6809_Compiler_V5.2/TEMPQB64.BAS
+/Users/glenhewlett/My Drive (nowhereman999@gmail.com)/Programming/CoCo_Related/_BASTo6809_Compiler_V5.2/TEST.BAS

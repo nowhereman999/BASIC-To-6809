@@ -72,6 +72,8 @@ Const NT_Extended = 13
 Const NT_ShortFloat = 14
 Const NT_UShortFloat = 15
 
+Dim ComparePushMode As Integer
+
 Dim FoldLeft$
 Dim FoldRight$
 Dim FoldN1 As _Integer64

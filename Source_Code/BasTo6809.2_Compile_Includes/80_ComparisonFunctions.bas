@@ -42,18 +42,26 @@ Return
 ' One is 1 byte, the other is 2 bytes
 EqualMaxType2:
 A$ = "LDX": B$ = "#$FFFF": C$ = "Default is True": GoSub AO
-If LeftType < 5 Then
-    ' Left is 1 byte and right is 2 bytes                     v1=1,S & 2,S - v2=,S
+If RightType < 5 Then
+    ' Left is 2 bytes and right is 1 byte
     A$ = "LDB": B$ = ",S+": C$ = "Get V2 8 bit value, move the stack": GoSub AO
-    A$ = "SEX": C$ = "D = B": GoSub AO
-    A$ = "SUBD": B$ = ",S": C$ = "Subtract v1 16 bit value, move the stack": GoSub AO
-    A$ = "CMPD": B$ = "#$0000": C$ = "TSTD": GoSub AO
+    If RightType = NT_UByte Then
+        A$ = "CLRA": C$ = "Zero extend unsigned 8-bit into D": GoSub AO
+    Else
+        A$ = "SEX": C$ = "Sign extend signed 8-bit into D": GoSub AO
+    End If
+    A$ = "SUBD": B$ = ",S": C$ = "Subtract V1 16 bit value": GoSub AO
+'    A$ = "CMPD": B$ = "#$0000": C$ = "Test if equal": GoSub AO
 Else
-    ' Left is 2 bytes and right is 1 byte                      v1=2,S - v2 =,S & 1,S
+    ' Left is 1 byte and right is 2 bytes
     A$ = "LDB": B$ = "2,S": C$ = "Get V1 8 bit value": GoSub AO
-    A$ = "SEX": C$ = "D = B": GoSub AO
-    A$ = "SUBD": B$ = ",S+": C$ = "Subtract v2 16 bit value, move the stack": GoSub AO
-    A$ = "CMPD": B$ = "#$0000": C$ = "TSTD": GoSub AO
+    If LeftType = NT_UByte Then
+        A$ = "CLRA": C$ = "Zero extend unsigned 8-bit into D": GoSub AO
+    Else
+        A$ = "SEX": C$ = "Sign extend signed 8-bit into D": GoSub AO
+    End If
+    A$ = "SUBD": B$ = ",S+": C$ = "Subtract V2 16 bit value, move the stack": GoSub AO
+'    A$ = "CMPD": B$ = "#$0000": C$ = "Test if equal": GoSub AO
 End If
 A$ = "BEQ": B$ = ">": C$ = "Skip if Equal": GoSub AO
 A$ = "LDX": B$ = "#$0000": C$ = "Set as False": GoSub AO
@@ -186,18 +194,26 @@ Return
 ' One is 1 byte, the other is 2 bytes
 NotEqualMaxType2:
 A$ = "LDX": B$ = "#$FFFF": C$ = "Default is True": GoSub AO
-If LeftType < 5 Then
-    ' Left is 1 byte and right is 2 bytes                     v1=1,S & 2,S - v2=,S
+If RightType < 5 Then
+    ' Left is 2 bytes and right is 1 byte
     A$ = "LDB": B$ = ",S+": C$ = "Get V2 8 bit value, move the stack": GoSub AO
-    A$ = "SEX": C$ = "D = B": GoSub AO
-    A$ = "SUBD": B$ = ",S": C$ = "Subtract v1 16 bit value, move the stack": GoSub AO
-    A$ = "CMPD": B$ = "#$0000": C$ = "TSTD": GoSub AO
+    If RightType = NT_UByte Then
+        A$ = "CLRA": C$ = "Zero extend unsigned 8-bit into D": GoSub AO
+    Else
+        A$ = "SEX": C$ = "Sign extend signed 8-bit into D": GoSub AO
+    End If
+    A$ = "SUBD": B$ = ",S": C$ = "Subtract V1 16 bit value": GoSub AO
+'    A$ = "CMPD": B$ = "#$0000": C$ = "Test if equal": GoSub AO
 Else
-    ' Left is 2 bytes and right is 1 byte                      v1=2,S - v2 =,S & 1,S
+    ' Left is 1 byte and right is 2 bytes
     A$ = "LDB": B$ = "2,S": C$ = "Get V1 8 bit value": GoSub AO
-    A$ = "SEX": C$ = "D = B": GoSub AO
-    A$ = "SUBD": B$ = ",S+": C$ = "Subtract v2 16 bit value, move the stack": GoSub AO
-    A$ = "CMPD": B$ = "#$0000": C$ = "TSTD": GoSub AO
+    If LeftType = NT_UByte Then
+        A$ = "CLRA": C$ = "Zero extend unsigned 8-bit into D": GoSub AO
+    Else
+        A$ = "SEX": C$ = "Sign extend signed 8-bit into D": GoSub AO
+    End If
+    A$ = "SUBD": B$ = ",S+": C$ = "Subtract V2 16 bit value, move the stack": GoSub AO
+'    A$ = "CMPD": B$ = "#$0000": C$ = "Test if equal": GoSub AO
 End If
 A$ = "BNE": B$ = ">": C$ = "Skip if NotEqual": GoSub AO
 A$ = "LDX": B$ = "#$0000": C$ = "Set as False": GoSub AO
@@ -401,7 +417,7 @@ LessThanLS1RU2:
 A$ = "LDX": B$ = "#$FFFF": C$ = "Default is True": GoSub AO
 A$ = "LDB": B$ = ",S+": C$ = "Pop LEFT signed 8-bit into B": GoSub AO
 A$ = "BMI": B$ = "@Store": C$ = "If LEFT<0 then True": GoSub AO
-Z$ = "!": A$ = "SEX": C$ = "Zero-extend LEFT into D": GoSub AO
+Z$ = "!": A$ = "CLRA": C$ = "Zero-extend LEFT into D": GoSub AO
 A$ = "CMPD": B$ = ",S": C$ = "Compare LEFT vs RIGHT as unsigned": GoSub AO
 A$ = "BLO": B$ = "@Store": C$ = "If LEFT<RIGHT keep True": GoSub AO
 A$ = "LDX": B$ = "#$0000": C$ = "Set False": GoSub AO
@@ -783,7 +799,7 @@ GreaterThanLS1RU2:
 A$ = "LDU": B$ = "#$FFFF": C$ = "Default is True": GoSub AO
 A$ = "LDB": B$ = ",S+": C$ = "B = LEFT signed 8-bit": GoSub AO
 A$ = "BMI": B$ = "@False": C$ = "If LEFT < 0 then False": GoSub AO
-A$ = "SEX": C$ = "Sign-extend, D = B": GoSub AO
+A$ = "CLRA": C$ = "Zero-extend LEFT into D": GoSub AO
 A$ = "CMPD": B$ = ",S": C$ = "Compare LEFT vs RIGHT as unsigned": GoSub AO
 A$ = "BHI": B$ = ">": C$ = "If LEFT>RIGHT keep True": GoSub AO
 Z$ = "@False": GoSub AO
@@ -1166,7 +1182,7 @@ LessOrEqualLS1RU2:
 A$ = "LDX": B$ = "#$FFFF": C$ = "Default is True": GoSub AO
 A$ = "LDB": B$ = ",S+": C$ = "Pop LEFT signed 8-bit into B": GoSub AO
 A$ = "BMI": B$ = "@True": C$ = "If LEFT is <-1 then True": GoSub AO
-Z$ = "!": A$ = "SEX": C$ = "Sign extend LEFT into D": GoSub AO
+Z$ = "!": A$ = "CLRA": C$ = "Zero-extend LEFT into D": GoSub AO
 A$ = "CMPD": B$ = ",S": C$ = "Compare LEFT vs RIGHT as unsigned": GoSub AO
 A$ = "BLS": B$ = "@True": C$ = "If LEFT <= RIGHT keep True": GoSub AO
 A$ = "LDX": B$ = "#$0000": C$ = "Set False": GoSub AO
@@ -1547,7 +1563,7 @@ GreaterOrEqualLS1RU2:
 A$ = "LDU": B$ = "#$FFFF": C$ = "Default is True": GoSub AO
 A$ = "LDB": B$ = ",S+": C$ = "B = LEFT signed 8-bit": GoSub AO
 A$ = "BMI": B$ = "@False": C$ = "If LEFT < 0 then False": GoSub AO
-A$ = "SEX": C$ = "Sign-extend, D = B": GoSub AO
+A$ = "CLRA": C$ = "Zero-extend LEFT into D": GoSub AO
 A$ = "CMPD": B$ = ",S": C$ = "Compare LEFT vs RIGHT as unsigned": GoSub AO
 A$ = "BHS": B$ = ">": C$ = "If LEFT >= RIGHT keep True": GoSub AO
 Z$ = "@False": GoSub AO

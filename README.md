@@ -10,9 +10,12 @@ https://github.com/nowhereman999/BASIC-To-6809/blob/main/Manual.pdf
 For more info check out the blog post here:
 https://wordpress.com/post/nowhereman999.wordpress.com/5054
 
+V 5.22
+- Fix a bug with IF comparinge an _Unsigned _Byte and literal values that were greater than 127
+
 V 5.21
 - Fixed a bug in the DoREAD
-- Fixed a bug with GMODE 164 causing a hang of the compiler.  Assignment of variable needed to be LONG nor integer
+- Fixed a bug with GMODE 164 causing a hang of the compiler.  Assignment of variable needed to be LONG not integer
 - Fixed some bugs in array 8bit/16 bit assignments
 - Sped up VAL() command to now use Integer conversion instead of always doing String to Single then Single to INT
 

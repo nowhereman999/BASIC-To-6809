@@ -1,7 +1,10 @@
-/Users/glenhewlett/Downloads/qb64pe4.1/source/ide
-/Users/glenhewlett/Downloads/qb64pe4.1/source/settings
-/Users/glenhewlett/Downloads/qb64pe4.1/source/subs_functions
-/Users/glenhewlett/Downloads/qb64pe4.1/source/internal
-/Users/glenhewlett/Downloads/qb64pe4.1/source/utilities
-/Users/glenhewlett/Downloads/qb64pe4.1/source/emit
-/Users/glenhewlett/Downloads/qb64pe4.1/source/global
+/Users/glenhewlett/My Drive (nowhereman999@gmail.com)/Programming/CoCo_Related/_BASTo6809_Compiler_V5.2/IDE
+/Users/glenhewlett/My Drive (nowhereman999@gmail.com)/Programming/CoCo_Related/_BASTo6809_Compiler_V5.2/settings
+/Users/glenhewlett/My Drive (nowhereman999@gmail.com)/Programming/CoCo_Related/_BASTo6809_Compiler_V5.2/licenses
+/Users/glenhewlett/My Drive (nowhereman999@gmail.com)/Programming/CoCo_Related/_BASTo6809_Compiler_V5.2/Basic_Commands
+/Users/glenhewlett/My Drive (nowhereman999@gmail.com)/Programming/CoCo_Related/_BASTo6809_Compiler_V5.2/roms
+/Users/glenhewlett/My Drive (nowhereman999@gmail.com)/Programming/CoCo_Related/_BASTo6809_Compiler_V5.2/internal
+/Users/glenhewlett/My Drive (nowhereman999@gmail.com)/Programming/CoCo_Related/_BASTo6809_Compiler_V5.2/cfg
+/Users/glenhewlett/My Drive (nowhereman999@gmail.com)/Programming/CoCo_Related/_BASTo6809_Compiler_V5.2/BasTo6809.2_Compile_Includes
+/Users/glenhewlett/My Drive (nowhereman999@gmail.com)/Programming/CoCo_Related/_BASTo6809_Compiler_V5.2/Basic_Includes
+/Users/glenhewlett/My Drive (nowhereman999@gmail.com)/Programming/CoCo_Related/_BASTo6809_Compiler_V5.2/nvram

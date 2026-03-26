@@ -792,7 +792,7 @@ While RPNEntry <= RPNLast
                         Value1$ = ProcessRPNStack$(ProcessRPNStackPointer - 1)
                         LeftType = Asc(Right$(Value1$, 1))
                         RightType = Asc(Right$(Value2$, 1))
-                        If RightType + LeftType > 255 Then
+                        If LeftIsLiteral% And RightIsLiteral% Then
                             Num = Val(Left$(Value1$, Len(Value1$) - 1)) + Val(Left$(Value2$, Len(Value2$) - 1))
                             GoSub NumAsString
                             If RightType > LeftType Then
@@ -2130,15 +2130,78 @@ End If
 ' ========================================================
 
 ' Resolve types exactly like your arithmetic ops do
-LeftType = Asc(Right$(Value1$, 1))
+' IMPORTANT:
+' Numeric literals are stored as: "123" + Chr$(Type+128)
+' so we must keep both:
+'   * the raw last byte (to know whether it is a literal)
+'   * the normalised base type (3..12) used for compare selection
+LeftTypeRaw = Asc(Right$(Value1$, 1))
+LeftIsLiteral% = 0
+LeftType = LeftTypeRaw
 If LeftType = 0 Then
     If Len(Value1$) >= 4 Then LeftType = Asc(Mid$(Value1$, 4, 1))
+ElseIf LeftType >= 128 Then
+    LeftIsLiteral% = -1
+    LeftType = LeftType - 128
 End If
 
-RightType = Asc(Right$(Value2$, 1))
+RightTypeRaw = Asc(Right$(Value2$, 1))
+RightIsLiteral% = 0
+RightType = RightTypeRaw
 If RightType = 0 Then
     If Len(Value2$) >= 4 Then RightType = Asc(Mid$(Value2$, 4, 1))
+ElseIf RightType >= 128 Then
+    RightIsLiteral% = -1
+    RightType = RightType - 128
 End If
+
+' --------------------------------------------------------
+' 2) Shrink integer literals for compare when safe
+'    Example:
+'      UBYTE var compared with &HFF should stay 8-bit vs 8-bit
+'    This is compare-only retagging; it does not change the
+'    original literal parser or the variable's real type.
+' --------------------------------------------------------
+If LeftIsLiteral% And (LeftType = NT_Int16 Or LeftType = NT_UInt16) Then
+    If RightType = NT_Byte Or RightType = NT_UByte Then
+        Num = Val(Left$(Value1$, Len(Value1$) - 1))
+        If RightType = NT_UByte Then
+            If Num >= 0 And Num <= 255 Then
+                Value1$ = Left$(Value1$, Len(Value1$) - 1) + Chr$(NT_UByte + 128)
+                LeftType = NT_UByte
+            End If
+        ElseIf RightType = NT_Byte Then
+            If Num >= -128 And Num <= 127 Then
+                Value1$ = Left$(Value1$, Len(Value1$) - 1) + Chr$(NT_Byte + 128)
+                LeftType = NT_Byte
+            End If
+        End If
+    End If
+End If
+
+If RightIsLiteral% And (RightType = NT_Int16 Or RightType = NT_UInt16) Then
+    If LeftType = NT_Byte Or LeftType = NT_UByte Then
+        Num = Val(Left$(Value2$, Len(Value2$) - 1))
+        If LeftType = NT_UByte Then
+            If Num >= 0 And Num <= 255 Then
+                Value2$ = Left$(Value2$, Len(Value2$) - 1) + Chr$(NT_UByte + 128)
+                RightType = NT_UByte
+            End If
+        ElseIf LeftType = NT_Byte Then
+            If Num >= -128 And Num <= 127 Then
+                Value2$ = Left$(Value2$, Len(Value2$) - 1) + Chr$(NT_Byte + 128)
+                RightType = NT_Byte
+            End If
+        End If
+    End If
+End If
+
+' IMPORTANT:
+' PutValuesOnStack re-reads the two operands from ProcessRPNStack$.
+' So if we shrink compare-only integer literals here, we must also write the
+' retagged tokens back into the live RPN stack entries or the optimisation is lost.
+ProcessRPNStack$(ProcessRPNStackPointer - 1) = Value1$
+ProcessRPNStack$(ProcessRPNStackPointer) = Value2$
 
 ' --------------------------------------------------------
 ' 2a) Constant-fold literal comparisons (both operands literal)
@@ -2194,7 +2257,9 @@ End If
 If InIFCondition% <> 0 And SimpleIFCompareMode% <> 0 Then
     If RPNEntry = LastCompareIndex% Then
         ' Put both operands on the 6809 stack using your normal helper
+        ComparePushMode = -1
         GoSub PutValuesOnStack
+        ComparePushMode = 0
         ' Now ProcessRPNStackPointer has been adjusted (2 -> 0 for this op)
         ' and the numeric values are on the 6809 stack in the expected format.
 
@@ -2219,7 +2284,9 @@ End If
 '         * sets LargestType, etc.
 '     - NumFunctionXxx leaves 0 / $FF on the 6809 stack.
 ' --------------------------------------------------------
+ComparePushMode = -1
 GoSub PutValuesOnStack
+ComparePushMode = 0
 
 Select Case CompareOp
     Case OP_EQ: GoSub NumFunctionEqual
@@ -2739,30 +2806,82 @@ Return
 ' Also sets LeftType, RightType, and Largesttype
 PutValuesOnStack:
 If ProcessRPNStackPointer < 1 Then Return
+
 ' Pop right then left from the RPN stack (normal RPN order)
 Value2$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
 Value1$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+
 V1OnStack% = 0
 V2OnStack% = 0
-'If Asc(Left$(Value1$, 1)) = &HFA Or Asc(Left$(Value1$, 1)) = TK_ADDR_ONSTACK Then V1OnStack% = -1
-'If Asc(Left$(Value2$, 1)) = &HFA Or Asc(Left$(Value2$, 1)) = TK_ADDR_ONSTACK Then V2OnStack% = -1
+
 If Asc(Left$(Value1$, 1)) = &HFA Or Asc(Left$(Value1$, 1)) = TK_BOOL_ONSTACK Or Asc(Left$(Value1$, 1)) = TK_ADDR_ONSTACK Then V1OnStack% = -1
 If Asc(Left$(Value2$, 1)) = &HFA Or Asc(Left$(Value2$, 1)) = TK_BOOL_ONSTACK Or Asc(Left$(Value2$, 1)) = TK_ADDR_ONSTACK Then V2OnStack% = -1
 
 ' ------------------------------------------------------------
 ' Determine numeric types even if already on stack
+'   Value1$ = LEFT operand
+'   Value2$ = RIGHT operand
 ' ------------------------------------------------------------
 If V1OnStack% Then
-    RightType = Asc(Right$(Value1$, 1))
+    LeftType = Asc(Right$(Value1$, 1))
 Else
     Tok$ = Value1$: GoSub GetTokenTypeOnly
-    RightType = TokType
+    LeftType = TokType
 End If
+
 If V2OnStack% Then
-    LeftType = Asc(Right$(Value2$, 1))
+    RightType = Asc(Right$(Value2$, 1))
 Else
     Tok$ = Value2$: GoSub GetTokenTypeOnly
-    LeftType = TokType
+    RightType = TokType
+End If
+
+' ------------------------------------------------------------
+' Compare-only literal shrinking
+'   If one side is a byte variable and the other side is a
+'   16-bit integer literal that fits in a byte, retag the
+'   literal now so PushTokenNumeric emits an 8-bit push.
+' ------------------------------------------------------------
+If ComparePushMode <> 0 Then
+
+    ' Left literal vs right byte
+    If Asc(Right$(Value1$, 1)) >= 128 Then
+        If (LeftType = NT_Int16 Or LeftType = NT_UInt16) Then
+            If RightType = NT_UByte Then
+                Num = Val(Left$(Value1$, Len(Value1$) - 1))
+                If Num >= 0 And Num <= 255 Then
+                    Value1$ = Left$(Value1$, Len(Value1$) - 1) + Chr$(NT_UByte + 128)
+                    LeftType = NT_UByte
+                End If
+            ElseIf RightType = NT_Byte Then
+                Num = Val(Left$(Value1$, Len(Value1$) - 1))
+                If Num >= -128 And Num <= 127 Then
+                    Value1$ = Left$(Value1$, Len(Value1$) - 1) + Chr$(NT_Byte + 128)
+                    LeftType = NT_Byte
+                End If
+            End If
+        End If
+    End If
+
+    ' Right literal vs left byte
+    If Asc(Right$(Value2$, 1)) >= 128 Then
+        If (RightType = NT_Int16 Or RightType = NT_UInt16) Then
+            If LeftType = NT_UByte Then
+                Num = Val(Left$(Value2$, Len(Value2$) - 1))
+                If Num >= 0 And Num <= 255 Then
+                    Value2$ = Left$(Value2$, Len(Value2$) - 1) + Chr$(NT_UByte + 128)
+                    RightType = NT_UByte
+                End If
+            ElseIf LeftType = NT_Byte Then
+                Num = Val(Left$(Value2$, Len(Value2$) - 1))
+                If Num >= -128 And Num <= 127 Then
+                    Value2$ = Left$(Value2$, Len(Value2$) - 1) + Chr$(NT_Byte + 128)
+                    RightType = NT_Byte
+                End If
+            End If
+        End If
+    End If
+
 End If
 
 ' ------------------------------------------------------------
@@ -2773,50 +2892,55 @@ End If
 Dim OldForceLitType3 As Integer
 OldForceLitType3 = ForceLitType
 If ForceLitType = 0 Then
-    If RightType > LeftType Then
-        ForceLitType = RightType
-    Else
+    If LeftType > RightType Then
         ForceLitType = LeftType
+    Else
+        ForceLitType = RightType
     End If
 End If
 
 ' ------------------------------------------------------------
-' Now enforce 6809 order: [ ... Value2(left) ][ Value1(right) ]
+' Now enforce 6809 order on the machine stack:
+'   push LEFT first, then RIGHT
+' so the final stack is:
+'   ,S   = RIGHT
+'   n,S  = LEFT
 ' ------------------------------------------------------------
 
 ' Case 1: both already on 6809 stack -> nothing to push
 If V1OnStack% And V2OnStack% Then GoTo SetLargest
-' Case 1b: left already on 6809 stack, right not -> push the missing right operand
+
+' Case 2: LEFT already on 6809 stack, RIGHT not
 If V1OnStack% And (Not V2OnStack%) Then
     Tok$ = Value2$: GoSub PushTokenNumeric
-    LeftType = TokType
+    RightType = TokType
     GoTo SetLargest
 End If
-' Case 2: left already on 6809 stack, right not -> push right second
+
+' Case 3: RIGHT already on 6809 stack, LEFT not
 If V2OnStack% And (Not V1OnStack%) Then
     Tok$ = Value1$: GoSub PushTokenNumeric
-    RightType = LeftType
     LeftType = TokType
     GoTo SetLargest
 End If
-' Case 3: neither on 6809 stack -> push right first, then left second
-'   (so Value1 @3,S, Value2 @,S)
+
+' Case 4: neither on 6809 stack
 If (Not V1OnStack%) And (Not V2OnStack%) Then
     Tok$ = Value1$: GoSub PushTokenNumeric
-    RightType = TokType
-    Tok$ = Value2$: GoSub PushTokenNumeric
     LeftType = TokType
+    Tok$ = Value2$: GoSub PushTokenNumeric
+    RightType = TokType
     GoTo SetLargest
 End If
+
 SetLargest:
-If RightType > LeftType Then
-    Largesttype = RightType
-Else
+If LeftType > RightType Then
     Largesttype = LeftType
+Else
+    Largesttype = RightType
 End If
 ForceLitType = OldForceLitType3
 Return
-
 ' ------------------------------------------------------------
 ' Helper: get token type without pushing
 ' ------------------------------------------------------------

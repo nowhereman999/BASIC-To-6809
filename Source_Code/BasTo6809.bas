@@ -1,9 +1,11 @@
-V$ = "5.21"
+V$ = "5.22"
+'       - Fix a bug with IF comparinge an _Unsigned _Byte and literal values that were greater than 127
+
+' V 5.21
 '       - Sped up VAL() command to now use Integer conversion instead of always doing String to Single then Single to INT
 '       - Fixed a bug in the DoREAD
-'       - Fixed a bug with GMODE 164 causing a hang of the compiler.  Assignment of variable needed to be LONG nor integer
+'       - Fixed a bug with GMODE 164 causing a hang of the compiler.  Assignment of variable needed to be LONG not integer
 '       - Fixed some bugs in array 8bit/16 bit assignments
-
 
 ' V 5.2
 '       - Added New -m option that allows the user to select 3 byte or 5 byte floating point math with Type Single

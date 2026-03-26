@@ -3057,7 +3057,7 @@ A$ = "STD": B$ = "_Var_Timer": C$ = "Use Basic's Timer as a starting point for t
 A$ = "STD": B$ = "Seed1": C$ = "Save TIMER value as the Random number seed value": GoSub AO
 
 If SDCPLAY = 1 Or SDCVersionCheck = 1 Then ' If we are doing any SDC streaming check the version as it must be V127 or higher
-'    A$ = "JSR": B$ = "CheckSDCFirmwareVersion": C$ = "Check the version of the SDC controller must be > v126": GoSub AO
+    A$ = "JSR": B$ = "CheckSDCFirmwareVersion": C$ = "Check the version of the SDC controller must be > v126": GoSub AO
 End If
 
 ' Address    Interrupt    CoCo 2 Vector    CoCo 3 Vector
