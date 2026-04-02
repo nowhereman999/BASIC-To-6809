@@ -2753,9 +2753,9 @@ If Gmode > 99 Then
     If Gmode > 159 And FirstGmode = 0 Then
         ' Set the Palette to the special NTSC 256 colour versions
         Z$ = "; First GMODE, Set the special Palette for the composite 256 colour mode": GoSub AO
-        A$ = "LDD": B$ = "#$0022": C$ = "Palette values for index 0 & 1": GoSub AO
+        A$ = "LDD": B$ = "#$0010": C$ = "Palette values for index 0 & 1": GoSub AO
         A$ = "STD": B$ = "$FFB0": C$ = "Update Palette 0 & 1": GoSub AO
-        A$ = "LDD": B$ = "#$1F3F": C$ = "Palette values for index 2 & 3": GoSub AO
+        A$ = "LDD": B$ = "#$2030": C$ = "Palette values for index 2 & 3": GoSub AO
         A$ = "STD": B$ = "$FFB2": C$ = "Update Palette 2 & 3": GoSub AO
     End If
     A$ = "LDD": B$ = "#$" + GModeStartAddress$(Gmode): C$ = "A = the location in RAM to start the graphics screen": GoSub AO

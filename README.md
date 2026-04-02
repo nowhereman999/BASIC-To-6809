@@ -12,7 +12,6 @@ https://wordpress.com/post/nowhereman999.wordpress.com/5054
 
 V 5.25
 - Fixed SDC_DIRPAGE(0), was causing a stack corruption
-- Fixed the automatic setting of the special palette for NTSC GMODE selected screens
 - Fixed V=VAL("&H"+A$)
 - Fixed a problem with mixed two byte addition or subtraction one byte operations
 - Fixed String concat, like S$ = "HELLO "+ "WORLD" was backwards, although S$ = A$ + B$ was fine
