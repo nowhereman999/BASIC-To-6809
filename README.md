@@ -2,7 +2,7 @@
 A BASIC cross compiler for the TRS-80 Color Computer 1,2 & 3 and also the Dragon computers.  The syntax is pretty much the same
 as Extended Color BASIC, with many new BASIC commands and features.
 
-Binaries for all major OSs are available in the binaries folder
+Binaries for all major OSs are available in the Binary_Versions folder
 
 Installation and much more info is available in the manual found here:
 https://github.com/nowhereman999/BASIC-To-6809/blob/main/Manual.pdf
