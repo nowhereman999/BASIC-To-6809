@@ -40,31 +40,32 @@ Return
 AddMaxType2:
 If LeftType < 5 Then
     ' Left is 1 byte and right is 2 bytes
-        A$ = "PULS": B$ = "B": C$ = "Get the left 8 bit value": GoSub AO
+    ' Stack on entry:
+    '   ,S   = RIGHT 16-bit
+    '   2,S  = LEFT  8-bit
     If LeftType = 1 Or LeftType = 3 Then
-        'Signed
-        A$ = "SEX": C$ = "Sign Extend B into D": GoSub AO
+        ' Signed left byte
+        A$ = "LDB": B$ = "2,S": C$ = "Get the left 8 bit value": GoSub AO
+        A$ = "SEX": C$ = "Sign extend B into D": GoSub AO
     Else
-    ' Unsigned
-        A$ = "CLRA": C$ = "MSB = 0": GoSub AO
+        ' Unsigned left byte
+        A$ = "LDB": B$ = "2,S": C$ = "Get the left 8 bit value": GoSub AO
+        A$ = "CLRA": C$ = "Zero extend B into D": GoSub AO
     End If
-    A$ = "ADDD": B$ = ",S++": C$ = "Add left 16 bit value, fix the stack the stack": GoSub AO
-    A$ = "PSHS": B$ = "D": C$ = "Save the new 16 bit value": GoSub AO
+    A$ = "ADDD": B$ = ",S+": C$ = "Add right 16 bit value, fix the stack": GoSub AO
+    A$ = "STD": B$ = ",S": C$ = "Save the new 16 bit result": GoSub AO
 Else
+    ' Right @ ,S Left @ 1,S
     ' Left is 2 bytes and right is 1 byte
     If RightType = 1 Or RightType = 3 Then
-    'Signed
-        A$ = "LDB": B$ = "2,S": C$ = "Get the right 8 bit value": GoSub AO
-        A$ = "SEX": C$ = "Sign Extend B into D": GoSub AO
-        A$ = "ADDD": B$ = ",S+": C$ = "Add left 16 bit value, move the stack": GoSub AO
-        A$ = "STD": B$ = ",S": C$ = "Save the new 16 bit value": GoSub AO
+        A$ = "LDB": B$ = ",S+": C$ = "Pop the right 8 bit value": GoSub AO
+        A$ = "SEX": C$ = "Sign extend B into D": GoSub AO
     Else
-    ' Unsigned
-        A$ = "LDB": B$ = "2,S": C$ = "Get the right 8 bit value": GoSub AO
-        A$ = "CLRA": C$ = "Clear MSB": GoSub AO
-        A$ = "ADDD": B$ = ",S+": C$ = "Add left 16 bit value, move the stack": GoSub AO
-        A$ = "STD": B$ = ",S": C$ = "Save the new 16 bit value": GoSub AO
-    End if
+        A$ = "LDB": B$ = ",S+": C$ = "Pop the right 8 bit value": GoSub AO
+        A$ = "CLRA": C$ = "Zero extend B into D": GoSub AO
+    End If
+    A$ = "ADDD": B$ = ",S": C$ = "Add the left 16 bit value": GoSub AO
+    A$ = "STD": B$ = ",S": C$ = "Save the new 16 bit value": GoSub AO
 End If
 Return
 
@@ -145,32 +146,43 @@ Return
 SubMaxType2:
 If LeftType < 5 Then
     ' Left is 1 byte and right is 2 bytes
+    ' Stack on entry:
+    '   ,S   = RIGHT 16-bit
+    '   2,S  = LEFT  8-bit
+    ' We must widen the LOWER left operand, then subtract:
+    '   LEFT - RIGHT
+    '
+    ' Left is 1 byte and right is 2 bytes
+    ' Doing D = Left @ 2,S - Right @,S
     If LeftType = 1 Or LeftType = 3 Then
-        'Signed
-        A$ = "LDB": B$ = ",S": C$ = "Get the left 8 bit value": GoSub AO
-        A$ = "SEX": C$ = "Sign Extend B into D": GoSub AO
-        A$ = "PSHS": B$ = "A": C$ = "Save the MSB on the stack": GoSub AO
+        ' Signed left byte
+        A$ = "LDB": B$ = "2,S": C$ = "Get the left 8 bit value": GoSub AO
+        A$ = "SEX": C$ = "Sign extend B into D": GoSub AO
     Else
-    ' Unsigned
-        A$ = "CLR": B$ = ",-S": C$ = "MSB = 0": GoSub AO
+        ' Unsigned left byte
+        A$ = "LDB": B$ = "2,S": C$ = "Get the left 8 bit value": GoSub AO
+        A$ = "CLRA": C$ = "Zero extend B into D": GoSub AO
     End If
-    A$ = "LDD": B$ = "2,S": C$ = "Get the right 16 bit value": GoSub AO
-    A$ = "SUBD": B$ = ",S++": C$ = "Subtract left 16 bit value, move the stack": GoSub AO
+    ' D has the LEFT value
+    A$ = "SUBD": B$ = ",S+": C$ = "Subtract right 16 bit value, move the stack": GoSub AO
+    A$ = "STD": B$ = ",S": C$ = "Save the 16 bit result on the stack": GoSub AO
 Else
-    ' Left is 2 bytes and right is 1 byte
+    '   LEFT - RIGHT
+    ' Left is 2 bytes @ 2,S and right is 1 byte at ,S
     If RightType = 1 Or RightType = 3 Then
-    'Signed
-        A$ = "LDB": B$ = "2,S": C$ = "Get the right 8 bit value": GoSub AO
+        ' Signed right byte
+        A$ = "LDB": B$ = ",S": C$ = "Get the right 8 bit value": GoSub AO
         A$ = "SEX": C$ = "Sign Extend B into D": GoSub AO
-        A$ = "SUBD": B$ = ",S+": C$ = "Subtract left 16 bit value, move the stack": GoSub AO
     Else
-    ' Unsigned
-        A$ = "LDB": B$ = "2,S": C$ = "Get the right 8 bit value": GoSub AO
+        ' Unsigned right byte
+        A$ = "LDB": B$ = ",S": C$ = "Get the right 8 bit value": GoSub AO
         A$ = "CLRA": C$ = "Clear MSB": GoSub AO
-        A$ = "SUBD": B$ = ",S+": C$ = "Subtract left 16 bit value, move the stack": GoSub AO
-    End if
+    End If
+    A$ = "STD": B$ = ",-S": C$ = "Store 16 bit version of the right value on the stack": GoSub AO
+    A$ = "LDD": B$ = "2,S": C$ = "Get the left 16 bit value": GoSub AO
+    A$ = "SUBD": B$ = ",S++": C$ = "D = left 16 bit value - right 16 bit value, fix the stack": GoSub AO
+    A$ = "STD": B$ = ",S": C$ = "Save the new 16 bit value": GoSub AO
 End If
-A$ = "STD": B$ = ",S": C$ = "Save the new 16 bit value": GoSub AO
 Return
 
 ' Both are 2 bytes
@@ -240,7 +252,7 @@ End Select
 Mul1ByteInt:
 A$ = "LDD": B$ = ",S++": C$ = "A = value1 an 8 bit unsigned, B = value2 an 8 bit unsigned, fix the stack": GoSub AO
 A$ = "MUL": C$ = "D = A * B": GoSub AO
-A$ = "PSHS": B$ = "D": C$ = "Save the new 8 bit value": GoSub AO
+A$ = "PSHS": B$ = "D": C$ = "Save the new 16 bit value": GoSub AO
 Largesttype=Largesttype+2
 Return
 ' Both are 2 bytes (16 bits)

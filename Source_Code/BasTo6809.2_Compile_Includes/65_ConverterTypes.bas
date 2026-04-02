@@ -860,10 +860,14 @@ Return
 
 ' Convert smaller of LeftType or RightType type to the largest type
 ScaleSmallNumberOnStack:
+Dim SaveLT As Integer
+Dim SaveRT As Integer
+
 ' Promote operands so BOTH match Largesttype.
-' (Largesttype can be forced by an operator, e.g. / forces NT_Single)
+' Largesttype may be forced by context, for example mixed int/float or mixed widths.
 If Largesttype > LeftType Or Largesttype > RightType Then
-    ' First promote the TOP operand (type in LeftType) to Largesttype
+
+    ' If LEFT is smaller, convert LEFT to match the target type
     If LeftType < Largesttype Then
         SaveRT = RightType
         RightType = Largesttype
@@ -872,22 +876,25 @@ If Largesttype > LeftType Or Largesttype > RightType Then
         RightType = SaveRT
     End If
 
-    ' Now promote the other operand (type in RightType) to Largesttype
+    ' If RIGHT is smaller, convert RIGHT to match the target type
     If RightType < Largesttype Then
+        SaveLT = LeftType
         LeftType = Largesttype
         GoSub ScaleRight2Left
         RightType = Largesttype
+        LeftType = SaveLT
     End If
+
     Return
 End If
 
-' Normal case: promote the smaller side to the larger side
+' Normal case: convert the smaller side to the larger side
 If LeftType <> RightType Then
     If LeftType > RightType Then
         GoSub ScaleRight2Left
     End If
     If RightType > LeftType Then
-        GoSub ScaleLeft2Right ' Scale the LeftType to match the RightType
+        GoSub ScaleLeft2Right
     End If
 End If
 Return
@@ -896,76 +903,131 @@ Return
 ScaleLeft2Right:
 Select Case RightType
     Case 5, 6 ' Right is 16 bit (signed or unsigned)
+        ' Stack on entry:
+        '   2,S = LEFT  8-bit value
+        '   ,S  = RIGHT 16-bit value
+        ' We must widen the LOWER left operand, not the top/right operand.
+        A$ = "PULS": B$ = "D": C$ = "Get the right 16 bit value off the stack": GoSub AO
+        A$ = "LEAS": B$ = "-1,S": C$ = "Make room for the new high byte of the left 16 bit value": GoSub AO
+        A$ = "PSHS": B$ = "D": C$ = "Restore the right 16 bit value on top of the stack": GoSub AO
         If LeftType = 1 Or LeftType = 3 Then
-            ' Right is a 16 bit value, Left is an 8 bit signed value
-            ' Sign Extend the left side to be 16 bits
-            A$ = "LDB": B$ = ",S": C$ = "Get left value off the stack": GoSub AO
+            ' Signed 8 -> signed 16
+            A$ = "LDB": B$ = "3,S": C$ = "Get left 8 bit value off the stack": GoSub AO
             A$ = "SEX": C$ = "Sign extend B into D": GoSub AO
-            A$ = "STA": B$ = ",-S": C$ = "Save the left value back on the stack, making room for a 16 bit value on the right": GoSub AO
+            A$ = "STA": B$ = "2,S": C$ = "Save the new high byte of the left 16 bit value": GoSub AO
         Else
-            ' Expand the left side to be 16 bits
-            A$ = "CLR": B$ = ",-S": C$ = "Save the left value back on the stack, making room for a 16 bit value on the right": GoSub AO
+            ' Unsigned 8 -> unsigned 16
+            A$ = "CLR": B$ = "2,S": C$ = "Clear the new high byte of the left 16 bit value": GoSub AO
         End If
     Case 7, 8 ' Right is 32 bit (signed or unsigned)
+        ' Stack on entry:
+        '   4,S... = LEFT  value (8 or 16 bit)
+        '   ,S...  = RIGHT 32-bit value
+        ' We must widen the LOWER left operand in place.
         Select Case LeftType
-            Case 1, 3 ' Left signed 8 bit to 32 bit
-                A$ = "LDB": B$ = ",S": C$ = "Get left value off the stack": GoSub AO
+            Case 1, 3 ' Left signed 8 bit -> 32 bit
+                A$ = "PULS": B$ = "D,X": C$ = "Get the right 32 bit value": GoSub AO
+                A$ = "LEAS": B$ = "-3,S": C$ = "Make room for the larger left value": GoSub AO
+                A$ = "PSHS": B$ = "D,X": C$ = "Restore the right 32 bit value": GoSub AO
+
+                A$ = "LDB": B$ = "7,S": C$ = "Get left 8 bit value off the stack": GoSub AO
                 A$ = "SEX": C$ = "Sign extend B into D": GoSub AO
-                A$ = "STA": B$ = ",-S": C$ = "Save the left value back on the stack": GoSub AO
-                A$ = "STA": B$ = ",-S": C$ = "Save the left value back on the stack": GoSub AO
-                A$ = "STA": B$ = ",-S": C$ = "Save the left value back on the stack": GoSub AO
-            Case 2, 4 ' Left Unsigned 8 bit to be 32 bits
-                A$ = "CLR": B$ = ",-S": C$ = "Save the left value back on the stack": GoSub AO
-                A$ = "CLR": B$ = ",-S": C$ = "Save the left value back on the stack": GoSub AO
-                A$ = "CLR": B$ = ",-S": C$ = "Save the left value back on the stack": GoSub AO
-            Case 5 ' Left signed 16 bit to signed 32 bit value
-                A$ = "LDD": B$ = ",S": C$ = "Get left MSW value off the stack": GoSub AO
-                A$ = "TFR": B$ = "A,B": C$ = "B = the MSB": GoSub AO
-                A$ = "SEX": C$ = "A now has the sign": GoSub AO
-                A$ = "STA": B$ = ",-S": C$ = "Save the left MSW value back on the stack": GoSub AO
-                A$ = "STA": B$ = ",-S": C$ = "Save the left MSW value back on the stack": GoSub AO
-            Case 6 ' Left UnSigned 16 bit to 32 bit value
-                A$ = "CLR": B$ = ",-S": C$ = "Clear the left MSW value back on the stack": GoSub AO
-                A$ = "CLR": B$ = ",-S": C$ = "Clear the left MSW value back on the stack": GoSub AO
+                A$ = "STA": B$ = "4,S": C$ = "Save new left 32 bit byte 0": GoSub AO
+                A$ = "STA": B$ = "5,S": C$ = "Save new left 32 bit byte 1": GoSub AO
+                A$ = "STA": B$ = "6,S": C$ = "Save new left 32 bit byte 2": GoSub AO
+            Case 2, 4 ' Left unsigned 8 bit -> 32 bit
+                A$ = "PULS": B$ = "D,X": C$ = "Get the right 32 bit value": GoSub AO
+                A$ = "LEAS": B$ = "-3,S": C$ = "Make room for the larger left value": GoSub AO
+                A$ = "PSHS": B$ = "D,X": C$ = "Restore the right 32 bit value": GoSub AO
+
+                A$ = "CLR": B$ = "4,S": C$ = "Clear new left 32 bit byte 0": GoSub AO
+                A$ = "CLR": B$ = "5,S": C$ = "Clear new left 32 bit byte 1": GoSub AO
+                A$ = "CLR": B$ = "6,S": C$ = "Clear new left 32 bit byte 2": GoSub AO
+            Case 5 ' Left signed 16 bit -> 32 bit
+                A$ = "PULS": B$ = "D,X": C$ = "Get the right 32 bit value": GoSub AO
+                A$ = "LEAS": B$ = "-2,S": C$ = "Make room for the larger left value": GoSub AO
+                A$ = "PSHS": B$ = "D,X": C$ = "Restore the right 32 bit value": GoSub AO
+
+                A$ = "LDB": B$ = "6,S": C$ = "Get left 16 bit MSB": GoSub AO
+                A$ = "SEX": C$ = "Sign extend B into D": GoSub AO
+                A$ = "STA": B$ = "4,S": C$ = "Save new left 32 bit byte 0": GoSub AO
+                A$ = "STA": B$ = "5,S": C$ = "Save new left 32 bit byte 1": GoSub AO
+            Case 6 ' Left unsigned 16 bit -> 32 bit
+                A$ = "PULS": B$ = "D,X": C$ = "Get the right 32 bit value": GoSub AO
+                A$ = "LEAS": B$ = "-2,S": C$ = "Make room for the larger left value": GoSub AO
+                A$ = "PSHS": B$ = "D,X": C$ = "Restore the right 32 bit value": GoSub AO
+
+                A$ = "CLR": B$ = "4,S": C$ = "Clear new left 32 bit byte 0": GoSub AO
+                A$ = "CLR": B$ = "5,S": C$ = "Clear new left 32 bit byte 1": GoSub AO
         End Select
     Case 9, 10 ' Right is 64 bit (signed or unsigned)
+        ' Stack on entry:
+        '   8,S... = LEFT  value (8/16/32 bit)
+        '   ,S...  = RIGHT 64-bit value
+        ' We must widen the LOWER left operand in place.
         Select Case LeftType
-            Case 1, 3 ' Left signed 8 bit to 64 bit
-                A$ = "LDB": B$ = ",S": C$ = "Get left value off the stack": GoSub AO
+            Case 1, 3 ' Left signed 8 bit -> 64 bit
+                A$ = "PULS": B$ = "D,X,Y,U": C$ = "Get right 64 bit value off the stack": GoSub AO
+                A$ = "LEAS": B$ = "-7,S": C$ = "Make room for the larger left value": GoSub AO
+                A$ = "PSHS": B$ = "D,X,Y,U": C$ = "Restore right 64 bit value": GoSub AO
+
+                A$ = "LDB": B$ = "15,S": C$ = "Get left 8 bit value": GoSub AO
                 A$ = "SEX": C$ = "Sign extend B into D": GoSub AO
-                A$ = "TFR": B$ = "A,B": C$ = "Copy the sign bits to B": GoSub AO
-                A$ = "PSHS": B$ = "A": C$ = "Save the new 16 bits Left side value on the stack": GoSub AO
-                A$ = "PSHS": B$ = "D": C$ = "Save the new 32 bit Left side value on the stack": GoSub AO
-                A$ = "PSHS": B$ = "D": C$ = "Save the new 48 bit Left side value on the stack": GoSub AO
-                A$ = "PSHS": B$ = "D": C$ = "Save the new 64 bit Left side value on the stack": GoSub AO
-            Case 2, 4 ' Left Unsigned 8 bit to be 64 bits
+                A$ = "TFR": B$ = "A,B": C$ = "Copy sign bits to B": GoSub AO
+                A$ = "STA": B$ = "14,S": C$ = "Save new left 16 bit byte": GoSub AO
+                A$ = "STD": B$ = "12,S": C$ = "Save new left 32 bit value": GoSub AO
+                A$ = "STD": B$ = "10,S": C$ = "Save new left 48 bit value": GoSub AO
+                A$ = "STD": B$ = "8,S": C$ = "Save new left 64 bit value": GoSub AO
+            Case 2, 4 ' Left unsigned 8 bit -> 64 bit
+                A$ = "PULS": B$ = "D,X,Y,U": C$ = "Get right 64 bit value off the stack": GoSub AO
+                A$ = "LEAS": B$ = "-7,S": C$ = "Make room for the larger left value": GoSub AO
+                A$ = "PSHS": B$ = "D,X,Y,U": C$ = "Restore right 64 bit value": GoSub AO
+
                 A$ = "LDD": B$ = "#$0000": C$ = "D=0": GoSub AO
-                A$ = "PSHS": B$ = "A": C$ = "Save the new 16 bits Left side value on the stack": GoSub AO
-                A$ = "PSHS": B$ = "D": C$ = "Save the new 32 bit Left side value on the stack": GoSub AO
-                A$ = "PSHS": B$ = "D": C$ = "Save the new 48 bit Left side value on the stack": GoSub AO
-                A$ = "PSHS": B$ = "D": C$ = "Save the new 64 bit Left side value on the stack": GoSub AO
-            Case 5 ' Left signed 16 bit to signed 64 bit value
-                A$ = "LDB": B$ = ",S": C$ = "Get Left 16 bit MSB value off the stack": GoSub AO
+                A$ = "STA": B$ = "14,S": C$ = "Save new left 16 bit byte": GoSub AO
+                A$ = "STD": B$ = "12,S": C$ = "Save new left 32 bit value": GoSub AO
+                A$ = "STD": B$ = "10,S": C$ = "Save new left 48 bit value": GoSub AO
+                A$ = "STD": B$ = "8,S": C$ = "Save new left 64 bit value": GoSub AO
+            Case 5 ' Left signed 16 bit -> 64 bit
+                A$ = "PULS": B$ = "D,X,Y,U": C$ = "Get right 64 bit value off the stack": GoSub AO
+                A$ = "LEAS": B$ = "-6,S": C$ = "Make room for the larger left value": GoSub AO
+                A$ = "PSHS": B$ = "D,X,Y,U": C$ = "Restore right 64 bit value": GoSub AO
+
+                A$ = "LDB": B$ = "14,S": C$ = "Get left 16 bit MSB": GoSub AO
                 A$ = "SEX": C$ = "Sign extend B into A": GoSub AO
-                A$ = "TFR": B$ = "A,B": C$ = "Copy the sign bits to B": GoSub AO
-                A$ = "PSHS": B$ = "D": C$ = "Save the new 32 bit Left side value on the stack": GoSub AO
-                A$ = "PSHS": B$ = "D": C$ = "Save the new 48 bit Left side value on the stack": GoSub AO
-                A$ = "PSHS": B$ = "D": C$ = "Save the new 64 bit Left side value on the stack": GoSub AO
-            Case 6 ' Left UnSigned 16 bit to 64 bit value
+                A$ = "TFR": B$ = "A,B": C$ = "Copy sign bits to B": GoSub AO
+                A$ = "STD": B$ = "12,S": C$ = "Save new left 32 bit value": GoSub AO
+                A$ = "STD": B$ = "10,S": C$ = "Save new left 48 bit value": GoSub AO
+                A$ = "STD": B$ = "8,S": C$ = "Save new left 64 bit value": GoSub AO
+            Case 6 ' Left unsigned 16 bit -> 64 bit
+                A$ = "PULS": B$ = "D,X,Y,U": C$ = "Get right 64 bit value off the stack": GoSub AO
+                A$ = "LEAS": B$ = "-6,S": C$ = "Make room for the larger left value": GoSub AO
+                A$ = "PSHS": B$ = "D,X,Y,U": C$ = "Restore right 64 bit value": GoSub AO
+
                 A$ = "LDD": B$ = "#$0000": C$ = "D=0": GoSub AO
-                A$ = "PSHS": B$ = "D": C$ = "Save the new 32 bit Left side value on the stack": GoSub AO
-                A$ = "PSHS": B$ = "D": C$ = "Save the new 48 bit Left side value on the stack": GoSub AO
-                A$ = "PSHS": B$ = "D": C$ = "Save the new 64 bit Left side value on the stack": GoSub AO
-            Case 7 ' Left signed 32 bit to 64 bit value
-                A$ = "LDB": B$ = ",S": C$ = "Get Left 32 bit MSB value off the stack": GoSub AO
+                A$ = "STD": B$ = "12,S": C$ = "Save new left 32 bit value": GoSub AO
+                A$ = "STD": B$ = "10,S": C$ = "Save new left 48 bit value": GoSub AO
+                A$ = "STD": B$ = "8,S": C$ = "Save new left 64 bit value": GoSub AO
+            Case 7 ' Left signed 32 bit -> 64 bit
+                A$ = "PULS": B$ = "D,X,Y,U": C$ = "Get right 64 bit value off the stack": GoSub AO
+                A$ = "LEAS": B$ = "-4,S": C$ = "Make room for the larger left value": GoSub AO
+                A$ = "PSHS": B$ = "D,X,Y,U": C$ = "Restore right 64 bit value": GoSub AO
+
+                A$ = "LDB": B$ = "12,S": C$ = "Get left 32 bit MSB": GoSub AO
                 A$ = "SEX": C$ = "Sign extend B into A": GoSub AO
-                A$ = "TFR": B$ = "A,B": C$ = "D now has the sign bits": GoSub AO
-                A$ = "PSHS": B$ = "D": C$ = "Save the new 48 bit Left side value on the stack": GoSub AO
-                A$ = "PSHS": B$ = "D": C$ = "Save the new 64 bit Left side value on the stack": GoSub AO
-            Case 8 ' Left Unsigned 32 bit to 64 bit value
-                A$ = "LDD": B$ = "#$0000": C$ = "D=0": GoSub AO
-                A$ = "PSHS": B$ = "D": C$ = "Save the new 48 bit Left side value on the stack": GoSub AO
-                A$ = "PSHS": B$ = "D": C$ = "Save the new 64 bit Left side value on the stack": GoSub AO
+                A$ = "STA": B$ = "11,S": C$ = "Save new left 40 bit byte": GoSub AO
+                A$ = "STA": B$ = "10,S": C$ = "Save new left 48 bit byte": GoSub AO
+                A$ = "STA": B$ = "9,S": C$ = "Save new left 56 bit byte": GoSub AO
+                A$ = "STA": B$ = "8,S": C$ = "Save new left 64 bit byte": GoSub AO
+            Case 8 ' Left unsigned 32 bit -> 64 bit
+                A$ = "PULS": B$ = "D,X,Y,U": C$ = "Get right 64 bit value off the stack": GoSub AO
+                A$ = "LEAS": B$ = "-4,S": C$ = "Make room for the larger left value": GoSub AO
+                A$ = "PSHS": B$ = "D,X,Y,U": C$ = "Restore right 64 bit value": GoSub AO
+
+                A$ = "CLR": B$ = "11,S": C$ = "Clear new left 40 bit byte": GoSub AO
+                A$ = "CLR": B$ = "10,S": C$ = "Clear new left 48 bit byte": GoSub AO
+                A$ = "CLR": B$ = "9,S": C$ = "Clear new left 56 bit byte": GoSub AO
+                A$ = "CLR": B$ = "8,S": C$ = "Clear new left 64 bit byte": GoSub AO
         End Select
     Case 11 ' Right is Single
         Select Case FloatType
@@ -973,230 +1035,6 @@ Select Case RightType
                 ' Handle 3 byte FFP
                 ' Right is a 3 byte FFP value, Left is an 8,16 or 32 bit value
                 Select Case LeftType
-                    Case 1, 3 ' Signed byte to  3 byte FFP value
-                        A$ = "PULS": B$ = "B": C$ = "Get the left byte off the stack": GoSub AO
-                        A$ = "SEX": C$ = "Sign extend B into D": GoSub AO
-                        A$ = "JSR": B$ = "S16_To_FFP": C$ = "Convert Signed 16 bit integer in D to 3 Byte FFP @ ,S": GoSub AO
-                    Case 2, 4 ' Bit is either 0 or 1 , or unsinged byte
-                        A$ = "PULS": B$ = "B": C$ = "Get the left byte off the stack": GoSub AO
-                        A$ = "CLRA": C$ = "MSB = 0": GoSub AO
-                        A$ = "JSR": B$ = "U16_To_FFP": C$ = "Convert Unsigned 16 bit integer in D to 3 Byte FFP @ ,S": GoSub AO
-                    Case 5
-                        ' Signed 16 bit value to  3 byte FFP value
-                        A$ = "PULS": B$ = "D": C$ = "Get the left bytes off the stack": GoSub AO
-                        A$ = "JSR": B$ = "S16_To_FFP": C$ = "Convert Signed 16 bit integer in D to 3 Byte FFP @ ,S": GoSub AO
-                    Case 6
-                        ' UnSigned 16 bit value to  3 byte FFP value
-                        A$ = "PULS": B$ = "D": C$ = "Get the left bytes off the stack": GoSub AO
-                        A$ = "JSR": B$ = "U16_To_FFP": C$ = "Convert Unsigned 16 bit integer in D to 3 Byte FFP @ ,S": GoSub AO
-                    Case 7 ' Signed 32 bit value to  3 byte FFP value
-                        A$ = "JSR": B$ = "S32_To_FFP": C$ = "Convert Signed 32 bit integer @,S to 3 Byte FFP @ ,S": GoSub AO
-                    Case 8 ' UnSigned 32 bit value to  3 byte FFP value
-                        A$ = "JSR": B$ = "U32_To_FFP": C$ = "Convert Unsigned 32 bit integer @,S to 3 Byte FFP @ ,S": GoSub AO
-                    Case 9 ' Signed 64 bit value to  3 byte FFP value
-                        A$ = "JSR": B$ = "S64_To_FFP": C$ = "Convert Signed 64 bit integer @,S to 3 Byte FFP @ ,S": GoSub AO
-                    Case 10 ' UnSigned 64 bit value to  3 byte FFP value
-                        A$ = "JSR": B$ = "U64_To_FFP": C$ = "Convert Unsigned 64 bit integer @,S to 3 Byte FFP @ ,S": GoSub AO
-                End Select
-            Case 1:
-                ' Handle 5 byte FP5
-                ' Right is a 5 byte FP5 value, Left is an 8,16 or 32 bit value
-                Select Case LeftType
-                    Case 1, 3 ' Signed byte to  5 byte FP5 value
-                        A$ = "PULS": B$ = "B": C$ = "Get the left byte off the stack": GoSub AO
-                        A$ = "SEX": C$ = "Sign extend B into D": GoSub AO
-                        A$ = "JSR": B$ = "S16_To_FP5": C$ = "Convert Signed 16 bit integer in D to 5 Byte FP5 @ ,S": GoSub AO
-                    Case 2, 4 ' Bit is either 0 or 1 , or unsinged byte
-                        A$ = "PULS": B$ = "B": C$ = "Get the left byte off the stack": GoSub AO
-                        A$ = "CLRA": C$ = "MSB = 0": GoSub AO
-                        A$ = "JSR": B$ = "U16_To_FP5": C$ = "Convert Unsigned 16 bit integer in D to 5 Byte FP5 @ ,S": GoSub AO
-                    Case 5
-                        ' Signed 16 bit value to 5 byte FP5 value
-                        A$ = "PULS": B$ = "D": C$ = "Get the left bytes off the stack": GoSub AO
-                        A$ = "JSR": B$ = "S16_To_FP5": C$ = "Convert Signed 16 bit integer in D to 5 Byte FP5 @ ,S": GoSub AO
-                    Case 6
-                        ' UnSigned 16 bit value to 5 byte FP5 value
-                        A$ = "PULS": B$ = "D": C$ = "Get the left bytes off the stack": GoSub AO
-                        A$ = "JSR": B$ = "U16_To_FP5": C$ = "Convert Unsigned 16 bit integer in D to 5 Byte FP5 @ ,S": GoSub AO
-                    Case 7 ' Signed 32 bit value to 5 byte FP5 value
-                        A$ = "JSR": B$ = "S32_To_FP5": C$ = "Convert Signed 32 bit integer @,S to 5 Byte FP5 @ ,S": GoSub AO
-                    Case 8 ' UnSigned 32 bit value to 5 byte FP5 value
-                        A$ = "JSR": B$ = "U32_To_FP5": C$ = "Convert Unsigned 32 bit integer @,S to 5 Byte FP5 @ ,S": GoSub AO
-                    Case 9 ' Signed 64 bit value to 5 byte FP5 value
-                        A$ = "JSR": B$ = "S64_To_FP5": C$ = "Convert Signed 64 bit integer @,S to 5 Byte FP5 @ ,S": GoSub AO
-                    Case 10 ' UnSigned 64 bit value to 5 byte FP5 value
-                        A$ = "JSR": B$ = "U64_To_FP5": C$ = "Convert Unsigned 64 bit integer @,S to 5 Byte FP5 @ ,S": GoSub AO
-                End Select
-        End Select
-    Case 12 ' Right is 10 byte Double-Precision Floating-Point value, which requires 10 bytes
-        ' Right is an (10 byte) value, Left is an 8,16,32,64 bit integer or Single value
-        Select Case LeftType
-            Case 1, 3 ' Signed byte to IEEE 754 Double, 64 bit FP number
-                A$ = "PULS": B$ = "B": C$ = "Get Left 8 bit signed value off the stack and move the stack pointer": GoSub AO
-                A$ = "SEX": C$ = "Sign extend B into D": GoSub AO
-                A$ = "JSR": B$ = "Int2Double": C$ = "Convert signed 16 bit integer in D to 10 byte Double @ ,S": GoSub AO
-            Case 2, 4 ' Bit is either 0 or 1 , or unsinged byte
-                A$ = "PULS": B$ = "B": C$ = "Get Left 8 bit signed value off the stack and move the stack pointer": GoSub AO
-                A$ = "CLRA": C$ = "D = B unsigned": GoSub AO
-                A$ = "JSR": B$ = "UnInt2Double": C$ = "Convert Unsigned 16 bit integer in D to 10 byte Double @ ,S": GoSub AO
-            Case 5
-                ' Signed 16 bit value to IEEE 754 Double, 64 bit FP number
-                A$ = "PULS": B$ = "D": C$ = "Get Left 16 bit signed value off the stack": GoSub AO
-                A$ = "JSR": B$ = "Int2Double": C$ = "Convert signed 16 bit integer in D to 10 byte Double @ ,S": GoSub AO
-            Case 6
-                ' UnSigned 16 bit value to IEEE 754 Double, 64 bit FP number
-                A$ = "PULS": B$ = "D": C$ = "Get Left 16 bit UnSigned value off the stack": GoSub AO
-                A$ = "JSR": B$ = "UnInt2Double": C$ = "Convert Unsigned 16 bit integer in D to 10 byte Double @ ,S": GoSub AO
-            Case 7 ' Signed 32 bit value to IEEE 754 Double, 64 bit FP number
-                A$ = "JSR": B$ = "S32_To_Double": C$ = "Convert signed 32bit integer @,S to 10 byte Double @ ,S": GoSub AO
-            Case 8 ' UnSigned 32 bit value to IEEE 754 Double, 64 bit FP number
-                A$ = "JSR": B$ = "U32_To_Double": C$ = "Convert Unsigned 32bit integer @,S to 10 byte Double @ ,S": GoSub AO
-            Case 9 ' Signed 64 bit value to IEEE 754 Double, 64 bit FP number
-                ' Change Left from Signed 64 bit value to 8 byte float value
-                A$ = "JSR": B$ = "S64_To_Double": C$ = "Convert signed 64 bit integer @,S to 10 byte Double @ ,S": GoSub AO
-            Case 10 ' UnSigned 64 bit value to IEEE 754 Double, 64 bit FP number
-                ' Change Left from UnSigned 64 bit value to 8 byte float value
-                A$ = "JSR": B$ = "U64_To_Double": C$ = "Convert Unsigned 64 bit integer @,S to 10 byte Double @ ,S": GoSub AO
-            Case 11 ' Right is IEEE 754 Double-Precision Floating-Point value, which requires 10 bytes
-                ' Change Left from Single value to 10 byte Double Float value
-                Select Case FloatType
-                    Case 0:
-                        ' Handle 3 byte FFP
-                        A$ = "JSR": B$ = "FFP_To_Double": C$ = "Convert FFP at ,S to 10 byte Double at ,S": GoSub AO
-                    Case 1:
-                        ' Handle 5 byte FP5
-                        A$ = "JSR": B$ = "FP5_To_Double": C$ = "Convert FP5 at ,S to 10 byte Double at ,S": GoSub AO
-                End Select
-                ' For now value of 13 are floating point numbers, with higher precision that code still must be written to handle.
-        End Select
-End Select
-Return
-
-' Scale the RightType to match the LeftType
-ScaleRight2Left:
-Select Case LeftType
-    Case 5, 6 ' Left is 16 bit (signed or unsigned)
-        A$ = "LDD": B$ = ",S": C$ = "Get left value off the stack": GoSub AO
-        A$ = "STD": B$ = ",-S": C$ = "Save the left value back on the stack, making room for a 16 bit value on the right": GoSub AO
-        If RightType = 1 Or RightType = 3 Then
-            ' Left is a 16 bit value, Right is an 8 bit signed value
-            ' Sign Extend the right side to be 16 bits
-            A$ = "LDB": B$ = "3,S": C$ = "Get Right 8 bit value off the stack": GoSub AO
-            A$ = "SEX": C$ = "Sign extend B into D": GoSub AO
-            A$ = "STA": B$ = "2,S": C$ = "Save the new 16 bit right side value on the stack": GoSub AO
-        Else
-            ' Expand the right side to be 16 bits
-            A$ = "CLR": B$ = "2,S": C$ = "Save the left value back on the stack, making room for a 16 bit value on the right": GoSub AO
-        End If
-    Case 7, 8 ' Left is 32 bit (signed or unsigned)
-        ' Left is a 32 bit value, Right is an 8 bit or 16 bit value
-        Select Case RightType
-            Case 1, 3 ' Right signed 8 bit to 32 bit
-                A$ = "PULS": B$ = "D,X": C$ = "Get the left 32 bit value": GoSub AO
-                A$ = "LEAS": B$ = "-3,S": C$ = "Move the stack pointer to make room for the new size of the right value": GoSub AO
-                A$ = "PSHS": B$ = "D,X": C$ = "Save the left 32 bit value": GoSub AO
-
-                A$ = "LDB": B$ = "7,S": C$ = "Get Right 8 bit value off the stack": GoSub AO
-                A$ = "SEX": C$ = "Sign extend B into D": GoSub AO
-                A$ = "STA": B$ = "4,S": C$ = "Save the new 16 bit right side value on the stack": GoSub AO
-                A$ = "STA": B$ = "5,S": C$ = "Save the new 24 bit right side value on the stack": GoSub AO
-                A$ = "STA": B$ = "6,S": C$ = "Save the new 32 bit right side value on the stack": GoSub AO
-            Case 2, 4 ' Right Unsigned 8 bit to be 32 bits
-                A$ = "PULS": B$ = "D,X": C$ = "Get the left 32 bit value": GoSub AO
-                A$ = "LEAS": B$ = "-3,S": C$ = "Move the stack pointer to make room for the new size of the right value": GoSub AO
-                A$ = "PSHS": B$ = "D,X": C$ = "Save the left 32 bit value": GoSub AO
-
-                A$ = "CLR": B$ = "4,S": C$ = "Save the left value back on the stack": GoSub AO
-                A$ = "CLR": B$ = "5,S": C$ = "Save the left value back on the stack": GoSub AO
-                A$ = "CLR": B$ = "6,S": C$ = "Save the left value back on the stack": GoSub AO
-            Case 5 ' Right signed 16 bit to signed 32 bit value
-                A$ = "PULS": B$ = "D,X": C$ = "Get the left 32 bit value": GoSub AO
-                A$ = "LEAS": B$ = "-2,S": C$ = "Move the stack pointer to make room for the new size of the right value": GoSub AO
-                A$ = "PSHS": B$ = "D,X": C$ = "Save the left 32 bit value": GoSub AO
-
-                A$ = "LDB": B$ = "6,S": C$ = "Get Right 8 bit value off the stack": GoSub AO
-                A$ = "SEX": C$ = "Sign extend B into D": GoSub AO
-                A$ = "STA": B$ = "4,S": C$ = "Save the new 32 bit right side value on the stack": GoSub AO
-                A$ = "STA": B$ = "5,S": C$ = "Save the new 32 bit right side value on the stack": GoSub AO
-            Case 6 ' Right UnSigned 16 bit to 32 bit value
-                A$ = "PULS": B$ = "D,X": C$ = "Get the left 32 bit value": GoSub AO
-                A$ = "LEAS": B$ = "-2,S": C$ = "Move the stack pointer to make room for the new size of the right value": GoSub AO
-                A$ = "PSHS": B$ = "D,X": C$ = "Save the left 32 bit value": GoSub AO
-
-                A$ = "CLR": B$ = "4,S": C$ = "Clear the right MSW value": GoSub AO
-                A$ = "CLR": B$ = "5,S": C$ = "Clear the right MSW value": GoSub AO
-        End Select
-    Case 9, 10 ' Left is 64 bit (signed or unsigned)
-        ' Left is a 64 bit value, Right is an 8,16 or 32 bit value
-        Select Case RightType
-            Case 1, 3 ' Right signed 8 bit to 64 bit
-                ' Turn RightType from 8 bit into 64 bit value
-                A$ = "PULS": B$ = "D,X,Y,U": C$ = "Get left 64 bit value off the stack": GoSub AO
-                A$ = "LEAS": B$ = "-7,S": C$ = "Move the stack pointer to make room for the new size of the right value": GoSub AO
-                A$ = "PSHS": B$ = "D,X,Y,U": C$ = "Put 64 bits of Left value on the stack": GoSub AO
-
-                A$ = "LDB": B$ = "15,S": C$ = "Get Right 8 bit value off the stack": GoSub AO
-                A$ = "SEX": C$ = "Sign extend B into D": GoSub AO
-                A$ = "TFR": B$ = "A,B": C$ = "Copy the sign bits to B": GoSub AO
-                A$ = "STA": B$ = "14,S": C$ = "Save the new 16 bit right side value on the stack": GoSub AO
-                A$ = "STD": B$ = "12,S": C$ = "Save the new 32 bit right side value on the stack": GoSub AO
-                A$ = "STD": B$ = "10,S": C$ = "Save the new 48 bit right side value on the stack": GoSub AO
-                A$ = "STD": B$ = "8,S": C$ = "Save the new 64 bit right side value on the stack": GoSub AO
-            Case 2, 4 ' Left Unsigned 8 bit to be 64 bits
-                A$ = "PULS": B$ = "D,X,Y,U": C$ = "Get left 64 bit value off the stack": GoSub AO
-                A$ = "LEAS": B$ = "-7,S": C$ = "Move the stack pointer to make room for the new size of the right value": GoSub AO
-                A$ = "PSHS": B$ = "D,X,Y,U": C$ = "Put 64 bits of Left value on the stack": GoSub AO
-
-                A$ = "LDD": B$ = "#$0000": C$ = "D=0": GoSub AO
-                A$ = "STA": B$ = "14,S": C$ = "Save the new 16 bit right side value on the stack": GoSub AO
-                A$ = "STD": B$ = "12,S": C$ = "Save the new 32 bit right side value on the stack": GoSub AO
-                A$ = "STD": B$ = "10,S": C$ = "Save the new 48 bit right side value on the stack": GoSub AO
-                A$ = "STD": B$ = "8,S": C$ = "Save the new 64 bit right side value on the stack": GoSub AO
-            Case 5 ' Right signed 16 bit to signed 64 bit value
-                A$ = "PULS": B$ = "D,X,Y,U": C$ = "Get left 64 bit value off the stack": GoSub AO
-                A$ = "LEAS": B$ = "-6,S": C$ = "Move the stack pointer to make room for the new size of the right value": GoSub AO
-                A$ = "PSHS": B$ = "D,X,Y,U": C$ = "Put 64 bits of Left value on the stack": GoSub AO
-
-                A$ = "LDB": B$ = "14,S": C$ = "Get Right 16 bit MSB value off the stack": GoSub AO
-                A$ = "SEX": C$ = "Sign extend B into A": GoSub AO
-                A$ = "TFR": B$ = "A,B": C$ = "Copy the sign bits to B": GoSub AO
-                A$ = "STD": B$ = "12,S": C$ = "Save the new 32 bit right side value on the stack": GoSub AO
-                A$ = "STD": B$ = "10,S": C$ = "Save the new 48 bit right side value on the stack": GoSub AO
-                A$ = "STD": B$ = "8,S": C$ = "Save the new 64 bit right side value on the stack": GoSub AO
-            Case 6 ' Right UnSigned 16 bit to 64 bit value
-                A$ = "PULS": B$ = "D,X,Y,U": C$ = "Get left 64 bit value off the stack": GoSub AO
-                A$ = "LEAS": B$ = "-6,S": C$ = "Move the stack pointer to make room for the new size of the right value": GoSub AO
-                A$ = "PSHS": B$ = "D,X,Y,U": C$ = "Put 64 bits of Left value on the stack": GoSub AO
-
-                A$ = "LDD": B$ = "#$0000": C$ = "D=0": GoSub AO
-                A$ = "STD": B$ = "12,S": C$ = "Save the new 32 bit right side value on the stack": GoSub AO
-                A$ = "STD": B$ = "10,S": C$ = "Save the new 48 bit right side value on the stack": GoSub AO
-                A$ = "STD": B$ = "8,S": C$ = "Save the new 64 bit right side value on the stack": GoSub AO
-            Case 7 ' Right signed 32 bit to 64 bit value
-                A$ = "PULS": B$ = "D,X,Y,U": C$ = "Get left 64 bit value off the stack": GoSub AO
-                A$ = "LEAS": B$ = "-4,S": C$ = "Setup new 64 bit stack pointer": GoSub AO
-                A$ = "PSHS": B$ = "D,X,Y,U": C$ = "Put 64 bits of Left value on the stack": GoSub AO
-
-                A$ = "LDB": B$ = "12,S": C$ = "Get right 32 bit value off the stack": GoSub AO
-                A$ = "SEX": C$ = "Sign extend B into A": GoSub AO
-                A$ = "STA": B$ = "11,S": C$ = "Save the new 40 bit right side value on the stack": GoSub AO
-                A$ = "STA": B$ = "10,S": C$ = "Save the new 48 bit right side value on the stack": GoSub AO
-                A$ = "STA": B$ = "9,S": C$ = "Save the new 56 bit right side value on the stack": GoSub AO
-                A$ = "STA": B$ = "8,S": C$ = "Save the new 64 bit right side value on the stack": GoSub AO
-            Case 8 ' Right Unsigned 32 bit to 64 bit value
-                A$ = "PULS": B$ = "D,X,Y,U": C$ = "Get left 64 bit value off the stack": GoSub AO
-                A$ = "LEAS": B$ = "-4,S": C$ = "Setup new 64 bit stack pointer": GoSub AO
-                A$ = "PSHS": B$ = "D,X,Y,U": C$ = "Put 64 bits of Left value on the stack": GoSub AO
-
-                A$ = "LDD": B$ = "#$0000": C$ = "D=0": GoSub AO
-                A$ = "STA": B$ = "10,S": C$ = "Save the new 48 bit right side value on the stack": GoSub AO
-                A$ = "STA": B$ = "8,S": C$ = "Save the new 64 bit right side value on the stack": GoSub AO
-        End Select
-    Case 11 ' Left is Single value, Right is an 8,16 or 32 bit value
-        Select Case FloatType
-            Case 0:
-                ' Handle 3 byte FFP
-                Select Case RightType
                     Case 1, 3 ' Signed byte to FFP 3 byte floating point value
                         A$ = "LDB": B$ = "3,S": C$ = "Get right byte value off the stack": GoSub AO
                         A$ = "SEX": C$ = "Sign extend B into D": GoSub AO
@@ -1269,7 +1107,7 @@ Select Case LeftType
                         A$ = "PSHS": B$ = "B,Y": C$ = "Put the old left FFP value": GoSub AO
                     Case 10 ' UnSigned 64 bit value to FFP value
                         ' Left is a 3 byte FFP value,  Right is a 64 bit unsigned value
-                        A$ = "LEAU": B$ = "4,S": C$ = "U points at the 64 bit number": GoSub AO
+                        A$ = "LEAU": B$ = "3,S": C$ = "U points at the 64 bit number": GoSub AO
                         A$ = "PULU": B$ = "D,X,Y": C$ = "Read MS 6 Bytes, move pointer": GoSub AO
                         A$ = "LDU": B$ = ",U": C$ = "Get LS Bytes of the 64bit number": GoSub AO
                         A$ = "PSHS": B$ = "D,X,Y,U": C$ = "Save the 64bit number on the stack": GoSub AO
@@ -1297,119 +1135,37 @@ Select Case LeftType
                 End Select
             Case 1:
                 ' Handle 5 byte FP5
-                Select Case RightType
-                    Case 1, 3 ' Signed byte to FP5 5 byte floating point value
-                        A$ = "PULS": B$ = "A,X,Y": C$ = "Get the left FP5 value": GoSub AO
-                        A$ = "LDB": B$ = ",S": C$ = "Get right byte value off the stack": GoSub AO
-                        A$ = "LEAS": B$ = "-4,S": C$ = "Make room for new FP5 right value": GoSub AO
-                        A$ = "PSHS": B$ = "A,X,Y": C$ = "Put the left FP5 value, where it needs to end up": GoSub AO
+                ' Right is a 5 byte FP5 value, Left is an 8,16 or 32 bit value
+                Select Case LeftType
+                    Case 1, 3 ' Signed byte to  5 byte FP5 value
+                        A$ = "PULS": B$ = "B": C$ = "Get the left byte off the stack": GoSub AO
                         A$ = "SEX": C$ = "Sign extend B into D": GoSub AO
-                        A$ = "JSR": B$ = "S16_To_FP5": C$ = "Convert Signed 16bit integer in D to 5 Byte FP5 @ ,S": GoSub AO
-                        A$ = "PULS": B$ = "A,X,Y": C$ = "Get the right FP5 value, fix the stack": GoSub AO
-                        A$ = "LEAU": B$ = "10,S": C$ = "Point past right location": GoSub AO
-                        A$ = "PSHU": B$ = "A,X,Y": C$ = "Put the right FP5 value": GoSub AO
+                        A$ = "JSR": B$ = "S16_To_FP5": C$ = "Convert Signed 16 bit integer in D to 5 Byte FP5 @ ,S": GoSub AO
                     Case 2, 4 ' Bit is either 0 or 1 , or unsinged byte
-                        A$ = "PULS": B$ = "A,X,Y": C$ = "Get the left FP5 value": GoSub AO
-                        A$ = "LDB": B$ = ",S": C$ = "Get right byte value off the stack": GoSub AO
-                        A$ = "LEAS": B$ = "-4,S": C$ = "Make room for new FP5 right value": GoSub AO
-                        A$ = "PSHS": B$ = "A,X,Y": C$ = "Put the left FP5 value, where it needs to end up": GoSub AO
+                        A$ = "PULS": B$ = "B": C$ = "Get the left byte off the stack": GoSub AO
                         A$ = "CLRA": C$ = "MSB = 0": GoSub AO
-                        A$ = "JSR": B$ = "S16_To_FP5": C$ = "Convert Signed 16bit integer in D to 5 Byte FP5 @ ,S": GoSub AO
-                        A$ = "PULS": B$ = "A,X,Y": C$ = "Get the right FP5 value, fix the stack": GoSub AO
-                        A$ = "LEAU": B$ = "10,S": C$ = "Point past right location": GoSub AO
-                        A$ = "PSHU": B$ = "A,X,Y": C$ = "Put the right FP5 value": GoSub AO
+                        A$ = "JSR": B$ = "U16_To_FP5": C$ = "Convert Unsigned 16 bit integer in D to 5 Byte FP5 @ ,S": GoSub AO
                     Case 5
-                        ' Signed 16 bit value to FP5 value
-                        A$ = "PULS": B$ = "A,X,Y": C$ = "Get the left FP5 value": GoSub AO
-                        A$ = "LEAS": B$ = "-3,S": C$ = "Make room for new FP5 right value": GoSub AO
-                        A$ = "PSHS": B$ = "A,X,Y": C$ = "Put the left FP5 value, where it needs to end up": GoSub AO
-                        A$ = "LDD": B$ = "8,S": C$ = "Get right byte value off the stack": GoSub AO
-                        A$ = "JSR": B$ = "S16_To_FP5": C$ = "Convert Signed 16bit integer in D to 5 Byte FP5 @ ,S": GoSub AO
-                        A$ = "PULS": B$ = "A,X,Y": C$ = "Get the right FP5 value, fix the stack": GoSub AO
-                        A$ = "LEAU": B$ = "10,S": C$ = "Point past right location": GoSub AO
-                        A$ = "PSHU": B$ = "A,X,Y": C$ = "Put the right FP5 value": GoSub AO
+                        ' Signed 16 bit value to 5 byte FP5 value
+                        A$ = "PULS": B$ = "D": C$ = "Get the left bytes off the stack": GoSub AO
+                        A$ = "JSR": B$ = "S16_To_FP5": C$ = "Convert Signed 16 bit integer in D to 5 Byte FP5 @ ,S": GoSub AO
                     Case 6
-                        ' UnSigned 16 bit value to FP5 value
-                        A$ = "PULS": B$ = "A,X,Y": C$ = "Get the left FP5 value": GoSub AO
-                        A$ = "LEAS": B$ = "-3,S": C$ = "Make room for new FP5 right value": GoSub AO
-                        A$ = "PSHS": B$ = "A,X,Y": C$ = "Put the left FP5 value, where it needs to end up": GoSub AO
-                        A$ = "LDD": B$ = "8,S": C$ = "Get right byte value off the stack": GoSub AO
-                        A$ = "JSR": B$ = "U16_To_FP5": C$ = "Convert Unsigned 16bit integer in D to 5 Byte FP5 @ ,S": GoSub AO
-                        A$ = "PULS": B$ = "A,X,Y": C$ = "Get the right FP5 value, fix the stack": GoSub AO
-                        A$ = "LEAU": B$ = "10,S": C$ = "Point past right location": GoSub AO
-                        A$ = "PSHU": B$ = "A,X,Y": C$ = "Put the right FP5 value": GoSub AO
-                    Case 7 ' Signed 32 bit value to FP5 value
-                        ' Left is a 5 Byte FP5 value, Right is a 32 bit INT value
-                        A$ = "PULS": B$ = "A,X,Y": C$ = "Get the left FP5 value": GoSub AO
-                        A$ = "LEAS": B$ = "-1,S": C$ = "Make room for new FP5 right value": GoSub AO
-                        A$ = "PSHS": B$ = "A,X,Y": C$ = "Put the left FP5 value, where it needs to end up": GoSub AO
-                        A$ = "LEAU": B$ = "6,S": C$ = "Point at the right 32 bit number": GoSub AO
-                        A$ = "PULU": B$ = "X,Y": C$ = "Get the right 4 byte value": GoSub AO
-                        A$ = "PSHS": B$ = "X,Y": C$ = "Save the right FP5 value on the stack, so it can be converted": GoSub AO
-                        A$ = "JSR": B$ = "S32_To_FP5": C$ = "Convert Signed 32bit integer @,S to 5 Byte FP5 @ ,S": GoSub AO
-                        A$ = "PULS": B$ = "A,X,Y": C$ = "Get the right FP5 value, fix the stack": GoSub AO
-                        A$ = "LEAU": B$ = "10,S": C$ = "Point past right location": GoSub AO
-                        A$ = "PSHU": B$ = "A,X,Y": C$ = "Put the right FP5 value": GoSub AO
-                    Case 8 ' UnSigned 32 bit value to FP5 value
-                        ' Left is a 5 Byte FP5 value, Right is a UnSigned 32 bit INT value
-                        A$ = "PULS": B$ = "A,X,Y": C$ = "Get the left FP5 value": GoSub AO
-                        A$ = "LEAS": B$ = "-1,S": C$ = "Make room for new FP5 right value": GoSub AO
-                        A$ = "PSHS": B$ = "A,X,Y": C$ = "Put the left FP5 value, where it needs to end up": GoSub AO
-                        A$ = "LEAU": B$ = "6,S": C$ = "Point at the right 32 bit number": GoSub AO
-                        A$ = "PULU": B$ = "X,Y": C$ = "Get the right 4 byte value": GoSub AO
-                        A$ = "PSHS": B$ = "X,Y": C$ = "Save the right FP5 value on the stack, so it can be converted": GoSub AO
-                        A$ = "JSR": B$ = "U32_To_FP5": C$ = "Convert Unsigned 32bit integer @,S to 5 Byte FP5 @ ,S": GoSub AO
-                        A$ = "PULS": B$ = "A,X,Y": C$ = "Get the right FP5 value, fix the stack": GoSub AO
-                        A$ = "LEAU": B$ = "10,S": C$ = "Point past right location": GoSub AO
-                        A$ = "PSHU": B$ = "A,X,Y": C$ = "Put the right FP5 value": GoSub AO
-                    Case 9 ' Signed 64 bit value to FP5 value
-                        ' Left is a 5 Byte FP5 value,  Right is a 64 bit signed value
-                        A$ = "LEAU": B$ = "9,S": C$ = "Point at the right 64 bit number (LS words)": GoSub AO
-                        A$ = "PULU": B$ = "X,Y": C$ = "Get the right 2 LS words": GoSub AO
-                        A$ = "PSHS": B$ = "X,Y": C$ = "Save the right 2 LS words the stack, so it can be converted": GoSub AO
-                        A$ = "LEAU": B$ = "-8,S": C$ = "Point at the right 64 bit number (MS words)": GoSub AO
-                        A$ = "PULU": B$ = "X,Y": C$ = "Get the right 2 MS words": GoSub AO
-                        A$ = "PSHS": B$ = "X,Y": C$ = "Save the right 2 MS words the stack, so it can be converted": GoSub AO
+                        ' UnSigned 16 bit value to 5 byte FP5 value
+                        A$ = "PULS": B$ = "D": C$ = "Get the left bytes off the stack": GoSub AO
+                        A$ = "JSR": B$ = "U16_To_FP5": C$ = "Convert Unsigned 16 bit integer in D to 5 Byte FP5 @ ,S": GoSub AO
+                    Case 7 ' Signed 32 bit value to 5 byte FP5 value
+                        A$ = "JSR": B$ = "S32_To_FP5": C$ = "Convert Signed 32 bit integer @,S to 5 Byte FP5 @ ,S": GoSub AO
+                    Case 8 ' UnSigned 32 bit value to 5 byte FP5 value
+                        A$ = "JSR": B$ = "U32_To_FP5": C$ = "Convert Unsigned 32 bit integer @,S to 5 Byte FP5 @ ,S": GoSub AO
+                    Case 9 ' Signed 64 bit value to 5 byte FP5 value
                         A$ = "JSR": B$ = "S64_To_FP5": C$ = "Convert Signed 64 bit integer @,S to 5 Byte FP5 @ ,S": GoSub AO
-                        A$ = "PULS": B$ = "A,X,Y": C$ = "Get the right FP5 value, move the stack": GoSub AO
-                        A$ = "LEAU": B$ = "5+8,S": C$ = "Point past right location": GoSub AO
-                        A$ = "PSHU": B$ = "A,X,Y": C$ = "Put the right FP5 value, where it needs to be": GoSub AO
-                        A$ = "PULS": B$ = "A,X,Y": C$ = "Get the left FP5 value, move the stack": GoSub AO
-                        A$ = "LEAS": B$ = "3,S": C$ = "Move the stack": GoSub AO
-                        A$ = "PSHS": B$ = "A,X,Y": C$ = "Put the left FP5 value on the stack": GoSub AO
-                    Case 10 ' UnSigned 64 bit value to FP5 value
-                        ' Left is a 5 Byte FP5 value,  Right is a 64 bit unsigned value
-                        A$ = "LEAU": B$ = "9,S": C$ = "Point at the right 64 bit number (LS words)": GoSub AO
-                        A$ = "PULU": B$ = "X,Y": C$ = "Get the right 2 LS words": GoSub AO
-                        A$ = "PSHS": B$ = "X,Y": C$ = "Save the right 2 LS words the stack, so it can be converted": GoSub AO
-                        A$ = "LEAU": B$ = "-8,S": C$ = "Point at the right 64 bit number (MS words)": GoSub AO
-                        A$ = "PULU": B$ = "X,Y": C$ = "Get the right 2 MS words": GoSub AO
-                        A$ = "PSHS": B$ = "X,Y": C$ = "Save the right 2 MS words the stack, so it can be converted": GoSub AO
+                    Case 10 ' UnSigned 64 bit value to 5 byte FP5 value
                         A$ = "JSR": B$ = "U64_To_FP5": C$ = "Convert Unsigned 64 bit integer @,S to 5 Byte FP5 @ ,S": GoSub AO
-                        A$ = "PULS": B$ = "A,X,Y": C$ = "Get the right FP5 value, move the stack": GoSub AO
-                        A$ = "LEAU": B$ = "5+8,S": C$ = "Point past right location": GoSub AO
-                        A$ = "PSHU": B$ = "A,X,Y": C$ = "Put the right FP5 value, where it needs to be": GoSub AO
-                        A$ = "PULS": B$ = "A,X,Y": C$ = "Get the left FP5 value, move the stack": GoSub AO
-                        A$ = "LEAS": B$ = "3,S": C$ = "Move the stack": GoSub AO
-                        A$ = "PSHS": B$ = "A,X,Y": C$ = "Put the left FP5 value on the stack": GoSub AO
-                    Case 12 ' 10 byte Double on the Right to FP5 value
-                        A$ = "LEAU": B$ = "10,S": C$ = "Point at the right 10 byte double number (Low 5 bytes)": GoSub AO
-                        A$ = "PULU": B$ = "B,X,Y": C$ = "Get the right 5 low bytes": GoSub AO
-                        A$ = "PSHS": B$ = "B,X,Y": C$ = "Save the right 5 low bytes on the stack, so it can be converted": GoSub AO
-                        A$ = "LEAU": B$ = "-10,S": C$ = "Point at the right 10 byte double number (Hi 5 bytes)": GoSub AO
-                        A$ = "PULU": B$ = "B,X,Y": C$ = "Get the right 5 MS bytes": GoSub AO
-                        A$ = "PSHS": B$ = "B,X,Y": C$ = "Save the right 5 MS bytes on the stack, so it can be converted": GoSub AO
-                        A$ = "JSR": B$ = "Double_To_FP5": C$ = "Convert 10 byte Double at ,S to 5 Byte FP5 at ,S": GoSub AO
-                        A$ = "PULS": B$ = "A,X,Y": C$ = "Get the right FP5 value, move the stack": GoSub AO
-                        A$ = "LEAU": B$ = "5+10,S": C$ = "Point past right location": GoSub AO
-                        A$ = "PSHU": B$ = "A,X,Y": C$ = "Put the right FP5 value, where it needs to be": GoSub AO
-                        A$ = "PULS": B$ = "A,X,Y": C$ = "Get the left FP5 value, move the stack": GoSub AO
-                        A$ = "LEAS": B$ = "5,S": C$ = "Move the stack": GoSub AO
-                        A$ = "PSHS": B$ = "A,X,Y": C$ = "Put the left FP5 value on the stack": GoSub AO
                 End Select
         End Select
-    Case 12 ' Left is 10 byte Double 80 bit Floating-Point value, which requires 10 bytes, Right is an 8,16,32,64 bit integer or Single value
-        Select Case RightType
+    Case 12 ' Right is 10 byte Double-Precision Floating-Point value, which requires 10 bytes
+        ' Right is an (10 byte) value, Left is an 8,16,32,64 bit integer or Single value
+        Select Case LeftType
             Case 1, 3 ' Signed byte to 10 byte Double, 64 bit FP number
                 ' First move 10 byte float to make room for the new 10 byte float on the right
                 A$ = "PULS": B$ = "D,X,Y,U": C$ = "Get left 8 byte value off the stack": GoSub AO
@@ -1601,6 +1357,247 @@ Select Case LeftType
                 A$ = "STD": B$ = "18,S": C$ = "Save Double Number": GoSub AO
                 ' For now value of 13 are floating point numbers, with higher precision that code still must be written to handle.
                 '      13     ##   _Float '               Min E-4932, Max E+4932
+        End Select
+End Select
+Return
+
+' Scale the RightType to match the LeftType
+ScaleRight2Left:
+Select Case LeftType
+    Case 5, 6 ' Left is 16 bit (signed or unsigned)
+        ' Stack on entry:
+        '   ,S   = RIGHT 8-bit value
+        '   1,S  = LEFT  16-bit value
+        ' Widen the TOP/RIGHT operand to 16 bits.
+        If RightType = 1 Or RightType = 3 Then
+            ' Right signed 8 -> 16
+            A$ = "PULS": B$ = "B": C$ = "Get the right 8 bit value off the stack": GoSub AO
+            A$ = "SEX": C$ = "Sign extend B into D": GoSub AO
+            A$ = "PSHS": B$ = "D": C$ = "Push widened right 16 bit value on top of left 16 bit value": GoSub AO
+        Else
+            ' Right unsigned 8 -> 16
+            A$ = "PULS": B$ = "B": C$ = "Get the right 8 bit value off the stack": GoSub AO
+            A$ = "CLRA": C$ = "D = unsigned 16 bit value": GoSub AO
+            A$ = "PSHS": B$ = "D": C$ = "Push widened right 16 bit value on top of left 16 bit value": GoSub AO
+        End If
+    Case 7, 8 ' Left is 32 bit (signed or unsigned)
+        ' Stack on entry:
+        '   ,S   = RIGHT value (8 or 16 bit)
+        '   n,S  = LEFT  32-bit value
+        ' Widen the TOP/RIGHT operand to 32 bits.
+        Select Case RightType
+            Case 1, 3 ' Right signed 8 -> 32
+                A$ = "PULS": B$ = "B": C$ = "Get the right 8 bit value off the stack": GoSub AO
+                A$ = "SEX": B$ = "": C$ = "Sign extend B into D": GoSub AO
+                A$ = "TFR": B$ = "D,X": C$ = "X = low 16 bits of widened right value": GoSub AO
+                A$ = "TSTA": B$ = "": C$ = "Check sign of the widened value": GoSub AO
+                A$ = "BPL": B$ = "@Here0": C$ = "If positive, high word is zero": GoSub AO
+                A$ = "LDD": B$ = "#$FFFF": C$ = "High 16 bits = $FFFF": GoSub AO
+                A$ = "BRA": B$ = "@Here1": C$ = "Skip zero case": GoSub AO
+                Z$ = "@Here0": GoSub AO
+                A$ = "LDD": B$ = "#$0000": C$ = "High 16 bits = 0": GoSub AO
+                Z$ = "@Here1": GoSub AO
+                A$ = "PSHS": B$ = "D,X": C$ = "Push widened right 32 bit value on top of left 32 bit value": GoSub AO
+                GoSub AO ' Leave a blank line
+
+            Case 2, 4 ' Right unsigned 8 -> 32
+                A$ = "PULS": B$ = "B": C$ = "Get the right 8 bit value off the stack": GoSub AO
+                A$ = "CLRA": B$ = "": C$ = "D = unsigned 16 bit value": GoSub AO
+                A$ = "TFR": B$ = "D,X": C$ = "X = low 16 bits of widened right value": GoSub AO
+                A$ = "LDD": B$ = "#$0000": C$ = "High 16 bits = 0": GoSub AO
+                A$ = "PSHS": B$ = "D,X": C$ = "Push widened right 32 bit value on top of left 32 bit value": GoSub AO
+
+            Case 5 ' Right signed 16 -> 32
+                A$ = "PULS": B$ = "D": C$ = "Get the right 16 bit value off the stack": GoSub AO
+                A$ = "TFR": B$ = "D,X": C$ = "X = low 16 bits of widened right value": GoSub AO
+                A$ = "TSTA": B$ = "": C$ = "Check sign of 16 bit value": GoSub AO
+                A$ = "BPL": B$ = "@Here2": C$ = "If positive, high word is zero": GoSub AO
+                A$ = "LDD": B$ = "#$FFFF": C$ = "High 16 bits = $FFFF": GoSub AO
+                A$ = "BRA": B$ = "@Here3": C$ = "Skip zero case": GoSub AO
+                Z$ = "@Here2": GoSub AO
+                A$ = "LDD": B$ = "#$0000": C$ = "High 16 bits = 0": GoSub AO
+                Z$ = "@Here3": GoSub AO
+                A$ = "PSHS": B$ = "D,X": C$ = "Push widened right 32 bit value on top of left 32 bit value": GoSub AO
+                GoSub AO ' Leave a blank line
+
+            Case 6 ' Right unsigned 16 -> 32
+                A$ = "PULS": B$ = "D": C$ = "Get the right 16 bit value off the stack": GoSub AO
+                A$ = "TFR": B$ = "D,X": C$ = "X = low 16 bits of widened right value": GoSub AO
+                A$ = "LDD": B$ = "#$0000": C$ = "High 16 bits = 0": GoSub AO
+                A$ = "PSHS": B$ = "D,X": C$ = "Push widened right 32 bit value on top of left 32 bit value": GoSub AO
+        End Select
+    Case 9, 10 ' Left is 64 bit (signed or unsigned)
+        ' Stack on entry:
+        '   ,S   = RIGHT value (8,16,32 bit)
+        '   n,S  = LEFT  64-bit value
+        ' Widen the TOP/RIGHT operand to 64 bits.
+
+        Select Case RightType
+            Case 1, 3 ' Right signed 8 -> 64
+                A$ = "PULS": B$ = "B": C$ = "Get the right 8 bit value off the stack": GoSub AO
+                A$ = "SEX": C$ = "Sign extend B into D": GoSub AO
+                A$ = "TFR": B$ = "D,X": C$ = "X = low 16 bits of widened right value": GoSub AO
+                A$ = "TSTA": C$ = "Check sign of widened value": GoSub AO
+                A$ = "BPL": B$ = "@Here4": C$ = "If positive, upper 48 bits are zero": GoSub AO
+                A$ = "LDU": B$ = "#$FFFF": C$ = "Upper word 0 = $FFFF": GoSub AO
+                A$ = "LDD": B$ = "#$FFFF": C$ = "Upper word 1 = $FFFF": GoSub AO
+                A$ = "BRA": B$ = "@Here5": C$ = "Skip zero case": GoSub AO
+                Z$ = "@Here4": GoSub AO
+                A$ = "LDU": B$ = "#$0000": C$ = "Upper word 0 = 0": GoSub AO
+                A$ = "LDD": B$ = "#$0000": C$ = "Upper word 1 = 0": GoSub AO
+                Z$ = "@Here5": GoSub AO
+                A$ = "PSHS": B$ = "U,D,X": C$ = "Push widened right 64 bit value on top of left 64 bit value": GoSub AO
+                GoSub AO ' Leave a blank line
+
+            Case 2, 4 ' Right unsigned 8 -> 64
+                A$ = "PULS": B$ = "B": C$ = "Get the right 8 bit value off the stack": GoSub AO
+                A$ = "CLRA": B$ = "": C$ = "D = unsigned 16 bit value": GoSub AO
+                A$ = "TFR": B$ = "D,X": C$ = "X = low 16 bits": GoSub AO
+                A$ = "LDU": B$ = "#$0000": C$ = "Upper word 0 = 0": GoSub AO
+                A$ = "LDD": B$ = "#$0000": C$ = "Upper word 1 = 0": GoSub AO
+                A$ = "PSHS": B$ = "U,D,X": C$ = "Push widened right 64 bit value on top of left 64 bit value": GoSub AO
+
+            Case 5 ' Right signed 16 -> 64
+                A$ = "PULS": B$ = "D": C$ = "Get the right 16 bit value off the stack": GoSub AO
+                A$ = "TFR": B$ = "D,X": C$ = "X = low 16 bits": GoSub AO
+                A$ = "TSTA": B$ = "": C$ = "Check sign of widened value": GoSub AO
+                A$ = "BPL": B$ = "@Here6": C$ = "If positive, upper 48 bits are zero": GoSub AO
+                A$ = "LDU": B$ = "#$FFFF": C$ = "Upper word 0 = $FFFF": GoSub AO
+                A$ = "LDD": B$ = "#$FFFF": C$ = "Upper word 1 = $FFFF": GoSub AO
+                A$ = "BRA": B$ = "@Here7": C$ = "Skip zero case": GoSub AO
+                Z$ = "@Here6": GoSub AO
+                A$ = "LDU": B$ = "#$0000": C$ = "Upper word 0 = 0": GoSub AO
+                A$ = "LDD": B$ = "#$0000": C$ = "Upper word 1 = 0": GoSub AO
+                Z$ = "@Here7": GoSub AO
+                A$ = "PSHS": B$ = "U,D,X": C$ = "Push widened right 64 bit value on top of left 64 bit value": GoSub AO
+                GoSub AO ' Leave a blank line
+
+            Case 6 ' Right unsigned 16 -> 64
+                A$ = "PULS": B$ = "D": C$ = "Get the right 16 bit value off the stack": GoSub AO
+                A$ = "TFR": B$ = "D,X": C$ = "X = low 16 bits": GoSub AO
+                A$ = "LDU": B$ = "#$0000": C$ = "Upper word 0 = 0": GoSub AO
+                A$ = "LDD": B$ = "#$0000": C$ = "Upper word 1 = 0": GoSub AO
+                A$ = "PSHS": B$ = "U,D,X": C$ = "Push widened right 64 bit value on top of left 64 bit value": GoSub AO
+
+            Case 7 ' Right signed 32 -> 64
+                A$ = "PULS": B$ = "D,X": C$ = "Get the right 32 bit value off the stack": GoSub AO
+                A$ = "TST": B$ = "A": C$ = "Check sign of widened value": GoSub AO
+                A$ = "BPL": B$ = "@Here8": C$ = "If positive, upper 32 bits are zero": GoSub AO
+                A$ = "LDU": B$ = "#$FFFF": C$ = "Upper word = $FFFF": GoSub AO
+                A$ = "BRA": B$ = "@Here9": C$ = "Skip zero case": GoSub AO
+                Z$ = "@Here8": GoSub AO
+                A$ = "LDU": B$ = "#$0000": C$ = "Upper word = 0": GoSub AO
+                Z$ = "@Here9": GoSub AO
+                A$ = "PSHS": B$ = "U,D,X": C$ = "Push widened right 64 bit value on top of left 64 bit value": GoSub AO
+                GoSub AO ' Leave a blank line
+
+            Case 8 ' Right unsigned 32 -> 64
+                A$ = "PULS": B$ = "D,X": C$ = "Get the right 32 bit value off the stack": GoSub AO
+                A$ = "LDU": B$ = "#$0000": C$ = "Upper word = 0": GoSub AO
+                A$ = "PSHS": B$ = "U,D,X": C$ = "Push widened right 64 bit value on top of left 64 bit value": GoSub AO
+        End Select
+    Case 11 ' Original expression Left is Single value, Right is other
+        Select Case FloatType
+            Case 0:
+                ' Handle 3 byte FFP
+                Select Case RightType
+                    Case 1, 3 ' Signed byte to  3 byte FFP value
+                        A$ = "PULS": B$ = "B": C$ = "Get the left byte off the stack": GoSub AO
+                        A$ = "SEX": C$ = "Sign extend B into D": GoSub AO
+                        A$ = "JSR": B$ = "S16_To_FFP": C$ = "Convert Signed 16 bit integer in D to 3 Byte FFP @ ,S": GoSub AO
+                    Case 2, 4 ' Bit is either 0 or 1 , or unsinged byte
+                        A$ = "PULS": B$ = "B": C$ = "Get the left byte off the stack": GoSub AO
+                        A$ = "CLRA": C$ = "MSB = 0": GoSub AO
+                        A$ = "JSR": B$ = "U16_To_FFP": C$ = "Convert Unsigned 16 bit integer in D to 3 Byte FFP @ ,S": GoSub AO
+                    Case 5
+                        ' Signed 16 bit value to  3 byte FFP value
+                        A$ = "PULS": B$ = "D": C$ = "Get the left bytes off the stack": GoSub AO
+                        A$ = "JSR": B$ = "S16_To_FFP": C$ = "Convert Signed 16 bit integer in D to 3 Byte FFP @ ,S": GoSub AO
+                    Case 6
+                        ' UnSigned 16 bit value to  3 byte FFP value
+                        A$ = "PULS": B$ = "D": C$ = "Get the left bytes off the stack": GoSub AO
+                        A$ = "JSR": B$ = "U16_To_FFP": C$ = "Convert Unsigned 16 bit integer in D to 3 Byte FFP @ ,S": GoSub AO
+                    Case 7 ' Signed 32 bit value to  3 byte FFP value
+                        A$ = "JSR": B$ = "S32_To_FFP": C$ = "Convert Signed 32 bit integer @,S to 3 Byte FFP @ ,S": GoSub AO
+                    Case 8 ' UnSigned 32 bit value to  3 byte FFP value
+                        A$ = "JSR": B$ = "U32_To_FFP": C$ = "Convert Unsigned 32 bit integer @,S to 3 Byte FFP @ ,S": GoSub AO
+                    Case 9 ' Signed 64 bit value to  3 byte FFP value
+                        A$ = "JSR": B$ = "S64_To_FFP": C$ = "Convert Signed 64 bit integer @,S to 3 Byte FFP @ ,S": GoSub AO
+                    Case 10 ' UnSigned 64 bit value to  3 byte FFP value
+                        A$ = "JSR": B$ = "U64_To_FFP": C$ = "Convert Unsigned 64 bit integer @,S to 3 Byte FFP @ ,S": GoSub AO
+                    Case 12 ' 10 byte Double on the Right to FFP value
+                        A$ = "JSR": B$ = "Double_To_FFP": C$ = "Convert 10 byte Double at ,S to 3 Byte FFP at ,S": GoSub AO
+                End Select
+            Case 1:
+                ' Handle 5 byte FP5
+                Select Case RightType
+                    Case 1, 3 ' Signed byte to  5 byte FP5 value
+                        A$ = "PULS": B$ = "B": C$ = "Get the left byte off the stack": GoSub AO
+                        A$ = "SEX": C$ = "Sign extend B into D": GoSub AO
+                        A$ = "JSR": B$ = "S16_To_FP5": C$ = "Convert Signed 16 bit integer in D to 5 Byte FP5 @ ,S": GoSub AO
+                    Case 2, 4 ' Bit is either 0 or 1 , or unsinged byte
+                        A$ = "PULS": B$ = "B": C$ = "Get the left byte off the stack": GoSub AO
+                        A$ = "CLRA": C$ = "MSB = 0": GoSub AO
+                        A$ = "JSR": B$ = "U16_To_FP5": C$ = "Convert Unsigned 16 bit integer in D to 5 Byte FP5 @ ,S": GoSub AO
+                    Case 5
+                        ' Signed 16 bit value to 5 byte FP5 value
+                        A$ = "PULS": B$ = "D": C$ = "Get the left bytes off the stack": GoSub AO
+                        A$ = "JSR": B$ = "S16_To_FP5": C$ = "Convert Signed 16 bit integer in D to 5 Byte FP5 @ ,S": GoSub AO
+                    Case 6
+                        ' UnSigned 16 bit value to 5 byte FP5 value
+                        A$ = "PULS": B$ = "D": C$ = "Get the left bytes off the stack": GoSub AO
+                        A$ = "JSR": B$ = "U16_To_FP5": C$ = "Convert Unsigned 16 bit integer in D to 5 Byte FP5 @ ,S": GoSub AO
+                    Case 7 ' Signed 32 bit value to 5 byte FP5 value
+                        A$ = "JSR": B$ = "S32_To_FP5": C$ = "Convert Signed 32 bit integer @,S to 5 Byte FP5 @ ,S": GoSub AO
+                    Case 8 ' UnSigned 32 bit value to 5 byte FP5 value
+                        A$ = "JSR": B$ = "U32_To_FP5": C$ = "Convert Unsigned 32 bit integer @,S to 5 Byte FP5 @ ,S": GoSub AO
+                    Case 9 ' Signed 64 bit value to 5 byte FP5 value
+                        A$ = "JSR": B$ = "S64_To_FP5": C$ = "Convert Signed 64 bit integer @,S to 5 Byte FP5 @ ,S": GoSub AO
+                    Case 10 ' UnSigned 64 bit value to 5 byte FP5 value
+                        A$ = "JSR": B$ = "U64_To_FP5": C$ = "Convert Unsigned 64 bit integer @,S to 5 Byte FP5 @ ,S": GoSub AO
+                    Case 12 ' 10 byte Double on the Right to FFP value
+                        A$ = "JSR": B$ = "Double_To_FP5": C$ = "Convert 10 byte Double at ,S to 3 Byte FP5 at ,S": GoSub AO
+                End Select
+        End Select
+    Case 12 ' Left is 10 byte Double 80 bit Floating-Point value, which requires 10 bytes, Right is an 8,16,32,64 bit integer or Single value
+        Select Case RightType
+            Case 1, 3 ' Signed byte to IEEE 754 Double, 64 bit FP number
+                A$ = "PULS": B$ = "B": C$ = "Get Left 8 bit signed value off the stack and move the stack pointer": GoSub AO
+                A$ = "SEX": C$ = "Sign extend B into D": GoSub AO
+                A$ = "JSR": B$ = "Int2Double": C$ = "Convert signed 16 bit integer in D to 10 byte Double @ ,S": GoSub AO
+            Case 2, 4 ' Bit is either 0 or 1 , or unsinged byte
+                A$ = "PULS": B$ = "B": C$ = "Get Left 8 bit signed value off the stack and move the stack pointer": GoSub AO
+                A$ = "CLRA": C$ = "D = B unsigned": GoSub AO
+                A$ = "JSR": B$ = "UnInt2Double": C$ = "Convert Unsigned 16 bit integer in D to 10 byte Double @ ,S": GoSub AO
+            Case 5
+                ' Signed 16 bit value to IEEE 754 Double, 64 bit FP number
+                A$ = "PULS": B$ = "D": C$ = "Get Left 16 bit signed value off the stack": GoSub AO
+                A$ = "JSR": B$ = "Int2Double": C$ = "Convert signed 16 bit integer in D to 10 byte Double @ ,S": GoSub AO
+            Case 6
+                ' UnSigned 16 bit value to IEEE 754 Double, 64 bit FP number
+                A$ = "PULS": B$ = "D": C$ = "Get Left 16 bit UnSigned value off the stack": GoSub AO
+                A$ = "JSR": B$ = "UnInt2Double": C$ = "Convert Unsigned 16 bit integer in D to 10 byte Double @ ,S": GoSub AO
+            Case 7 ' Signed 32 bit value to IEEE 754 Double, 64 bit FP number
+                A$ = "JSR": B$ = "S32_To_Double": C$ = "Convert signed 32bit integer @,S to 10 byte Double @ ,S": GoSub AO
+            Case 8 ' UnSigned 32 bit value to IEEE 754 Double, 64 bit FP number
+                A$ = "JSR": B$ = "U32_To_Double": C$ = "Convert Unsigned 32bit integer @,S to 10 byte Double @ ,S": GoSub AO
+            Case 9 ' Signed 64 bit value to IEEE 754 Double, 64 bit FP number
+                ' Change Left from Signed 64 bit value to 8 byte float value
+                A$ = "JSR": B$ = "S64_To_Double": C$ = "Convert signed 64 bit integer @,S to 10 byte Double @ ,S": GoSub AO
+            Case 10 ' UnSigned 64 bit value to IEEE 754 Double, 64 bit FP number
+                ' Change Left from UnSigned 64 bit value to 8 byte float value
+                A$ = "JSR": B$ = "U64_To_Double": C$ = "Convert Unsigned 64 bit integer @,S to 10 byte Double @ ,S": GoSub AO
+            Case 11 ' Right is IEEE 754 Double-Precision Floating-Point value, which requires 10 bytes
+                ' Change Left from Single value to 10 byte Double Float value
+                Select Case FloatType
+                    Case 0:
+                        ' Handle 3 byte FFP
+                        A$ = "JSR": B$ = "FFP_To_Double": C$ = "Convert FFP at ,S to 10 byte Double at ,S": GoSub AO
+                    Case 1:
+                        ' Handle 5 byte FP5
+                        A$ = "JSR": B$ = "FP5_To_Double": C$ = "Convert FP5 at ,S to 10 byte Double at ,S": GoSub AO
+                End Select
+                ' For now value of 13 are floating point numbers, with higher precision that code still must be written to handle.
         End Select
 End Select
 Return

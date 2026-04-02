@@ -54,6 +54,8 @@ Const OP_STRARRPTR = &H73 ' FC 73 argCount  (string  array element address -> UI
 Const OP_LITTYPEPUSH = &H74 ' FC 74 type    (temporary literal-type hint scope begin)
 Const OP_LITTYPEPOP = &H75 ' FC 75         (temporary literal-type hint scope end)
 Const OP_FORCENVT = &H76 ' FC 76 type    (force top-of-stack to NVT)
+Const OP_OPTYPEPUSH = &H77 ' FC 77 type   (temporary operator-width scope begin)
+Const OP_OPTYPEPOP = &H78 ' FC 78        (temporary operator-width scope end)
 
 ' Variable Type Constants
 Const NT_Bit = 1
@@ -342,6 +344,10 @@ Dim HasDExp As Integer
 Dim VALPreferredType As Integer
 Dim OldNVTForVAL As Integer
 Dim OldLastTypeForVAL As Integer
+
+Dim ScratchStringVar$
+Dim SpillLeftString%
+Dim SpillRightString%
 
 ' Used only once
 Dim FORCount As Integer

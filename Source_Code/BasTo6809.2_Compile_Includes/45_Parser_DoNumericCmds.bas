@@ -1074,7 +1074,6 @@ Select Case cmd16
         ' ------------------------------------------------------------
         Arg1$ = ProcessRPNStack$(ProcessRPNStackPointer)
         ProcessRPNStackPointer = ProcessRPNStackPointer - 1
-        ' Type check: PEEK expects numeric, not string
         Temp$ = Arg1$: GoSub IsStringToken
         If IsStrFlag% Then
             Print "Error: SDC_DIRPAGE() expects a numeric argument";: GoTo FoundError
@@ -1093,12 +1092,12 @@ Select Case cmd16
         ' CODEGEN: runtime stub
         ' Convention: address is at ,S (UInt16). Stub consumes it and pushes value.
         ' ------------------------------------------------------------
+        A$ = "LEAS": B$ = "1,S": C$ = "Fix the stack, this command doesn't really need a value in the brackets": GoSub AO
         A$ = "LDU": B$ = "#_StrVar_PF01": C$ = "U points at scratch buffer for the 256 byte directory listing": GoSub AO
         A$ = "JSR": B$ = "SDC_DirectoryPage": C$ = "Get the directory listing": GoSub AO
         A$ = "PSHS": B$ = "B": C$ = "Save B (result of the command) on the stack": GoSub AO
         ' ------------------------------------------------------------
         ' PUSH RESULT MARKER: one result replaces the popped arg
-        ' Pick the type you want PEEK() to return:
         '   - NT_UByte (0..255) is typical
         ' ------------------------------------------------------------
         ProcessRPNStackPointer = ProcessRPNStackPointer + 1
@@ -1351,7 +1350,7 @@ Select Case cmd16
         ' ------------------------------------------------------------
         A$ = "PULS": B$ = "B": C$ = "B = Length of the string": GoSub AO
         A$ = "LEAX": B$ = ",S": C$ = "X=S": GoSub AO
-        A$ = "LDA": B$ = ",S": C$ = "A First byet of the string": GoSub AO
+        A$ = "LDA": B$ = ",S": C$ = "A First byte of the string": GoSub AO
         A$ = "ABX": C$ = "Fix the size of the stack (just in case it's a sting instead of just a byte)": GoSub AO
         A$ = "LEAS": B$ = ",X": C$ = "S=X": GoSub AO
         A$ = "PSHS": B$ = "A": C$ = "Save A on the stack": GoSub AO
@@ -1872,7 +1871,6 @@ Case VAL_CMD
         A$ = "PSHS": B$ = "B": C$ = "Save B on the stack": GoSub AO
         ' ------------------------------------------------------------
         ' PUSH RESULT MARKER: one result replaces the popped arg
-        ' Pick the type you want PEEK() to return:
         '   - NT_UByte (0..255) is typical
         ' ------------------------------------------------------------
         ProcessRPNStackPointer = ProcessRPNStackPointer + 1
@@ -1949,8 +1947,6 @@ Case VAL_CMD
         End Select
         ' ------------------------------------------------------------
         ' PUSH RESULT MARKER: one result replaces the popped arg
-        ' Pick the type you want PEEK() to return:
-        '   - NT_UByte (0..255) is typical
         ' ------------------------------------------------------------
         ProcessRPNStackPointer = ProcessRPNStackPointer + 1
         ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(LastType)

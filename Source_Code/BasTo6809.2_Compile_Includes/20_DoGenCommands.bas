@@ -1247,7 +1247,7 @@ Select Case v$
         A$ = "LDD": B$ = "#$2365": GoSub AO
         A$ = "STD": B$ = "$FF98": GoSub AO
         A$ = "LDD": B$ = "#$0000": GoSub AO
-        A$ = "STD": B$ = "$FF9A": C$ = "Border color register - BRDR & 2 Meg Vertual 512k Bank": GoSub AO
+        A$ = "STD": B$ = "$FF9A": C$ = "Border color register - BRDR & 2 Meg Virtual 512k Bank": GoSub AO
         A$ = "STA": B$ = "$FF9C": C$ = "Vertical scroll register - VSC": GoSub AO
         A$ = "STA": B$ = "$FF9F": C$ = "Clear the Horizontal register": GoSub AO
         '$FF9D-$FF9E Vertical offset register
@@ -1264,7 +1264,7 @@ Select Case v$
         A$ = "LDD": B$ = "#$2371": GoSub AO
         A$ = "STD": B$ = "$FF98": GoSub AO
         A$ = "LDD": B$ = "#$0000": GoSub AO
-        A$ = "STD": B$ = "$FF9A": C$ = "Border color register - BRDR & 2 Meg Vertual 512k Bank": GoSub AO
+        A$ = "STD": B$ = "$FF9A": C$ = "Border color register - BRDR & 2 Meg Virtual 512k Bank": GoSub AO
         A$ = "STA": B$ = "$FF9C": C$ = "Vertical scroll register - VSC": GoSub AO
         A$ = "STA": B$ = "$FF9F": C$ = "Clear the Horizontal register": GoSub AO
         '$FF9D-$FF9E Vertical offset register
@@ -1281,7 +1281,7 @@ Select Case v$
         A$ = "LDD": B$ = "#$2375": GoSub AO
         A$ = "STD": B$ = "$FF98": GoSub AO
         A$ = "LDD": B$ = "#$0000": GoSub AO
-        A$ = "STD": B$ = "$FF9A": C$ = "Border color register - BRDR & 2 Meg Vertual 512k Bank": GoSub AO
+        A$ = "STD": B$ = "$FF9A": C$ = "Border color register - BRDR & 2 Meg Virtual 512k Bank": GoSub AO
         A$ = "STA": B$ = "$FF9C": C$ = "Vertical scroll register - VSC": GoSub AO
         A$ = "STA": B$ = "$FF9F": C$ = "Clear the Horizontal register": GoSub AO
         '$FF9D-$FF9E Vertical offset register
@@ -2753,9 +2753,9 @@ If Gmode > 99 Then
     If Gmode > 159 And FirstGmode = 0 Then
         ' Set the Palette to the special NTSC 256 colour versions
         Z$ = "; First GMODE, Set the special Palette for the composite 256 colour mode": GoSub AO
-        A$ = "LDD": B$ = "#$0010": C$ = "Palette values for index 0 & 1": GoSub AO
+        A$ = "LDD": B$ = "#$0022": C$ = "Palette values for index 0 & 1": GoSub AO
         A$ = "STD": B$ = "$FFB0": C$ = "Update Palette 0 & 1": GoSub AO
-        A$ = "LDD": B$ = "#$2030": C$ = "Palette values for index 2 & 3": GoSub AO
+        A$ = "LDD": B$ = "#$1F3F": C$ = "Palette values for index 2 & 3": GoSub AO
         A$ = "STD": B$ = "$FFB2": C$ = "Update Palette 2 & 3": GoSub AO
     End If
     A$ = "LDD": B$ = "#$" + GModeStartAddress$(Gmode): C$ = "A = the location in RAM to start the graphics screen": GoSub AO
@@ -2865,8 +2865,6 @@ A$ = "TSTB": C$ = "Test B": GoSub AO
 A$ = "BNE": B$ = "@DoGraphicMode": C$ = "Skip ahead if graphics mode requested": GoSub AO
 A$ = "LDX": B$ = "#$0400": C$ = "Text screen starts here": GoSub AO
 A$ = "STX": B$ = "BEGGRP": C$ = "Update the Screen starting location": GoSub AO
-A$ = "LDA": B$ = "#$0F": C$ = "$0F Back to Text Mode for the CoCo 3": GoSub AO
-A$ = "STA": B$ = "$FF9C": C$ = "Neccesary for CoCo 3 GIME to use this mode": GoSub AO
 If Gmode > 99 Then
     ' We are using a CoCo 3 graphics mode, Go to CoCo 3 Text mode
     A$ = "LDA": B$ = "#$CC": GoSub AO
@@ -2877,6 +2875,9 @@ If Gmode > 99 Then
     A$ = "STD": B$ = "$FF9E": GoSub AO
     A$ = "LDD": B$ = "#$0FE0": GoSub AO
     A$ = "STD": B$ = "$FF9C": GoSub AO
+Else
+    A$ = "LDA": B$ = "#$0F": C$ = "$0F Back to Text Mode for the CoCo 3": GoSub AO
+    A$ = "STA": B$ = "$FF9C": C$ = "Neccesary for CoCo 3 GIME to use this mode": GoSub AO
 End If
 A$ = "LDA": B$ = "#Internal_Alphanumeric": C$ = "A = Text mode requested": GoSub AO
 A$ = "BRA": B$ = ">": GoSub AO
@@ -4241,7 +4242,7 @@ If v >= Asc("0") And v <= Asc("9") Or (v = Asc("&") And Array(x) = Asc("H")) The
                     Case 1:
                         A$ = "JSR": B$ = "FP5_TO_DECSTR": C$ = "Convert 5 Byte FP5 number @,S to a numeric string on the stack": GoSub AO
                 End Select
-             Case 12
+            Case 12
                 NVT = NT_Double ' Set the sign value as Double
                 GoSub ConvertLastType2NVT
                 A$ = "JSR": B$ = "DB_TO_DECSTR": C$ = "Convert 10 byte Double number @,S to a numeric string on the stack": GoSub AO
@@ -4260,7 +4261,7 @@ If v >= Asc("0") And v <= Asc("9") Or (v = Asc("&") And Array(x) = Asc("H")) The
         End If
         A$ = "DECB": C$ = "Decrement the counter": GoSub AO
         A$ = "BNE": B$ = "<": C$ = "Loop until all data is copied to the destination string": GoSub AO
-            Z$ = "@Done": GoSub AO: GoSub AO
+        Z$ = "@Done": GoSub AO: GoSub AO
     Else
         ' Printing to a normal Text screen
         Select Case LastType
@@ -4387,7 +4388,7 @@ Select Case v
                 Case 11
                     Select Case FloatType
                         Case 0:
-                            A$ = "JSR": B$ = "Print_FFP": C$ = "Print 3 byte FFP, number is on the stack": GoSub AO    
+                            A$ = "JSR": B$ = "Print_FFP": C$ = "Print 3 byte FFP, number is on the stack": GoSub AO
                         Case 1:
                             A$ = "JSR": B$ = "Print_FP5": C$ = "Print 5 byte FP5, number is on the stack": GoSub AO
                     End Select
@@ -4456,62 +4457,62 @@ Select Case v
 
 
 
-    Case &H23 ' Printing # somewhere other than the text screen , PRINT #-3,"Hello, World!"
-        v = Array(x): x = x + 1
-        If v = &H30 Then
-            v = Array(x): x = x + 1
-            If v = &HF5 Then
+            Case &H23 ' Printing # somewhere other than the text screen , PRINT #-3,"Hello, World!"
                 v = Array(x): x = x + 1
-                If v <> &H2C Then
-                    Print "Can't print the value after # on";: GoTo FoundError
-                Else
-                    ' If it is Print #0, then print to text screen
-                    PrintD$ = "Print_D": PrintA$ = "PrintA_On_Screen": PrintDev$ = " on screen"
-                    GoTo GetSectionToPrint
-                End If
-            End If
-        End If
-        If v = &HFC Then
-            v = Array(x): x = x + 1
-            If v = &H2D Then
-                ' Printing #-
-                v = Array(x): x = x + 1
-                If v = &H32 Then
-                    ' Print #-2
+                If v = &H30 Then
                     v = Array(x): x = x + 1
                     If v = &HF5 Then
                         v = Array(x): x = x + 1
                         If v <> &H2C Then
-                            Print "Print command should have a comma after # on";: GoTo FoundError
+                            Print "Can't print the value after # on";: GoTo FoundError
                         Else
-                            PrintD$ = "PRINT_D_Serial": PrintA$ = "AtoSerialPort": PrintDev$ = " to printer"
+                            ' If it is Print #0, then print to text screen
+                            PrintD$ = "Print_D": PrintA$ = "PrintA_On_Screen": PrintDev$ = " on screen"
                             GoTo GetSectionToPrint
                         End If
                     End If
                 End If
-                If v = &H33 Then
-                    ' Print #-3
+                If v = &HFC Then ' Special Character
                     v = Array(x): x = x + 1
-                    If v = &HF5 Then
-                        v = Array(x): x = x + 1
-                        If v <> &H2C Then
-                            Print "Print command should have a comma after # on";: GoTo FoundError
-                        Else
-                            If Gmode > 99 Then
-                                ' Print to the CoCo 3 graphic screen
-                                PrintCC3 = 1
-                            Else
-                                ' Print to the CoCo 2 graphic screen
-                                PrintCC3 = 0
-                            End If
-                            PrintD$ = "PRINT_D_Graphics_Screen_" + GModeName$(Gmode): PrintA$ = "AtoGraphics_Screen_" + GModeName$(Gmode): PrintDev$ = " to graphic screen"
-                            GoTo GetSectionToPrint
-                        End If
+                    If v = &H2D Then ' - character
+                        ' Printing #-
+                        v = Array(x): x = x + 1 ' Get the number
+                        Select Case v
+                            Case &H32
+                                ' Print #-2
+                                v = Array(x): x = x + 1
+                                If v = &HF5 Then
+                                    v = Array(x): x = x + 1
+                                    If v <> &H2C Then
+                                        Print "Print command should have a comma after # on";: GoTo FoundError
+                                    Else
+                                        PrintD$ = "PRINT_D_Serial": PrintA$ = "AtoSerialPort": PrintDev$ = " to printer"
+                                        GoTo GetSectionToPrint
+                                    End If
+                                End If
+                            Case &H33
+                                ' Print #-3 print to the graphics screen
+                                v = Array(x): x = x + 1
+                                If v = &HF5 Then ' special character
+                                    v = Array(x): x = x + 1
+                                    If v <> &H2C Then ' comma?
+                                        Print "Print command should have a comma after # on";: GoTo FoundError
+                                    Else
+                                        If Gmode > 99 Then
+                                            ' Print to the CoCo 3 graphic screen
+                                            PrintCC3 = 1
+                                        Else
+                                            ' Print to the CoCo 2 graphic screen
+                                            PrintCC3 = 0
+                                        End If
+                                        PrintD$ = "PRINT_D_Graphics_Screen_" + GModeName$(Gmode): PrintA$ = "AtoGraphics_Screen_" + GModeName$(Gmode): PrintDev$ = " to graphic screen"
+                                        GoTo GetSectionToPrint
+                                    End If
+                                End If
+                        End Select
                     End If
                 End If
-            End If
-        End If
-        Print "Can't handle printing to other devices on";: GoTo FoundError
+                Print "Can't handle printing to other devices on";: GoTo FoundError
     
 
 
@@ -4603,7 +4604,7 @@ Select Case v
         GoTo GetSectionToPrint
     Case &HFB ' Printing a FN - function
     Case Else
-        Print "Error, Not sure how to print the end of line "; linelabel$; " v = $"; Hex$(v), Chr$(v)
+        Print "Error, Not sure how to print the end of line "; LineLabel$; " v = $"; Hex$(v), Chr$(v)
         Print "x-2 = $"; Hex$(Array(x - 2))
         Print "x-1 = $"; Hex$(Array(x - 1))
         Print "x   = $"; Hex$(Array(x))

@@ -1,3 +1,2 @@
-*__UBYTE_I=0;
-__STRING_K->len=0;
-__STRING_A->len=0;
+*__INTEGER_T1=0;
+*__INTEGER_T2=0;

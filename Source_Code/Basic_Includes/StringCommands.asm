@@ -228,34 +228,51 @@ StrCommandLTrim:
 @Return:
       JMP   ,Y          ; Return
 
-; StrString
-; Copy ,S copies of the string @ 1,S
+; StrString - Command
+; copy string @,S string length +2,S times
+; Copy 2,S copies of the string @ ,S
 StrString:
-      PULS  Y                 ; Get the return address off the stack
-      LDD   ,S
+      PULS  Y           ; Get the return address off the stack
+      LDB   ,S          ; Get the size of the string to copy
+      STB   @SelfMod1+1 ; Save the length of the string
+      LEAX  1,S
+      ABX
+      LDA   ,X          ; Get the count
+      STA   StrComTemp  ; Save the count
+; Leave one copy of the string on the stack
+      INCB              ; Also copy the string length byte
+!     LDA   ,-X         ; X = X - 1 then A = PEEK(A)
+      STA   1,X         ; save A 1,X
+      DECB
+      BNE   <           ; Loop string length+1
+      LEAS  1,S         ; Fix the stack
+      LDA   StrComTemp  ; Get the count
+      LDB   ,S          ; Get the string length
       MUL
-      CMPD  #255      ; If the new string is going to be
-      BLO   >           ; If it's lower than 255 then it's good
-      LEAS  1,S         ; Otherwise just keep one string on the stack
-      BRA   @Return
-!     STB   @SelfMod+1  ; Save the new string length
-      LDD   ,S++        ; A = repeat count, B = length of the current string
-      DECA              ; Leave the first string as is, so one less to copy
-      STA   StrComTemp  ; Save the repeat counter
-      STB   @SelfMod1+1 ; Self mod string length
-      CLRA
-      LEAX  D,S         ; X points at the end of the string
+      CMPD  #255      ; See if the string is going to be too big
+      BHS   @Return     ; If it's 255 or more then leave the one string on the stack and return
+; If we get here we are good to make copies of the string on the stack
+      STB   @SelfMod+1  ; Save the new string length
+; Make #StrComTemp copies of the string
+      LDB   ,S+         ; Get the size of the string to copy, fix the stack
+      LEAX  ,S          
+      ABX               ; X points at the end of the string
+      LEAU  ,X          ; U also points at the end of the string
+      BRA   @CheckCopies
+; Make a copy of the string on the stack
 @SelfMod1:
       LDB   #$FF        ; Self mod string length
-!     LDA   ,-X
+      LEAX  ,U          ; X points at the end of the string
+!     LDA   ,-X         ; Copy the string on the stack
       STA   ,-S
       DECB
-      BNE   <
-      DEC   StrComTemp
+      BNE   <           ; Copy string loop
+@CheckCopies
+      DEC   StrComTemp  ; Decrement
       BNE   @SelfMod1
 @SelfMod:
       LDB   #$FF
-      STB   ,-S
+      STB   ,-S         ; Save the new size of the string on the stack
 @Return:
       JMP   ,Y          ; Return
 ;
@@ -535,3 +552,4 @@ StrConcat2:
       BNE   <           ; Copy string 2 2nd on the stack
 @Return
       JMP   >$FFFF      ; Return
+

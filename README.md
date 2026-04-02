@@ -10,6 +10,16 @@ https://github.com/nowhereman999/BASIC-To-6809/blob/main/Manual.pdf
 For more info check out the blog post here:
 https://wordpress.com/post/nowhereman999.wordpress.com/5054
 
+V 5.25
+- Fixed SDC_DIRPAGE(0), was causing a stack corruption
+- Fixed the automatic setting of the special palette for NTSC GMODE selected screens
+- Fixed V=VAL("&H"+A$)
+- Fixed a problem with mixed two byte addition or subtraction one byte operations
+- Fixed String concat, like S$ = "HELLO "+ "WORLD" was backwards, although S$ = A$ + B$ was fine
+- Fixed STRING$(), was totally broken
+- Adding missing command SLEEP to the manual, command existed but I forgot to put it in the manual
+- Fixed a bunch of compare sizes that were incorrectly comparing the wrong types on the stack
+
 V 5.22
 - Fix a bug with IF comparing an _Unsigned _Byte and literal values that were greater than 127
 

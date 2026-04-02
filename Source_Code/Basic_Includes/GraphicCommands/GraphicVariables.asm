@@ -216,7 +216,7 @@ GModePage       FCB  0		* Graphics mode page # (zero based, although BASIC uses 
 FORCOL		FCB  1		* Foreground color (default to 1)
 BAKCOL		FCB  0		* Background color
 ;ENDGRP		RMB  2		* End address of the screen page
-CSSVAL		RMB  1		* CSS value
+CSSVAL		FCB  0		* CSS value - Default starts as 0
 LineColour      FCB  3          * Colour value for the Line command
 
 BEGGRP		RMB  2		* Start address of the screen page

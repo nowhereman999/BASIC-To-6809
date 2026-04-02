@@ -1,6 +1,5 @@
-uint8 *__UBYTE_I=NULL;
-qbs *__STRING_K=NULL;
-qbs *__STRING_A=NULL;
+int16 *__INTEGER_T1=NULL;
+int16 *__INTEGER_T2=NULL;
 int32 console=0;
 int32 screen_hide_startup=0;
 int32 asserts=0;

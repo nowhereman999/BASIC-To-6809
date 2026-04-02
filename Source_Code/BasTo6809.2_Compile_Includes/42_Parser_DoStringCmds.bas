@@ -265,22 +265,21 @@ Select Case cmd16
         CountTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
 
         ' Push source string first, then count so count ends up at ,S
-        ' If it's a string the first character will be $F9
-        If Asc(Left$(StrTok$, 1)) = TK_STR_ONSTACK Then
-            ' It's a string
+        Temp$ = StrTok$: GoSub IsStringToken
+        If IsStrFlag% Then
             Temp$ = StrTok$: GoSub PushOneStringTokenOnStack
         Else
-            ' It's not a string, it's an ASCII code
             Temp$ = StrTok$: GoSub PushOneValueTokenOnStack
             LastType = PushedType
-            NVT = NT_UByte ' Make sure it's 0 to 255 range
+            NVT = NT_UByte
             GoSub ConvertLastType2NVT
         End If
         Temp$ = CountTok$: GoSub PushOneValueTokenOnStack
         LastType = PushedType
         NVT = NT_UByte ' Make sure it's 0 to 255 range
         GoSub ConvertLastType2NVT
-        If Asc(Left$(StrTok$, 1)) = TK_STR_ONSTACK Then
+        Temp$ = StrTok$: GoSub IsStringToken
+        If IsStrFlag% Then
             ' It's a string
             ' Call runtime/stub: consumes (string, len) and pushes string result
             A$ = "JSR": B$ = "StrString": C$ = "STRING$(count,string) -> string": GoSub AO

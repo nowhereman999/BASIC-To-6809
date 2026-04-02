@@ -79,6 +79,7 @@ Dim GModeLib(200) As Integer
 Dim GModePageLib(200) As Integer
 
 Dim DimType As _Unsigned _Byte
+Dim TypeToCheck As _Unsigned _Byte
 
 ' Variable Type Constants
 Const NT_Bit = 1
@@ -4938,6 +4939,7 @@ If v = &HFF Then
             Else
                 NumericArrayType(ii) = DimType
             End If
+            TypeToCheck = DimType: GoSub EnsureMathIncludeForType
 
             p = p + 3
         Loop
@@ -5161,6 +5163,19 @@ If Found = 0 Then
     IncludeList$(IncludeCount) = Temp$
 End If
 Return
+EnsureMathIncludeForType:
+' Enter with TypeToCheck containing one of the NT_* numeric type constants.
+' Adds any math/conversion library required for that type.
+Select Case TypeToCheck
+    Case 7, 8 ' Int32 / UInt32
+        Temp$ = "Math_Integer32": GoSub AddIncludeTemp
+    Case 9, 10 ' Int64 / UInt64
+        Temp$ = "Math_Integer64": GoSub AddIncludeTemp
+    Case 12 ' Double also relies on Integer64 helpers in a few places
+        Temp$ = "Math_Integer64": GoSub AddIncludeTemp
+End Select
+Return
+
 WriteIncludeListToFile:
 For AI = 1 To IncludeCount
     Print #1, T2$; "INCLUDE     ./Basic_Includes/"; IncludeList$(AI); ".asm"
@@ -5382,16 +5397,19 @@ If Array(x) = Asc("&") Or Array(x) = Asc("~") Or Array(x) = Asc("!") Then
     ' Looks like we have a special type assignment
     If Array(x) = Asc("~") And Array(x + 1) = Asc("&") And Array(x + 2) = Asc("&") Then ' ~&&  _Unsigned _Integer64
         Temp$ = "Math_Integer64": GoSub AddIncludeTemp ' Add code for 64 bit math, some routines use integer 64 Add/Subtract
+        TypeToCheck = NT_UInt64: GoSub EnsureMathIncludeForType
         x = x + 3
         GoTo DoneCheckType
     End If
     If Array(x) = Asc("&") And Array(x + 1) = Asc("&") Then ' ~&   _Unsigned Long
         Temp$ = "Math_Integer32": GoSub AddIncludeTemp ' Add code for 32 bit math
+        TypeToCheck = NT_UInt32: GoSub EnsureMathIncludeForType
         x = x + 2
         GoTo DoneCheckType
     End If
     If Array(x) = Asc("&") And Array(x + 1) = Asc("&") Then ' &&   _Integer64
         Temp$ = "Math_Integer64": GoSub AddIncludeTemp ' Add code for 64 bit math, some routines use integer 64 Add/Subtract
+        TypeToCheck = NT_Int64: GoSub EnsureMathIncludeForType
         x = x + 2
         GoTo DoneCheckType
     End If
@@ -5401,6 +5419,7 @@ If Array(x) = Asc("&") Or Array(x) = Asc("~") Or Array(x) = Asc("!") Then
     End If
     If Array(x) = Asc("&") Then ' &   Long
         Temp$ = "Math_Integer32": GoSub AddIncludeTemp ' Add code for 32 bit math
+        TypeToCheck = NT_Int32: GoSub EnsureMathIncludeForType
         x = x + 1
         GoTo DoneCheckType
     End If
@@ -5982,6 +6001,7 @@ Function Replace (text$, old$, new$) 'can also be used as a SUB without the coun
     Loop While find
     Replace = count 'function returns the number of replaced words. Comment out in SUB
 End Function
+
 
 
 

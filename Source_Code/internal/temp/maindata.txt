@@ -1,14 +1,8 @@
-if(__UBYTE_I==NULL){
-__UBYTE_I=(uint8*)mem_static_malloc(1);
-*__UBYTE_I=0;
+if(__INTEGER_T1==NULL){
+__INTEGER_T1=(int16*)mem_static_malloc(2);
+*__INTEGER_T1=0;
 }
-if (!__STRING_K)__STRING_K=qbs_new(0,0);
-if (!__STRING_A)__STRING_A=qbs_new(0,0);
-static int16 fornext_value3;
-static int16 fornext_finalvalue3;
-static int16 fornext_step3;
-static uint8 fornext_step_negative3;
-byte_element_struct *byte_element_4=NULL;
-if (!byte_element_4){
-if ((mem_static_pointer+=12)<mem_static_limit) byte_element_4=(byte_element_struct*)(mem_static_pointer-12); else byte_element_4=(byte_element_struct*)mem_static_malloc(12);
+if(__INTEGER_T2==NULL){
+__INTEGER_T2=(int16*)mem_static_malloc(2);
+*__INTEGER_T2=0;
 }

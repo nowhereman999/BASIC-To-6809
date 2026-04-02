@@ -1,4 +1,4 @@
-VALI_Flags      RMB     1   ; bit0 = negative sign seen, bit7 = overflow/saturated
+VALI_Flags      RMB     1   ; bit0 = overflow/saturated, bit7 = negative sign seen
 VALI_Len        RMB     1   ; remaining chars
 VALI_Digit      RMB     1   ; current digit 0..9
 
@@ -30,8 +30,8 @@ VALI_Tmp3       RMB     1
 ; Behaviour:
 ;   - skips leading spaces / tabs
 ;   - optional + or -
-;   - parses decimal digits only
-;   - stops at first non-digit
+;   - parses decimal digits, or hex digits if prefixed with &H / &h
+;   - stops at first non-digit / non-hex-digit
 ;   - empty / invalid => 0
 ;
 ; Returned stack result:
@@ -137,7 +137,6 @@ NegateMag32:
         INC     VALI_Mag0     ; Carry into top byte
 @Done
         RTS
-
 ; ============================================================
 ; ParseIntegerPrefixToU32
 ;
@@ -156,69 +155,119 @@ NegateMag32:
 ;   VALI_Flags bit0 = overflow/saturated to $FFFFFFFF
 ;
 ; Notes:
-;   - parses only the integer decimal prefix
+;   - parses the integer decimal prefix, or hexadecimal if prefixed by &H / &h
 ;   - ignores leading spaces/tabs
 ;   - accepts optional + or -
-;   - stops at first non-digit
+;   - stops at first non-digit / non-hex-digit
 ; ============================================================
 ParseIntegerPrefixToU32:
-      CLRB                    ; B = 0
-      STB     VALI_Flags      ; Clear all flags
-      STB     VALI_Digit      ; Clear current digit temp
-      STB     VALI_Mag0       ; Clear parsed magnitude MSB
+      CLRB
+      STB     VALI_Flags
+      STB     VALI_Digit
+      STB     VALI_Mag0
       STB     VALI_Mag1
       STB     VALI_Mag2
-      STB     VALI_Mag3       ; Clear parsed magnitude LSB
-      LDB     2,S             ; Get string length from top of stack
-      STB     VALI_Len        ; Save remaining length counter
-      LEAX    3,S             ; X -> first character of string
+      STB     VALI_Mag3
+      LDB     2,S
+      STB     VALI_Len
+      LEAX    3,S
 @SkipLead
-      LDB     VALI_Len        ; Any characters left?
-      BEQ     @Done           ; No -> done, empty or fully skipped string
-      LDA     ,X              ; Get current character
-      CMPA    #' '            ; Is it a space?
-      BEQ     @ConsumeLead    ; Yes -> consume and continue
-      CMPA    #9              ; Is it a TAB?
-      BEQ     @ConsumeLead    ; Yes -> consume and continue
-      BRA     @CheckSign      ; Neither -> move on to sign check
+      LDB     VALI_Len
+      BEQ     @Done
+      LDA     ,X
+      CMPA    #' '
+      BEQ     @ConsumeLead
+      CMPA    #9
+      BEQ     @ConsumeLead
+      BRA     @CheckSign
 @ConsumeLead
-      LEAX    1,X             ; Advance to next character
-      DEC     VALI_Len        ; One less character remaining
-      BRA     @SkipLead       ; Keep skipping leading whitespace
+      LEAX    1,X
+      DEC     VALI_Len
+      BRA     @SkipLead
 @CheckSign
-      LDB     VALI_Len        ; Any characters left after whitespace skip?
-      BEQ     @Done           ; No -> done
-      LDA     ,X              ; Look at current character
+      LDB     VALI_Len
+      BEQ     @Done
+      LDA     ,X
       CMPA    #'+'
-      BEQ     @ConsumeSign    ; '+' found -> consume it and continue
+      BEQ     @ConsumeSign
       CMPA    #'-'
-      BNE     @DigitLoopStart ; Not '+' or '-' -> start digit loop
-      ; If '-' found, remember that a negative sign was present
+      BNE     @CheckHexPrefix
       LDA     VALI_Flags
-      ORA     #%10000000      ; Set bit7 = saw negative sign
+      ORA     #%10000000
       STA     VALI_Flags
 @ConsumeSign
-      LEAX    1,X             ; Skip over '+' or '-'
-      DEC     VALI_Len        ; Reduce remaining length
+      LEAX    1,X
+      DEC     VALI_Len
+@CheckHexPrefix
+      LDB     VALI_Len
+      CMPB    #2
+      BLO     @DigitLoopStart
+      LDA     ,X
+      CMPA    #'&'
+      BNE     @DigitLoopStart
+      LDA     1,X
+      CMPA    #'H'
+      BEQ     @ConsumeHexPrefix
+      CMPA    #'h'
+      BNE     @DigitLoopStart
+@ConsumeHexPrefix
+      LEAX    2,X
+      LDB     VALI_Len
+      SUBB    #2
+      STB     VALI_Len
+      BRA     @HexLoopStart
 @DigitLoopStart
-      LDB     VALI_Len        ; Any characters left after optional sign?
-      BEQ     @Done           ; No -> done
+      LDB     VALI_Len
+      BEQ     @Done
 @DigitLoop
-      LDB     VALI_Len        ; Remaining characters?
-      BEQ     @Done           ; No -> finished parsing
-      LDA     ,X              ; Fetch current character
+      LDB     VALI_Len
+      BEQ     @Done
+      LDA     ,X
       CMPA    #'0'
-      BLO     @Done           ; Below '0' -> not a digit, stop parsing
+      BLO     @Done
       CMPA    #'9'
-      BHI     @Done           ; Above '9' -> not a digit, stop parsing
-      SUBA    #'0'            ; Convert ASCII digit to numeric 0..9
-      STA     VALI_Digit      ; Save digit for multiply/add helper
-      BSR     Mul10AddDigit_U32 ; mag = mag * 10 + digit
-      LEAX    1,X             ; Advance to next character
-      DEC     VALI_Len        ; One less character remaining
-      BRA     @DigitLoop      ; Continue parsing digit prefix
+      BHI     @Done
+      SUBA    #'0'
+      STA     VALI_Digit
+      BSR     Mul10AddDigit_U32
+      LEAX    1,X
+      DEC     VALI_Len
+      BRA     @DigitLoop
+@HexLoopStart
+      LDB     VALI_Len
+      BEQ     @Done
+@HexLoop
+      LDB     VALI_Len
+      BEQ     @Done
+      LDA     ,X
+      CMPA    #'0'
+      BLO     @Done
+      CMPA    #'9'
+      BLS     @HexIs09
+      CMPA    #'A'
+      BLO     @HexCheckLower
+      CMPA    #'F'
+      BLS     @HexIsAF
+@HexCheckLower
+      CMPA    #'a'
+      BLO     @Done
+      CMPA    #'f'
+      BHI     @Done
+      SUBA    #('a' - 10)
+      BRA     @HexHaveDigit
+@HexIsAF
+      SUBA    #('A' - 10)
+      BRA     @HexHaveDigit
+@HexIs09
+      SUBA    #'0'
+@HexHaveDigit
+      STA     VALI_Digit
+      BSR     Mul16AddDigit_U32
+      LEAX    1,X
+      DEC     VALI_Len
+      BRA     @HexLoop
 @Done
-      RTS                     ; Return with parsed magnitude/flags
+      RTS
 
 ; ============================================================
 ; Mul10AddDigit_U32
@@ -314,14 +363,85 @@ Mul10AddDigit_U32:
         STA     VALI_Flags
 !       RTS                   ; Success, no overflow
 
+; ============================================================
+; Mul16AddDigit_U32
+;
+; VALI_Mag = VALI_Mag * 16 + VALI_Digit
+;
+; Input:
+;   VALI_Mag0..3 = current unsigned 32-bit value
+;   VALI_Digit   = new hex digit (0..15)
+;
+; Output:
+;   VALI_Mag0..3 updated
+;
+; Behavior on overflow:
+;   Saturates result to $FFFFFFFF
+;   Sets bit0 in VALI_Flags
+; ============================================================
+Mul16AddDigit_U32:
+        ; If overflow already happened earlier, keep value saturated
+        LDA     VALI_Flags
+        BITA    #%00000001
+        BEQ     >
+        RTS
+        ; mag = mag * 16  (4 left shifts)
+!       LSL     VALI_Mag3
+        ROL     VALI_Mag2
+        ROL     VALI_Mag1
+        ROL     VALI_Mag0
+        BCS     @Saturate
+        LSL     VALI_Mag3
+        ROL     VALI_Mag2
+        ROL     VALI_Mag1
+        ROL     VALI_Mag0
+        BCS     @Saturate
+        LSL     VALI_Mag3
+        ROL     VALI_Mag2
+        ROL     VALI_Mag1
+        ROL     VALI_Mag0
+        BCS     @Saturate
+        LSL     VALI_Mag3
+        ROL     VALI_Mag2
+        ROL     VALI_Mag1
+        ROL     VALI_Mag0
+        BCS     @Saturate
+        ; mag = mag + digit
+        LDA     VALI_Mag3
+        ADDA    VALI_Digit
+        STA     VALI_Mag3
+        BCC     @Done
+        INC     VALI_Mag2
+        BNE     @Done
+        INC     VALI_Mag1
+        BNE     @Done
+        INC     VALI_Mag0
+        BNE     @Done
+@Saturate
+        LDA     #$FF
+        STA     VALI_Mag0
+        STA     VALI_Mag1
+        STA     VALI_Mag2
+        STA     VALI_Mag3
+        LDA     VALI_Flags
+        ORA     #%00000001
+        STA     VALI_Flags
+@Done
+        RTS
+
 ; Fake doing U64 versions
-NumericString_To_U64_Stack:
 NumericString_To_S64_Stack:
       PULS  Y
       JSR   NumericString_To_U32_Stack    ; do 32 bit version
       LDB   ,S                ; Get the 32 bit number sign
       SEX                     ; extended it to 64 bit
-      PSHS  D
+      TFR   A,B
+!     PSHS  D
       PSHS  D
       JMP   ,Y
-      
+
+NumericString_To_U64_Stack:
+      PULS  Y
+      JSR   NumericString_To_U32_Stack    ; do 32 bit version
+      LDD   #$0000
+      BRA   <
