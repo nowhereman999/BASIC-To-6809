@@ -1042,6 +1042,9 @@ End If
                         If Asc(Left$(Value2$, 1)) = &HFA Or Asc(Left$(Value2$, 1)) = TK_BOOL_ONSTACK Then
                             ' Numeric value already on 6809 stack; just negate it
                             LeftType = Asc(Right$(Value2$, 1))
+                            If LeftType < 11 And (LeftType And 1) = 0 Then
+                                LeftType = LeftType - 1
+                            End If
                             GoSub NumFunctionNEG
                             ' Keep marker at same stack slot (no pop)
                             ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(LeftType)
@@ -1074,6 +1077,9 @@ End If
                     Else
                         ' General case: push operand onto 6809 stack then negate
                         GoSub PutValue2OnStack ' this pops Value2$ and decrements ProcessRPNStackPointer
+                        If LeftType < 11 And (LeftType And 1) = 0 Then
+                            LeftType = LeftType - 1
+                        End If
                         GoSub NumFunctionNEG
                         ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(LeftType)
                     End If
@@ -1704,7 +1710,7 @@ End If
 
                     ' ---- Compute address of element and leave it as UInt16 on 6809 stack ----
 
-                    If NumericArrayDimensions(ArrNum) = 1 And IdxBits = 8 Then
+                    If NumericArrayDimensions(ArrNum) = 1 And IdxBits = 8 And ElemType < 5 Then
                         ' index is a byte at ,S -> convert to address and replace index with address
                         Z$ = "; Here9:": GoSub AO
                         A$ = "LDB": B$ = ",S+": C$ = "B = index (pop it)": GoSub AO

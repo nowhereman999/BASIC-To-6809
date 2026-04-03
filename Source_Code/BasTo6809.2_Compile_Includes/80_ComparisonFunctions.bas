@@ -111,7 +111,7 @@ A$ = "CMPX": B$ = "14,S": C$ = "Compare with right MSWord 32 bit value": GoSub A
 A$ = "BEQ": B$ = ">": C$ = "Skip if Equal": GoSub AO
 Z$ = "@False:": GoSub AO
 A$ = "CLRA": C$ = "Flag as false": GoSub AO
-Z$ = "!": A$ = "LEAS": B$ = "5,S": C$ = "Move the stack forward": GoSub AO
+Z$ = "!": A$ = "LEAS": B$ = "15,S": C$ = "Move the stack forward": GoSub AO
 A$ = "STA": B$ = ",S": C$ = "Save A and move the stack forward, we only need to save the result as an 8 bit value": GoSub AO
 GoSub AO
 Return
@@ -234,7 +234,7 @@ Return
 NotEqualSameType4: '
 A$ = "LDA": B$ = "#$FF": C$ = "Default is True": GoSub AO
 A$ = "LDX": B$ = ",S": C$ = "Get the left MSWord 32 bit value": GoSub AO
-A$ = "CMPx": B$ = "4,S": C$ = "Compare with right MSWord 32 bit value": GoSub AO
+A$ = "CMPX": B$ = "4,S": C$ = "Compare with right MSWord 32 bit value": GoSub AO
 A$ = "BNE": B$ = ">": C$ = "If Not Equal, Exit with True": GoSub AO
 A$ = "LDX": B$ = "2,S": C$ = "Get the left LSWord 32 bit value": GoSub AO
 A$ = "CMPX": B$ = "6,S": C$ = "Compare with right MSWord 32 bit value": GoSub AO
@@ -498,7 +498,7 @@ A$ = "LDX": B$ = "#$0000": C$ = "Set as False": GoSub AO
 Z$ = "!": A$ = "STX": B$ = ",S+": C$ = "Save X and move the stack forward, we only need to save the result as an 8 bit value": GoSub AO
 Return
 LessThanLS2RU1:
-A$ = "LDD": B$ = "1,S": C$ = "D = signed 16-bit, move stack 1 bytes": GoSub AO
+A$ = "LDD": B$ = "1,S": C$ = "D = signed 16-bit": GoSub AO
 A$ = "BMI": B$ = "@Store": C$ = "If LEFT<0 then TRUE": GoSub AO
 A$ = "CLR": B$ = ",-S": C$ = "ext=0 for unsigned RIGHT": GoSub AO
 A$ = "CMPD": B$ = ",S+": C$ = "Compare LEFT vs RIGHT as unsigned, move the stack": GoSub AO
@@ -699,7 +699,7 @@ Select Case FloatType
     Case 0:
         ' Handle 3 byte FFP
         A$ = "JSR": B$ = "FFP_CMP_Stack": C$ = "Compare FFP Value1 @ 3,S with Value 2 @ ,S sets the 6809 flags Z, N, and C": GoSub AO
-        A$ = "BGT": B$ = ">": C$ = "Skip if GreaterThan": GoSub AO
+        A$ = "BLT": B$ = ">": C$ = "Skip if LessThan": GoSub AO
         A$ = "LDX": B$ = "#$0000": C$ = "Set as False": GoSub AO
         Z$ = "!": A$ = "LEAS": B$ = "4,S": C$ = "Move the stack forward": GoSub AO
         A$ = "STX": B$ = ",S+": C$ = "Save X and move the stack forward, we only need to save the result as an 8 bit value": GoSub AO
@@ -707,7 +707,7 @@ Select Case FloatType
     Case 1:
         ' Handle 5 byte FP5
         A$ = "JSR": B$ = "FP5_CMP_Stack": C$ = "Compare FP5 Value1 @ ,S with Value 2 @ 5,S sets the 6809 flags Z, N, and C": GoSub AO
-        A$ = "BGT": B$ = ">": C$ = "Skip if GreaterThan": GoSub AO
+        A$ = "BLT": B$ = ">": C$ = "Skip if LessThan": GoSub AO
         A$ = "LDX": B$ = "#$0000": C$ = "Set as False": GoSub AO
         Z$ = "!": A$ = "LEAS": B$ = "8,S": C$ = "Move the stack forward": GoSub AO
         A$ = "STX": B$ = ",S+": C$ = "Save X and move the stack forward, we only need to save the result as an 8 bit value": GoSub AO
@@ -718,7 +718,7 @@ End Select
 LessThanSameDouble:
 A$ = "LDX": B$ = "#$FFFF": C$ = "Default is True": GoSub AO
 A$ = "JSR": B$ = "Double_CMP_Stack": C$ = "Compare Double Value1 @ ,S with Value 2 @ 10,S sets the 6809 flags Z, N, and C": GoSub AO
-A$ = "BGT": B$ = ">": C$ = "Skip if GreaterThan": GoSub AO
+A$ = "BLT": B$ = ">": C$ = "Skip if LessThan": GoSub AO
 A$ = "LDX": B$ = "#$0000": C$ = "Set as False": GoSub AO
 Z$ = "!": A$ = "LEAS": B$ = "18,S": C$ = "Move the stack forward": GoSub AO
 A$ = "STX": B$ = ",S+": C$ = "Save X and move the stack forward, we only need to save the result as an 8 bit value": GoSub AO
@@ -1126,7 +1126,7 @@ Select Case FloatType
     Case 0:
         ' Handle 3 byte FFP
         A$ = "JSR": B$ = "FFP_CMP_Stack": C$ = "Compare FFP Value1 @ 3,S with Value 2 @ ,S sets the 6809 flags Z, N, and C": GoSub AO
-        A$ = "BLT": B$ = ">": C$ = "Skip if LessThan": GoSub AO
+        A$ = "BGT": B$ = ">": C$ = "Skip if GreaterThan": GoSub AO
         A$ = "LDX": B$ = "#$0000": C$ = "Set as False": GoSub AO
         Z$ = "!": A$ = "LEAS": B$ = "4,S": C$ = "Move the stack forward": GoSub AO
         A$ = "STX": B$ = ",S+": C$ = "Save X and move the stack forward, we only need to save the result as an 8 bit value": GoSub AO
@@ -1134,7 +1134,7 @@ Select Case FloatType
     Case 1:
         ' Handle 5 byte FP5
         A$ = "JSR": B$ = "FP5_CMP_Stack": C$ = "Compare FP5 Value1 @ ,S with Value 2 @ 5,S sets the 6809 flags Z, N, and C": GoSub AO
-        A$ = "BLT": B$ = ">": C$ = "Skip if LessThan": GoSub AO
+        A$ = "BGT": B$ = ">": C$ = "Skip if GreaterThan": GoSub AO
         A$ = "LDX": B$ = "#$0000": C$ = "Set as False": GoSub AO
         Z$ = "!": A$ = "LEAS": B$ = "8,S": C$ = "Move the stack forward": GoSub AO
         A$ = "STX": B$ = ",S+": C$ = "Save X and move the stack forward, we only need to save the result as an 8 bit value": GoSub AO
@@ -1145,7 +1145,7 @@ End Select
 GreaterThanSameDouble:
 A$ = "LDX": B$ = "#$FFFF": C$ = "Default is True": GoSub AO
 A$ = "JSR": B$ = "Double_CMP_Stack": C$ = "Compare Double Value1 @ ,S with Value 2 @ 10,S sets the 6809 flags Z, N, and C": GoSub AO
-A$ = "BLT": B$ = ">": C$ = "Skip if LessThan": GoSub AO
+A$ = "BGT": B$ = ">": C$ = "Skip if GreaterThan": GoSub AO
 A$ = "LDX": B$ = "#$0000": C$ = "Set as False": GoSub AO
 Z$ = "!": A$ = "LEAS": B$ = "18,S": C$ = "Move the stack forward": GoSub AO
 A$ = "STX": B$ = ",S+": C$ = "Save X and move the stack forward, we only need to save the result as an 8 bit value": GoSub AO
@@ -1550,7 +1550,7 @@ Select Case FloatType
     Case 0:
         ' Handle 3 byte FFP
         A$ = "JSR": B$ = "FFP_CMP_Stack": C$ = "Compare FFP Value1 @ 3,S with Value 2 @ ,S sets the 6809 flags Z, N, and C": GoSub AO
-        A$ = "BGE": B$ = ">": C$ = "Skip if GreaterOrEqual": GoSub AO
+        A$ = "BLE": B$ = ">": C$ = "Skip if LessOrEqual": GoSub AO
         A$ = "LDX": B$ = "#$0000": C$ = "Set as False": GoSub AO
         Z$ = "!": A$ = "LEAS": B$ = "4,S": C$ = "Move the stack forward": GoSub AO
         A$ = "STX": B$ = ",S+": C$ = "Save X and move the stack forward, we only need to save the result as an 8 bit value": GoSub AO
@@ -1558,7 +1558,7 @@ Select Case FloatType
     Case 1:
         ' Handle 5 byte FP5
         A$ = "JSR": B$ = "FP5_CMP_Stack": C$ = "Compare FP5 Value1 @ ,S with Value 2 @ 5,S sets the 6809 flags Z, N, and C": GoSub AO
-        A$ = "BGE": B$ = ">": C$ = "Skip if GreaterOrEqual": GoSub AO
+        A$ = "BLE": B$ = ">": C$ = "Skip if LessOrEqual": GoSub AO
         A$ = "LDX": B$ = "#$0000": C$ = "Set as False": GoSub AO
         Z$ = "!": A$ = "LEAS": B$ = "8,S": C$ = "Move the stack forward": GoSub AO
         A$ = "STX": B$ = ",S+": C$ = "Save X and move the stack forward, we only need to save the result as an 8 bit value": GoSub AO
@@ -1569,7 +1569,7 @@ End Select
 LessOrEqualSameDouble:
 A$ = "LDX": B$ = "#$FFFF": C$ = "Default is True": GoSub AO
 A$ = "JSR": B$ = "Double_CMP_Stack": C$ = "Compare Double Value1 @ ,S with Value 2 @ 10,S sets the 6809 flags Z, N, and C": GoSub AO
-A$ = "BGE": B$ = ">": C$ = "Skip if GreaterOrEqual": GoSub AO
+A$ = "BLE": B$ = ">": C$ = "Skip if LessOrEqual": GoSub AO
 A$ = "LDX": B$ = "#$0000": C$ = "Set as False": GoSub AO
 Z$ = "!": A$ = "LEAS": B$ = "18,S": C$ = "Move the stack forward": GoSub AO
 A$ = "STX": B$ = ",S+": C$ = "Save X and move the stack forward, we only need to save the result as an 8 bit value": GoSub AO
@@ -1774,10 +1774,12 @@ A$ = "LDD": B$ = "1,S": C$ = "D = signed 16-bit, move stack 1 bytes": GoSub AO
 A$ = "BMI": B$ = "@False": C$ = "If LEFT<0 then False": GoSub AO
 A$ = "LDU": B$ = "#$FFFF": C$ = "Default is True": GoSub AO
 A$ = "CLR": B$ = ",-S": C$ = "ext=0 for unsigned RIGHT": GoSub AO
-A$ = "CMPD": B$ = ",S": C$ = "Compare LEFT vs RIGHT as unsigned": GoSub AO
+A$ = "CMPD": B$ = ",S+": C$ = "Compare LEFT vs RIGHT as unsigned, fix the stack": GoSub AO
 A$ = "BHS": B$ = "@True": C$ = "If LEFT >= RIGHT keep True": GoSub AO
-Z$ = "@False": A$ = "LDU": B$ = "#$0000": C$ = "Set False": GoSub AO
-Z$ = "@True": A$ = "STU": B$ = ",S+": C$ = "Store result, move stack": GoSub AO
+Z$ = "@False"
+A$ = "LDU": B$ = "#$0000": C$ = "Set as False": GoSub AO
+Z$ = "@True": A$ = "LEAS": B$ = "1,S": C$ = "Move the stack": GoSub AO
+A$ = "STU": B$ = ",S+": C$ = "Save U and move the stack forward, we only need to save the result as an 8 bit value": GoSub AO
 GoSub AO
 Return
 GreaterOrEqualLU2RS1:
@@ -1975,7 +1977,7 @@ Select Case FloatType
     Case 0:
         ' Handle 3 byte FFP
         A$ = "JSR": B$ = "FFP_CMP_Stack": C$ = "Compare FFP Value1 @ 3,S with Value 2 @ ,S sets the 6809 flags Z, N, and C": GoSub AO
-        A$ = "BLE": B$ = ">": C$ = "Skip if LessOrEqual": GoSub AO
+        A$ = "BGE": B$ = ">": C$ = "Skip if GreaterOrEqual": GoSub AO
         A$ = "LDX": B$ = "#$0000": C$ = "Set as False": GoSub AO
         Z$ = "!": A$ = "LEAS": B$ = "4,S": C$ = "Move the stack forward": GoSub AO
         A$ = "STX": B$ = ",S+": C$ = "Save X and move the stack forward, we only need to save the result as an 8 bit value": GoSub AO
@@ -1983,7 +1985,7 @@ Select Case FloatType
     Case 1:
         ' Handle 5 byte FP5
         A$ = "JSR": B$ = "FP5_CMP_Stack": C$ = "Compare FP5 Value1 @ ,S with Value 2 @ 5,S sets the 6809 flags Z, N, and C": GoSub AO
-        A$ = "BLE": B$ = ">": C$ = "Skip if LessOrEqual": GoSub AO
+        A$ = "BGE": B$ = ">": C$ = "Skip if GreaterOrEqual": GoSub AO
         A$ = "LDX": B$ = "#$0000": C$ = "Set as False": GoSub AO
         Z$ = "!": A$ = "LEAS": B$ = "8,S": C$ = "Move the stack forward": GoSub AO
         A$ = "STX": B$ = ",S+": C$ = "Save X and move the stack forward, we only need to save the result as an 8 bit value": GoSub AO
@@ -1994,7 +1996,7 @@ End Select
 GreaterOrEqualSameDouble:
 A$ = "LDX": B$ = "#$FFFF": C$ = "Default is True": GoSub AO
 A$ = "JSR": B$ = "Double_CMP_Stack": C$ = "Compare Double Value1 @ ,S with Value 2 @ 10,S sets the 6809 flags Z, N, and C": GoSub AO
-A$ = "BLE": B$ = ">": C$ = "Skip if LessOrEqual": GoSub AO
+A$ = "BGE": B$ = ">": C$ = "Skip if GreaterOrEqual": GoSub AO
 A$ = "LDX": B$ = "#$0000": C$ = "Set as False": GoSub AO
 Z$ = "!": A$ = "LEAS": B$ = "18,S": C$ = "Move the stack forward": GoSub AO
 A$ = "STX": B$ = ",S+": C$ = "Save X and move the stack forward, we only need to save the result as an 8 bit value": GoSub AO

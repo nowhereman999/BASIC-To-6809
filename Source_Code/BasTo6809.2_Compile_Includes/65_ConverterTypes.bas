@@ -1135,32 +1135,131 @@ Select Case RightType
                 End Select
             Case 1:
                 ' Handle 5 byte FP5
-                ' Right is a 5 byte FP5 value, Left is an 8,16 or 32 bit value
+                ' Right is a 5 byte FP5 value already at ,S
+                ' Left is below it on the stack and must be widened in place
                 Select Case LeftType
-                    Case 1, 3 ' Signed byte to  5 byte FP5 value
-                        A$ = "PULS": B$ = "B": C$ = "Get the left byte off the stack": GoSub AO
+                    Case 1, 3 ' Signed byte to 5 byte FP5 value
+                        A$ = "PULS": B$ = "A,X,Y": C$ = "Get right FP5 value": GoSub AO
+                        A$ = "PULS": B$ = "B": C$ = "Get left signed byte": GoSub AO
+                        A$ = "LEAS": B$ = "-5,S": C$ = "Make room for left value": GoSub AO
+                        A$ = "PSHS": B$ = "A,X,Y": C$ = "Put the right FP5 value": GoSub AO
+
                         A$ = "SEX": C$ = "Sign extend B into D": GoSub AO
                         A$ = "JSR": B$ = "S16_To_FP5": C$ = "Convert Signed 16 bit integer in D to 5 Byte FP5 @ ,S": GoSub AO
-                    Case 2, 4 ' Bit is either 0 or 1 , or unsinged byte
-                        A$ = "PULS": B$ = "B": C$ = "Get the left byte off the stack": GoSub AO
+
+                        A$ = "PULS": B$ = "B,X,Y": C$ = "Get the new left FP5 value, fix the stack": GoSub AO
+                        A$ = "LEAU": B$ = "10,S": C$ = "U points where to store the left value": GoSub AO
+                        A$ = "PSHU": B$ = "B,X,Y": C$ = "Put the new left FP5 value": GoSub AO
+
+                    Case 2, 4 ' Bit is either 0 or 1, or unsigned byte
+                        A$ = "PULS": B$ = "A,X,Y": C$ = "Get right FP5 value": GoSub AO
+                        A$ = "PULS": B$ = "B": C$ = "Get left unsigned byte": GoSub AO
+                        A$ = "LEAS": B$ = "-5,S": C$ = "Make room for left value": GoSub AO
+                        A$ = "PSHS": B$ = "A,X,Y": C$ = "Put the right FP5 value": GoSub AO
+
                         A$ = "CLRA": C$ = "MSB = 0": GoSub AO
-                        A$ = "JSR": B$ = "U16_To_FP5": C$ = "Convert Unsigned 16 bit integer in D to 5 Byte FP5 @ ,S": GoSub AO
+                        A$ = "JSR": B$ = "U16_To_FP5": C$ = "Convert UnSigned 16 bit integer in D to 5 Byte FP5 @ ,S": GoSub AO
+
+                        A$ = "PULS": B$ = "B,X,Y": C$ = "Get the new left FP5 value, fix the stack": GoSub AO
+                        A$ = "LEAU": B$ = "10,S": C$ = "U points where to store the left value": GoSub AO
+                        A$ = "PSHU": B$ = "B,X,Y": C$ = "Put the new left FP5 value": GoSub AO
+
                     Case 5
                         ' Signed 16 bit value to 5 byte FP5 value
-                        A$ = "PULS": B$ = "D": C$ = "Get the left bytes off the stack": GoSub AO
+                        A$ = "PULS": B$ = "A,X,Y": C$ = "Get right FP5 value": GoSub AO
+                        A$ = "LEAS": B$ = "-3,S": C$ = "Make room for left value": GoSub AO
+                        A$ = "PSHS": B$ = "A,X,Y": C$ = "Put the right FP5 value": GoSub AO
+
+                        A$ = "LDD": B$ = "8,S": C$ = "Get the Signed 16 bit left value in D": GoSub AO
                         A$ = "JSR": B$ = "S16_To_FP5": C$ = "Convert Signed 16 bit integer in D to 5 Byte FP5 @ ,S": GoSub AO
+
+                        A$ = "PULS": B$ = "B,X,Y": C$ = "Get the new left FP5 value, fix the stack": GoSub AO
+                        A$ = "LEAU": B$ = "10,S": C$ = "U points where to store the left value": GoSub AO
+                        A$ = "PSHU": B$ = "B,X,Y": C$ = "Put the new left FP5 value": GoSub AO
+
                     Case 6
-                        ' UnSigned 16 bit value to 5 byte FP5 value
-                        A$ = "PULS": B$ = "D": C$ = "Get the left bytes off the stack": GoSub AO
-                        A$ = "JSR": B$ = "U16_To_FP5": C$ = "Convert Unsigned 16 bit integer in D to 5 Byte FP5 @ ,S": GoSub AO
+                        ' Unsigned 16 bit value to 5 byte FP5 value
+                        A$ = "PULS": B$ = "A,X,Y": C$ = "Get right FP5 value": GoSub AO
+                        A$ = "LEAS": B$ = "-3,S": C$ = "Make room for left value": GoSub AO
+                        A$ = "PSHS": B$ = "A,X,Y": C$ = "Put the right FP5 value": GoSub AO
+
+                        A$ = "LDD": B$ = "8,S": C$ = "Get the Unsigned 16 bit left value in D": GoSub AO
+                        A$ = "JSR": B$ = "U16_To_FP5": C$ = "Convert UnSigned 16 bit integer in D to 5 Byte FP5 @ ,S": GoSub AO
+
+                        A$ = "PULS": B$ = "B,X,Y": C$ = "Get the new left FP5 value, fix the stack": GoSub AO
+                        A$ = "LEAU": B$ = "10,S": C$ = "U points where to store the left value": GoSub AO
+                        A$ = "PSHU": B$ = "B,X,Y": C$ = "Put the new left FP5 value": GoSub AO
+
                     Case 7 ' Signed 32 bit value to 5 byte FP5 value
+                        A$ = "PULS": B$ = "A,X,Y": C$ = "Get right FP5 value": GoSub AO
+                        A$ = "LEAS": B$ = "-1,S": C$ = "Make room for left value": GoSub AO
+                        A$ = "LDD": B$ = "6,S": C$ = "Get MSB of left signed 32 bit integer": GoSub AO
+                        A$ = "LDX": B$ = "8,S": C$ = "Get LSB of left signed 32 bit integer": GoSub AO
+                        A$ = "PSHS": B$ = "D,X": C$ = "Save the 32 bit integer to be converted on the stack": GoSub AO
                         A$ = "JSR": B$ = "S32_To_FP5": C$ = "Convert Signed 32 bit integer @,S to 5 Byte FP5 @ ,S": GoSub AO
-                    Case 8 ' UnSigned 32 bit value to 5 byte FP5 value
-                        A$ = "JSR": B$ = "U32_To_FP5": C$ = "Convert Unsigned 32 bit integer @,S to 5 Byte FP5 @ ,S": GoSub AO
+
+                        A$ = "PULS": B$ = "B,X,Y": C$ = "Get the new left FP5 value, fix the stack": GoSub AO
+                        A$ = "LEAU": B$ = "10,S": C$ = "U points where to store the left value": GoSub AO
+                        A$ = "PSHU": B$ = "B,X,Y": C$ = "Put the new left FP5 value": GoSub AO
+
+                    Case 8 ' Unsigned 32 bit value to 5 byte FP5 value
+                        A$ = "PULS": B$ = "A,X,Y": C$ = "Get right FP5 value": GoSub AO
+                        A$ = "LEAS": B$ = "-1,S": C$ = "Make room for left value": GoSub AO
+                        A$ = "LDD": B$ = "6,S": C$ = "Get MSB of left unsigned 32 bit integer": GoSub AO
+                        A$ = "LDX": B$ = "8,S": C$ = "Get LSB of left unsigned 32 bit integer": GoSub AO
+                        A$ = "PSHS": B$ = "D,X": C$ = "Save the 32 bit unsigned integer to be converted on the stack": GoSub AO
+                        A$ = "JSR": B$ = "U32_To_FP5": C$ = "Convert unsigned 32 bit integer @,S to 5 Byte FP5 @ ,S": GoSub AO
+
+                        A$ = "PULS": B$ = "B,X,Y": C$ = "Get the new left FP5 value, fix the stack": GoSub AO
+                        A$ = "LEAU": B$ = "10,S": C$ = "U points where to store the left value": GoSub AO
+                        A$ = "PSHU": B$ = "B,X,Y": C$ = "Put the new left FP5 value": GoSub AO
+
+
                     Case 9 ' Signed 64 bit value to 5 byte FP5 value
+                        A$ = "LEAU": B$ = "5,S": C$ = "U points at the left signed 64 bit number": GoSub AO
+                        A$ = "PULU": B$ = "D,X,Y": C$ = "Read MS 6 bytes, move pointer": GoSub AO
+                        A$ = "LDU": B$ = ",U": C$ = "Get LS bytes of the 64 bit number": GoSub AO
+                        A$ = "PSHS": B$ = "D,X,Y,U": C$ = "Save the 64 bit number on the stack": GoSub AO
                         A$ = "JSR": B$ = "S64_To_FP5": C$ = "Convert Signed 64 bit integer @,S to 5 Byte FP5 @ ,S": GoSub AO
-                    Case 10 ' UnSigned 64 bit value to 5 byte FP5 value
+
+                        A$ = "PULS": B$ = "B,X,Y": C$ = "Get the new left FP5 value, fix the stack": GoSub AO
+                        A$ = "LEAU": B$ = "13,S": C$ = "U points where to store the left value": GoSub AO
+                        A$ = "PSHU": B$ = "B,X,Y": C$ = "Put the new left FP5 value": GoSub AO
+
+                        A$ = "PULS": B$ = "B,X,Y": C$ = "Get the right FP5 value, fix the stack": GoSub AO
+                        A$ = "LEAS": B$ = "3,S": C$ = "Move Stack to the end of the left value": GoSub AO
+                        A$ = "PSHS": B$ = "B,X,Y": C$ = "Put the right FP5 value on the stack": GoSub AO
+
+                    Case 10 ' Unsigned 64 bit value to 5 byte FP5 value
+                        A$ = "LEAU": B$ = "5,S": C$ = "U points at the left signed 64 bit number": GoSub AO
+                        A$ = "PULU": B$ = "D,X,Y": C$ = "Read MS 6 bytes, move pointer": GoSub AO
+                        A$ = "LDU": B$ = ",U": C$ = "Get LS bytes of the 64 bit number": GoSub AO
+                        A$ = "PSHS": B$ = "D,X,Y,U": C$ = "Save the 64 bit number on the stack": GoSub AO
                         A$ = "JSR": B$ = "U64_To_FP5": C$ = "Convert Unsigned 64 bit integer @,S to 5 Byte FP5 @ ,S": GoSub AO
+
+                        A$ = "PULS": B$ = "B,X,Y": C$ = "Get the new left FP5 value, fix the stack": GoSub AO
+                        A$ = "LEAU": B$ = "13,S": C$ = "U points where to store the left value": GoSub AO
+                        A$ = "PSHU": B$ = "B,X,Y": C$ = "Put the new left FP5 value": GoSub AO
+
+                        A$ = "PULS": B$ = "B,X,Y": C$ = "Get the right FP5 value, fix the stack": GoSub AO
+                        A$ = "LEAS": B$ = "3,S": C$ = "Move Stack to the end of the left value": GoSub AO
+                        A$ = "PSHS": B$ = "B,X,Y": C$ = "Put the right FP5 value on the stack": GoSub AO
+
+                    Case 12 ' Left 10 byte Double to 5 byte FP5 value
+                        A$ = "LEAU": B$ = "5+4,S": C$ = "U points at the left 10 byte Double below the right FP5 value": GoSub AO
+                        A$ = "PULU": B$ = "D,X,Y": C$ = "Read 6 LS bytes of left Double, move pointer": GoSub AO
+                        A$ = "PSHS": B$ = "D,X,Y": C$ = "Push 6 LS bytes of left Double onto stack": GoSub AO
+                        A$ = "PULU": B$ = "X,Y": C$ = "Read 4 MS bytes of left Double, move pointer": GoSub AO
+                        A$ = "PSHS": B$ = "X,Y": C$ = "Push 4 MS bytes of left Double onto stack": GoSub AO
+                        A$ = "JSR": B$ = "Double_To_FP5": C$ = "Convert 10 byte Double @,S to 5 byte FP5 @,S": GoSub AO
+
+                        A$ = "PULS": B$ = "B,X,Y": C$ = "Get the new left FP5 value, move the stack": GoSub AO
+                        A$ = "LEAU": B$ = "5+10,S": C$ = "U points where to store the left value": GoSub AO
+                        A$ = "PSHU": B$ = "B,X,Y": C$ = "Put the new left FP5 value": GoSub AO
+
+                        A$ = "PULS": B$ = "B,X,Y": C$ = "Get the right FP5 value, fix the stack": GoSub AO
+                        A$ = "LEAS": B$ = "5,S": C$ = "Move Stack to the end of the left value": GoSub AO
+                        A$ = "PSHS": B$ = "B,X,Y": C$ = "Put the right FP5 value on the stack": GoSub AO
                 End Select
         End Select
     Case 12 ' Right is 10 byte Double-Precision Floating-Point value, which requires 10 bytes

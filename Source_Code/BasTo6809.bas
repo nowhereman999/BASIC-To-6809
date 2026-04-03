@@ -1,7 +1,11 @@
-V$ = "5.25"
+V$ = "5.26"
+'       - Fixed compare code GreaterOrEqualLS2RU1 it was corrupting the stack
+'       - Fixed the EqualSameType8 routine, needed a LEAS 15,S at the end was a type of LEAS 5,S
+'       - Fixed reversal of conversion code of FP5 types that were first in an expression
+'       - Fixed compares with Single and Double types
 
+' V 5.25
 '       - Fixed SDC_DIRPAGE(0), was causing a stack corruption
-'       - Fixed the automatic setting of the special palette for NTSC GMODE selected screens
 '       - Fixed V=VAL("&H"+A$)
 '       - Fixed a problem with mixed two byte addition or subtraction one byte operations
 '       - Fixed String concat, like S$ = "HELLO "+ "WORLD" was backwards, although S$ = A$ + B$ was fine

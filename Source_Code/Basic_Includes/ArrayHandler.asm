@@ -10,7 +10,7 @@
 ; Enter with:
 ; A = BytesPerEntry
 ; B = Number of Array Dimensions
-; X = Start of the array data
+; U = Start of the array data
 ; On the stack are a bunch of 8 bit numbers, d4,d3,d2,...
 BytesPerEntry           FCB   1     ; Number of bytes per entry needed for this array
 ArrayDimCounter         FCB   1     ; Save Dimensions counter here

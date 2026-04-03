@@ -464,7 +464,7 @@ GoSub ConvertLastType2NVT ' Convert LastType @,S to (Numeric Variable Type) NVT 
 ' Value in brackets is on the stack
 ' NumBits = number of bits (8 or 16)
 ' NumDims = Number of dimensions
-If NumDims = 1 And InsideArrayType = NT_UByte Then
+If NumDims = 1 And NumBits = 8 And NVTArrayType < 5 Then
     ' This is a quick and easy location to calc and store
     A$ = "PULS": B$ = "B": C$ = "Array pointer, Fix the stack": GoSub AO
     A$ = "LDX": B$ = "#_ArrayNum_" + NV$ + "+1": C$ = "The array starts here": GoSub AO

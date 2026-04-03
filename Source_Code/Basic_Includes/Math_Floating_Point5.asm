@@ -2020,7 +2020,7 @@ FP5_ADD_SUB:
       LDX   #$8000            ; Set MSbit
 @ClearLowWord:
       LDU   #$0000            ; Clear LS Word
-      LEAU  10,S
+      LEAS  10,S
 !     PSHS  A,X,U             ; Store the result
       BRA   @Return           ; RTS
 ; Value 1 is not special, value 2 is special, so return with Value 2

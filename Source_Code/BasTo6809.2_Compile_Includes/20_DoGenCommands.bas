@@ -1501,7 +1501,7 @@ Do Until v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A)
         ' Value in brackets is on the stack
         ' NumBits = number of bits (8 or 16)
         ' NumDims = Number of dimensions
-        If NumDims = 1 And InsideArrayType = NT_UByte Then
+        If NumDims = 1 And NumBits = 8 And NVTArrayType < 5 Then
             ' This is a quick and easy location to calc and store
             A$ = "PULS": B$ = "B": C$ = "Array pointer, Fix the stack": GoSub AO
             A$ = "LDX": B$ = "#_ArrayNum_" + NV$ + "+1": C$ = "The array starts here": GoSub AO
@@ -1968,7 +1968,7 @@ If count = 0 Then
             ' Value in brackets is on the stack
             ' NumBits = number of bits (8 or 16)
             ' NumDims = Number of dimensions
-            If NumDims = 1 And InsideArrayType = NT_UByte Then
+            If NumDims = 1 And NumBits = 8 And NVTArrayType < 5 Then
                 ' This is a quick and easy location to calc and store
                 A$ = "PULS": B$ = "B": C$ = "Array pointer, Fix the stack": GoSub AO
                 A$ = "LDX": B$ = "#_ArrayNum_" + NV$ + "+1": C$ = "The array starts here": GoSub AO
@@ -2335,7 +2335,7 @@ Do Until v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A)
             ' Value in brackets is on the stack
             ' NumBits = number of bits (8 or 16)
             ' NumDims = Number of dimensions
-            If NumDims = 1 And InsideArrayType = NT_UByte Then
+            If NumDims = 1 And NumBits = 8 And NVTArrayType < 5 Then
                 ' This is a quick and easy location to calc and store
                 A$ = "PULS": B$ = "B": C$ = "Array pointer, Fix the stack": GoSub AO
                 A$ = "LDX": B$ = "#_ArrayNum_" + NV$ + "+1": C$ = "The array starts here": GoSub AO
