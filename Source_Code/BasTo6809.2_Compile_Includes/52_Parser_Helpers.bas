@@ -99,9 +99,13 @@ Return
 ParseNumericExpression_Int16:
 GoSub ParseNumericExpression ' Parse Expression$ and return with value at ,S & Variable LastType with the datatype of that variable
 Select Case LastType
-    Case Is < NT_Int16 ' value is an 8 bit number, CLRA and get B, then return
+    Case Is < NT_Int16 ' value is an 8 bit number
         A$ = "PULS": B$ = "B": C$ = "Get value in B and Fix the stack": GoSub AO
-        A$ = "SEX": C$ = "Sign extend B into A": GoSub AO
+        If LastType = NT_Bit Or LastType = NT_Byte Then
+            A$ = "SEX": C$ = "Sign extend signed 8 bit value into A": GoSub AO
+        Else
+            A$ = "CLRA": C$ = "Zero extend unsigned 8 bit value into A": GoSub AO
+        End If
         Return
     Case NT_Int16 'Already in the correct format
         A$ = "PULS": B$ = "D": C$ = "Get value in D and Fix the stack": GoSub AO

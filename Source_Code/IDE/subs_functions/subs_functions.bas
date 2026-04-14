@@ -4460,6 +4460,16 @@ Sub reginternal
     regid
 
     clearid
+    id.n = "SDC_PlayMovie"
+    id.subfunc = 2
+    id.callname = "sub_coco"
+    id.args = 2
+    id.arg = MKL$(STRINGTYPE - ISPOINTER) + MKL$(LONGTYPE - ISPOINTER)
+    id.specialformat = "?,?"
+    id.hr_syntax = "SDC_PLAYMOVIE fileName$, File # 0 or 1"
+    regid
+
+    clearid
     id.n = "SDC_Play"
     id.subfunc = 2
     id.callname = "sub_coco"
@@ -5097,6 +5107,26 @@ Sub reginternal
     id.arg = MKL$(LONGTYPE - ISPOINTER) + MKL$(LONGTYPE - ISPOINTER)
     id.specialformat = "[?,?]"
     id.hr_syntax = "PALETTE Slot,Value"
+    regid
+
+    clearid
+    id.n = "PaletteV"
+    id.subfunc = 2
+    id.callname = "sub_coco"
+    id.args = 2
+    id.arg = MKL$(LONGTYPE - ISPOINTER) + MKL$(LONGTYPE - ISPOINTER)
+    id.specialformat = "[?,?]"
+    id.hr_syntax = "PALETTEV Slot,Value"
+    regid
+
+    clearid
+    id.n = "PaletteW"
+    id.subfunc = 2
+    id.callname = "sub_coco"
+    id.args = 2
+    id.arg = MKL$(LONGTYPE - ISPOINTER) + MKL$(LONGTYPE - ISPOINTER)
+    id.specialformat = "[?,?]"
+    id.hr_syntax = "PALETTEW Slot,Value"
     regid
 
 reginternalsubfunc = 0

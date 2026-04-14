@@ -1,4 +1,11 @@
-V$ = "5.26"
+V$ = "5.27"
+'       - Fixed the addition of 8 bit values always now results in a 16 bit result, to avoid overflows
+'       - Fixed the subtraction of 8 bit values always now results in a 16 bit signed result
+'       - Changed Palette handling, Palette now updates the hardware palette immediately
+'       - Added PaletteW command that changes the Palette Mirror value
+'       - Added PaletteV command that changes the palette Mirror value and copies all 16 palette values from the mirror to hardware
+
+' V 5.26
 '       - Fixed compare code GreaterOrEqualLS2RU1 it was corrupting the stack
 '       - Fixed the EqualSameType8 routine, needed a LEAS 15,S at the end was a type of LEAS 5,S
 '       - Fixed reversal of conversion code of FP5 types that were first in an expression

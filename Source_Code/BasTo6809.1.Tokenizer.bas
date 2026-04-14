@@ -1687,8 +1687,9 @@ For ii = 0 To GeneralCommandsFoundCount - 1
     If Temp$ = "LINE" Then
         LineCommand = 1 ' Flag that we will use the LINE command
     End If
-    If Temp$ = "SDC_PLAY" Or Temp$ = "SDC_PLAYORCL" Or Temp$ = "SDC_PLAYORCR" Or Temp$ = "SDC_PLAYORCS" Then
+    If Temp$ = "SDC_PLAY" Or Temp$ = "SDC_PLAYORCL" Or Temp$ = "SDC_PLAYORCR" Or Temp$ = "SDC_PLAYORCS" Or Temp$ = "SDC_PLAYMOVIE" Then
         SDCPLAY = 1 ' Flag that we need extra SDCPlayback buffer space
+        SDCVersionCheck = 1 ' include code to make sure we have the correct SDC firmware
     End If
     If Temp$ = "SDC_OPEN" Or Temp$ = "SDC_LOADM" Or Temp$ = "SDC_SAVEM" Then
         SDCVersionCheck = 1 ' include code to make sure we have the correct SDC firmware
@@ -1737,14 +1738,14 @@ If CoCo3 = 1 And Sprites = 1 Then
             ColourDiv = 2
     End Select
     Num = (Val(GModeMaxX$(Gmode)) + 1) / ColourDiv: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-    z$ = "GmodeBytesPerRow EQU     " + num$ + "    ; # of bytes per graphics row, used by the sprite rendering code": GoSub AO
+    Z$ = "GmodeBytesPerRow EQU     " + num$ + "    ; # of bytes per graphics row, used by the sprite rendering code": GoSub AO
     Num = Val("&H" + GModeScreenSize$(Gmode)): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-    z$ = "ScreenSize      EQU     " + num$ + "   ; Size of a graphics screen": GoSub AO
+    Z$ = "ScreenSize      EQU     " + num$ + "   ; Size of a graphics screen": GoSub AO
     Num = Val(GModeMaxX$(Gmode)): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-    z$ = "PixelsMaxX      EQU     " + num$ + "     ; Screen width Max from 0 to this value": GoSub AO
+    Z$ = "PixelsMaxX      EQU     " + num$ + "     ; Screen width Max from 0 to this value": GoSub AO
     Num = Val(GModeColours$(Gmode)): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-    z$ = "NumberOfColours EQU     " + num$ + "      ; Number of Colours on this screen": GoSub AO
-    z$ = "Artifacting     EQU     0       ; Not using Artifact colours with a CoCo 3 GMODE": GoSub AO
+    Z$ = "NumberOfColours EQU     " + num$ + "      ; Number of Colours on this screen": GoSub AO
+    Z$ = "Artifacting     EQU     0       ; Not using Artifact colours with a CoCo 3 GMODE": GoSub AO
 
     ' add code to save in the correct block for $FFA1 & $FFA2...  ($2000 & $4000)
     SpritePointer = -1
@@ -1762,7 +1763,7 @@ If CoCo3 = 1 And Sprites = 1 Then
         Num = SpritePointer: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
         num$ = Right$("00" + num$, 2)
         SpritePointerBlk$ = "Sprite" + num$ + "Blk"
-        z$ = SpritePointerBlk$ + "     EQU     $40   ; First block used for sprites (CoCo 3 needs to have 2 Megs for sprites)": GoSub AO
+        Z$ = SpritePointerBlk$ + "     EQU     $40   ; First block used for sprites (CoCo 3 needs to have 2 Megs for sprites)": GoSub AO
         FirstBlk$ = SpritePointerBlk$
         For i = 0 To 31
             If Sprite$(i) <> "" Then
@@ -1778,7 +1779,7 @@ If CoCo3 = 1 And Sprites = 1 Then
                 A$ = "ORG": B$ = "$2000": C$ = "Add the sprite at $2000": GoSub AO
                 Print #1, T2$; "INCLUDE     ./"; Sprite$(i)
                 SpriteEnd$ = "Sprite" + num$ + "End"
-                z$ = SpriteEnd$ + "     EQU       *": GoSub AO
+                Z$ = SpriteEnd$ + "     EQU       *": GoSub AO
                 ' Get next sprite #
                 I2 = i + 1
                 While I2 <= 31
@@ -1792,7 +1793,7 @@ If CoCo3 = 1 And Sprites = 1 Then
                     Num = I2: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
                     num$ = Right$("00" + num$, 2)
                     NextBlk$ = "Sprite" + num$ + "Blk"
-                    z$ = NextBlk$ + "     EQU     " + FirstBlk$ + "+((" + SpriteEnd$ + "-$2000)/$2000)+1": GoSub AO
+                    Z$ = NextBlk$ + "     EQU     " + FirstBlk$ + "+((" + SpriteEnd$ + "-$2000)/$2000)+1": GoSub AO
                     FirstBlk$ = NextBlk$
                 End If
             End If
@@ -1819,7 +1820,7 @@ If CoCo3 = 1 And Samples = 1 Then
                 num$ = Right$("00" + num$, 2)
                 SamplePointerBlk$ = "Sample" + num$ + "Blk"
                 Num = SampleStartBlock(i): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-                z$ = SamplePointerBlk$ + "     EQU     $" + Hex$(Val(num$)) + "  ; First block used for Sample" + Str$(i): GoSub AO
+                Z$ = SamplePointerBlk$ + "     EQU     $" + Hex$(Val(num$)) + "  ; First block used for Sample" + Str$(i): GoSub AO
                 A$ = "ORG": B$ = "$FFA1": C$ = "Address to control $0000 block": GoSub AO
                 padding = 3 - SampleNumberOfBLKs(i)
                 For BLK = SampleStartBlock(i) + SampleNumberOfBLKs(i) - 1 - padding To SampleStartBlock(i) + SampleNumberOfBLKs(i) - 1
@@ -1875,7 +1876,7 @@ Print #1, "Seed2           RMB     1     ; Random number seed location"
 Print #1, "Seed3           RMB     1     ; Used by Random number generator"
 Print #1, "Seed4           RMB     1     ; Used by Random number generator"
 If WidthVal$ <> "" And WidthVal$ <> "32" Then
-    z$ = "CC3Width:": GoSub AO
+    Z$ = "CC3Width:": GoSub AO
     A$ = "FCB": B$ = CC3Width$: C$ = "0=Width 40, 1=Width 64, 2=Width 80": GoSub AO
 End If
 If PrintGraphicsText = 1 Then
@@ -1899,8 +1900,6 @@ Print #1, "Temp4           RMB     1     ; Temporary byte used for many routines
 Print #1, "Denominator     RMB     2     ; Denominator, used in division"
 Print #1, "Numerator       RMB     2     ; Numerator, used in division"
 Print #1, "DATAPointer     RMB     2     ; Variable that points to the current DATA location"
-'Print #1, "_NumVar_IFRight RMB     2     ; Temp bytes for IF Compares"
-
 Print #1, "SwapTypes       RMB     8     ; Temp bytes for Numeric conversions"
 
 ' Reserve space for Numeric variables
@@ -1967,43 +1966,43 @@ Print #1, "CASFLG          RMB     1     ; Case flag for keyboard output $FF=UPP
 Print #1, "OriginalIRQ     RMB     3     ; We save the original branch and location of the IRQ here, restored before we exit"
 Print #1, "EndClearHere:" ' This is the end address of variables that will all be cleared to zero when the program starts
 Num = Playfield: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-z$ = "PLAYFIELD   EQU     " + num$: GoSub AO
+Z$ = "PLAYFIELD   EQU     " + num$: GoSub AO
 If ScollBackground = 1 Then
     ' Add Scrolling Background code
     Temp$ = "GraphicCommands/CoCo3_ScrollingBackground": GoSub AddIncludeTemp
     If Playfield = 1 Then
         ' Calculating which row the sprite will be should be normal
-        z$ = "Scrolling   EQU     0": GoSub AO
-        z$ = "VideoRamBlock           FCB     %00000010       ; Set default to 1 Meg to 1.5 Meg location": GoSub AO
+        Z$ = "Scrolling   EQU     0": GoSub AO
+        Z$ = "VideoRamBlock           FCB     %00000010       ; Set default to 1 Meg to 1.5 Meg location": GoSub AO
     Else
         ' Calculating which row the sprite will be needs to account for a 256 byte (512 pixel screen)
-        z$ = "Scrolling   EQU     1": GoSub AO
-        z$ = "VideoRamBlock           FCB     %00000010       ; Set default to 1 Meg to 1.5 Meg location": GoSub AO
+        Z$ = "Scrolling   EQU     1": GoSub AO
+        Z$ = "VideoRamBlock           FCB     %00000010       ; Set default to 1 Meg to 1.5 Meg location": GoSub AO
     End If
 Else
-    z$ = "Scrolling   EQU     0": GoSub AO
-    z$ = "VideoRamBlock           FCB     %00000000       ; Set default to 0 Meg to 0.5 Meg location": GoSub AO
+    Z$ = "Scrolling   EQU     0": GoSub AO
+    Z$ = "VideoRamBlock           FCB     %00000000       ; Set default to 0 Meg to 0.5 Meg location": GoSub AO
 End If
-z$ = "VerticalPosition        FDB     $0000           ; Offset": GoSub AO
-z$ = "HorizontalPosition      FCB     %00000000       ; Bit 7 set = Horizontal scrolling enabled": GoSub AO
+Z$ = "VerticalPosition        FDB     $0000           ; Offset": GoSub AO
+Z$ = "HorizontalPosition      FCB     %00000000       ; Bit 7 set = Horizontal scrolling enabled": GoSub AO
 
 If CoCo3 = 1 Then
     Print #1, T2$; "INCLUDE        ./Basic_Includes/CoCo3_Equates.asm" ' Include the CoCo 3 Equates
     If Disk = 1 Then
         ' DISK controller Interrupts
         '; NMI SERVICE
-        z$ = "DNMISV:"
+        Z$ = "DNMISV:"
         A$ = "LDA": B$ = "NMIFLG": C$ = "GET NMI FLAG": GoSub AO
         A$ = "BEQ": B$ = "LD8AE": C$ = "RETURN IF NOT ACTIVE": GoSub AO
         A$ = "LDX": B$ = "DNMIVC": C$ = "GET NEW RETURN VECTOR": GoSub AO
         A$ = "STX": B$ = "10,S": C$ = "STORE AT STACKED PC SLOT ON STACK": GoSub AO
         A$ = "CLR": B$ = "NMIFLG": C$ = "RESET NMI FLAG": GoSub AO
-        z$ = "LD8AE"
+        Z$ = "LD8AE"
         A$ = "RTI": B$ = "": C$ = "RETURN FROM INTERRUPT": GoSub AO
         If Sprites = 0 And Samples = 0 Then
             ' Just add disk IRQ service, no special FIRQ or IRQ
             '; Disk IRQ SERVICE and Sound and Timer 60 Hz IRQ
-            z$ = "BASIC_IRQ:": GoSub AO
+            Z$ = "BASIC_IRQ:": GoSub AO
             A$ = "LDA": B$ = "$FF03": C$ = "63.5 MICRO SECOND OR 60 HZ INTERRUPT?": GoSub AO
             A$ = "BPL": B$ = "LD8AE": C$ = "RETURN IF 63.5 MICROSECOND": GoSub AO
             A$ = "LDA": B$ = "$FF02": C$ = "RESET 60 HZ PIA INTERRUPT FLAG": GoSub AO
@@ -2016,16 +2015,16 @@ If CoCo3 = 1 Then
             A$ = "ANDA": B$ = "#$B0": C$ = "TURN ALL MOTORS AND DRIVE SELECTS OFF": GoSub AO
             A$ = "STA": B$ = "DRGRAM": C$ = "PUT IT BACK IN RAM IMAGE": GoSub AO
             A$ = "STA": B$ = "DSKREG": C$ = "SEND TO CONTROL REGISTER (MOTORS OFF)": GoSub AO
-            z$ = "LD8CD"
+            Z$ = "LD8CD"
             A$ = "LDX": B$ = "SoundDuration": C$ = "Get the new Sound duration value": GoSub AO
-            A$ = "BEQ": B$ = ">": C$ = "RETURN IF TIMER = 0": GoSub AO
-            A$ = "LEAX": B$ = "-1,X": C$ = "DECREMENT TIMER IF NOT = 0": GoSub AO
+            A$ = "BEQ": B$ = ">": C$ = "Done if Sound duration is zero": GoSub AO
+            A$ = "LEAX": B$ = "-1,X": C$ = "Decrement Sound duration": GoSub AO
             A$ = "STX": B$ = "SoundDuration": C$ = "Save the new Sound duration value": GoSub AO
-            z$ = "!"
+            Z$ = "!"
             A$ = "INC": B$ = "_Var_Timer+1": C$ = "Increment the LSB of the Timer Value": GoSub AO
             A$ = "BNE": B$ = "Not60Hz": C$ = "Skip ahead if not zero": GoSub AO
             A$ = "INC": B$ = "_Var_Timer": C$ = "Increment the MSB of the Timer Value": GoSub AO
-            z$ = "Not60Hz"
+            Z$ = "Not60Hz"
             A$ = "RTI": B$ = "": C$ = "RETURN FROM INTERRUPT": GoSub AO
         Else
             If Sprites = 1 Then
@@ -2040,8 +2039,8 @@ If CoCo3 = 1 Then
                 If Val(GModeMaxY$(Gmode)) = 224 Then
                     Print #1, T2$; "INCLUDE        ./Basic_Includes/CoCo3_FIRQ_Delay_225_Rows.asm"
                 End If
-                z$ = "**************** VSyncIRQ *************************": GoSub AO
-                z$ = "BASIC_IRQ:": GoSub AO
+                Z$ = "**************** VSyncIRQ *************************": GoSub AO
+                Z$ = "BASIC_IRQ:": GoSub AO
                 A$ = "LDA": B$ = "GIME_InterruptReqEnable_FF92": C$ = "Re enable the VSYNC IRQ": GoSub AO
                 Print #1, T2$; "INCLUDE        ./Basic_Includes/CoCo3_IRQ_WithDisk.asm"
                 Print #1, T2$; "INCLUDE        ./Basic_Includes/CoCo3_IRQandFIRQ_Sprites.asm" ' Sprites also includes FIRQ Sample playback handling
@@ -2049,8 +2048,8 @@ If CoCo3 = 1 Then
             Else
                 If Samples = 1 Then
                     ' include the cc3 sprite drawing code here:
-                    z$ = "**************** VSyncIRQ *************************": GoSub AO
-                    z$ = "BASIC_IRQ:": GoSub AO
+                    Z$ = "**************** VSyncIRQ *************************": GoSub AO
+                    Z$ = "BASIC_IRQ:": GoSub AO
                     A$ = "LDA": B$ = "GIME_InterruptReqEnable_FF92": C$ = "Re enable the VSYNC IRQ": GoSub AO
                     Print #1, T2$; "INCLUDE        ./Basic_Includes/CoCo3_IRQ_WithDisk.asm"
                     Print #1, T2$; "INCLUDE        ./Basic_Includes/CoCo3_IRQandFIRQ_SamplesOnly.asm" ' Sprites also includes FIRQ Sample playback handling
@@ -2062,20 +2061,20 @@ If CoCo3 = 1 Then
         If Sprites = 0 And Samples = 0 Then
             ' Keep the IRQ and FIRQ simple and as fast as possible
             ' Sound and Timer 60 Hz IRQ
-            z$ = "; Sound and Timer 60hz IRQ ": GoSub AO
-            z$ = "BASIC_IRQ:": GoSub AO
+            Z$ = "; Sound and Timer 60hz IRQ ": GoSub AO
+            Z$ = "BASIC_IRQ:": GoSub AO
             A$ = "LDA": B$ = "$FF03": C$ = "CHECK FOR 60HZ INTERRUPT": GoSub AO
             A$ = "BPL": B$ = "Not60Hz": C$ = "RETURN IF 63.5 MICROSECOND INTERRUPT": GoSub AO
             A$ = "LDA": B$ = "$FF02": C$ = "RESET PIA0, PORT B INTERRUPT FLAG": GoSub AO
             A$ = "LDX": B$ = "SoundDuration": C$ = "Get the new Sound duration value": GoSub AO
-            A$ = "BEQ": B$ = ">": C$ = "RETURN IF TIMER = 0": GoSub AO
-            A$ = "LEAX": B$ = "-1,X": C$ = "DECREMENT TIMER IF NOT = 0": GoSub AO
+            A$ = "BEQ": B$ = ">": C$ = "Done if Sound duration is zero": GoSub AO
+            A$ = "LEAX": B$ = "-1,X": C$ = "Decrement Sound duration": GoSub AO
             A$ = "STX": B$ = "SoundDuration": C$ = "Save the new Sound duration value": GoSub AO
-            z$ = "!"
+            Z$ = "!"
             A$ = "INC": B$ = "_Var_Timer+1": C$ = "Increment the LSB of the Timer Value": GoSub AO
             A$ = "BNE": B$ = "Not60Hz": C$ = "Skip ahead if not zero": GoSub AO
             A$ = "INC": B$ = "_Var_Timer": C$ = "Increment the MSB of the Timer Value": GoSub AO
-            z$ = "Not60Hz"
+            Z$ = "Not60Hz"
             A$ = "RTI": B$ = "": C$ = "RETURN FROM INTERRUPT": GoSub AO
         Else
             If Sprites = 1 Then
@@ -2090,14 +2089,14 @@ If CoCo3 = 1 Then
                 If Val(GModeMaxY$(Gmode)) = 224 Then
                     Print #1, T2$; "INCLUDE        ./Basic_Includes/CoCo3_FIRQ_Delay_225_Rows.asm"
                 End If
-                z$ = "**************** VSyncIRQ *************************": GoSub AO
-                z$ = "BASIC_IRQ:": GoSub AO
+                Z$ = "**************** VSyncIRQ *************************": GoSub AO
+                Z$ = "BASIC_IRQ:": GoSub AO
                 Print #1, T2$; "INCLUDE        ./Basic_Includes/CoCo3_IRQandFIRQ_Sprites.asm" ' Sprites also includes FIRQ Sample playback handling
                 Print #1, T2$; "INCLUDE        ./Basic_Includes/GraphicCommands/CoCo3_SpriteHandler.asm" 'Add the sprite handling code
             Else
                 If Samples = 1 Then
-                    z$ = "**************** VSyncIRQ *************************": GoSub AO
-                    z$ = "BASIC_IRQ:": GoSub AO
+                    Z$ = "**************** VSyncIRQ *************************": GoSub AO
+                    Z$ = "BASIC_IRQ:": GoSub AO
                     A$ = "LDA": B$ = "GIME_InterruptReqEnable_FF92": C$ = "Re enable the VSYNC IRQ": GoSub AO
                     Print #1, T2$; "INCLUDE        ./Basic_Includes/CoCo3_IRQandFIRQ_SamplesOnly.asm" ' Sprites also includes FIRQ Sample playback handling
                 End If
@@ -2108,34 +2107,34 @@ Else
     ' Coco 1 or 2
     If Disk = 0 Then
         ' Sound and Timer 60 Hz IRQ
-        z$ = "; Sound and Timer 60hz IRQ ": GoSub AO
-        z$ = "BASIC_IRQ:": GoSub AO
+        Z$ = "; Sound and Timer 60hz IRQ ": GoSub AO
+        Z$ = "BASIC_IRQ:": GoSub AO
         A$ = "LDA": B$ = "$FF03": C$ = "CHECK FOR 60HZ INTERRUPT": GoSub AO
         A$ = "BPL": B$ = "Not60Hz": C$ = "RETURN IF 63.5 MICROSECOND INTERRUPT": GoSub AO
         A$ = "LDA": B$ = "$FF02": C$ = "RESET PIA0, PORT B INTERRUPT FLAG": GoSub AO
         A$ = "LDX": B$ = "SoundDuration": C$ = "Get the new Sound duration value": GoSub AO
-        A$ = "BEQ": B$ = ">": C$ = "RETURN IF TIMER = 0": GoSub AO
-        A$ = "LEAX": B$ = "-1,X": C$ = "DECREMENT TIMER IF NOT = 0": GoSub AO
+        A$ = "BEQ": B$ = ">": C$ = "Done if Sound duration is zero": GoSub AO
+        A$ = "LEAX": B$ = "-1,X": C$ = "Decrement Sound duration": GoSub AO
         A$ = "STX": B$ = "SoundDuration": C$ = "Save the new Sound duration value": GoSub AO
-        z$ = "!"
+        Z$ = "!"
         A$ = "INC": B$ = "_Var_Timer+1": C$ = "Increment the LSB of the Timer Value": GoSub AO
         A$ = "BNE": B$ = "Not60Hz": C$ = "Skip ahead if not zero": GoSub AO
         A$ = "INC": B$ = "_Var_Timer": C$ = "Increment the MSB of the Timer Value": GoSub AO
-        z$ = "Not60Hz"
+        Z$ = "Not60Hz"
         A$ = "RTI": B$ = "": C$ = "RETURN FROM INTERRUPT": GoSub AO
     Else
         ' DISK controller Interrupts
         '; NMI SERVICE
-        z$ = "DNMISV:"
+        Z$ = "DNMISV:"
         A$ = "LDA": B$ = "NMIFLG": C$ = "GET NMI FLAG": GoSub AO
         A$ = "BEQ": B$ = "LD8AE": C$ = "RETURN IF NOT ACTIVE": GoSub AO
         A$ = "LDX": B$ = "DNMIVC": C$ = "GET NEW RETURN VECTOR": GoSub AO
         A$ = "STX": B$ = "10,S": C$ = "STORE AT STACKED PC SLOT ON STACK": GoSub AO
         A$ = "CLR": B$ = "NMIFLG": C$ = "RESET NMI FLAG": GoSub AO
-        z$ = "LD8AE"
+        Z$ = "LD8AE"
         A$ = "RTI": B$ = "": C$ = "RETURN FROM INTERRUPT": GoSub AO
         '; Disk IRQ SERVICE and Sound and Timer 60 Hz IRQ
-        z$ = "BASIC_IRQ:"
+        Z$ = "BASIC_IRQ:"
         A$ = "LDA": B$ = "$FF03": C$ = "63.5 MICRO SECOND OR 60 HZ INTERRUPT?": GoSub AO
         A$ = "BPL": B$ = "LD8AE": C$ = "RETURN IF 63.5 MICROSECOND": GoSub AO
         A$ = "LDA": B$ = "$FF02": C$ = "RESET 60 HZ PIA INTERRUPT FLAG": GoSub AO
@@ -2148,30 +2147,30 @@ Else
         A$ = "ANDA": B$ = "#$B0": C$ = "TURN ALL MOTORS AND DRIVE SELECTS OFF": GoSub AO
         A$ = "STA": B$ = "DRGRAM": C$ = "PUT IT BACK IN RAM IMAGE": GoSub AO
         A$ = "STA": B$ = "DSKREG": C$ = "SEND TO CONTROL REGISTER (MOTORS OFF)": GoSub AO
-        z$ = "LD8CD"
+        Z$ = "LD8CD"
         A$ = "LDX": B$ = "SoundDuration": C$ = "Get the new Sound duration value": GoSub AO
-        A$ = "BEQ": B$ = ">": C$ = "RETURN IF TIMER = 0": GoSub AO
-        A$ = "LEAX": B$ = "-1,X": C$ = "DECREMENT TIMER IF NOT = 0": GoSub AO
+        A$ = "BEQ": B$ = ">": C$ = "Done if Sound duration is zero": GoSub AO
+        A$ = "LEAX": B$ = "-1,X": C$ = "Decrement Sound duration": GoSub AO
         A$ = "STX": B$ = "SoundDuration": C$ = "Save the new Sound duration value": GoSub AO
-        z$ = "!"
+        Z$ = "!"
         A$ = "INC": B$ = "_Var_Timer+1": C$ = "Increment the LSB of the Timer Value": GoSub AO
         A$ = "BNE": B$ = "Not60Hz": C$ = "Skip ahead if not zero": GoSub AO
         A$ = "INC": B$ = "_Var_Timer": C$ = "Increment the MSB of the Timer Value": GoSub AO
-        z$ = "Not60Hz"
+        Z$ = "Not60Hz"
         A$ = "RTI": B$ = "": C$ = "RETURN FROM INTERRUPT": GoSub AO
     End If
 End If
 If PlayCommand = 1 Then
     ' Include special PLAY IRQ to jump to while playing notes
-    z$ = "; Timer & Play 60hz IRQ ": GoSub AO
-    z$ = "PLAY_IRQ:": GoSub AO
+    Z$ = "; Timer & Play 60hz IRQ ": GoSub AO
+    Z$ = "PLAY_IRQ:": GoSub AO
     A$ = "LDA": B$ = "$FF03": C$ = "CHECK FOR 60HZ INTERRUPT": GoSub AO
     A$ = "BPL": B$ = "Not60HzPlay": C$ = "RETURN IF 63.5 MICROSECOND INTERRUPT": GoSub AO
     A$ = "LDA": B$ = "$FF02": C$ = "RESET PIA0, PORT B INTERRUPT FLAG": GoSub AO
     A$ = "INC": B$ = "_Var_Timer+1": C$ = "Increment the LSB of the Timer Value": GoSub AO
     A$ = "BNE": B$ = ">": C$ = "Skip ahead if not zero": GoSub AO
     A$ = "INC": B$ = "_Var_Timer": C$ = "Increment the MSB of the Timer Value": GoSub AO
-    z$ = "!"
+    Z$ = "!"
     A$ = "LDD": B$ = "PLYTMR": C$ = "GET THE PLAY TIMER": GoSub AO
     A$ = "BEQ": B$ = ">": C$ = "Exit IRQ": GoSub AO
     A$ = "SUBD": B$ = "VD5": C$ = "SUBTRACT OUT PLAY INTERVAL": GoSub AO
@@ -2179,9 +2178,9 @@ If PlayCommand = 1 Then
     A$ = "BHI": B$ = ">": C$ = "BRANCH IF PLAY COMMAND NOT DONE": GoSub AO
     A$ = "CLR": B$ = "PLYTMR": C$ = "RESET MSB OF PLAY TIMER IF DONE": GoSub AO
     A$ = "CLR": B$ = "PLYTMR+1": C$ = "RESET LSB OF PLAY TIMER": GoSub AO
-    z$ = "PlayIRQExit:": GoSub AO
+    Z$ = "PlayIRQExit:": GoSub AO
     A$ = "PULS": B$ = "A": C$ = "GET THE CONDITION CODE REG": GoSub AO
-    z$ = "PlayStackPointer:": GoSub AO
+    Z$ = "PlayStackPointer:": GoSub AO
     A$ = "LDS": B$ = "#$FFFF": C$ = "LOAD THE STACK POINTER WITH THE CONTENTS OF THE U REGISTER": GoSub AO
     Print #1, "; WHICH WAS STACKED WHEN THE INTERRUPT WAS HONORED."
     A$ = "ANDA": B$ = "#$7F": C$ = "CLEAR E FLAG - MAKE COMPUTER THINK THIS WAS AN FIRQ": GoSub AO
@@ -2190,7 +2189,7 @@ If PlayCommand = 1 Then
     Print #1, "; INTERRUPTED FROM - IT WILL RETURN TO THE MAIN PLAY"
     Print #1, "; COMMAND INTERPRETATION LOOP."
     Print #1, "!"
-    z$ = "Not60HzPlay"
+    Z$ = "Not60HzPlay"
     A$ = "RTI": B$ = "": C$ = "RETURN FROM INTERRUPT": GoSub AO
 End If
 Print #1, "ClearHere2nd:" ' This is the start address of variables that will all be cleared to zero when the program starts
@@ -2210,7 +2209,7 @@ End If
 ' Add the String Variables used
 Print #1, "; String Variables Used:"; StringVariableCounter
 For ii = 0 To StringVariableCounter - 1
-    z$ = "_StrVar_" + StringVariable$(ii): GoSub AO
+    Z$ = "_StrVar_" + StringVariable$(ii): GoSub AO
     A$ = "RMB": B$ = "1": C$ = "String Variable " + StringVariable$(ii) + " length (0 to 255) initialized to 0": GoSub AO
     A$ = "RMB": B$ = "255": C$ = "255 bytes available for string variable " + StringVariable$(ii): GoSub AO
 Next ii
@@ -2315,6 +2314,10 @@ If StringArrayVarsUsedCounter > 0 Then
     Next ii
 End If
 Print #1, "EndClearHere2nd:" ' This is the end address of variables that will all be cleared to zero when the program starts
+' Leave room for Palette Mirror, so we can blast them on screen with PaletteV
+If CoCo3 = 1 Then
+    Print #1, "PalMirror"; T1$; "RMB "; T1$; "16    ; Keep copies of the Palette registers, with the Palette command"
+End If
 
 Print #1, "; General Commands Used:"; GeneralCommandsFoundCount
 For ii = 0 To GeneralCommandsFoundCount - 1
@@ -2632,12 +2635,19 @@ For ii = 0 To GeneralCommandsFoundCount - 1
         Temp$ = "SDC_LoadmSavem": GoSub AddIncludeTemp
     End If
     If Temp$ = "SDC_BIGLOADM" Then
-        Temp$ = "SDC_Comm": GoSub AddIncludeTemp
-        Temp$ = "SDC_CompilerCode": GoSub AddIncludeTemp
+        Temp$ = "SDC_Comm": GoSub AddIncludeTemp ' CoCo SDC Low-level interface routine
+        Temp$ = "SDC_CompilerCode": GoSub AddIncludeTemp 'the compiler builds string @ ,S but the SDC library expects the fil
         Temp$ = "SDC_StreamFile_Library": GoSub AddIncludeTemp
         Temp$ = "SDC_BigLoadm": GoSub AddIncludeTemp
     End If
-
+    If Temp$ = "SDC_PLAYMOVIE" Then
+        Temp$ = "Audio_Muxer": GoSub AddIncludeTemp ' Add code for Selecting the audio muxer and to turn it on or off
+        Temp$ = "SDC_Comm": GoSub AddIncludeTemp ' CoCo SDC Low-level interface routine
+        Temp$ = "SDC_CompilerCode": GoSub AddIncludeTemp ' The compiler builds string @ ,S but the SDC library expects the fil
+        Temp$ = "SDC_FileAccess": GoSub AddIncludeTemp ' Open a file for writing to or reading from the CoCoSDC ,filename is at _StrVar_PF00 and terminated with a zero
+        Temp$ = "SDC_StreamFile_Library": GoSub AddIncludeTemp 'Open a file on the CoCoSDC and stream it using 512 bytes sectors
+        Temp$ = "SDC_Play_Movie": GoSub AddIncludeTemp ' Add code to playback movie file from the CoCoSDC
+    End If
     If Temp$ = "SOUND" Then
         Temp$ = "Sound": GoSub AddIncludeTemp ' Add code for the sound command
         Temp$ = "Audio_Muxer": GoSub AddIncludeTemp 'SOUND routine also requires the Muxer to be turned on
@@ -2730,18 +2740,18 @@ If Sprites = 1 Then
     If CoCo3 <> 1 Then
         ' Do this for CoCo 1 & 2
         Num = (Val(GModeMaxX$(Gmode)) + 1) / ColourDiv: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-        z$ = "GmodeBytesPerRow EQU     " + num$ + "        ; # of bytes per graphics row, used by the sprite rendering code": GoSub AO
+        Z$ = "GmodeBytesPerRow EQU     " + num$ + "        ; # of bytes per graphics row, used by the sprite rendering code": GoSub AO
         Num = Val("&H" + GModeScreenSize$(Gmode)): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-        z$ = "ScreenSize       EQU     " + num$ + "        ; Size of a graphics screen": GoSub AO
+        Z$ = "ScreenSize       EQU     " + num$ + "        ; Size of a graphics screen": GoSub AO
         Num = Val(GModeMaxX$(Gmode)): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-        z$ = "PixelsMaxX       EQU     " + num$ + "        ; Screen width Max from 0 to this value": GoSub AO
+        Z$ = "PixelsMaxX       EQU     " + num$ + "        ; Screen width Max from 0 to this value": GoSub AO
         Num = Val(GModeColours$(Gmode)): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
-        z$ = "NumberOfColours  EQU     " + num$ + "        ; Number of Colours on this screen": GoSub AO
+        Z$ = "NumberOfColours  EQU     " + num$ + "        ; Number of Colours on this screen": GoSub AO
         If Gmode = 18 Then
             ' We are going to use CoCo 1 & 2 Hi-res artifacting mode
-            z$ = "Artifacting      EQU     1         ; Using Artifact colours": GoSub AO
+            Z$ = "Artifacting      EQU     1         ; Using Artifact colours": GoSub AO
         Else
-            z$ = "Artifacting      EQU     0         ; Not using Artifact colours": GoSub AO
+            Z$ = "Artifacting      EQU     0         ; Not using Artifact colours": GoSub AO
         End If
         For i = 0 To 31
             If Sprite$(i) <> "" Then
@@ -2750,7 +2760,7 @@ If Sprites = 1 Then
         Next i
         Temp$ = "GraphicCommands/SpriteHandler": GoSub AddIncludeTemp
 
-        z$ = "SpriteDrawTable:": GoSub AO
+        Z$ = "SpriteDrawTable:": GoSub AO
         For i = 0 To 31
             If Sprite$(i) <> "" Then
                 ' Find the last backslash
@@ -2767,7 +2777,7 @@ If Sprites = 1 Then
             End If
         Next i
     End If
-    z$ = "SpriteBackupTable:": GoSub AO
+    Z$ = "SpriteBackupTable:": GoSub AO
     For i = 0 To 31
         If Sprite$(i) <> "" Then
             ' Find the last backslash
@@ -2785,7 +2795,7 @@ If Sprites = 1 Then
             A$ = "FDB": B$ = "$0000": C$ = "No Sprite for this slot": GoSub AO
         End If
     Next i
-    z$ = "SpriteRestoreTable:": GoSub AO ' For VSYNC 0
+    Z$ = "SpriteRestoreTable:": GoSub AO ' For VSYNC 0
     For i = 0 To 31
         If Sprite$(i) <> "" Then
             ' Find the last backslash
@@ -2811,8 +2821,8 @@ GoSub WriteIncludeListToFile ' Write all the INCLUDE files needed to the .ASM fi
 GoSub AO
 If GraphicVars = 0 And POSCommand = 1 Then
     ' We need some variables for the POS command to work properly
-    z$ = "BEGGRP           FDB     $0400      ; Needed by the POS command": GoSub AO
-    z$ = "x0               FDB     $0000      ; Needed by the POS command": GoSub AO
+    Z$ = "BEGGRP           FDB     $0400      ; Needed by the POS command": GoSub AO
+    Z$ = "x0               FDB     $0000      ; Needed by the POS command": GoSub AO
 End If
 GoSub AO
 
@@ -2827,7 +2837,7 @@ A$ = "TFR": B$ = "A,DP": C$ = "Setup the Direct page to use our variable locatio
 
 ' Extra randomness
 A$ = "TST": B$ = "$FF02": C$ = "Reset the VSYNC flag": GoSub AO
-z$ = "!": A$ = "ADDD": B$ = "#$0001": C$ = "Increment the counter": GoSub AO
+Z$ = "!": A$ = "ADDD": B$ = "#$0001": C$ = "Increment the counter": GoSub AO
 A$ = "TST": B$ = "$FF03": C$ = "Test for new Vsync": GoSub AO
 A$ = "BPL": B$ = "<": C$ = "If bit 7 is not set (Vsync hasn't happened yet) keep looping": GoSub AO
 A$ = "STD": B$ = ">Seed3": C$ = "Save 16 bit random seed, seed1 & 2 will use the timer": GoSub AO
@@ -2836,7 +2846,7 @@ If CoCo3 = 1 Then
     A$ = "LDA": B$ = "#$38": C$ = "Normal First Bank": GoSub AO
     A$ = "STA": B$ = "$FFA8": C$ = "Make first block in 2nd bank the same as the first bank, this is where the IRQs are": GoSub AO
     ' We are using CoCo 3 commands, So let's put it in CoCo 3 mode
-    z$ = "* CoCo 3 commands were detected, Enabling CoCo3 mode and Hi Speed": GoSub AO
+    Z$ = "* CoCo 3 commands were detected, Enabling CoCo3 mode and Hi Speed": GoSub AO
     A$ = "LDA": B$ = "#%01111100": C$ = "CoCo 3 Mode, MMU Enabled, GIME IRQ Enabled, GIME FIRQ Enabled, Vector RAM at FEXX enabled, Standard SCS Normal, ROM Map 16k Int, 16k Ext": GoSub AO
     A$ = "STA": B$ = "$FF90": C$ = "Make the changes": GoSub AO
     ' Set graphics mode to text
@@ -2881,8 +2891,8 @@ If CoCo3 = 1 Then
             ' Use the CoCo 3 40 column text screen
             A$ = "LDX": B$ = "#$0E00": C$ = "Text screen starts here": GoSub AO
             A$ = "STX": B$ = "BEGGRP": C$ = "Update the Screen starting location": GoSub AO
-            z$ = "; $FF98 = 0x00100011 - Text Mode,Extra Descenders,Colour,60 Hz,8 lines per character": GoSub AO
-            z$ = "; $FF99 = 0x01100101 - 40 Column mode": GoSub AO
+            Z$ = "; $FF98 = 0x00100011 - Text Mode,Extra Descenders,Colour,60 Hz,8 lines per character": GoSub AO
+            Z$ = "; $FF99 = 0x01100101 - 40 Column mode": GoSub AO
             ' A$ = "LDA": B$ = "#%00100011": GoSub AO
             ' A$ = "LDB": B$ = "#%01100101": GoSub AO
             A$ = "LDD": B$ = "#$2365": GoSub AO
@@ -2899,8 +2909,8 @@ If CoCo3 = 1 Then
             ' Use the CoCo 3 64 column text screen
             A$ = "LDX": B$ = "#$0E00": C$ = "Text screen starts here": GoSub AO
             A$ = "STX": B$ = "BEGGRP": C$ = "Update the Screen starting location": GoSub AO
-            z$ = "; $FF98 = 0x00100011 - Text Mode,Extra Descenders,Colour,60 Hz,8 lines per character": GoSub AO
-            z$ = "; $FF99 = 0x01111001 - 64 Column mode": GoSub AO
+            Z$ = "; $FF98 = 0x00100011 - Text Mode,Extra Descenders,Colour,60 Hz,8 lines per character": GoSub AO
+            Z$ = "; $FF99 = 0x01111001 - 64 Column mode": GoSub AO
             ' A$ = "LDA": B$ = "#%00100011": GoSub AO
             ' A$ = "LDB": B$ = "#%01100101": GoSub AO
             A$ = "LDD": B$ = "#$2371": GoSub AO
@@ -2917,8 +2927,8 @@ If CoCo3 = 1 Then
             ' Use the CoCo 3 80 column text screen
             A$ = "LDX": B$ = "#$0E00": C$ = "Text screen starts here": GoSub AO
             A$ = "STX": B$ = "BEGGRP": C$ = "Update the Screen starting location": GoSub AO
-            z$ = "; $FF98 = 0x00100011 - Text Mode,Extra Descenders,Colour,60 Hz,8 lines per character": GoSub AO
-            z$ = "; $FF99 = 0x01110101 - 80 Column mode": GoSub AO
+            Z$ = "; $FF98 = 0x00100011 - Text Mode,Extra Descenders,Colour,60 Hz,8 lines per character": GoSub AO
+            Z$ = "; $FF99 = 0x01110101 - 80 Column mode": GoSub AO
             ' A$ = "LDA": B$ = "#%00100011": GoSub AO
             ' A$ = "LDB": B$ = "#%01100101": GoSub AO
             A$ = "LDD": B$ = "#$2375": GoSub AO
@@ -2933,7 +2943,7 @@ If CoCo3 = 1 Then
             A$ = "STD": B$ = "$FF9D": C$ = "Vertical offset register": GoSub AO
     End Select
 End If
-z$ = "* Enable 6 Bit DAC output": GoSub AO
+Z$ = "* Enable 6 Bit DAC output": GoSub AO
 A$ = "LDA": B$ = "$FF23": C$ = "* PIA1_Byte_3_IRQ_Ct_Snd * $FF23 GET PIA": GoSub AO
 A$ = "ORA": B$ = "#%00001000": C$ = "* SET 6-BIT SOUND ENABLE": GoSub AO
 A$ = "STA": B$ = "$FF23": C$ = "* PIA1_Byte_3_IRQ_Ct_Snd * $FF23 STORE": GoSub AO
@@ -2964,17 +2974,17 @@ End If
 
 A$ = "JMP": B$ = "SkipClear": C$ = "On startup skip ahead and do a BSR to this section to clear the variables, as CLEAR will use this code": GoSub AO
 ' Clear variable RAM  (make this a routine as the CLEAR command will use it to erase all the variables
-z$ = "ClearVariables:": GoSub AO
+Z$ = "ClearVariables:": GoSub AO
 A$ = "LDX": B$ = "#StartClearHere": C$ = "Set the start address of the variables that will be cleared to zero when the program starts": GoSub AO
 A$ = "CLRA": C$ = "Clear Accumulator A": GoSub AO
-z$ = "!"
+Z$ = "!"
 A$ = "STA": B$ = ",X+": C$ = "Clear the variable space, move pointer forward": GoSub AO
 A$ = "CMPX": B$ = "#EndClearHere": C$ = "Compare the current address to the end of the variables that will be cleared to zero when the program starts": GoSub AO
 A$ = "BNE": B$ = "<": C$ = "Loop until all cleared": GoSub AO
 
 A$ = "LDX": B$ = "#ClearHere2nd": C$ = "Set the start address of the variables that will be cleared to zero when the program starts": GoSub AO
 A$ = "CLRA": C$ = "Clear Accumulator A": GoSub AO
-z$ = "!"
+Z$ = "!"
 A$ = "STA": B$ = ",X+": C$ = "Clear the variable space, move pointer forward": GoSub AO
 A$ = "CMPX": B$ = "#EndClearHere2nd": C$ = "Compare the current address to the end of the variables that will be cleared to zero when the program starts": GoSub AO
 A$ = "BNE": B$ = "<": C$ = "Loop until all cleared": GoSub AO
@@ -3049,7 +3059,7 @@ A$ = "LDD": B$ = "#DataStart": C$ = "Get the Address where DATA starts": GoSub A
 A$ = "STD": B$ = "DATAPointer": C$ = "Save it in the DATAPointer variable": GoSub AO
 A$ = "RTS": C$ = "Return from clearing the variables": GoSub AO
 
-z$ = "SkipClear:": GoSub AO
+Z$ = "SkipClear:": GoSub AO
 A$ = "JSR": B$ = "ClearVariables": C$ = "Go clear the all the variables": GoSub AO
 A$ = "LDA": B$ = "#$FF": GoSub AO
 A$ = "STA": B$ = "CASFLG": C$ = "set the case flag to $FF = Normal uppercase": GoSub AO
@@ -3058,7 +3068,7 @@ A$ = "STD": B$ = "_Var_Timer": C$ = "Use Basic's Timer as a starting point for t
 A$ = "STD": B$ = "Seed1": C$ = "Save TIMER value as the Random number seed value": GoSub AO
 
 If SDCPLAY = 1 Or SDCVersionCheck = 1 Then ' If we are doing any SDC streaming check the version as it must be V127 or higher
-    A$ = "JSR": B$ = "CheckSDCFirmwareVersion": C$ = "Check the version of the SDC controller must be > v126": GoSub AO
+    '    A$ = "JSR": B$ = "CheckSDCFirmwareVersion": C$ = "Check the version of the SDC controller must be > v126": GoSub AO
 End If
 
 ' Address    Interrupt    CoCo 2 Vector    CoCo 3 Vector
@@ -3084,11 +3094,11 @@ A$ = "ORA": B$ = "#%00000001": C$ = "If it's CoCo 3 then we set bit 0 of the CoC
 A$ = "LDX": B$ = "#$FEF7": C$ = "X = Address for the COCO 3 IRQ JMP": GoSub AO
 A$ = "LDY": B$ = "#$FEFD": C$ = "Y = Address for the COCO 3 NMI JMP": GoSub AO
 A$ = "BRA": B$ = ">": C$ = "Skip ahead": GoSub AO
-z$ = "SaveCoCo1": GoSub AO
+Z$ = "SaveCoCo1": GoSub AO
 ' reset the coco 1/2 interrupt jumps
 A$ = "LDX": B$ = "#$010C": C$ = "X = Address for the COCO 1 IRQ JMP": GoSub AO
 A$ = "LDY": B$ = "#$0109": C$ = "Y = Address for the COCO 1 NMI JMP": GoSub AO
-z$ = "!"
+Z$ = "!"
 A$ = "STA": B$ = "CoCoHardware": C$ = "Save the CoCoHardware Desriptor byte": GoSub AO
 
 If PlayCommand = 1 Then
@@ -3121,7 +3131,7 @@ End If
 
 ' Setup Sprite blocks
 If CoCo3 = 1 And Sprites = 1 Then
-    z$ = "* Setup which blocks the sprites are located at in RAM": GoSub AO
+    Z$ = "* Setup which blocks the sprites are located at in RAM": GoSub AO
     For i = 0 To 31
         If Sprite$(i) <> "" Then
             ' This is a sprite
@@ -3143,7 +3153,7 @@ If CoCo3 = 1 Then
     If Sprites = 1 Or Samples = 1 Then
         Print #1, T2$; "INCLUDE        ./Basic_Includes/CoCo3_FIRQ_Setup.asm"
     End If
-    z$ = "* This is where we enable the FIRQ & IRQ": GoSub AO
+    Z$ = "* This is where we enable the FIRQ & IRQ": GoSub AO
     A$ = "ANDCC": B$ = "#%10101111": C$ = "= %10101111 this will Enable the FIRQ & IRQ to start": GoSub AO
 Else
     ' Use our IRQ address
@@ -3153,10 +3163,10 @@ Else
     ' Make FIRQ an RTI
     A$ = "LDA": B$ = "#$3B": C$ = "RTI instruction": GoSub AO
     A$ = "STA": B$ = "$010F": C$ = "Save instruction for the FIRQ CoCo1": GoSub AO
-    z$ = "* This is where we enable the IRQ": GoSub AO
+    Z$ = "* This is where we enable the IRQ": GoSub AO
     A$ = "ANDCC": B$ = "#%11101111": C$ = "= %11101111 this will Enable the IRQ to start": GoSub AO
 End If
-z$ = "; *** User's Program code starts here ***": GoSub AO
+Z$ = "; *** User's Program code starts here ***": GoSub AO
 
 System 1 ' End with flag of 1 = All went OK
 
@@ -5142,14 +5152,14 @@ Return
 ' Send assembly instructions out to .asm file
 AO:
 'Print z$ at the beginning of the line
-If Len(z$) < 8 Then
-    Print #1, Left$(z$ + "        ", 8); Left$(A$ + "        ", 8);
+If Len(Z$) < 8 Then
+    Print #1, Left$(Z$ + "        ", 8); Left$(A$ + "        ", 8);
 Else
-    Print #1, z$; T2$; Left$(A$ + "        ", 8);
+    Print #1, Z$; T2$; Left$(A$ + "        ", 8);
 End If
 If Len(B$) > 13 Then Print #1, B$; "   "; Else Print #1, Left$(B$ + "              ", 14);
 If C$ <> "" Then Print #1, "; "; C$ Else Print #1,
-z$ = "": A$ = "": B$ = "": C$ = "" 'Clear the strings so next entry won't be repeated
+Z$ = "": A$ = "": B$ = "": C$ = "" 'Clear the strings so next entry won't be repeated
 Return
 
 AddIncludeTemp:

@@ -1,7 +1,54 @@
 ' Enter with LeftType set, RightType set & LargestType set
 NumFunctionAdd:
 Z$ = "; Doing ADD:": GoSub AO
-If Largesttype < 5 Then GoTo AddSameType1 ' Both are a byte size of 1
+
+If LargestType < 5 Then
+    AddSameType1:
+    If (LeftType = NT_UBit Or LeftType = NT_UByte) And (RightType = NT_UBit Or RightType = NT_UByte) Then
+        ' Both are unsigned
+        LargestType = NT_UInt16
+        LeftType = NT_UInt16
+        RightType = NT_UInt16
+        Z$ = "; Both are 1 byte Unsigned values, produce a 16 bit unsigned result": GoSub AO
+        A$ = "CLRA": C$ = "Assume no carry for high byte": GoSub AO
+        A$ = "LDB": B$ = ",S+": C$ = "Pop the right 8 bit value": GoSub AO
+        A$ = "ADDB": B$ = ",S+": C$ = "Add the left 8 bit value, fix the stack": GoSub AO
+        A$ = "ADCA": B$ = "#0": C$ = "A = carry from 8 bit add, so D is full 16 bit sum": GoSub AO
+        A$ = "PSHS": B$ = "D": C$ = "Save the new 16 bit value": GoSub AO
+    Else
+        LargestType = NT_Int16
+        A$ = "LDD": B$ = ",S": C$ = "Get right in A and left in B off the stack": GoSub AO
+        A$ = "LEAS": B$ = "-1,S": C$ = "Make room to widen the left 8 bit value to 16 bits": GoSub AO
+        A$ = "STA": B$ = ",S": C$ = "Save the right 8 bit value": GoSub AO
+
+        If LeftType = NT_Bit Or LeftType = NT_Byte Then
+            A$ = "SEX": C$ = "Sign extend left value into D": GoSub AO
+            LeftType = NT_Int16
+        Else
+            A$ = "CLRA": C$ = "Left value is unsigned, high byte = 0": GoSub AO
+            LeftType = NT_UInt16
+        End If
+
+        A$ = "STD": B$ = "1,S": C$ = "Save the 16 bit left value on the stack": GoSub AO
+        A$ = "LDB": B$ = ",S+": C$ = "Get the right 8 bit value, move the stack": GoSub AO
+
+        If RightType = NT_Bit Or RightType = NT_Byte Then
+            A$ = "SEX": C$ = "Sign extend right value into D": GoSub AO
+            RightType = NT_Int16
+        Else
+            A$ = "CLRA": C$ = "Right value is unsigned, high byte = 0": GoSub AO
+            RightType = NT_UInt16
+        End If
+
+        A$ = "ADDD": B$ = ",S": C$ = "Add the 16 bit right value to the 16 bit left value": GoSub AO
+        A$ = "STD": B$ = ",S": C$ = "Save the 16 bit result on the stack": GoSub AO
+
+        LeftType = NT_Int16
+        RightType = NT_Int16
+    End If
+    Return
+End If
+
 If (LeftType = 5 Or LeftType = 6) And (RightType = 5 Or RightType = 6) Then GoTo AddSameType2 ' Both are a byte size of 2
 If LeftType < 7 And RightType < 7 Then GoTo AddMaxType2 ' One is 1 byte the other is 2 byte
 If (LeftType = 7 Or LeftType = 8) And (RightType = 7 Or RightType = 8) Then GoTo AddSameType4 ' Both are a byte size of 4
@@ -22,14 +69,6 @@ Select Case Largesttype
     Case 12 'Same Double values
         GoTo AddSameDouble
 End Select
-
-' Both are 1 byte
-AddSameType1:
-' Both are 1 byte (8 bits)
-A$ = "PULS": B$ = "B": C$ = "Left value is 8 bits": GoSub AO
-A$ = "ADDB": B$ = ",S+": C$ = "Right is an 8 bit value, save the stack": GoSub AO
-A$ = "PSHS": B$ = "B": C$ = "Save the new 8 bit right side value": GoSub AO
-Return
 
 '       right        left
 ' ; A = B (Integer) - C (byte)
@@ -129,12 +168,60 @@ Select Case Largesttype
 End Select
 
 ' Both are 1 byte
-SubSameType1:
+'SubSameType1:
 ' Both are 1 byte (8 bits)
 ' on the stack we have: Value2, Value1
-A$ = "LDB": B$ = "1,S": C$ = "value1 is 8 bits": GoSub AO
-A$ = "SUBB": B$ = ",S++": C$ = "Subtract value1 from Value2, Fix the stack": GoSub AO
-A$ = "PSHS": B$ = "B": C$ = "Push the result on the stack": GoSub AO
+'A$ = "LDB": B$ = "1,S": C$ = "value1 is 8 bits": GoSub AO
+'A$ = "SUBB": B$ = ",S++": C$ = "Subtract value1 from Value2, Fix the stack": GoSub AO
+'A$ = "PSHS": B$ = "B": C$ = "Push the result on the stack": GoSub AO
+'Return
+
+' Both are 1 byte
+SubSameType1:
+If (LeftType = NT_UBit Or LeftType = NT_UByte) And (RightType = NT_UBit Or RightType = NT_UByte) Then
+    A$ = "CLRA": C$ = "MS byte in both right and left will be zero": GoSub AO
+    A$ = "STA": B$ = ",-S": C$ = "Save right as a 16 bit unsigned value": GoSub AO
+
+    A$ = "LDB": B$ = "2,S": C$ = "Get left 8 bit value": GoSub AO
+    A$ = "SUBD": B$ = ",S+": C$ = "Subtract right from left 16 bit value, Move the stack": GoSub AO
+    A$ = "STD": B$ = ",S": C$ = "Save 16 bit result": GoSub AO
+Else
+    If LeftType = NT_UBit Or LeftType = NT_UByte Then
+        ' Left unsigned - Right signed
+        A$ = "LDB": B$ = ",S": C$ = "get right 8 bit value": GoSub AO
+        A$ = "SEX": C$ = "Sign extend right into D": GoSub AO
+        A$ = "STA": B$ = ",-S": C$ = "Save right as a 16 bit value": GoSub AO
+
+        A$ = "LDB": B$ = "2,S": C$ = "Get left 8 bit value": GoSub AO
+        A$ = "CLRA": C$ = "Make left an unsigned 16 bit value in D": GoSub AO
+        A$ = "SUBD": B$ = ",S+": C$ = "Subtract right from left 16 bit value, Move the stack": GoSub AO
+        A$ = "STD": B$ = ",S": C$ = "Save 16 bit result": GoSub AO
+                                                                Else
+        If RightType = NT_UBit Or RightType = NT_UByte Then
+            ' Left signed - Right unsigned
+            A$ = "CLR": B$ = ",-S": C$ = "Save right as a 16 bit unsigned value": GoSub AO
+
+            A$ = "LDB": B$ = "2,S": C$ = "Get left 8 bit value": GoSub AO
+            A$ = "SEX": C$ = "Sign extend left into D": GoSub AO
+            A$ = "SUBD": B$ = ",S+": C$ = "Subtract right from left 16 bit value, Move the stack": GoSub AO
+            A$ = "STD": B$ = ",S": C$ = "Save 16 bit result": GoSub AO
+        Else
+            ' Both are signed
+            A$ = "LDB": B$ = ",S": C$ = "get right 8 bit value": GoSub AO
+            A$ = "SEX": C$ = "Sign extend right into D": GoSub AO
+            A$ = "STA": B$ = ",-S": C$ = "Save right as a 16 bit value": GoSub AO
+
+            A$ = "LDB": B$ = "2,S": C$ = "Get left 8 bit value": GoSub AO
+            A$ = "SEX": C$ = "Sign extend left into D": GoSub AO
+            A$ = "SUBD": B$ = ",S+": C$ = "Subtract right from left 16 bit value, Move the stack": GoSub AO
+            A$ = "STD": B$ = ",S": C$ = "Save 16 bit result": GoSub AO
+        End If
+    End If
+End If
+' Result could always be negative, so promote the 8 bit values to signed 16 bit numbers
+LargestType = NT_Int16
+LeftType = NT_Int16
+RightType = NT_Int16
 Return
 
 '       right        left
@@ -183,7 +270,12 @@ Else
     A$ = "SUBD": B$ = ",S++": C$ = "D = left 16 bit value - right 16 bit value, fix the stack": GoSub AO
     A$ = "STD": B$ = ",S": C$ = "Save the new 16 bit value": GoSub AO
 End If
+' Result could always be negative, so promote to signed 16 bit numbers
+LargestType = NT_Int16
+LeftType = NT_Int16
+RightType = NT_Int16
 Return
+
 
 ' Both are 2 bytes
 SubSameType2:

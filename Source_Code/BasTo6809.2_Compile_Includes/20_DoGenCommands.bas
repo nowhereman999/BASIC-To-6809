@@ -88,6 +88,10 @@ Select Case GeneralCommands$(v)
         GoTo DoPAINT
     Case "PALETTE"
         GoTo DoPalette
+    Case "PALETTEW"
+        GoTo DoPaletteW
+    Case "PALETTEV"
+        GoTo DoPaletteV
     Case "PLAY"
         GoTo DoPLAY
     Case "PLAYFIELD"
@@ -120,6 +124,8 @@ Select Case GeneralCommands$(v)
         GoTo DoSDC_LOADM
     Case "SDC_OPEN"
         GoTo DoSDC_OPEN
+    Case "SDC_PLAYMOVIE"
+        GoTo DoSDC_PLAY_MOVIE
     Case "SDC_PLAY"
         GoTo DoSDC_PLAY
     Case "SDC_PLAYORCL"
@@ -369,6 +375,19 @@ DoSDC_PUTBYTE1:
 GoSub GetExpressionB4EOL 'Handle an expression that ends with a colon or End of a Line
 GoSub ParseNumericExpression_UByte ' Parse Number and return with value as Unsigned value in B
 A$ = "JSR": B$ = "SDCPutByteB1": C$ = "Send byte B to file 1": GoSub AO
+Return
+
+DoSDC_PLAY_MOVIE:
+' Copy filename to a tempstring
+GoSub GetExpressionB4CommaEOL 'Handle an expression that ends with a comma or EOL, skip brackets
+GoSub ParseStringExpression ' Parse the String Expression, value will end up on the stack @ ,S
+A$ = "JSR": B$ = "SDC_FilenameToStrVar_PF00": C$ = "Copy filename off the stack into _StrVar_PF00": GoSub AO
+If Array(x) <> &HF5 Or Array(x + 1) <> &H2C Then Print "Can't find a comma after the filename for the SDC_PLAY command on";: GoTo FoundError
+x = x + 2 ' consume the ,
+GoSub GetExpressionB4CommaEOL 'Handle an expression that ends with a comma or EOL, skip brackets
+GoSub ParseNumericExpression_UByte ' Parse Number and return with value as Unsigned value in B
+A$ = "STB": B$ = "SDC_DriveNumber": C$ = "Save the disk #": GoSub AO
+A$ = "JSR": B$ = "SDCPLAYMOVIE": C$ = "Play Movie": GoSub AO
 Return
 
 DoSDC_PLAY:
@@ -1160,7 +1179,44 @@ Print #1, ' Need a space for @ in assembly
 Return
 
 ' Pallette ColourSlot, ColourValue
+' Update the palette register imediately (no waiting)
 DoPalette:
+' Get the numeric value before a comma
+' Get first number in D
+GoSub GetExpressionB4Comma: x = x + 2 ' Get the expression before a Comma, & move past it
+GoSub ParseNumericExpression_UByte ' Parse Number and return with value as Unsigned value in B
+A$ = "ANDB": B$ = "#%00001111": C$ = "Make sure B is a range of 0 to 15": GoSub AO
+A$ = "PSHS": B$ = "B": C$ = "Save the palette # to set on the stack": GoSub AO
+'Get colour value in D (we only use B)
+GoSub GetExpressionB4EOL 'Handle an expression that ends with a colon or End of a Line
+GoSub ParseNumericExpression_UByte ' Parse Number and return with value as Unsigned value in B
+A$ = "LDX": B$ = "#$FFB0": C$ = "Point at the start of the palette memory": GoSub AO
+A$ = "PULS": B$ = "A": C$ = "Get the palette # to set, fix the stack": GoSub AO
+A$ = "STB": B$ = "A,X": C$ = "Update the palette # to B": GoSub AO
+A$ = "LDX": B$ = "#PalMirror": C$ = "Point at the start of the palette mirror": GoSub AO
+A$ = "STB": B$ = "A,X": C$ = "Update the palette # to B": GoSub AO
+Return
+
+' Pallette ColourSlot, ColourValue
+' Update the palette register mirror only (no waiting), then use the paletteV to wait for vsync then copy PalMirror to hardware
+DoPaletteW:
+' Get the numeric value before a comma
+' Get first number in D
+GoSub GetExpressionB4Comma: x = x + 2 ' Get the expression before a Comma, & move past it
+GoSub ParseNumericExpression_UByte ' Parse Number and return with value as Unsigned value in B
+A$ = "ANDB": B$ = "#%00001111": C$ = "Make sure B is a range of 0 to 15": GoSub AO
+A$ = "PSHS": B$ = "B": C$ = "Save the palette # to set on the stack": GoSub AO
+'Get colour value in D (we only use B)
+GoSub GetExpressionB4EOL 'Handle an expression that ends with a colon or End of a Line
+GoSub ParseNumericExpression_UByte ' Parse Number and return with value as Unsigned value in B
+A$ = "PULS": B$ = "A": C$ = "Get the palette # to set, fix the stack": GoSub AO
+A$ = "LDX": B$ = "#PalMirror": C$ = "Point at the start of the palette mirror": GoSub AO
+A$ = "STB": B$ = "A,X": C$ = "Update the palette # to B": GoSub AO
+Return
+
+' Pallette ColourSlot, ColourValue
+' Wait for vsync then copy PalMirror to hardware
+DoPaletteV:
 ' Get the numeric value before a comma
 ' Get first number in D
 GoSub GetExpressionB4Comma: x = x + 2 ' Get the expression before a Comma, & move past it
@@ -1174,9 +1230,15 @@ GoSub ParseNumericExpression_UByte ' Parse Number and return with value as Unsig
 A$ = "LDA": B$ = "$FF02": C$ = "Reset Vsync flag": GoSub AO
 Z$ = "!": A$ = "LDA": B$ = "$FF03": C$ = "See if Vsync has occurred yet": GoSub AO
 A$ = "BPL": B$ = "<": C$ = "If not then keep looping, until the Vsync occurs": GoSub AO
-A$ = "LDX": B$ = "#$FFB0": C$ = "Point at the start of the palette memory": GoSub AO
 A$ = "PULS": B$ = "A": C$ = "Get the palette # to set, fix the stack": GoSub AO
-A$ = "STB": B$ = "A,X": C$ = "Update the palette # to B": GoSub AO
+A$ = "LDU": B$ = "#PalMirror": C$ = "Point at the start of the palette mirror": GoSub AO
+A$ = "STB": B$ = "A,U": C$ = "Update the palette # to B": GoSub AO
+A$ = "LDX": B$ = "#$FFB0": C$ = "Point at the start of the palette hardware": GoSub AO
+A$ = "LDB": B$ = "#15": C$ = "We will update Palette values from 0 to 15": GoSub AO
+Z$ = "!": A$ = "LDA": B$ = "B,U": C$ = "Get the palette value from the mirror": GoSub AO
+A$ = "STA": B$ = "B,X": C$ = "Set the palette value in hardware": GoSub AO
+B$ = "DECB": C$ = "Decrement the counter": GoSub AO
+A$ = "BPL": B$ = "<": C$ = "Loop until we are at -1": GoSub AO
 Return
 
 ' Quickly get the joystick values of 0,31,63 of both joysticks both horizontally and vertically
@@ -2886,7 +2948,7 @@ If Gmode > 99 Then
     ' We are using a CoCo 3 graphics mode
     A$ = "LDA": B$ = "#%01111100": C$ = "CoCo 3 Mode, MMU Enabled, GIME IRQ Enabled, GIME FIRQ Enabled, Vector RAM at FEXX enabled, Standard SCS Normal, ROM Map 16k Int, 16k Ext": GoSub AO
     A$ = "STA": B$ = "$FF90": C$ = "Make the changes": GoSub AO
-    A$ = "LDD": B$ = "#$" + GModeStartAddress$(Gmode): C$ = "A = the location in RAM to start the graphics screen": GoSub AO
+    A$ = "LDD": B$ = "#$" + GModeStartAddress$(Gmode): C$ = "D = the location in RAM to start the graphics screen": GoSub AO
     A$ = "STD": B$ = "BEGGRP": C$ = "Update the Screen starting location": GoSub AO
     A$ = "LDA": B$ = "#" + GMode$(Gmode): C$ = "A = Graphic mode requested": GoSub AO
     A$ = "STA": B$ = "$FF99": C$ = "Vid_Res_Reg": GoSub AO
