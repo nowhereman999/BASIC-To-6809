@@ -10,6 +10,13 @@ https://github.com/nowhereman999/BASIC-To-6809/blob/main/Manual.pdf
 For more info check out the blog post here:
 https://wordpress.com/post/nowhereman999.wordpress.com/5054
 
+V 5.27
+- Fixed the addition of 8 bit values now always results in a 16 bit result, to avoid overflows
+- Fixed the subtraction of 8 bit values always now results in a 16 bit signed result
+- Changed Palette handling, Palette now updates the hardware palette immediately
+- Added PaletteW command that changes the Palette Mirror value
+- Added PaletteV command that changes the palette Mirror value and copies all 16 palette values from the mirror to hardware
+
 V 5.26
 - Fixed compare code GreaterOrEqualLS2RU1 it was corrupting the stack
 - Fixed the EqualSameType8 routine, needed a LEAS 15,S at the end was a type of LEAS 5,S
@@ -189,7 +196,7 @@ V 4.26
   Emulation mode so the timings are the same as the 6809 while loading.  After loading it will put the 6309 back into native mode.
 
 V 4.25
-- Fixed a bug with with using numeric commands like RNDZ(x) before an close bracket of a graphics command like SET(x,y,RNDZ(3))
+- Fixed a bug with using numeric commands like RNDZ(x) before an close bracket of a graphics command like SET(x,y,RNDZ(3))
 
 V 4.24
 - Fixed a bug in the compiler when it was assigning the value of an equation to a variable.  If the equation didn't have a
