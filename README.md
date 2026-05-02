@@ -10,6 +10,10 @@ https://github.com/nowhereman999/BASIC-To-6809/blob/main/Manual.pdf
 For more info check out the blog post here:
 https://wordpress.com/post/nowhereman999.wordpress.com/5054
 
+For support goto the CoCo Nation Basic-to-6809 channel on discord:
+https://discord.com/channels/301741082600013824/460587865928105985
+
+
 V 5.27
 - Fixed the addition of 8 bit values now always results in a 16 bit result, to avoid overflows
 - Fixed the subtraction of 8 bit values always now results in a 16 bit signed result
