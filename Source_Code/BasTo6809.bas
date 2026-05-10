@@ -1,4 +1,8 @@
-V$ = "5.27"
+V$ = "5.28"
+'       - Fixed a bug with the IF command and three or more OR's / AND's, it would cause the stack to get messed up and crash the program
+
+
+' V 5.27
 '       - Fixed the addition of 8 bit values always now results in a 16 bit result, to avoid overflows
 '       - Fixed the subtraction of 8 bit values always now results in a 16 bit signed result
 '       - Changed Palette handling, Palette now updates the hardware palette immediately

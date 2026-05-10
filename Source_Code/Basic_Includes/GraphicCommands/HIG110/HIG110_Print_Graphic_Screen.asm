@@ -91,7 +91,7 @@ PRINT_D_Graphics_Screen_HIG110:
         BRA     AtoGraphics_Screen_HIG110 ; Print A on the screen and return
 
 AtoGraphics_Screen_HIG110:
-* Put character of the graphics screen
+* Put character A on the graphics screen
         PSHS  D,X,Y,U
         LDX   GraphicCURPOS
         CMPA  #$08      ; Is it a backspace?

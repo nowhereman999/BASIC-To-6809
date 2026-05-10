@@ -1237,7 +1237,7 @@ A$ = "LDX": B$ = "#$FFB0": C$ = "Point at the start of the palette hardware": Go
 A$ = "LDB": B$ = "#15": C$ = "We will update Palette values from 0 to 15": GoSub AO
 Z$ = "!": A$ = "LDA": B$ = "B,U": C$ = "Get the palette value from the mirror": GoSub AO
 A$ = "STA": B$ = "B,X": C$ = "Set the palette value in hardware": GoSub AO
-B$ = "DECB": C$ = "Decrement the counter": GoSub AO
+A$ = "DECB": C$ = "Decrement the counter": GoSub AO
 A$ = "BPL": B$ = "<": C$ = "Loop until we are at -1": GoSub AO
 Return
 

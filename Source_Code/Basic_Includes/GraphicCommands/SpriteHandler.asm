@@ -38,7 +38,7 @@ ShowSpriteFrame:
         LDU     SpriteCachePointer0      ; Get the next empty pointer in the Sprite Cache0
         CMPU    #SpriteCacheEnd0         ; Have we reached the end of the cache0?
         BNE     >
-        BSR     DoWaitVBL                ; go update screen which will empty the cache0 & cache1
+        JSR     DoWaitVBL                ; go update screen which will empty the cache0 & cache1
         LDU     SpriteCachePointer0      ; Load the first pointer in the Sprite Cache0
 ; Get the location of the sprite on screen
 !       LDX     #SpriteTable            ; Point at the start of the Sprite Restore table
@@ -89,7 +89,7 @@ SpriteBOff:
         CMPU    #SpriteCacheEnd0         ; Have we reached the end of the cache0?
         BNE     >
         PSHS    B
-        BSR     DoWaitVBL                ; go update screen which will empty the cache0 & cache1
+        JSR     DoWaitVBL                ; go update screen which will empty the cache0 & cache1
         PULS    B
         LDY     SpriteCachePointer1      ; Load the first pointer in the Sprite Cache1
         LDU     SpriteCachePointer0      ; Load the first pointer in the Sprite Cache0
@@ -111,7 +111,7 @@ EraseSpriteB:
         LDU     SpriteCachePointer0      ; Get the next empty pointer in the Sprite Cache0
         CMPU    #SpriteCacheEnd0         ; Have we reached the end of the cache0?
         BNE     >
-        BSR     DoWaitVBL                ; go update screen which will empty the cache0 & cache1
+        JSR     DoWaitVBL                ; go update screen which will empty the cache0 & cache1
         LDB     ,S                       ; Restore the sprite #
         LDY     SpriteCachePointer1      ; Load the first pointer in the Sprite Cache1
         LDU     SpriteCachePointer0      ; Load the first pointer in the Sprite Cache0
@@ -140,7 +140,7 @@ BackupSpriteB:
         LDU     SpriteCachePointer0      ; Get the next empty pointer in the Sprite Cache0
         CMPU    #SpriteCacheEnd0         ; Have we reached the end of the cache0?
         BNE     >
-        BSR     DoWaitVBL                ; go update screen which will empty the cache0 & cache1
+        JSR     DoWaitVBL                ; go update screen which will empty the cache0 & cache1
         LDU     SpriteCachePointer0      ; Load the first pointer in the Sprite Cache0
         LDB     ,S                       ; Get the sprite #
 ; Get the location of the sprite on screen
@@ -169,7 +169,7 @@ CalcAddressOfSprite0:
         PSHS    D                       ; Save the screen location on the stack
         LDD     SpriteX,X               ; D = the x position (pixel)
         LDX     ,S++                    ; X = the Row offset on screen 0, fix the stack
-        BSR     CalculateSpriteLocation ; Go calculate the address of the sprite
+        JSR     CalculateSpriteLocation ; Go calculate the address of the sprite
         STX     ,U                      ; Save the location of the sprite on screen 0 in the cache0
         LEAU    4,U                     ; Point at the next empty pointer in the Sprite Cache0
         STU     SpriteCachePointer0     ; Save the next empty pointer in the Sprite Cache0
@@ -184,7 +184,7 @@ CalcAddressOfSprite0_and1:
         PSHS    D                       ; Save the screen location on the stack
         LDD     SpriteX,X               ; D = the x position (pixel)
         LDX     ,S++                    ; X = the Row offset on screen 0, fix the stack
-        BSR     CalculateSpriteLocation ; Go calculate the address of the sprite
+        JSR     CalculateSpriteLocation ; Go calculate the address of the sprite
         STX     ,U                      ; Save the location of the sprite on screen 0 in the cache0
         LEAU    4,U                     ; Point at the next empty pointer in the Sprite Cache0
         STU     SpriteCachePointer0     ; Save the next empty pointer in the Sprite Cache0
@@ -330,7 +330,7 @@ AddSpriteToSpriteCache:
  ENDIF
  
 
-; For Screen 1 we will use the copy sprite area from screen 0 to screen1 routine
+; For Screen 1 we will use the copy sprite area from screen 0 to screen 1 routine
 !       LDX     #SpriteRestoreTable+2  ; Point at the SpriteRestoreTable+2 so it points at screen1 routine
         LDB     6,S     ; Get the sprite number
         LSLB            ; * 2 (two bytes per entry in the jump table)

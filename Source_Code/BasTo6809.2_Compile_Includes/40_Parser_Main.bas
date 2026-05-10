@@ -604,6 +604,9 @@ ForceOperatorSP = -1
 Dim TotalANDs As Integer, TotalORs As Integer
 Dim RemainingANDs As Integer, RemainingORs As Integer
 
+TotalANDs = 0
+TotalORs = 0
+
 RPNEntry = 0
 ProcessRPNStackPointer = -1
 
@@ -641,10 +644,12 @@ If InIFCondition% <> 0 Then
 
                     Case OP_AND
                         LogicCount = LogicCount + 1
+                        TotalANDs = TotalANDs + 1
                         HasAndOverall% = -1
 
                     Case OP_OR
                         LogicCount = LogicCount + 1
+                        TotalORs = TotalORs + 1
                         HasOROverall% = -1
 
                     Case OP_XOR, OP_NOT
@@ -1212,7 +1217,7 @@ End If
                                     If IsBoolOnStack%(Value1$) <> 0 And IsBoolOnStack%(Value2$) <> 0 Then
                                         UsedANDShortCircuit% = -1
 
-                                        If IsLastANDInIF%(RPNEntry) = 0 Then
+                                        If RemainingANDs > 0 Then
                                             ' --- MIDDLE AND in pure-AND IF ---
                                             A$ = "LDB": B$ = ",S+": C$ = "Pop boolean result for AND": GoSub AO
                                             A$ = "LBEQ": B$ = IFFalseLabel$: C$ = "Short-circuit AND: if FALSE jump to ELSE/END IF": GoSub AO
@@ -1244,7 +1249,7 @@ End If
                                 If IsBoolOnStack%(Value1$) <> 0 And IsBoolOnStack%(Value2$) <> 0 Then
                                     UsedANDShortCircuit% = -1
 
-                                    If IsLastANDInIF%(RPNEntry) = 0 Then
+                                    If RemainingANDs > 0 Then
                                         ' --- MIDDLE AND in pure-AND IF ---
                                         A$ = "LDB": B$ = ",S+": C$ = "Pop boolean result for AND": GoSub AO
                                         A$ = "LBEQ": B$ = IFFalseLabel$: C$ = "Short-circuit AND: if FALSE jump to ELSE/END IF": GoSub AO
@@ -1299,7 +1304,7 @@ End If
                                 If IsBoolOnStack%(Value1$) <> 0 And IsBoolOnStack%(Value2$) <> 0 Then
                                     UsedORShortCircuit% = -1
 
-                                    If IsLastORInIF%(RPNEntry) = 0 Then
+                                    If RemainingORs > 0 Then
                                         ' --- MIDDLE OR (another OR still to come) ---
                                         A$ = "LDB": B$ = ",S+": C$ = "Pop boolean result for OR": GoSub AO
                                         A$ = "LBNE": B$ = IFTrueLabel$: C$ = "Short-circuit OR: if TRUE jump to THEN": GoSub AO
@@ -1329,7 +1334,7 @@ End If
                             If IsBoolOnStack%(Value1$) <> 0 And IsBoolOnStack%(Value2$) <> 0 Then
                                 UsedORShortCircuit% = -1
 
-                                If IsLastORInIF%(RPNEntry) = 0 Then
+                                If RemainingORs > 0 Then
                                     ' --- MIDDLE OR (another OR still to come) ---
                                     A$ = "LDB": B$ = ",S+": C$ = "Pop boolean result for OR": GoSub AO
                                     A$ = "LBNE": B$ = IFTrueLabel$: C$ = "Short-circuit OR: if TRUE jump to THEN": GoSub AO

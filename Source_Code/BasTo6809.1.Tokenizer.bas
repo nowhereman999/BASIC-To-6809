@@ -360,7 +360,6 @@ C_SAMPLE_LOAD = ii
 Check$ = "PLAYFIELD": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
 C_PLAYFIELD = ii
 
-
 Check$ = "_BIT": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
 C_UBIT = ii
 Check$ = "_UNSIGNED": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
@@ -395,6 +394,10 @@ Check$ = "_SHORT16384": GoSub FindGenCommandNumber ' Gets the General Command nu
 C_USHORT16384 = ii
 Check$ = "_SHORT32768": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
 C_USHORT32768 = ii
+
+' Find numeric command
+Check$ = "SQR": GoSub FindNumCommandNumber ' Gets the Numeric Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+SQR_CMD = ii
 
 WidthVal$ = "" ' default no width command
 ' Handle command line options
@@ -2393,6 +2396,7 @@ If CoCo3 = 1 And Samples = 1 Then
         End If
     Next i
 End If
+
 If CoCo3 = 1 Then
     GraphicVars = 1
     Temp$ = "GraphicCommands/GraphicVariables": GoSub AddIncludeTemp ' Add code for graphics variables
@@ -2722,7 +2726,9 @@ If FloatType = 1 Then
     Temp$ = "Math_Integer32": GoSub AddIncludeTemp ' 32 bit MUL and DIV needed for FP5 math
 End If
 Temp$ = "Math_Variables": GoSub AddIncludeTemp ' Math_Integer16 needs this
-Temp$ = "SquareRoot": GoSub AddIncludeTemp
+If SQR_CMD = 1 Then
+    Temp$ = "SquareRoot": GoSub AddIncludeTemp ' Calculate the square root of a 16 bit number
+End If
 Temp$ = "CPUSpeed": GoSub AddIncludeTemp
 Temp$ = "StringCommands": GoSub AddIncludeTemp ' Add general command library
 Temp$ = "Random": GoSub AddIncludeTemp ' Add the code to do a Random number
@@ -3332,7 +3338,7 @@ While i <= Len(Expression$)
                     End If
                     GotGMode:
                     GModeLib(Val(V$)) = 1
-                    V1$ = ""
+                    V1$ = "": vs1 = 0
                     If Mid$(Expression$, p, 1) = " " Then
                         p = p + 3
                         GettingGmodePage:
@@ -3346,9 +3352,10 @@ While i <= Len(Expression$)
                             GoTo GettingGmodePage
                         End If
                         GotGModePage:
-                        If Len(V1$) = 0 Then V1$ = "2" ' If a variable is used then we will set it to two pages to be reserved
-                        Temp2 = GModePageLib(Val(V$))
-                        If Temp2 < Val(V1$) Then GModePageLib(Val(V$)) = Val(V1$)
+                        If Len(V1$) = 0 Then V1$ = "0" ' If a variable is used then we will set it to two pages to be reserved
+                        vs1 = Val(V1$) + 1 ' vs1 = number of pages, zero based
+                        Temp2 = GModePageLib(Val(V$)) ' get the old value
+                        If Temp2 < vs1 Then GModePageLib(Val(V$)) = vs1
                     End If
                 End If
                 If Temp$ = "WIDTH" Then
@@ -5187,6 +5194,18 @@ End Select
 Return
 
 WriteIncludeListToFile:
+' Re-arrange list, if CoCo 3 graphics modes are used make the handling of them first so they get loaded in lower RAM
+Pointer1 = 1
+For AI = 2 To IncludeCount
+    If Left$(IncludeList$(AI), 15) = "GraphicCommands" Then
+        ' Found it's not first, make it first
+        ZZ_Temp$ = IncludeList$(Pointer1)
+        IncludeList$(Pointer1) = IncludeList$(AI)
+        IncludeList$(AI) = ZZ_Temp$
+        Pointer1 = Pointer1 + 1
+    End If
+Next AI
+
 For AI = 1 To IncludeCount
     Print #1, T2$; "INCLUDE     ./Basic_Includes/"; IncludeList$(AI); ".asm"
 Next AI
@@ -5234,6 +5253,17 @@ FindGenCommandNumber:
 Found = 0
 For ii = 0 To GeneralCommandsCount
     If GeneralCommands$(ii) = Check$ Then
+        Found = 1
+        Exit For
+    End If
+Next ii
+Return
+
+' Gets the Numeric Command number, returns with number in ii, Found=1 if found and Found=0 if not found
+FindNumCommandNumber:
+Found = 0
+For ii = 0 To NumericCommandsCount
+    If NumericCommands$(ii) = Check$ Then
         Found = 1
         Exit For
     End If

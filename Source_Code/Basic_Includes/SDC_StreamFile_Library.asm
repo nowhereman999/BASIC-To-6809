@@ -48,7 +48,7 @@ OpenSDC_File_X_At_Start:
         BSR     OpenSDC_File_X_At_AU    * Open a file at Logical Sector Block (24 bit block where A=MSB (bits 23 to 16), U=Least significant Word (bits 15 to 0)
         PULS    A,U,PC              * File is open, restore and return
 
-* Open a file for streaming starting at Logical Sector Number, each sector is 256 bytes.  The LSN is in A & U where
+* Open a file for streaming starting at Logical Sector Number, in streaming mode each sector is 512 bytes.  The LSN is in A & U where
 * the Logical Sector Block, 24 bit block where A=MSB (bits 23 to 16), U=Least significant Word (bits 15 to 0)
 *
 OpenSDC_File_X_At_AU:

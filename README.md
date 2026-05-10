@@ -14,6 +14,10 @@ For support goto the CoCo Nation Basic-to-6809 channel on discord:
 https://discord.com/channels/301741082600013824/460587865928105985
 
 
+V 5.28
+- Fixed a bug with the IF command and three or more OR's / AND's, it would cause the stack to get messed up and crash the program
+- Added SDC_PLAYMOVIE command to be used to play movies back on the CoCo3 directly off the CoCoSDC made with the MakeNTM program
+
 V 5.27
 - Fixed the addition of 8 bit values now always results in a 16 bit result, to avoid overflows
 - Fixed the subtraction of 8 bit values always now results in a 16 bit signed result
