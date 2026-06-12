@@ -1433,6 +1433,18 @@ While x < filesize
                     x = x + 7
                     PrintGraphicsText = 1
                 End If
+                ' Found a PRINT command, see if we have a print #-4, which will print 42 column text to the FG6R graphics screen
+                ' #-4, =  F5 23 FC 2D 34 F5 2C
+                If Array(x) = &HF5 And Array(x + 1) = &H23 And Array(x + 2) = &HFC And Array(x + 3) = &H2D And Array(x + 4) = &H34 And Array(x + 5) = &HF5 And Array(x + 6) = &H2C Then
+                    x = x + 7
+                    PrintGraphicsText6 = 1
+                End If
+                ' Found a PRINT command, see if we have a print #-5, which will print inverse 42 column text to the FG6R graphics screen
+                ' #-5, =  F5 23 FC 2D 35 F5 2C
+                If Array(x) = &HF5 And Array(x + 1) = &H23 And Array(x + 2) = &HFC And Array(x + 3) = &H2D And Array(x + 4) = &H35 And Array(x + 5) = &HF5 And Array(x + 6) = &H2C Then
+                    x = x + 7
+                    PrintGraphicsText6 = 1
+                End If
             Case C_GMODE
                 ' Found a GMODE command
                 If Gmode = -1 Then
@@ -1882,9 +1894,13 @@ If WidthVal$ <> "" And WidthVal$ <> "32" Then
     Z$ = "CC3Width:": GoSub AO
     A$ = "FCB": B$ = CC3Width$: C$ = "0=Width 40, 1=Width 64, 2=Width 80": GoSub AO
 End If
-If PrintGraphicsText = 1 Then
+If PrintGraphicsText = 1 Or PrintGraphicsText6 = 1 Then
     ' Found program uses PRINT #-3, to print to the graphics screen
     Print #1, "GraphicCURPOS   RMB     2     ; Reserve RAM for the Graphics Cursor"
+End If
+If PrintGraphicsText = 1 Or PrintGraphicsText6 = 1 Then
+    ' Found program uses PRINT #-4, to print 42 column text to the FG6R graphics screen
+    Print #1, "GraphicCURPOS6  RMB     2     ; Reserve RAM for the 42 column Graphics Cursor"
 End If
 
 Print #1, "_Var_Timer      RMB     2     ; TIMER value"
@@ -2426,6 +2442,11 @@ If PrintGraphicsText = 1 Then
         End If
     Next i3
 End If
+If PrintGraphicsText6 = 1 Then
+    ' Found program uses PRINT #-4, to print 42 column text to the FG6R graphics screen
+    Temp$ = "GraphicCommands/FG6R/FG6R_Print_Graphic_Screen_6Bit": GoSub AddIncludeTemp
+    Temp$ = "GraphicCommands/FG6R/FG6R_Locate": GoSub AddIncludeTemp
+End If
 For ii = 0 To GeneralCommandsFoundCount - 1
     Temp$ = UCase$(GeneralCommandsFound$(ii))
     If Temp$ = "SET" Then
@@ -2960,10 +2981,15 @@ If LineCommand = 1 Then
     A$ = "LDD": B$ = "#96": C$ = "Set D to the middle of the screen": GoSub AO
     A$ = "STD": B$ = "endY": C$ = "Save as the previous end position": GoSub AO
 End If
-If PrintGraphicsText = 1 Then
+If PrintGraphicsText = 1 Or PrintGraphicsText6 = 1 Then
     ' Found program uses PRINT #-3, to print to the graphics screen
     A$ = "LDD": B$ = "#$0E00": C$ = "Set D to the top left of the screen": GoSub AO
     A$ = "STD": B$ = "GraphicCURPOS": C$ = "Set the graphics cursor to the top left corner": GoSub AO
+End If
+If PrintGraphicsText = 1 Or PrintGraphicsText6 = 1 Then
+    ' Found program uses PRINT #-4, to print 42 column text to the FG6R graphics screen
+    A$ = "LDD": B$ = "#0": C$ = "Set D to the top left 42 column graphics text cell": GoSub AO
+    A$ = "STD": B$ = "GraphicCURPOS6": C$ = "Set the 42 column graphics cursor to the top left corner": GoSub AO
 End If
 
 If PlayCommand = 1 Then
@@ -6041,8 +6067,5 @@ Function Replace (text$, old$, new$) 'can also be used as a SUB without the coun
     Loop While find
     Replace = count 'function returns the number of replaced words. Comment out in SUB
 End Function
-
-
-
 
 

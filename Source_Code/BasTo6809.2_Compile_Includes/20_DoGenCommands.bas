@@ -4571,6 +4571,38 @@ Select Case v
                                         GoTo GetSectionToPrint
                                     End If
                                 End If
+                            Case &H34
+                                ' Print #-4 print 42 column text to the FG6R graphics screen
+                                v = Array(x): x = x + 1
+                                If v = &HF5 Then ' special character
+                                    v = Array(x): x = x + 1
+                                    If v <> &H2C Then ' comma?
+                                        Print "Print command should have a comma after # on";: GoTo FoundError
+                                    Else
+                                        If GModeName$(Gmode) <> "FG6R" Then
+                                            Print "PRINT #-4 only works with GMODE 16 FG6R on";: GoTo FoundError
+                                        End If
+                                        PrintCC3 = 0
+                                        PrintD$ = "PRINT_D_Graphics_Screen_6Bit_FG6R": PrintA$ = "AtoGraphics_Screen_6Bit_FG6R": PrintDev$ = " to 42 column graphic screen"
+                                        GoTo GetSectionToPrint
+                                    End If
+                                End If
+                            Case &H35
+                                ' Print #-5 print inverse 42 column text to the FG6R graphics screen
+                                v = Array(x): x = x + 1
+                                If v = &HF5 Then ' special character
+                                    v = Array(x): x = x + 1
+                                    If v <> &H2C Then ' comma?
+                                        Print "Print command should have a comma after # on";: GoTo FoundError
+                                    Else
+                                        If GModeName$(Gmode) <> "FG6R" Then
+                                            Print "PRINT #-5 only works with GMODE 16 FG6R on";: GoTo FoundError
+                                        End If
+                                        PrintCC3 = 0
+                                        PrintD$ = "PRINT_D_Graphics_Screen_6Bit_Inverse_FG6R": PrintA$ = "AtoGraphics_Screen_6Bit_Inverse_FG6R": PrintDev$ = " to inverse 42 column graphic screen"
+                                        GoTo GetSectionToPrint
+                                    End If
+                                End If
                         End Select
                     End If
                 End If

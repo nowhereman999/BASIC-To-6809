@@ -1,9 +1,10 @@
-; Play Movie from the CoCoSDC - Glen Hewlett
+; Play Movie from the CoCoSDC
+; Dragon's Lair specific version
 ; *****************************************************
-; To convert any movie to the proper format for this video player use similar to this:
-; ./MakeNTM106 -i=MovieName.mkv -name="Full Movie Name here (2026)" -o=MOVIE.NTM -g136 -s=.75 -f9 -a2 -p1 -c0
+; To convert any movie to the proper format for this video player use:
+; ./MakeNTM106 -i=dls00.mkv -name="Dragon's Lair" -o=DRAGS210.NTM -g136 -s=.75 -f10 -a2 -k -p1 -c0 -sp1=36 -sp2=54 -nopillar
 *****************************************************
-;
+
 ;
 ; Reserve space in 8K bank @ $E000 for audio buffers and palette buffer
 SDCNTSAudioBuffer0      EQU   $E000                         ; Audio Buffer 0 starts here
@@ -85,17 +86,17 @@ SDCPLAYMOVIE:
 ; There is also a small wait you need built into the polling routines in order to give the MCU
 ; time to reset/set the bit (20 microseconds or so is sufficient).
 
-; Make both screen buffers black (all zeros)
+; Make both screen buffers colour Palette 2
       LDB   #$35              ; start with the last Mem bank
       STB   >Temp1            ; Save the bank counter
-      CLRA                    ; Colour all zeros (black)
-      LDX   #$0000            ; Colour all zeros (black)
+      LDA   #$22              ; Colour palette 2
+      LDX   #$2222            ; Colour palette 2
       LEAY  ,X                ; Y = X
       LEAU  ,X                ; U = X
 @BankLoop:
       LDB   >Temp1
       STB   <$A6              ; Configure $C000
-      CLRB
+      LDB   #$22              ; Colour palette 2
       LDS   #$E000
 !     PSHS  D,X,Y,U           ; Fill the $2000 bytes with zeros
       CMPS  #$C000
@@ -107,6 +108,15 @@ SDCPLAYMOVIE:
 
 MovieSDCStack:
       LDS   #$FFFF            ; Restore the Stack pointer (self mod)
+;
+      LDU   #$6000
+      STU   >BEGGRP           ; Set the top left corner of the screen in RAM
+; 32 characters per row, characters are at byte boundaries, can start on any row
+      LDU   #$6000+4*25+3+256 ; Screen position for score
+      STU   >GraphicCURPOS    ; Set where the text should be printed on the graphics screen
+      JSR   DragPrint         ; Print text below on the graphics screen
+      FCN   '000000'
+;
 ; Load the first sector into audio buffer 0, so we can read the header info and figure out the correct playback method
 ; for this file
       LDX   #NTMovHeader      ; Point at the header space in RAM
@@ -166,23 +176,17 @@ NTMovPercentLBN   EQU   NTMovJumpSectorRateNum+2 ; 9 * 3 = 27 bytes the LBN valu
       STA   NTMovLoadAudioBuff+1          ; Save the number of audio sectors needed (1,2,3 or 4)
       LSLA                                ; A = A * 2, D = A * 512
       CLRB
-      STA   NTMovCalcEndInitAudioBuff0+1  ; Get value to add so we know when the FIRQ reached the end of the buffer0
-      STA   NTMovCalcEndAudioBuff0+1      ; Get value to add so we know when the FIRQ reached the end of the buffer0
       STA   NTMovCalcEndPalInitAudioBuff0+1 ; Get value to add so we know when the FIRQ reached the end of the Palette buffer0
       STA   NTMovCalcEndPalAudioBuff0+1   ; Get value to add so we know when the FIRQ reached the end of the Palette buffer0
-      STA   NTMovCalcEndAudioBuff1+1      ; Get value to add so we know when the FIRQ reached the end of the buffer1
       STA   NTMovCalcEndPalAudioBuff1+1   ; Get value to add so we know when the FIRQ reached the end of the Palette buffer1
 ;
       LDU   #SDCNTSAudioBuffer0           ; U = Buffer 0 start
       LEAU  D,U                           ; Point at the end of audio buffer 0
-      STU   NTMovEndInitAudBuf0+1         ; Set the location to start blasting into audio buffer 0 - init
-      STU   NTMovEndAudBuf0+1             ; Set the location to start blasting into audio buffer 0
       STU   NTMovPalUpEndInitAudBuf0+1    ; Set the location to start blasting into audio buffer 0 - Palette updaing version - init
       STU   NTMovPalUpEndAudBuf0+1        ; Set the location to start blasting into audio buffer 0 - Palette updaing version
 ;
       LDU   #SDCNTSAudioBuffer1           ; U = Buffer 1 start
       LEAU  D,U                           ; Point at the end of audio buffer 1
-      STU   NTMovEndAudBuf1+1             ; Set the location to start blasting into audio buffer 1
       STU   NTMovPalUpEndAudBuf1+1        ; Set the location to start blasting into audio buffer 1 - Palette updaing version
 
 ; Setup graphics mode
@@ -262,98 +266,6 @@ NTMovFIRQDelaySet:
 NTMovContinueMovie:
       STB   <$D9                          ; Put CoCo 3 in double speed mode
       CLR   <$02                          ; $FF02 clear keyboard check
-      LDA   >NTMovHeader+NTMovPalMode     ; Get the Palette Changing flag 0 = not changing, 1 = changing
-      LBNE  PaletteChangingPlayback       ; Playback mode will change the palette each frame
-
-; Setup Even frame (frame 0)
-; Audio buffer 0 prep
-; Load audio buffer 0
-      LDD   #SDCNTSAudioBuffer0           ; Point the audio player start at Audio Buffer 0
-      STD   NTMovGetSample+1              ; Set the value
-NTMovCalcEndInitAudioBuff0:
-      ADDA  #$FF                          ; Self mod the number of 256 byte blocks the audio buffer is
-      STA   NTMovAudioCMP+1               ; Save value for FIRQ to test for to see if it's reached the end of the buffer
-      CLR   >NTMovAudioDone               ; Clear it so it's ready for next audio wait for audio to complete loop
-;      
-NTMovEndInitAudBuf0:
-      LDU   #$FFFF                        ; Point at the end of the audio buffer (self mod)
-      JSR   NTMovLoadAudioBuff
-; load video buffer 0
-      LDD   #$3031                        ; [3] Banks 0 & 1 & 2
-      JSR   NTMovLoadVideoBuff            ; Set memory banks and load a frame
-; turn on audio
-      ANDCC #%00111111                    ; Start the FIRQ
-      BRA   NTMovEnterHere
-
-; Loop Start
-NTMovMainLoop:
-; Set audio playback to the start of audio buffer 0
-      LDD   #SDCNTSAudioBuffer0     ; Point the audio player start at Audio Buffer 0
-      STD   NTMovGetSample+1        ; Set the value
-NTMovCalcEndAudioBuff0:
-      ADDA  #$FF                    ; Self mod the number of 256 byte blocks the audio buffer is
-      STA   NTMovAudioCMP+1         ; Save value for FIRQ to test for to see if it's reached the end of the buffer
-      CLR   >NTMovAudioDone         ; Clear it so it's ready for next audio wait for audio to complete loop
-
-; Scan keyboard for any keypress
-      LDA   <$92
-      BEQ   >
-      JSR   NTMovSomeKeyPressed
-!
-
-NTMovEnterHere:
-; Show Video buffer 0
-      TST   <$02                    ; [6] Tickle the vsync Interrupt
-!     TST   <$03                    ; [6] Check for vsync Interrupt
-      BPL   <                       ; [3] If not yet then keep looping
-      LDD   #$30*4*$100+00          ; [3] Bank $30 is the start of video Display, Clear B
-      STD   <$9D                    ; [5] Update the VidStart pointer
-; load audio buffer 1
-NTMovEndAudBuf1:
-      LDU   #$FFFF                  ; Point at the end of the audio buffer (self mod)
-      JSR   NTMovLoadAudioBuff
-; load video buffer 1
-      LDD   #$3334                  ; [3] Banks 3 & 4 & 5
-      JSR   NTMovLoadVideoBuff      ; Set memory banks and load a frame
-; Loop audio buffer 0 until end of buffer reached
-!     LDA   >NTMovAudioDone         ; Get Value (FIRQ will clear it when it reaches the end of the buffer)
-      BEQ   <                       ; Loop until we get the clear signal
-; Set audio playback to the start of audio buffer 1
-      LDD   #SDCNTSAudioBuffer1     ; Point the audio player start at Audio Buffer 1
-      STD   NTMovGetSample+1        ; Set the value
-NTMovCalcEndAudioBuff1:
-      ADDA  #$FF                    ; Self mod the number of 256 byte blocks the audio buffer is
-      STA   NTMovAudioCMP+1         ; Save value for FIRQ to test for to see if it's reached the end of the buffer
-      CLR   >NTMovAudioDone         ; Clear it so it's ready for next audio wait for audio to complete loop
-
-; Scan keyboard for any keypress
-      LDA   <$92
-      BEQ   >
-      JSR   NTMovSomeKeyPressed
-!
-
-; show video buffer 1
-      TST   <$02                    ; [6] Tickle the vsync Interrupt
-!     TST   <$03                    ; [6] Check for vsync Interrupt
-      BPL   <                       ; [3] If not yet then keep looping
-      LDD   #$33*4*$100             ; [3] Bank $33 is the start of video Display, Clear B
-      STD   <$9D                    ; [5] Update the VidStart pointer
-; load audio buffer 0
-NTMovEndAudBuf0:
-      LDU   #$FFFF                  ; Point at the end of the audio buffer (self mod)
-      JSR   NTMovLoadAudioBuff
-; load video buffer 0
-      LDD   #$3031                  ; [3] Banks 0 & 1 & 2
-      JSR   NTMovLoadVideoBuff      ; Set memory banks and load a frame
-; Loop audio buffer 1 until end of buffer reached
-!     LDA   >NTMovAudioDone         ; Get Value (FIRQ will clear it when it reaches the end of the buffer)
-      BEQ   <                       ; Loop until we get the clear signal
-      JMP   NTMovMainLoop
-; Loop end
-
-
-
-
 
 ; Palette changing every frame:
 ; Each Sector will hold 512 / 16 = 32 frames of palette info
@@ -501,6 +413,10 @@ NTMovLoadVideoBuff:
       STB   <$A6                    ; [4] Configure $C000
 NTMovVidBlast:
       LDU   #$8000+128*167          ; Start drawing the image at row 167 fills bottom up
+      LEAU  -32,U                   ; Move start location
+      JMP   Blast192x144U
+
+
 NTMovSetVidSectors:
       LDA   #36                     ; [2] Self mod, 36 sectors of 512 bytes each to be read, 512 * 36 = 18,432 bytes per frame
       STA   <$42                    ; [3] save the sector counter
@@ -970,6 +886,223 @@ MovBlastSectorU:
       LBNE  @SectorLoop       ; [3] Keep looping until we've blasted all sectors into buffer ,U
       RTS                     ; [5] Return
 
+; Blast the video into the buffer
+Blast192x144U:
+      LDA   #9
+      STA   @MainLoopCount
+@Loop0:
+; -----------------------------
+; Sector 1 = 5 rows + 32 bytes
+; -----------------------------
+      LDA   #5
+      JSR   @BlastFullRows          ; 480 bytes normal
+      JSR   @Blast30_NoRowAdvance   ; 510 bytes
+      LDD   <$4A                    ; [5] 2 bytes
+      PSHU  D                       ; [7] save 2 bytes on U stack
+; Wait for the CoCoSDC to fill it's buffer and indicate it's ready
+!     LDA   <$48
+      ASRA
+      LBCC  SDCMovieDone      ; Signify we've reached the end
+      BEQ   <
+; -----------------------------
+; Sector 2 = 64 bytes + 4 rows + 64 bytes
+; -----------------------------
+; Blast 60
+      JSR   @Blast60_NoRowAdvance
+      LDD   <$4A
+      LDX   <$4A
+      NOP
+      LDY   <$4A
+      PSHU  X,Y         ; final 4 bytes of the 64-byte partial row
+      LEAU  96-128,U    ; Next row
+; 1st byte of new row
+      PSHU  D           ; Write 2 bytes, start of first row
+; 1 row of 94 bytes
+; Do the rest of this row 94
+      LDA   #4          ; 4 * 96 = 384
+      STA   @InLoopCount     
+!     JSR   @Blast90_NoRowAdvance
+      LDD   <$4A
+      LDX   <$4A
+      NOP
+      LDY   <$4A
+      PSHU  X,Y         ; 4 bytes to finish current row
+      LEAU  96-128,U    ; Next row
+      PSHU  D           ; Write 2 bytes
+      DEC   @InLoopCount
+      BNE   <
+;
+      JSR   @Blast60_NoRowAdvance
+      LDD   <$4A
+      PSHU  D
+; Wait for the CoCoSDC to fill it's buffer and indicate it's ready
+!     LDA   <$48
+      ASRA
+      LBCC  SDCMovieDone      ; Signify we've reached the end
+      BEQ   <
+; -----------------------------
+; Sector 3 = 36 + 4*96 + 92 = 512
+; -----------------------------
+      JSR   @Blast30_NoRowAdvance
+      LDD   <$4A
+      LDX   <$4A
+      NOP
+      LDY   <$4A
+      PSHU  Y           ; final 2 bytes of the 32-byte partial row
+      LEAU  96-128,U    ; Next row
+      PSHU  D,X         ; Write 4 bytes
+; wrote 36 bytes
+      LDA   #4          ; 4 rows using 90 + split 6 bytes each
+      STA   @InLoopCount     
+@InLoop1:
+      BSR   @Blast90_NoRowAdvance
+      LDD   <$4A
+      LDX   <$4A
+      NOP
+      LDY   <$4A
+      PSHU  Y
+      LEAU  96-128,U    ; Next row
+      PSHU  D,X         ; 4 bytes carried into next row
+      DEC   @InLoopCount
+      BNE   @InLoop1
+;
+; Final row of this sector already has 4 bytes written.
+; Need 92 more bytes: 90 + final 2.
+; This keeps the last sector read as LDD / PSHU D.
+      JSR   @Blast90_NoRowAdvance   ; 90 bytes
+      LDD   <$4A                    ; final 2 bytes of sector
+      PSHU  D
+      LEAU  96-128,U                ; completed this row
+;
+; Wait for the CoCoSDC to fill it's buffer and indicate it's ready
+!     LDA   <$48
+      ASRA
+      LBCC  SDCMovieDone      ; Signify we've reached the end
+      BEQ   <
+;
+      DEC   @MainLoopCount
+      LBNE  @Loop0
+      RTS
+@MainLoopCount    RMB   1
+@InLoopCount      RMB   1
+;
+; This routine writes A full rows. Each row is 96 bytes.
+@BlastFullRows:
+      STA   <$42
+@FullRowLoop:
+      BSR   @Blast96_NoRowAdvance
+      LEAU  96-128,U          ; move to right edge of row above
+      DEC   <$42
+      BNE   @FullRowLoop
+      RTS
+;
+; 96 byte
+@Blast96_NoRowAdvance:
+      LDD   <$4A
+      LDX   <$4A
+      NOP
+      LDY   <$4A
+      PSHU  D,X,Y
+;
+@Blast90_NoRowAdvance:
+      LDD   <$4A
+      LDX   <$4A
+      NOP
+      LDY   <$4A
+      PSHU  D,X,Y
+;
+      LDD   <$4A
+      LDX   <$4A
+      NOP
+      LDY   <$4A
+      PSHU  D,X,Y
+;
+      LDD   <$4A
+      LDX   <$4A
+      NOP
+      LDY   <$4A
+      PSHU  D,X,Y
+;
+      LDD   <$4A
+      LDX   <$4A
+      NOP
+      LDY   <$4A
+      PSHU  D,X,Y
+;
+      LDD   <$4A
+      LDX   <$4A
+      NOP
+      LDY   <$4A
+      PSHU  D,X,Y
+;
+; 60 bytes
+@Blast60_NoRowAdvance:
+      LDD   <$4A
+      LDX   <$4A
+      NOP
+      LDY   <$4A
+      PSHU  D,X,Y
+;
+      LDD   <$4A
+      LDX   <$4A
+      NOP
+      LDY   <$4A
+      PSHU  D,X,Y
+;
+      LDD   <$4A
+      LDX   <$4A
+      NOP
+      LDY   <$4A
+      PSHU  D,X,Y
+;
+      LDD   <$4A
+      LDX   <$4A
+      NOP
+      LDY   <$4A
+      PSHU  D,X,Y
+;
+      LDD   <$4A
+      LDX   <$4A
+      NOP
+      LDY   <$4A
+      PSHU  D,X,Y
+;
+; For 30 bytes
+@Blast30_NoRowAdvance:
+      ; five 6-byte blocks = 30 bytes
+      ; inline this for speed
+      LDD   <$4A
+      LDX   <$4A
+      NOP
+      LDY   <$4A
+      PSHU  D,X,Y
+;
+      LDD   <$4A
+      LDX   <$4A
+      NOP
+      LDY   <$4A
+      PSHU  D,X,Y
+;
+      LDD   <$4A
+      LDX   <$4A
+      NOP
+      LDY   <$4A
+      PSHU  D,X,Y
+;
+      LDD   <$4A
+      LDX   <$4A
+      NOP
+      LDY   <$4A
+      PSHU  D,X,Y
+;
+      LDD   <$4A
+      LDX   <$4A
+      NOP
+      LDY   <$4A
+      PSHU  D,X,Y
+      RTS
+
+
 ; FIRQ for playing movie audio
 NTMovieFIRQ:
       STA   @FIRQ0Restore+1   ; Save exit value of A
@@ -1154,6 +1287,8 @@ NTMovSomeKeyPressed:
       BNE   >                 ; Skip ahead if not
 ; 8 Key press jump to 80%
       LDB   #8*3              ; Point at 80% Value
+;
+;      JMP   Debug            ; For debugging
 ;
       BRA   @GetLBN
 ; Check for 2
@@ -1526,7 +1661,6 @@ NTMovJupLBN:
       JSR   OpenSDC_File_X_At_AU
       JMP   NTMovContinueMovie      ; all set so Jump back to movie playback, it will put it back in double speed
 
-
 Debug:
 ; Insert code below for debugging
       PSHS  A
@@ -1547,3 +1681,38 @@ ShowRegs:
       TFR   A,DP
       PULS  D
       JMP   ShowValues
+
+DragPrint:
+      PULS  X                 ; X points at the text (null terminated)
+!     LDA   ,X+
+      BEQ   >
+      BSR   DragText          ; Print A on screen
+      BRA   <
+!     JMP   ,X
+
+; Put some text on screen
+;
+; Need to set CC3ScreenStart to the 8k block we want as the start of our screen
+; Video Buffer0 = $30,$31,$32 - it will be loaded at $6000, so references for screen location must be from $6000
+; Video Buffer1 = $33,$34,$35
+;
+; x0 and y0 are the text printing locations setup normally with LOCATE x0,y0
+DragText:
+      PSHS  DP
+      LDB   #$17
+      TFR   B,DP
+;
+      LDB   #$30                          ; Video Buffer0
+      STB   CC3ScreenStart                ; Set it
+      LDU   GraphicCURPOS                 ; Get where the text should be printed
+      LDY   #AtoGraphics_Screen_HIG136    ; Y points at the routine to do, Go print A to graphic screen
+      JSR   DoCC3Graphics                 ; Prep for CoCo 3 graphics and then JSR ,Y and restore & return
+;
+      LDB   #$33                          ; Video Buffer1
+      STB   CC3ScreenStart                ; Set it
+      STU   GraphicCURPOS                 ; Set where the text should be printed
+      LDY   #AtoGraphics_Screen_HIG136    ; Y points at the routine to do, Go print A to graphic screen
+      JSR   DoCC3Graphics                 ; Prep for CoCo 3 graphics and then JSR ,Y and restore & return
+;
+      PULS  DP,PC
+

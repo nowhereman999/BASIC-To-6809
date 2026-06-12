@@ -1024,6 +1024,40 @@ Select Case v
                                 End If
                             End If
                         End If
+                        If v = &H34 Then
+                            ' Print #-4
+                            v = Array(x): x = x + 1
+                            If v = &HF5 Then
+                                v = Array(x): x = x + 1
+                                If v <> &H2C Then
+                                    Print "Print command should have a comma after # on";: GoTo FoundError
+                                Else
+                                    If GModeName$(Gmode) <> "FG6R" Then
+                                        Print "PRINT #-4 only works with GMODE 16 FG6R on";: GoTo FoundError
+                                    End If
+                                    PrintCC3 = 0
+                                    PrintD$ = "PRINT_D_Graphics_Screen_6Bit_FG6R": PrintA$ = "AtoGraphics_Screen_6Bit_FG6R": PrintDev$ = " to 42 column graphic screen"
+                                    GoTo GetSectionToPrint
+                                End If
+                            End If
+                        End If
+                        If v = &H35 Then
+                            ' Print #-5
+                            v = Array(x): x = x + 1
+                            If v = &HF5 Then
+                                v = Array(x): x = x + 1
+                                If v <> &H2C Then
+                                    Print "Print command should have a comma after # on";: GoTo FoundError
+                                Else
+                                    If GModeName$(Gmode) <> "FG6R" Then
+                                        Print "PRINT #-5 only works with GMODE 16 FG6R on";: GoTo FoundError
+                                    End If
+                                    PrintCC3 = 0
+                                    PrintD$ = "PRINT_D_Graphics_Screen_6Bit_Inverse_FG6R": PrintA$ = "AtoGraphics_Screen_6Bit_Inverse_FG6R": PrintDev$ = " to inverse 42 column graphic screen"
+                                    GoTo GetSectionToPrint
+                                End If
+                            End If
+                        End If
                     End If
                 End If
                 Print "Can't handle printing to other devices on";: GoTo FoundError

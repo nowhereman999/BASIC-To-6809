@@ -1,9 +1,29 @@
-; Play Movie from the CoCoSDC - Glen Hewlett
+; Play Movie from the CoCoSDC
 ; *****************************************************
-; To convert any movie to the proper format for this video player use similar to this:
-; ./MakeNTM106 -i=MovieName.mkv -name="Full Movie Name here (2026)" -o=MOVIE.NTM -g136 -s=.75 -f9 -a2 -p1 -c0
-*****************************************************
+; To convert any movie to the proper format for the video converter 1st use ffmpeg:
+; mkdir -p frames && \
+; ffmpeg -i framecount_timecode_tone_plus_beep_bars.mp4 \
+;  -map 0:v:0 \
+;  -vf "fps=20,scale=256:144:force_original_aspect_ratio=decrease:flags=lanczos+accurate_rnd+full_chroma_int,pad=256:144:(ow-iw)/2:(oh-ih)/2:black,scale=128:144:flags=lanczos+accurate_rnd+full_chroma_int,setsar=1" \
+;  -start_number 0 frames/frame%06d.png \
+;  -map 0:a:0 -ac 1 -ar 11828 -c:a pcm_u8 -f u8 \
+;  -af "aresample=11828:filter_size=256:cutoff=1.0" \
+;  audio.u8
 ;
+; 2nd step use the special MakeNTM program to convert the .png frames and audio.u8 into a format that this utility will play
+;
+; ./MakeNTM -d1 frames/frame%06d.png audio.u8 COCO3MOV.NTM
+;
+*****************************************************
+
+;      ALIGN $100                    ; Make the audio buffers start at an $00 value
+;SDCNTSAudioBuffer0      RMB   512*4 ; Make it 2048 max
+;SDCNTSAudioBuffer1      RMB   512*4 ; Make it 2048 max
+;NTMovPalette            RMB   512
+;SectorCount             FCB   $00
+;NTMovAudioDone          FCB   $00   ; Flag FIRQ is done playing this frame
+;NTMovDelay              EQU   777
+
 ;
 ; Reserve space in 8K bank @ $E000 for audio buffers and palette buffer
 SDCNTSAudioBuffer0      EQU   $E000                         ; Audio Buffer 0 starts here
@@ -122,15 +142,13 @@ MovieSDCStack:
       BEQ   <                 ; [3] If A = 0 then keep waiting
       LEAS  2,S               ; Fix the stack
 
-      LDA	#2		      ; Enable only keyboard interrupt
-	STA	<$92
-
 ; Important info from the file header
 ; Bytes
 NTMovVersion      EQU   0                 ; word - Version # only supports version 1 so far
 NTMovGMode        EQU   NTMovVersion+2    ; byte - graphics mode value
-NTMovEndframe     EQU   NTMovGMode+1      ; 32 bit value - Number of frames in this movie
-NTMovWidth        EQU   NTMovEndframe+4   ; word - width
+; Common values:
+; %00011001 = 512x192x256 NTSC composite 
+NTMovWidth        EQU   NTMovGMode+1      ; word - width
 NTMovHeight       EQU   NTMovWidth+2      ; byte - height
 NTMovFPS          EQU   NTMovHeight+1     ; byte - frame rate
 NTMovVidSectors   EQU   NTMovFPS+1        ; byte - # of video sectors needed to load for each frame
@@ -296,11 +314,12 @@ NTMovCalcEndAudioBuff0:
       CLR   >NTMovAudioDone         ; Clear it so it's ready for next audio wait for audio to complete loop
 
 ; Scan keyboard for any keypress
-      LDA   <$92
+      LDA   <$00   ; $FF00
+      COMA
+      LSLA
       BEQ   >
       JSR   NTMovSomeKeyPressed
 !
-
 NTMovEnterHere:
 ; Show Video buffer 0
       TST   <$02                    ; [6] Tickle the vsync Interrupt
@@ -327,11 +346,12 @@ NTMovCalcEndAudioBuff1:
       CLR   >NTMovAudioDone         ; Clear it so it's ready for next audio wait for audio to complete loop
 
 ; Scan keyboard for any keypress
-      LDA   <$92
+      LDA   <$00   ; $FF00
+      COMA
+      LSLA
       BEQ   >
       JSR   NTMovSomeKeyPressed
 !
-
 ; show video buffer 1
       TST   <$02                    ; [6] Tickle the vsync Interrupt
 !     TST   <$03                    ; [6] Check for vsync Interrupt
@@ -392,11 +412,12 @@ NTMovCalcEndPalAudioBuff0:
       CLR   >NTMovAudioDone         ; Clear it so it's ready for next audio wait for audio to complete loop
 
 ; Scan keyboard for any keypress
-      LDA   <$92
+      LDA   <$00   ; $FF00
+      COMA
+      LSLA
       BEQ   >
       JSR   NTMovSomeKeyPressed
 !
-
 NTMovEnterHerePalChang:
 ; Show Video buffer 0
       TST   <$02                    ; [6] Tickle the vsync Interrupt
@@ -440,11 +461,12 @@ NTMovCalcEndPalAudioBuff1:
       CLR   >NTMovAudioDone         ; Clear it so it's ready for next audio wait for audio to complete loop
 
 ; Scan keyboard for any keypress
-      LDA   <$92
+      LDA   <$00                    ; $FF00
+      COMA
+      LSLA
       BEQ   >
       JSR   NTMovSomeKeyPressed
 !
-
 ; show video buffer 1
       TST   <$02                    ; [6] Tickle the vsync Interrupt
 !     TST   <$03                    ; [6] Check for vsync Interrupt
@@ -488,11 +510,11 @@ NTMovPalUpEndAudBuf0:
 
 ; Load the palette buffer, reset pointer to the start of the buffer
 NTMovLoadPaletteBuff:
-      LDU   #NTMovPalette+512       ; Set the buffer end location
+      LDU   #NTMovPalette+512
       LDD   #NTMovPalette           ; Get the Palette start value
       STD   NTMovPalettePointer+1   ; Save the pointer
       LDA   #1
-      BRA   MovBlastSectorU         ; Stack blast to fill #A of 512 Byte sectors to software Stack location ,U then return
+      BRA   MovBlastSectorU         ; Stack blast to fill #A of 512 Bytes sectors to software Stack location ,U then return
 
 ; Load the video buffer
 NTMovLoadVideoBuff:
@@ -504,8 +526,9 @@ NTMovVidBlast:
 NTMovSetVidSectors:
       LDA   #36                     ; [2] Self mod, 36 sectors of 512 bytes each to be read, 512 * 36 = 18,432 bytes per frame
       STA   <$42                    ; [3] save the sector counter
-      INC  >NTMovCurFrameCount+2
-      BNE   @SectorLoop
+      ADDA  >NTMovCurFrameCount+2
+      STA   >NTMovCurFrameCount+2
+      BCC   @SectorLoop
       INC   >NTMovCurFrameCount+1
       BNE   @SectorLoop
       INC   >NTMovCurFrameCount
@@ -1154,7 +1177,6 @@ NTMovSomeKeyPressed:
       BNE   >                 ; Skip ahead if not
 ; 8 Key press jump to 80%
       LDB   #8*3              ; Point at 80% Value
-;
       BRA   @GetLBN
 ; Check for 2
 !     LDA   #%11111011        ; Strobe keyboard columns 2, so we can catch 2
@@ -1187,7 +1209,7 @@ NTMovSomeKeyPressed:
       LDB   #4*3              ; Point at 40% Value
       BRA   @GetLBN
 ; Check for 5
-!     LDA   #%11011111        ; Strobe keyboard columns 5, so we can catch 5 or left arrow
+!     LDA   #%11011111        ; Strobe keyboard columns 5, so we can catch 5
       STA   <$02              ; $FF02
       LDA   <$00              ; Read keyboard @ $FF00
 ;        bits 76543210
@@ -1196,11 +1218,6 @@ NTMovSomeKeyPressed:
 ; 5 Key press jump to 50%
       LDB   #5*3              ; Point at 50% Value
       BRA   @GetLBN
-;        bits 76543210
-!     BITA  #%00001000        ; Test Row bit 3 for a left arrow
-      BNE   >                 ; Skip ahead if not
-; Left arrow key
-      JMP   NTMovSkipBackward ; Move playback location backwards
 ; Check for 6
 !     LDA   #%10111111        ; Strobe keyboard columns 6, so we can catch 6 or right arrow
       STA   <$02              ; $FF02
@@ -1264,6 +1281,21 @@ NTMovSpacePressed:
       BNE   @CountVsyncs
 ;
 
+* Scan keyboard
+* CoCo Keyboard mapping
+* Read keyboard  CoCo Keyboard mapping
+*Row                Data
+*bits   7    6    5    4    3    2    1    0
+*0      G    F    E    D    C    B    A    @
+*1      O    N    M    L    K    J    I    H
+*2      W    V    U    T    S    R    Q    P
+*3     SPC  RGT  LFT   DN   UP   Z    Y    X
+*4      '    &    %    $    #    "    !    0
+*4      7    6    5    4    3    2    1
+*5      ?    >    =    <    +    *    )    (
+*5      /    .    _    ,    ;    :    9    8
+*6   SHIFTS  F2   F1  CTRL ALT  BRK  CLR  ENT
+***********************************************************
 @PauseLoop:
       LDA   #%11111011        ; Strobe keyboard columns 2, so we can catch BREAK key
       STA   <$02              ; $FF02 ..which contains the BREAK key
@@ -1289,49 +1321,19 @@ NTMovSpacePressed:
       BRA   @PauseLoop
 
 
-NTMovSkipForwardSecs    EQU   120                     ; Amount of seconds to move forward when right arrow is pressed
-NTMovSkipBackwardSecs   EQU   NTMovSkipForwardSecs/2  ; Amount of seconds to move backwards when left arrow is pressed
-;
-; NTMovCurFrameCount = 24 bit value, current frame being played
-; TargetFrame = CurrentFrame - BackSeconds * FPS
-NTMovSkipBackward:
-; Get the amount of seconds to skip backwards as a 32 bit value
-;
-; Copy Current Frame count onto the stack
-      CLRA
-      LDB   >NTMovCurFrameCount
-      LDX   >NTMovCurFrameCount+1
-      PSHS  D,X                           ; Put the current frame count on the stack as a 32 bit value
-;
-      LDX   #NTMovSkipBackwardSecs/65536
-      LDU   #NTMovSkipBackwardSecs
-      PSHS  X,U                           ; Save 32 bit version of skip forward seconds, value on the stack
-      CLRA
-      LDB   >NTMovHeader+NTMovFPS         ; Get frames per second
-      PSHS  D
-      CLRB
-      PSHS  D                             ; Save 32 bit version on the stack
-      JSR   Mul_UnSigned_Both_32          ; ,S (4 bytes) * 4,S (4 bytes) result 4 byte (32 bit) value is at ,S also full 64 bit value is @ RESULT
-;
-; Stack is now 4,S = CurrentFrame and ,S = Backseconds * FPS
-      JSR   Subtract_4ByteFrom4Byte       ; Value1 @ 4,S - Value2 @ ,S result (4 bytes) on the stack
-; TargetFrame is now on the stack
-      BPL   @EndFrameIsHigher             ; Go move player pointer and continue playback
-      LEAS  4,S                           ; Otherwise (remove negative position), Fix the stack
-      JMP   ,Y                            ; And return
 ;
 ; NTMovCurFrameCount = 24 bit value, current frame being played
 ; TargetFrame = CurrentFrame + 120 * FPS
+NTMovSkipForwardSecs    EQU   120                     ; Amount of seconds to move forward when right arrow is pressed
+NTMovSkipBackwardSecs   EQU   NTMovSkipForwardSecs/2  ; Amount of seconds to move backwards when left arrow is pressed
 NTMovSkipForward:
-; Get the amount of seconds to skip forward as a 32 bit value
-      LDX   #NTMovSkipForwardSecs/65536
+      LDX   #$0000
       LDU   #NTMovSkipForwardSecs
-      PSHS  X,U                           ; Save 32 bit version of skip forward seconds, value on the stack
+      PSHS  X,U                           ; Save 32 bit version on the stack
       CLRA
       LDB   >NTMovHeader+NTMovFPS         ; Get frames per second
       PSHS  D
-      CLRB
-      PSHS  D                             ; Save 32 bit version on the stack
+      PSHS  X                             ; Save 32 bit version on the stack
       JSR   Mul_UnSigned_Both_32          ; ,S (4 bytes) * 4,S (4 bytes) result 4 byte (32 bit) value is at ,S also full 64 bit value is @ RESULT
 ;
       CLRA
@@ -1340,24 +1342,8 @@ NTMovSkipForward:
       PSHS  D,X                           ; Put the current frame count on the stack as a 32 bit value
 ;
       JSR   Add_4ByteTo4Byte              ; ,S (4 bytes) + 4,S (4 bytes) result 4 byte (32 bit) value is at ,S
-; Stack now has the TargetFrame
-; Make sure TargetFrame is not past the end of the Movie
-      LDX   >NTMovHeader+NTMovEndframe    ; Get Endframe value = MSWord
-      CMPX  ,S                            ; Compare it with TargetFrame
-      BEQ   >                             ; If they are the same check the LSWords
-      BHI   @EndFrameIsHigher             ; We are good to skip to this location in the movie
-      BRA   @EndFrameIsLower              ; If it's lower then fix the stack and return
-!     LDX   >NTMovHeader+NTMovEndframe+2  ; Get Endframe value = LSWord
-      CMPX  2,S                           ; Compare it with TargetFrame
-      BHI   @EndFrameIsHigher             ; We are good to skip to this location in the movie
-;
-@EndFrameIsLower:
-; If we get here it wants to jump past the end of the movie
-      LEAS  4,S                           ; remove TargetFrame off the stack
-      JMP   ,Y                            ; Return/Resume playback
-;
-@EndFrameIsHigher:
 ; TargetFrame is now on the stack as a 32 bit number
+;
       LDA   >NTMovHeader+NTMovPalMode     ; Get the Palette Changing flag 0 = not changing, 1 = changing
       BNE   NTMovPalMode1                 ; Playback mode will change the palette each frame
 ; PalMode 0
@@ -1378,7 +1364,7 @@ NTMovSkipForward:
 ; GroupIndex = TargetFrame >> 5
 ; StartSector = 1 + GroupIndex * (1 + 32 * (VidSectors + AudSectors))
 NTMovPalMode1:
-; Divide by 32 bit number on the stack by 32
+; Divide 32 bit number on the stack by 32
       LDB   #5                ; To divide by 32 we shift the value right 5 times
 !     LSR   ,S
       ROR   1,S
@@ -1410,6 +1396,33 @@ NTMovPalMode1:
 !     JSR   Mul_UnSigned_Both_32          ; ,S (4 bytes) * 4,S (4 bytes) result 4 byte (32 bit) value is at ,S also full 64 bit value is @ RESULT
 ; LBN is 24 bits, so move the stack
       LEAS  1,S
+      BRA   @Add1_SetLBN                  ; Go add 1 to the 24 bit LBN value on the stack and update the LBN and play from that point
+;
+; Playback movie from D second position
+; X = TargetSeconds to resume playback of movie from
+; Set position to play and continue
+; StartSector = 1 + ((TargetSeconds * FPS) \ 32) * BuildJumpSectorRateNum
+NTMov_PlayFromXSeconds:
+      CLRA
+      LDB   >NTMovHeader+NTMovFPS   ; Get the FPS of the movie
+      PSHS  D,X               ; Save FPS & TargetSeconds on the stack
+      JSR   MUL16             ; ,S * 2,S result with D = MSWORD ,S & X = LSWORD of ,S * 2,S
+      PSHS  D                 ; Stack now has a 32 bit result of the multiplication
+;
+; Divide by 32 bit number on the stack by 32
+      LDB   #5                ; To divide by 32 we shift the value right 5 times
+!     LSR   ,S
+      ROR   1,S
+      ROR   2,S
+      ROR   3,S
+      DECB
+      BNE   <
+;
+      LDX   >NTMovHeader+NTMovJumpSectorRateNum  ; Get the special JumpSectorNumber for this specific movie
+      STX   ,S                ; Save it on the stack (over write the MS word of the division above)
+; Do multiply
+      JSR   MUL16             ; ,S * 2,S result with D = MSWORD ,S & X = LSWORD of ,S * 2,S
+      PSHS  B                 ; Stack now has a 24 bit result of the multiplication
 ;
 ; Go add 1 to the 24 bit LBN value on the stack and update the LBN and play from that point
 @Add1_SetLBN                  
@@ -1419,7 +1432,7 @@ NTMovPalMode1:
       INC   1,S
       BNE   NTMovJupLBN
       INC   ,S
-; We now have the sector to jump to (24 bit LBN) on the stack
+; We now have the sector to jump to (LBN) on the stack
 NTMovJupLBN:
 ; Stop the stream mode
       ORCC  #$50                    ; Disable the Interrupts
@@ -1428,10 +1441,6 @@ NTMovJupLBN:
       LDU   #$FFFF                  ; Signify we don't want to fill a 256 byte buffer
       JSR   CommSDC                 ; Send to the CoCoSDC
 ;
-; Calculate the new CurrentFrame
-      LDA   >NTMovHeader+NTMovPalMode     ; Get the Palette Changing flag 0 = not changing, 1 = changing
-      BNE   @PalMode1                     ; Playback mode changes the palette
-; Palmode 0
 ; CurrentFrame = (SectorNum - 1) \ (VideoSectors + AudioSectors)
       CLRA
       LDB   ,S
@@ -1454,34 +1463,12 @@ NTMovJupLBN:
 ; Value2 is stored at ,S  (Divisor)
 ; After Division the stack is moved forward 4 bytes and the result (Quotient) is stored at ,S
       JSR   Div_UnSigned_NoRounding_32
-      BRA   @SaveNewFrame                 ; 32 bit frame number is on the stack
 ;
-; Pal Mode = 1, cahning palette every frame
-@PalMode1:
-; GroupSize = 1 + 32 * (VideoSectors + AudioSectors)
-; CurrentFrame = ((SectorNum - 1) / GroupSize) * 32
-;
-; Calculate (SectNum - 1)
-      CLRA
-      LDB   ,S                      ; Get the new Sector Number off the stack
-      LDU   1,S                     ; Get the new Sector Number off the stack
-      PSHS  D,U                     ; Save SectorNum as a 32 bit number  
-      CLRB
-      LDU   #$001
-      PSHS  D,U                     ; Save 32 bit version of # 1
-      JSR   Subtract_4ByteFrom4Byte ; Value1 @ 4,S - Value2 @ ,S result (4 bytes) on the stack
-; (SectNum - 1) is now on the stack as a 32 bit number
-; Get GroupSize on the stack newxt so they will be in the correct order on the stack do 32 bit division
-;
-; (VidSectors + AudSectors)
-      LDA   >NTMovHeader+NTMovVidSectors  ; A = VidSectors
-      ADDA  >NTMovHeader+NTMovAudSectors  ; A = A + AudSectors
-      PSHS  A
-      LDD   #$0000
-      PSHS  D
-      PSHS  A
-; (VidSectors + AudSectors) is now on the stack as a 32 bit number
-; * 32
+; 24 bit sector number is on the stack
+      LDA   >NTMovHeader+NTMovPalMode     ; Get the Palette Changing flag 0 = not changing, 1 = changing
+      BEQ   @PalMode0                     ; Playback mode does not change the palette
+; If Palmode = 1
+; CurrentFrame = ((SectorNum - 1) \ GroupSize) * 32
 ; Multiply 32 bit number on the stack by 32
       LDB   #5                ; To multiply by 32 we shift the value left 5 times
 !     LSL   3,S
@@ -1490,33 +1477,11 @@ NTMovJupLBN:
       ROL   ,S
       DECB
       BNE   <
-; + 1, Add 1 to the 32 bit value on the stack
-      INC   3,S
-      BNE   @GotGroupSize
-      INC   2,S
-      BNE   @GotGroupSize
-      INC   1,S
-      BNE   @GotGroupSize
-      INC   ,S
-; GroupSize is now on the stack as a 32 bit number
-@GotGroupSize:
-; Divide
-      JSR   Div_UnSigned_NoRounding_32    ; Divide 4,S / ,S result (4 bytes) on the stack
-; * 32
-; Multiply 32 bit number on the stack by 32
-      LDB   #5                ; To multiply by 32 we shift the value left 5 times
-!     LSL   3,S
-      ROL   2,S
-      ROL   1,S
-      ROL   ,S
-      DECB
-      BNE   <
-;
-; Save the new 32 bit frame value as 24 bit current frame value
-@SaveNewFrame:
+; Pal Mode = 0
+@PalMode0:
       PULS  D,X                           ; Get Current 32 bit value frame, off the stack
-      STB   >NTMovCurFrameCount
-      STX   >NTMovCurFrameCount+1         ; Save as 24 bit value as the current frame
+      STB   NTMovCurFrameCount
+      STX   NTMovCurFrameCount+1          ; Save as the current frame
 ;
       PULS  A,U                     ; A & U have the 24 bit LBN to send to the CoCoSDC to set where to continue playback from
       LDX   #_StrVar_PF00           ; X points at the filename in the buffer, ready to be used with "m:" at the beginning already
@@ -1526,8 +1491,6 @@ NTMovJupLBN:
       JSR   OpenSDC_File_X_At_AU
       JMP   NTMovContinueMovie      ; all set so Jump back to movie playback, it will put it back in double speed
 
-
-Debug:
 ; Insert code below for debugging
       PSHS  A
       TFR   DP,A

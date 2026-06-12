@@ -1155,6 +1155,8 @@ NTMovSomeKeyPressed:
 ; 8 Key press jump to 80%
       LDB   #8*3              ; Point at 80% Value
 ;
+;      JMP   Debug            ; For debugging
+;
       BRA   @GetLBN
 ; Check for 2
 !     LDA   #%11111011        ; Strobe keyboard columns 2, so we can catch 2
