@@ -6,12 +6,10 @@
 ;
 ;
 ; CoCo 1 RAM layout used by this player:
-;   $0600-$09FF  1K audio buffer
 ;   $0E00-$25FF  screen buffer 0
 ;   $2600-$3DFF  screen buffer 1
-;   $4600-$4640  header cache with only the fields needed after startup
-NTMovHeader             EQU   $4600                         ; Small permanent cache for runtime header values
-NTMovHeaderCacheSize    EQU   65                            ; Header bytes 0..64, through the 9 percent-jump LBN entries
+;   NTMovCacheEndframe-NTMovCacheEnd  32 byte runtime header cache
+;   NTMovAudioBuffer-NTMovAudioBufferEnd  1K local audio/header buffer
 ;
 NTMovCurFrameCount      EQU   Temp2                         ; 3 byte's to keep track of the currently played frame
 ;
@@ -21,8 +19,6 @@ NTMovCurFrameCount      EQU   Temp2                         ; 3 byte's to keep t
 ;   12 sectors = 6144 bytes of stack-blasted GMODE 16 video
 ; Audio timing comes from playing the 1024 byte audio buffer at fixed
 ; points while loading the 6144 byte hidden video buffer.
-NTMovAudioBuffer        EQU   $0600
-NTMovAudioBufferEnd     EQU   NTMovAudioBuffer+$400-1
 
 SDCPLAYMOVIE:
 ; Disable any high speed options
@@ -100,14 +96,25 @@ MovieSDCStack:
       BNE   <
 ; Cache only the header bytes needed later by the player.  The audio buffer
 ; is reused for audio sectors as soon as frame loading starts.
-      LDX   #NTMovAudioBuffer
-      LDY   #NTMovHeader
-      LDB   #NTMovHeaderCacheSize
-@CopyHeaderCache:
+      LDX   #NTMovAudioBuffer+NTMovEndframe
+      LDY   #NTMovCacheEndframe
+      LDB   #4
+@CopyHeaderEndframeCache:
       LDA   ,X+
       STA   ,Y+
       DECB
-      BNE   @CopyHeaderCache
+      BNE   @CopyHeaderEndframeCache
+      LDX   #NTMovAudioBuffer+NTMovFPS
+      LDA   ,X
+      STA   >NTMovCacheFPS
+      LDX   #NTMovAudioBuffer+NTMovPercentLBN
+      LDY   #NTMovCachePercentLBN
+      LDB   #27
+@CopyHeaderPercentCache:
+      LDA   ,X+
+      STA   ,Y+
+      DECB
+      BNE   @CopyHeaderPercentCache
 ; Check if SDC is ready for the first frame sector.
       LEAS  -2,S              ; Temp stack placement, just in case it exits below
 !     LDA   <$48              ; Poll status byte for the next 512 byte sector
@@ -288,7 +295,7 @@ NTMovLoadVideoBuff:
       LDD   <$4A                          ; 5
       NOP                                 ; 2 Waste CPU cycles
       STA   <$20                          ; 4 DAC sample 1
-      LDY   #NTMovAudioBufferEnd+1        ; 4 first audio sector fills $0800-$09FF
+      LDY   #NTMovAudioBufferEnd+1        ; 4 first audio sector fills the local audio buffer
       STB   -1,Y                          ; 5
 ;
       LDD   >NTMovCurFrameCount+1         ; 6
@@ -710,13 +717,15 @@ NTMovSomeKeyPressed:
       JMP   NTMovResumePlayback ; Return
 ;
 @GetLBN:
-      LDX   #NTMovHeader+NTMovPercentLBN-3      ; Offset start of LBN locations by 3 so 1 is the first
+      LDX   #NTMovCachePercentLBN-3      ; Offset start of LBN locations by 3 so 1 is the first
       ABX
       LDA   ,X
       LDU   1,X
 ; Set LBN value is A & U
 @GotAandUforLBN:
-      PSHS  A,U               ; Save the LBN on the stack
+      STA   >NTMovJumpLBN
+      STU   >NTMovJumpLBN+1
+      JSR   NTMovLBNToFrame   ; Keep current frame correct after number-key jumps
       JMP   NTMovJupLBN
 
 ; Space Bar pressed during playback
@@ -775,99 +784,145 @@ NTMovSkipBackwardSecs   EQU   10                      ; Amount of seconds to mov
 ; NTMovCurFrameCount = 24 bit value, current frame being played
 ; TargetFrame = CurrentFrame - BackSeconds * FPS
 NTMovSkipBackward:
-; Get the amount of seconds to skip backwards as a 32 bit value
-;
-; Copy Current Frame count onto the stack
-      CLRA
-      LDB   >NTMovCurFrameCount
-      LDX   >NTMovCurFrameCount+1
-      PSHS  D,X                           ; Put the current frame count on the stack as a 32 bit value
-;
-      LDX   #NTMovSkipBackwardSecs/65536
-      LDU   #NTMovSkipBackwardSecs
-      PSHS  X,U                           ; Save 32 bit version of skip forward seconds, value on the stack
-      CLRA
-      LDB   >NTMovHeader+NTMovFPS         ; Get frames per second
-      PSHS  D
-      CLRB
-      PSHS  D                             ; Save 32 bit version on the stack
-      JSR   Mul_UnSigned_Both_32          ; ,S (4 bytes) * 4,S (4 bytes) result 4 byte (32 bit) value is at ,S also full 64 bit value is @ RESULT
-;
-; Stack is now 4,S = CurrentFrame and ,S = Backseconds * FPS
-      JSR   Subtract_4ByteFrom4Byte       ; Value1 @ 4,S - Value2 @ ,S result (4 bytes) on the stack
-; TargetFrame is now on the stack
-      BPL   @EndFrameIsHigher             ; Go move player pointer and continue playback
-; If skipping backward would go before frame 0, clamp to the first data sector.
-      LEAS  4,S                           ; remove negative TargetFrame
-      CLRA
-      LDU   #$0001                        ; Sector 1, just after the header sector
-      PSHS  A,U
+      JSR   NTMovCalcSkipFrames
+      LDD   >NTMovCurFrameCount+1
+      SUBD  >NTMovSkipFrames
+      STD   >NTMovJumpFrame+1
+      LDA   >NTMovCurFrameCount
+      SBCA  #0
+      BCC   >
+; If skipping backward would go before frame 0, clamp to frame 0.
+      CLR   >NTMovJumpFrame
+      CLR   >NTMovJumpFrame+1
+      CLR   >NTMovJumpFrame+2
+      JSR   NTMovFrameToLBN
+      JMP   NTMovJupLBN
+!     STA   >NTMovJumpFrame
+      JSR   NTMovFrameToLBN
       JMP   NTMovJupLBN
 ;
 ; NTMovCurFrameCount = 24 bit value, current frame being played
-; TargetFrame = CurrentFrame + 120 * FPS
+; TargetFrame = CurrentFrame + ForwardSeconds * FPS
 NTMovSkipForward:
-; Get the amount of seconds to skip forward as a 32 bit value
-      LDX   #NTMovSkipForwardSecs/65536
-      LDU   #NTMovSkipForwardSecs
-      PSHS  X,U                           ; Save 32 bit version of skip forward seconds, value on the stack
+      JSR   NTMovCalcSkipFrames
+      LDD   >NTMovCurFrameCount+1
+      ADDD  >NTMovSkipFrames
+      STD   >NTMovJumpFrame+1
+      LDA   >NTMovCurFrameCount
+      ADCA  #0
+      STA   >NTMovJumpFrame
+      JSR   NTMovClampJumpFrameToEnd
+      JSR   NTMovFrameToLBN
+      JMP   NTMovJupLBN
+;
+; Calculate 10 seconds of frames as a 16-bit value: FPS * 10.
+; CoCo 1 movie playback uses small fixed FPS values, so 16 bits is enough.
+NTMovCalcSkipFrames:
       CLRA
-      LDB   >NTMovHeader+NTMovFPS         ; Get frames per second
-      PSHS  D
-      CLRB
-      PSHS  D                             ; Save 32 bit version on the stack
-      JSR   Mul_UnSigned_Both_32          ; ,S (4 bytes) * 4,S (4 bytes) result 4 byte (32 bit) value is at ,S also full 64 bit value is @ RESULT
+      LDB   >NTMovCacheFPS
+      TFR   D,X
+      ASLB
+      ROLA
+      STD   >NTMovSkipFrames              ; FPS * 2
+      TFR   X,D
+      ASLB
+      ROLA
+      ASLB
+      ROLA
+      ASLB
+      ROLA                                ; FPS * 8
+      ADDD  >NTMovSkipFrames              ; FPS * 10
+      STD   >NTMovSkipFrames
+      RTS
 ;
-      CLRA
-      LDB   >NTMovCurFrameCount
-      LDX   >NTMovCurFrameCount+1
-      PSHS  D,X                           ; Put the current frame count on the stack as a 32 bit value
-;
-      JSR   Add_4ByteTo4Byte              ; ,S (4 bytes) + 4,S (4 bytes) result 4 byte (32 bit) value is at ,S
-; Stack now has the TargetFrame
-; Make sure TargetFrame is not past the end of the Movie
-      LDX   >NTMovHeader+NTMovEndframe    ; Get Endframe value = MSWord
-      CMPX  ,S                            ; Compare it with TargetFrame
-      BEQ   >                             ; If they are the same check the LSWords
-      BHI   @EndFrameIsHigher             ; We are good to skip to this location in the movie
-      BRA   @EndFrameIsLower              ; If it's lower then fix the stack and return
-!     LDX   >NTMovHeader+NTMovEndframe+2  ; Get Endframe value = LSWord
-      CMPX  2,S                           ; Compare it with TargetFrame
-      BHI   @EndFrameIsHigher             ; We are good to skip to this location in the movie
-;
-@EndFrameIsLower:
-; If we get here it wants to jump past the end of the movie.  Clamp to
-; Endframe - 1 so the right arrow still does something on short clips.
-      LEAS  4,S                           ; remove TargetFrame off the stack
-      LDX   >NTMovHeader+NTMovEndframe
-      LDU   >NTMovHeader+NTMovEndframe+2
-      PSHS  X,U
-      LDD   2,S
+; Clamp NTMovJumpFrame to Endframe - 1 if needed. Endframe is 32-bit in
+; the header cache, but the CoCo 1 player only tracks 24-bit frame numbers.
+NTMovClampJumpFrameToEnd:
+      LDA   >NTMovCacheEndframe
+      BNE   @FrameOK
+      LDA   >NTMovCacheEndframe+1
+      CMPA  >NTMovJumpFrame
+      BHI   @FrameOK
+      BLO   @ClampFrame
+      LDD   >NTMovCacheEndframe+2
+      CMPD  >NTMovJumpFrame+1
+      BHI   @FrameOK
+@ClampFrame:
+      LDA   >NTMovCacheEndframe+1
+      LDX   >NTMovCacheEndframe+2
+      STA   >NTMovJumpFrame
+      STX   >NTMovJumpFrame+1
+      LDD   >NTMovJumpFrame+1
       SUBD  #1
-      STD   2,S
-      BCC   @EndFrameIsHigher
-      LDD   ,S
-      SUBD  #1
-      STD   ,S
-      BRA   @EndFrameIsHigher
+      STD   >NTMovJumpFrame+1
+      BCC   @FrameOK
+      DEC   >NTMovJumpFrame
+@FrameOK:
+      RTS
 ;
-@EndFrameIsHigher:
-; TargetFrame is now on the stack as a 32 bit number.
-; CoCo 1 GMODE 16 audio-buffer frames are fixed at 14 sectors:
-; StartSector = 1 + TargetFrame * 14
-      LDX   #0
-      LDU   #14
-      PSHS  X,U                           ; Save 32 bit version of 14
-      JSR   Mul_UnSigned_Both_32          ; ,S (14) * 4,S (TargetFrame), result at ,S
-; LBN is 24 bits, so drop the top byte and add the header sector offset.
-      LEAS  1,S
-; Add 1 for the 512-byte header sector at LBN 0.
-      INC   2,S
-      BNE   NTMovJupLBN
-      INC   1,S
-      BNE   NTMovJupLBN
-      INC   ,S
-; We now have the sector to jump to (24 bit LBN) on the stack
+; CoCo 1 movie frames are always 14 sectors:
+; JumpLBN = 1 + JumpFrame * 14
+NTMovFrameToLBN:
+      CLR   >NTMovJumpLBN
+      CLR   >NTMovJumpLBN+1
+      CLR   >NTMovJumpLBN+2
+      LDB   #14
+@FrameToLBNLoop:
+      LDA   >NTMovJumpLBN+2
+      ADDA  >NTMovJumpFrame+2
+      STA   >NTMovJumpLBN+2
+      LDA   >NTMovJumpLBN+1
+      ADCA  >NTMovJumpFrame+1
+      STA   >NTMovJumpLBN+1
+      LDA   >NTMovJumpLBN
+      ADCA  >NTMovJumpFrame
+      STA   >NTMovJumpLBN
+      DECB
+      BNE   @FrameToLBNLoop
+      INC   >NTMovJumpLBN+2               ; Add the header sector
+      BNE   @FrameToLBNDone
+      INC   >NTMovJumpLBN+1
+      BNE   @FrameToLBNDone
+      INC   >NTMovJumpLBN
+@FrameToLBNDone:
+      RTS
+;
+; Convert the current 24-bit JumpLBN back to a frame number:
+; JumpFrame = (JumpLBN - 1) / 14
+NTMovLBNToFrame:
+      LDA   >NTMovJumpLBN
+      LDX   >NTMovJumpLBN+1
+      STA   >NTMovLBNWork
+      STX   >NTMovLBNWork+1
+      LDD   >NTMovLBNWork+1
+      SUBD  #1
+      STD   >NTMovLBNWork+1
+      BCC   >
+      DEC   >NTMovLBNWork
+!     CLR   >NTMovJumpFrame
+      CLR   >NTMovJumpFrame+1
+      CLR   >NTMovJumpFrame+2
+      CLR   >NTMovDivRemainder
+      LDB   #24
+@Div14Loop:
+      ASL   >NTMovLBNWork+2
+      ROL   >NTMovLBNWork+1
+      ROL   >NTMovLBNWork
+      ROL   >NTMovDivRemainder
+      ASL   >NTMovJumpFrame+2
+      ROL   >NTMovJumpFrame+1
+      ROL   >NTMovJumpFrame
+      LDA   >NTMovDivRemainder
+      CMPA  #14
+      BLO   @Div14Next
+      SUBA  #14
+      STA   >NTMovDivRemainder
+      INC   >NTMovJumpFrame+2
+@Div14Next:
+      DECB
+      BNE   @Div14Loop
+      RTS
+;
 NTMovJupLBN:
 ; Stop the stream mode
       ORCC  #$50                    ; Disable the Interrupts
@@ -876,31 +931,45 @@ NTMovJupLBN:
       LDU   #$FFFF                  ; Signify we don't want to fill a 256 byte buffer
       JSR   CommSDC                 ; Send to the CoCoSDC
 ;
-; Calculate the new CurrentFrame for fixed 14-sector CoCo 1 audio-buffer frames:
-; CurrentFrame = (SectorNum - 1) / 14
-      CLRA
-      LDB   ,S                      ; Get the new Sector Number off the stack
-      LDU   1,S
-      PSHS  D,U                     ; Save SectorNum as a 32 bit number
-      CLRB
-      LDU   #$0001
-      PSHS  D,U                     ; Save 32 bit version of #1
-      JSR   Subtract_4ByteFrom4Byte ; Value1 @ 4,S - Value2 @ ,S result (4 bytes) on the stack
-      LDX   #0
-      LDU   #14
-      PSHS  X,U
-      JSR   Div_UnSigned_NoRounding_32 ; Divide 4,S / ,S result (4 bytes) on the stack
-;
-; Save the new 32 bit frame value as 24 bit current frame value
-@SaveNewFrame:
-      PULS  D,X                           ; Get Current 32 bit value frame, off the stack
-      STB   >NTMovCurFrameCount
-      STX   >NTMovCurFrameCount+1         ; Save as 24 bit value as the current frame
-;
-      PULS  A,U                     ; A & U have the 24 bit LBN to send to the CoCoSDC to set where to continue playback from
+; Save the new 24-bit frame value and open the stream at the 24-bit LBN.
+      LDA   >NTMovJumpFrame
+      LDX   >NTMovJumpFrame+1
+      STA   >NTMovCurFrameCount
+      STX   >NTMovCurFrameCount+1
+      LDA   >NTMovJumpLBN
+      LDU   >NTMovJumpLBN+1
       LDX   #_StrVar_PF00           ; X points at the filename in the buffer, ready to be used with "m:" at the beginning already
 ; Open a file for streaming starting at Logical Sector Number, each sector is 512 bytes.  The LSN is in A & U where
 ; the Logical Sector Block, 24 bit block where A=MSB (bits 23 to 16), U=Least significant Word (bits 15 to 0)
       STB   <$D8                    ; Put CoCo 3 in normal speed mode
       JSR   OpenSDC_File_X_At_AU
       JMP   NTMovContinueMovie      ; all set so Jump back to movie playback, it will put it back in double speed
+;
+; Small runtime cache copied from the 512-byte header before the audio buffer
+; is reused for playback.
+NTMovCacheEndframe:
+      RMB   4
+NTMovCacheFPS:
+      RMB   1
+NTMovCachePercentLBN:
+      RMB   27
+NTMovCacheEnd:
+NTMovJumpFrame:
+      RMB   3
+NTMovJumpLBN:
+      RMB   3
+NTMovSkipFrames:
+      RMB   2
+NTMovLBNWork:
+      RMB   3
+NTMovDivRemainder:
+      RMB   1
+;
+; Local 1K audio buffer. The 512-byte movie header is loaded here temporarily,
+; then the buffer is reused for audio playback.
+NTMovAudioBuffer:
+      RMB   $400
+NTMovAudioBufferEnd     EQU   NTMovAudioBuffer+$400-1
+;
+; Program requires code + 32 byte header cache + 12 byte jump math work area
+; plus 1024 bytes for audio playback, total around 2.5k bytes

@@ -2682,10 +2682,10 @@ For ii = 0 To GeneralCommandsFoundCount - 1
         Temp$ = "SDC_CompilerCode": GoSub AddIncludeTemp ' The compiler builds string @ ,S but the SDC library expects the fil
         Temp$ = "SDC_FileAccess": GoSub AddIncludeTemp ' Open a file for writing to or reading from the CoCoSDC ,filename is at _StrVar_PF00 and terminated with a zero
         Temp$ = "SDC_StreamFile_Library": GoSub AddIncludeTemp 'Open a file on the CoCoSDC and stream it using 512 bytes sectors
-        Temp$ = "Math_Integer32": GoSub AddIncludeTemp ' Add code for 32 bit jump math
         If GModeLib(16) = 1 Or GModeLib(15) = 1 Or GModeLib(8) = 1 Then
             Temp$ = "SDC_Play_Movie_CoCo1": GoSub AddIncludeTemp ' Add code to playback GMODE 16 movie file from the CoCoSDC
         Else
+            Temp$ = "Math_Integer32": GoSub AddIncludeTemp ' Add code for 32 bit jump math
             Temp$ = "SDC_Play_Movie_CoCo3": GoSub AddIncludeTemp ' Add code to playback movie file from the CoCoSDC
         End If
     End If
