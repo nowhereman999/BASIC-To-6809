@@ -1,4 +1,9 @@
-V$ = "5.28"
+V$ = "5.29"
+'       - The CoCo 1/2 graphics mode was reserving an extra graphics page beyond what the user requested, wasting upto 6144 bytes of RAM
+'       - Fixed a bug with CASE ELSE when used inside an IF/THEN/ELSE stement
+'       - Fixed a problem with the TRIM commands that could corrupt the stack if given a string with a size of 0
+
+' V 5.28
 '       - Fixed a bug with the IF command and three or more OR's / AND's, it would cause the stack to get messed up and crash the program
 
 

@@ -1,0 +1,8 @@
+echo "Processing "
+Processing 
+./BasTo6809 -ascii 
+13:27: syntax error: A property can’t go after this identifier. (-2740)
+94:100: syntax error: Expected “,” but found identifier. (-2741)
+./lwasm -9bl -o.bin .asm > ./NEW_Assembly_Listing.txt -i
+Cannot open file '.asm': No such file or directory
+make: *** [defaultF11] Error 1

@@ -262,7 +262,13 @@ End If
 ' Check if this byte sequence is ELSE or ELSEIF
 If v = &HFF Then
     cmd16 = Array(ScanPos) * 256 + Array(ScanPos + 1)
-    If (cmd16 = ELSE_CMD) Or (cmd16 = ELSEIF_CMD) Then
+    PrevGenCmd = 0
+    If cmd16 = ELSE_CMD Then
+        PrevScan = ScanPos - 2
+        While PrevScan > 2 And Array(PrevScan) = Asc(" "): PrevScan = PrevScan - 1: Wend
+        If PrevScan > 2 And Array(PrevScan - 2) = &HFF Then PrevGenCmd = Array(PrevScan - 1) * 256 + Array(PrevScan)
+    End If
+    If ((cmd16 = ELSE_CMD) And PrevGenCmd <> CASE_CMD) Or (cmd16 = ELSEIF_CMD) Then
         If ENDIFCheck = 1 Then
             FoundELSE = 1
             GoTo DoneScanning

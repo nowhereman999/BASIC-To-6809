@@ -166,6 +166,7 @@ StrCommandMid:
 StrCommandRTrim:
       PULS  Y                 ; Get the return address off the stack
         LDB     ,S+
+        BEQ     @EmptyString
         CLRA
         LEAX    D,S             ; X = point just after the string
         BRA     @TrimRight
@@ -176,6 +177,7 @@ StrCommandRTrim:
 StrCommandTrim:
       PULS  Y                 ; Get the return address off the stack
         LDB     ,S+
+        BEQ     @EmptyString
         CLRA
         LEAX    D,S             ; X = point just after the string
 !       LDA     ,S+
@@ -205,6 +207,9 @@ StrCommandTrim:
         LDB     #$FF
         STB     ,-X             ; Save new value
         LEAS    ,X              ; Fix the stack
+        BRA     @Return
+@EmptyString:
+        CLR     ,-S             ; Return an empty string without reading past it
 @Return:
       JMP   ,Y          ; Return
 
@@ -214,6 +219,7 @@ StrCommandTrim:
 StrCommandLTrim:
       PULS  Y                 ; Get the return address off the stack
         LDB     ,S+
+        BEQ     @EmptyString
         CLRA
         LEAX    D,S             ; X = point just after the string
         LEAU    ,X              ; U = X
@@ -225,6 +231,9 @@ StrCommandLTrim:
         CLR     ,-S
         BRA     @Return         ; New string is empty
 !       STB     ,--S             ; Save new value
+        BRA     @Return
+@EmptyString:
+        CLR     ,-S             ; Return an empty string without reading past it
 @Return:
       JMP   ,Y          ; Return
 
@@ -552,4 +561,3 @@ StrConcat2:
       BNE   <           ; Copy string 2 2nd on the stack
 @Return
       JMP   >$FFFF      ; Return
-

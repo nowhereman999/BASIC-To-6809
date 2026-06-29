@@ -1,0 +1,495 @@
+MakeNTM v1.10 User Guide
+by Glen Hewlett
+
+
+Overview
+========
+
+MakeNTM creates CoCo .NTM movie files from PNG image frames and unsigned
+8-bit mono audio.  It can also call ffprobe/ffmpeg directly to extract frames
+and audio from a movie file.
+
+The program supports two broad output types:
+
+1. CoCo 1/2 compatible 6144-byte screen movies:
+   - GMODE 8  / SG24, 64x192, 8 colours plus black
+   - GMODE 15 / PMODE 3, 128x192, 4 colours
+   - GMODE 16 / PMODE 4, 256x192, 2 colours / artifact colours
+
+2. CoCo 3 .NTM movies using the original CoCo 3 movie player format,
+   including optional per-frame palette sectors.
+
+
+Basic Workflows
+===============
+
+MakeNTM can be used in two ways.
+
+
+1. PNG Frames And Raw Audio
+---------------------------
+
+Use this when you already have numbered PNG frames and optional raw unsigned
+8-bit mono audio.
+
+General syntax:
+
+  MakeNTM [options] WxH AudioSectors FramePattern AudioFile OutputFile
+
+For CoCo 1/2 GMODE 8/15/16, AudioSectors is optional and ignored because
+those formats always use two 512-byte audio sectors per frame:
+
+  MakeNTM -g8  [options] WxH FramePattern OutputFile
+  MakeNTM -g8  [options] WxH FramePattern AudioFile OutputFile
+  MakeNTM -g15 [options] WxH FramePattern OutputFile
+  MakeNTM -g15 [options] WxH FramePattern AudioFile OutputFile
+  MakeNTM -g16 [options] WxH FramePattern OutputFile
+  MakeNTM -g16 [options] WxH FramePattern AudioFile OutputFile
+
+Examples:
+
+  MakeNTM -d1 -g8 -t0 64x192 frames/frame%06d.png movie.ntm
+  MakeNTM -d1 -g15 -t1 128x192 frames/frame%06d.png audio.u8 movie.ntm
+  MakeNTM -d1 -g16 -t2 256x192 frames/frame%06d.png audio.u8 movie.ntm
+  MakeNTM -d1 -f10 -g136 -p1 256x192 2 frames/frame%06d.png audio.u8 movie.ntm
+
+
+2. Direct Movie Input
+---------------------
+
+Use -i= to let MakeNTM call ffprobe/ffmpeg, extract frames and audio, and then
+build the .NTM file.
+
+General syntax:
+
+  MakeNTM -i=input_movie -o=output.ntm [options]
+
+Examples:
+
+  MakeNTM -i=input.mp4 -o=movie.ntm -g8 --length=00:01:00
+  MakeNTM -i=input.mp4 -o=movie.ntm -g15 -t1 --length=00:01:00
+  MakeNTM -i=input.mov -o=movie.ntm -g16 -t2 --start=00:05:00 --length=00:01:00
+  MakeNTM -i=input.mov -o=movie.ntm -g136 -f12 -a2 -p1 -c1 -r=256x144
+
+When -i= is used, ffprobe and ffmpeg must be available in the command path
+unless overridden with --ffprobe= and --ffmpeg=.
+
+
+CoCo 1/2 6144-Byte Screen Modes
+===============================
+
+The CoCo 1/2 streaming player uses a fixed frame format:
+
+  512-byte .NTM header sector
+  For each frame:
+    2 audio sectors = 1024 bytes
+    12 video sectors = 6144 bytes
+
+These modes always force:
+
+  12 fps
+  -p0
+  two audio sectors per frame
+
+The timing in the CoCo 1/2 player is hard-coded for 12 fps, so changing -f or
+-fps does not change the output rate for -g8, -g15, or -g16.
+
+If no audio file is supplied, MakeNTM fills the audio sectors with silence.
+
+
+GMODE 8 / SG24
+--------------
+
+Option:
+
+  -g8
+
+Required frame size:
+
+  64x192
+
+This mode is semi-graphics 24.  It is treated as a 64x192 screen using
+8 colours plus black.  The conversion mode is selected with -t#:
+
+  -t0 = SG24 pair colour matching, default
+  -t1 = SG24 3-pixel look-ahead matching
+
+Examples:
+
+  MakeNTM -d1 -g8 -t0 64x192 frames/frame%06d.png movie.ntm
+  MakeNTM -i=input.mp4 -o=movie.ntm -g8 -t1 --length=00:01:00
+
+
+GMODE 15 / PMODE 3
+------------------
+
+Option:
+
+  -g15
+
+Required frame size:
+
+  128x192
+
+This mode uses 4 colours.  The colour set is selected with -t#:
+
+  -t0 = colour set 0: green, yellow, blue, red
+  -t1 = colour set 1: buff, cyan, magenta, orange
+
+Examples:
+
+  MakeNTM -d1 -g15 -t0 128x192 frames/frame%06d.png movie.ntm
+  MakeNTM -i=input.mp4 -o=movie.ntm -g15 -t1 --length=00:01:00
+
+
+GMODE 16 / PMODE 4
+------------------
+
+Option:
+
+  -g16
+
+Required frame size:
+
+  256x192
+
+This is the CoCo 1/2 high-resolution 1-bit graphics mode.  On composite video,
+the CoCo can generate artifact colours.  The artifact conversion mode is
+selected with -t#:
+
+  -t0 = current 1-bit black/white conversion
+  -t1 = solid black/white with two-pixel white pairs
+  -t2 = black/red/blue/white artifact matching, default
+  -t3 = 2x2 CoCo artifact colour matching
+
+Examples:
+
+  MakeNTM -d1 -g16 -t0 256x192 frames/frame%06d.png movie.ntm
+  MakeNTM -d1 -g16 -t2 256x192 frames/frame%06d.png audio.u8 movie.ntm
+  MakeNTM -i=input.mov -o=movie.ntm -g16 -t2 --start=00:05:00 --length=00:01:00
+
+
+CoCo 3 Output
+=============
+
+For CoCo 3 movie output, use -g# to select a graphics mode.  If # is 100..165,
+MakeNTM uses its built-in graphics mode table.  Otherwise, the value is written
+directly as the CoCo 3 graphics mode byte.
+
+Common examples:
+
+  -g118 = 128x192x16, byte 18, %00010010
+  -g136 = 256x192x16, byte 26, %00011010
+  -g145 = 320x192x16, byte 30, %00011110
+  -g151 = 512x192x4,  byte 25, %00011001
+  -g164 = 640x200x4,  byte 61, %00111101
+
+Examples:
+
+  MakeNTM -d1 -f10 -g151 -p0 512x144 1 frames/frame%06d.png audio.u8 movie.ntm
+  MakeNTM -d1 -f10 -g136 -p1 -c0 256x192 2 frames/frame%06d.png audio.u8 movie.ntm
+  MakeNTM -i=input.mov -o=movie.ntm -g136 -f12 -a2 -p1 -c1 -r=256x144
+
+
+Options
+=======
+
+
+General Options
+---------------
+
+  -d#
+      Dither mode used by the frame converter.
+
+      -d0 = none
+      -d1 = Floyd-Steinberg
+      -d2 = blue-noise style
+      -d3 = ordered
+
+      Example: -d1
+
+  -f# or -fps#
+      Frames per second written into the .NTM header.
+
+      For -g8, -g15, and -g16, this is forced to 12 fps.
+
+      Example: -f10
+
+  -g#
+      Graphics mode selection.
+
+      Examples:
+
+        -g8
+        -g15
+        -g16
+        -g136
+        -g145
+
+  -name=text
+      Movie title stored in the .NTM header.
+
+      In movie-source mode, --name=text is also accepted.
+
+      Example:
+
+        -name="GMODE 16 Test"
+
+  -y#
+      Top row where the video should start on screen.  MakeNTM calculates the
+      stack-blast start address.
+
+      Formula:
+
+        $8000 + screen bytes/row * (start row + video height - 1)
+
+      Example: -y24
+
+  -maddr
+      Manual override for the stack-blast start address.
+
+      Example: -m$E000
+
+  -t#
+      Conversion mode for CoCo 1/2 -g8, -g15, and -g16.  See the mode sections
+      above for details.
+
+      Examples:
+
+        -g8 -t1
+        -g15 -t0
+        -g16 -t2
+
+
+Audio And Palette Options
+-------------------------
+
+  -a#
+      Audio sectors per frame in movie-source mode.
+
+      Ignored by -g8, -g15, and -g16, which always use two audio sectors.
+
+      Example: -a2
+
+  -p0
+      No per-frame palette sectors.
+
+  -p1
+      Enable per-frame palette sectors for CoCo 3 RGB 16-colour output.
+
+      In -p1 mode:
+
+      - MakeNTM finds a 16-colour RGB palette for each frame.
+      - It writes one 512-byte palette sector for each group of 32 frames.
+      - The player can update the palette during playback.
+
+      Ignored for -g151 grayscale mode and forced off for -g8, -g15, and -g16.
+
+  -c0
+      Palette chooser method 0, default.
+
+      Chooses the 15 most frequent non-black colours.
+
+  -c1
+      Palette chooser method 1.
+
+      Chooses 15 non-black colours using a frequency-weighted colour distance
+      method.
+
+  -l#
+      Shadow luma/grey Floyd mode for -p1 RGB 16-colour output.
+
+      -l0 = off, use classic RGB Floyd in dark areas
+      -l1 = on, prefer luminance/grey handling in neutral shadows
+
+      Example: -l1
+
+  -i=v0,v1,...
+      In PNG/audio input mode, sets the 16 initial palette bytes stored in the
+      header.
+
+      Important: in movie-source mode, -i=file means input movie file instead.
+
+      Example:
+
+        -i=0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15
+
+  -sp#=value
+      Force one initial palette slot value in the header.
+
+      Example:
+
+        -sp1=63
+
+
+Movie-Source Options
+--------------------
+
+These options are used when -i=input_movie is supplied.
+
+  -i=file
+      Input movie file.  This switches MakeNTM into ffmpeg/ffprobe mode.
+
+      Example: -i=tears_of_steel_720p.mov
+
+  -o=file
+      Output .NTM movie file.
+
+      Example: -o=TEST16.NTM
+
+  -n=pattern
+      Optional extracted PNG frame pattern.
+
+      Example: -n=tmp/frame%05d.png
+
+  -r=WxH
+      Force active movie size before padding/placement.
+
+      Example: -r=256x144
+
+  -s=factor
+      Scale active movie size by factor, where 0 < factor <= 1.
+
+      Example: -s=.75
+
+  -pillar
+      Pad movie-source output to the selected screen width.
+
+  -nopillar
+      Do not add side pillar bars in movie-source mode.
+
+      Example: -nopillar
+
+  -b0
+      Disable automatic ffmpeg crop detection.
+
+      Example: -b0
+
+  -k
+      Keep extracted frames/audio files after conversion.
+
+      Example: -k
+
+  --start=time
+      Start trim point.
+
+      Example: --start=00:05:00
+
+  --end=time
+      End trim point.
+
+      Example: --end=00:06:00
+
+  --length=time
+      Duration to encode.
+
+      Example: --length=00:01:00
+
+  --audio-track=choice
+      Select an audio track or audio preference.
+
+      Examples:
+
+        --audio-track=a2
+        --audio-track=stereo
+        --audio-track=mono
+        --audio-track=surround
+
+  --audio-normalize=on|off
+      Enables or disables ffmpeg loudnorm/alimiter before resampling.
+
+      Example: --audio-normalize=off
+
+  --ffmpeg=path
+      Override ffmpeg executable.
+
+      Example: --ffmpeg=/opt/homebrew/bin/ffmpeg
+
+  --ffprobe=path
+      Override ffprobe executable.
+
+      Example: --ffprobe=/opt/homebrew/bin/ffprobe
+
+
+Frame And Audio Size Notes
+==========================
+
+For CoCo 3 output:
+
+  Video sectors = ceiling(video bytes per frame / 512)
+  Audio rate    = FPS * AudioSectors * 512
+  FIRQ delay    = 1000000 / (SampleRate * 0.279365)
+
+For CoCo 1/2 -g8, -g15, and -g16:
+
+  FPS           = 12
+  Audio sectors = 2
+  Audio rate    = 12 * 2 * 512 = 12288 Hz
+  Video sectors = 12
+  Frame sectors = 14
+
+Video byte formulas:
+
+  -g8 SG24      = ((Width + 1) \ 2) * Height
+  -g15          = 32 bytes/row * 192 rows = 6144 bytes
+  -g16          = 32 bytes/row * 192 rows = 6144 bytes
+  -p1 16-colour = ((Width + 1) \ 2) * Height
+
+
+CoCoSDC Playback Notes
+======================
+
+The CoCo 1/2 streaming movie player relies on CoCoSDC low-level stream mode.
+For each frame, the file layout is two 512-byte audio sectors followed by
+twelve 512-byte video sectors.
+
+The CoCoSDC does not guarantee a fixed delay between streamed 512-byte blocks.
+The delay depends on the SD card, file fragmentation, cluster boundaries, and
+whether FAT data has to be loaded.  For best playback:
+
+  - Use a freshly formatted FAT32 SD card.
+  - Copy movie files to the card before adding/deleting many other files.
+  - Prefer larger FAT32 cluster sizes such as 32 KB when practical.
+  - Keep .NTM files contiguous where possible.
+  - Use the latest CoCoSDC firmware.
+
+The 12 fps CoCo 1/2 mode is the stable default because it leaves enough audio
+buffer reserve to absorb normal stream refill jitter.
+
+
+Output File Notes
+=================
+
+MakeNTM writes a 512-byte .NTM header sector first.
+
+For CoCo 3 -p1 output, palette sectors are written every 32 frames.
+
+For CoCo 1/2 -g8, -g15, and -g16 output, every frame is:
+
+  2 audio sectors
+  12 video sectors
+
+
+Quick Examples
+==============
+
+Create a one-minute GMODE 16 artifact movie directly from a movie source:
+
+  MakeNTM -i=input.mov -o=TEST16.NTM -g16 -t2 --start=00:05:00 --length=00:01:00
+
+Create a GMODE 8 SG24 movie with 3-pixel look-ahead:
+
+  MakeNTM -i=input.mp4 -o=SG24.NTM -g8 -t1 --length=00:01:00
+
+Create a GMODE 15 colour set 1 movie:
+
+  MakeNTM -i=input.mp4 -o=PMODE3.NTM -g15 -t1 --length=00:01:00
+
+Create a CoCo 3 256x192x16 movie with per-frame palettes:
+
+  MakeNTM -i=input.mov -o=COCO3.NTM -g136 -f12 -a2 -p1 -c1 -r=256x192
+
+Create a CoCo 3 512x192x4 grayscale movie from PNG frames:
+
+  MakeNTM -d1 -f10 -g151 -p0 512x192 1 frames/frame%06d.png audio.u8 GREY.NTM
+

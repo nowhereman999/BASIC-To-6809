@@ -1,0 +1,15 @@
+float *_FUNC_ISNUMBER_SINGLE_ISNUMBER=NULL;
+if(_FUNC_ISNUMBER_SINGLE_ISNUMBER==NULL){
+_FUNC_ISNUMBER_SINGLE_ISNUMBER=(float*)mem_static_malloc(4);
+*_FUNC_ISNUMBER_SINGLE_ISNUMBER=0;
+}
+qbs*oldstr815=NULL;
+if(_FUNC_ISNUMBER_STRING_S->tmp||_FUNC_ISNUMBER_STRING_S->fixed||_FUNC_ISNUMBER_STRING_S->readonly){
+oldstr815=_FUNC_ISNUMBER_STRING_S;
+if (oldstr815->cmem_descriptor){
+_FUNC_ISNUMBER_STRING_S=qbs_new_cmem(oldstr815->len,0);
+}else{
+_FUNC_ISNUMBER_STRING_S=qbs_new(oldstr815->len,0);
+}
+memcpy(_FUNC_ISNUMBER_STRING_S->chr,oldstr815->chr,oldstr815->len);
+}

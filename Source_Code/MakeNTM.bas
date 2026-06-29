@@ -5,7 +5,7 @@ _Dest _Console
 ChDir _StartDir$
 
 Const ProgramName$ = "MakeNTM"
-Const VersionNumber$ = "1.07"
+Const VersionNumber$ = "1.10"
 Const BYTES_PER_SECTOR = 512
 Const HEADER_SECTOR_BYTES = 512
 
@@ -46,6 +46,9 @@ Dim Shared StartByteX As Integer
 Dim Shared PalMode As Integer
 Dim Shared AudSectors As Integer
 Dim Shared VidSectors As Integer
+Dim Shared CoCo1VideoOnly As Integer
+Dim Shared CoCo1ArtifactMode As Integer
+Dim Shared CoCo1ArtifactModeSpecified As Integer
 Dim Shared VideoBytesPerFrame As Long
 Dim Shared AudioBytesPerFrame As Long
 Dim Shared SampleRate As Long
@@ -80,6 +83,7 @@ Declare Sub WriteHeaderSector (fh As Integer)
 Declare Sub WriteStackBlastedSector (fh As Integer, sectorData() As _Unsigned _Byte)
 Declare Sub WritePaletteSector (fh As Integer, groupPalettes() As _Unsigned _Byte, groupCount As Integer)
 Declare Sub WriteStatusLine (row As Integer, msg$)
+Declare Sub ReportLine (label$, value$)
 Declare Sub ConvertOneFrame (frameFile$, frameVideo() As _Unsigned _Byte, framePalette() As _Unsigned _Byte)
 Declare Sub BuildMuxedFrame (frameVideo() As _Unsigned _Byte, muxedFrame() As _Unsigned _Byte)
 Declare Function ExpandFramePattern$ (pat$, index As Long)
@@ -97,6 +101,12 @@ Declare Sub BuildPaletteFromDither (framePalette() As _Unsigned _Byte)
 Declare Sub RemapDitherToFramePalette (framePalette() As _Unsigned _Byte)
 Declare Sub ConvertFrameToGMode151Grey (frameVideo() As _Unsigned _Byte, framePalette() As _Unsigned _Byte)
 Declare Sub ConvertFrameTo1BitBW (frameVideo() As _Unsigned _Byte, framePalette() As _Unsigned _Byte)
+Declare Sub ConvertFrameToCoCo1SG24 (frameVideo() As _Unsigned _Byte, framePalette() As _Unsigned _Byte)
+Declare Sub ConvertFrameToCoCo1GMode15 (frameVideo() As _Unsigned _Byte, framePalette() As _Unsigned _Byte)
+Declare Sub ConvertFrameToCoCo1SolidBW (frameVideo() As _Unsigned _Byte, framePalette() As _Unsigned _Byte)
+Declare Sub ConvertFrameToCoCo1Artifact4Color (frameVideo() As _Unsigned _Byte, framePalette() As _Unsigned _Byte)
+Declare Sub ConvertFrameToCoCo1Artifact2x2 (frameVideo() As _Unsigned _Byte, framePalette() As _Unsigned _Byte)
+Declare Sub PackDitherOutTo1Bit (frameVideo() As _Unsigned _Byte)
 Declare Function QuantizeGrey2Bit% (grey As Integer)
 Declare Function QuantizeBW1Bit% (grey As Integer)
 Declare Sub Gosub_DoNoDither
@@ -114,7 +124,7 @@ Declare Function TimeToSeconds# (t$)
 Declare Function SecondsToTime$ (s#)
 Declare Function DetectCrop$ (ffmpeg$, inputFile$, sampleStart$, sampleDur$)
 Declare Function ComputeScaledRes$ (screenW As Integer, screenH As Integer, scaleTxt$)
-Declare Function BuildVideoFilter$ (ffmpeg$, ffprobe$, inputFile$, fps As Integer, screenW As Integer, screenH As Integer, movieW As Integer, movieH As Integer, frameOutW As Integer, frameOutH As Integer, srcW As Integer, srcH As Integer, cropInfo$, hdrInfo$, scaleTxt$, resTxt$, autoCrop As Integer, startTime$, noPillar As Integer)
+Declare Function BuildVideoFilter$ (ffmpeg$, ffprobe$, inputFile$, fps As Integer, screenW As Integer, screenH As Integer, movieW As Integer, movieH As Integer, frameOutW As Integer, frameOutH As Integer, srcW As Integer, srcH As Integer, cropInfo$, hdrInfo$, scaleTxt$, resTxt$, autoCrop As Integer, startTime$, noPillar As Integer, forceFullFrame As Integer)
 Declare Function ExtractRawOptValue$ (rawCmd$, optA$, optB$)
 Declare Sub EnsureSilentAudio (audioFile$, fps As Integer, audSectors As Integer)
 Declare Sub DeleteIfExists (f$)
@@ -133,6 +143,8 @@ Dim frameIndex As Long
 Dim frameFile$
 Dim frameCount As Long
 Dim outFH As Integer
+Dim PosArg$(20)
+Dim PosCount As Integer
 Dim processedInGroup As Integer
 Dim headerWritten As Integer
 Dim groupCount As Integer
@@ -176,6 +188,9 @@ MemStart = &H8000 + 128 * 167
 StartRow = 0
 UseStartRow = 0
 PalMode = 0
+CoCo1VideoOnly = 0
+CoCo1ArtifactMode = 2
+CoCo1ArtifactModeSpecified = 0
 PalettePickMethod = 0
 ShadowLumaGreyMode = 0
 ForceSP1Enabled = 0
@@ -192,7 +207,7 @@ If HasMovieInputMode Then
     GoTo AfterOldParse
 End If
 
-If count < 5 Then
+If count < 3 Then
     ShowUsage
     System
 End If
@@ -216,6 +231,9 @@ For check = 1 To count
         UseStartRow = 0
     ElseIf LCase$(Left$(arg$, 2)) = "-p" Then
         PalMode = Val(Mid$(arg$, 3))
+    ElseIf LCase$(Left$(arg$, 2)) = "-t" Then
+        CoCo1ArtifactMode = Val(Mid$(arg$, 3))
+        CoCo1ArtifactModeSpecified = -1
     ElseIf LCase$(Left$(arg$, 3)) = "-sp" Then
         eqPos2 = InStr(arg$, "=")
         If eqPos2 > 4 Then
@@ -240,20 +258,71 @@ For check = 1 To count
             Print "Error: bad palette list in "; arg$
             System
         End If
-    ElseIf haveRes = 0 Then
-        ResArg$ = arg$: haveRes = -1
-    ElseIf haveAudioSectors = 0 Then
-        AudSectors = Val(arg$): haveAudioSectors = -1
-    ElseIf havePattern = 0 Then
-        FramePattern$ = arg$: havePattern = -1
-    ElseIf haveAudio = 0 Then
-        AudioFile$ = arg$: haveAudio = -1
-    ElseIf haveOutput = 0 Then
-        OutFile$ = arg$: haveOutput = -1
+    Else
+        PosCount = PosCount + 1
+        If PosCount <= 20 Then PosArg$(PosCount) = arg$
     End If
 Next
 
 AfterOldParse:
+
+CoCo1VideoOnly = (GModeIndex = 8 Or GModeIndex = 15 Or GModeIndex = 16)
+
+If PosCount > 0 Then
+    If CoCo1VideoOnly Then
+        If PosCount = 3 Then
+            ResArg$ = PosArg$(1): haveRes = -1
+            AudSectors = 2: haveAudioSectors = -1
+            FramePattern$ = PosArg$(2): havePattern = -1
+            AudioFile$ = "": haveAudio = -1
+            OutFile$ = PosArg$(3): haveOutput = -1
+        ElseIf PosCount = 4 Then
+            ResArg$ = PosArg$(1): haveRes = -1
+            AudSectors = 2: haveAudioSectors = -1
+            FramePattern$ = PosArg$(2): havePattern = -1
+            AudioFile$ = PosArg$(3): haveAudio = -1
+            OutFile$ = PosArg$(4): haveOutput = -1
+        ElseIf PosCount >= 5 Then
+            ResArg$ = PosArg$(1): haveRes = -1
+            AudSectors = 2: haveAudioSectors = -1
+            FramePattern$ = PosArg$(3): havePattern = -1
+            AudioFile$ = PosArg$(4): haveAudio = -1
+            OutFile$ = PosArg$(5): haveOutput = -1
+        End If
+    ElseIf PosCount >= 5 Then
+        ResArg$ = PosArg$(1): haveRes = -1
+        AudSectors = Val(PosArg$(2)): haveAudioSectors = -1
+        FramePattern$ = PosArg$(3): havePattern = -1
+        AudioFile$ = PosArg$(4): haveAudio = -1
+        OutFile$ = PosArg$(5): haveOutput = -1
+    End If
+End If
+
+If CoCo1VideoOnly Then
+    AudSectors = 2
+    haveAudioSectors = -1
+    haveAudio = -1
+    PalMode = 0
+    FPS = 12
+    If GModeIndex = 8 Then
+        If CoCo1ArtifactModeSpecified = 0 Then CoCo1ArtifactMode = 0
+        If CoCo1ArtifactMode < 0 Or CoCo1ArtifactMode > 1 Then
+            Print "Error: GMODE 8 SG24 conversion mode must be -t0 or -t1"
+            System
+        End If
+    ElseIf GModeIndex = 15 Then
+        If CoCo1ArtifactModeSpecified = 0 Then CoCo1ArtifactMode = 0
+        If CoCo1ArtifactMode < 0 Or CoCo1ArtifactMode > 1 Then
+            Print "Error: GMODE 15 colour set must be -t0 or -t1"
+            System
+        End If
+    Else
+        If CoCo1ArtifactMode < 0 Or CoCo1ArtifactMode > 3 Then
+            Print "Error: GMODE 16 artifact mode must be -t0, -t1, -t2, or -t3"
+            System
+        End If
+    End If
+End If
 
 If haveRes = 0 Or haveAudioSectors = 0 Or havePattern = 0 Or haveAudio = 0 Or haveOutput = 0 Then
     ShowUsage
@@ -270,8 +339,13 @@ If FrameW < 1 Or FrameH < 1 Or FrameH > 255 Then
     System
 End If
 
-If AudSectors < 1 Or AudSectors > 255 Then
+If CoCo1VideoOnly = 0 And (AudSectors < 1 Or AudSectors > 255) Then
     Print "Error: AudioSectors must be 1..255"
+    System
+End If
+
+If CoCo1VideoOnly <> 0 And AudSectors <> 2 Then
+    Print "Error: GMODE 8/15/16 CoCo 1 output uses two audio buffer sectors per frame"
     System
 End If
 
@@ -280,7 +354,23 @@ If FPS < 1 Or FPS > 255 Then
     System
 End If
 
-If GModeIndex >= 100 And GModeIndex <= 165 Then
+If CoCo1VideoOnly Then
+    If GModeIndex = 8 Then
+        ScreenW = 64
+        ScreenColors = 9
+    ElseIf GModeIndex = 15 Then
+        ScreenW = 128
+        ScreenColors = 4
+    Else
+        ScreenW = 256
+        ScreenColors = 2
+    End If
+    ScreenH = 192
+    If FrameW <> ScreenW Or FrameH <> 192 Then
+        Print "Error: GMODE"; GModeIndex; " CoCo 1 output must be"; ScreenW; "x192"
+        System
+    End If
+ElseIf GModeIndex >= 100 And GModeIndex <= 165 Then
     If GetModeInfo(GModeIndex, ScreenW, ScreenH, ScreenColors) = 0 Then
         Print "Error: could not decode CoCo mode "; GModeIndex
         System
@@ -299,6 +389,8 @@ If ScreenColors = 2 Then
     PalMode = 0
 ElseIf ScreenColors = 4 Then
     PalMode = 0
+ElseIf ScreenColors = 9 Then
+    PalMode = 0
 ElseIf GModeIndex >= 160 Then
     PalMode = 0
 End If
@@ -308,6 +400,8 @@ Select Case ScreenColors
         ScreenBytesPerRow = (ScreenW + 7) \ 8
     Case 4
         ScreenBytesPerRow = (ScreenW + 3) \ 4
+    Case 9
+        ScreenBytesPerRow = (ScreenW + 1) \ 2
     Case 16
         ScreenBytesPerRow = (ScreenW + 1) \ 2
     Case Else
@@ -336,6 +430,8 @@ Select Case ScreenColors
         FrameBytesPerRow = (FrameW + 7) \ 8
     Case 4
         FrameBytesPerRow = (FrameW + 3) \ 4
+    Case 9
+        FrameBytesPerRow = (FrameW + 1) \ 2
     Case 16
         FrameBytesPerRow = (FrameW + 1) \ 2
     Case Else
@@ -343,7 +439,11 @@ Select Case ScreenColors
 End Select
 
 StartByteX = (ScreenBytesPerRow - FrameBytesPerRow) \ 2
-If StartByteX < 0 Then StartByteX = 0
+If StartByteX < 0 Then
+    Print "Error: video width is larger than the selected screen mode"
+    Print "Screen bytes/row:"; ScreenBytesPerRow; "  video bytes/row:"; FrameBytesPerRow
+    System
+End If
 
 MemStart = &H8000 + CLng(ScreenBytesPerRow) * CLng(StartRow + FrameH - 1) + StartByteX
 
@@ -351,10 +451,22 @@ VideoBytesPerFrame = CLng(FrameBytesPerRow) * CLng(FrameH)
 VidSectors = (VideoBytesPerFrame + BYTES_PER_SECTOR - 1) \ BYTES_PER_SECTOR
 AudioBytesPerFrame = CLng(AudSectors) * BYTES_PER_SECTOR
 Dim BytesPerSecond As Long
-BytesPerSecond = CLng(FPS) * (VideoBytesPerFrame + AudioBytesPerFrame)
+If CoCo1VideoOnly Then
+    BytesPerSecond = CLng(FPS) * (VidSectors + AudSectors) * BYTES_PER_SECTOR
+Else
+    BytesPerSecond = CLng(FPS) * (VideoBytesPerFrame + AudioBytesPerFrame)
+End If
 If PalMode <> 0 Then BytesPerSecond = BytesPerSecond + CLng(FPS) * 16
 SampleRate = CLng(FPS) * AudioBytesPerFrame
-FIRQDelay = CLng(1000000# / (SampleRate * 0.279365#) + .5)
+If SampleRate > 0 Then
+    If CoCo1VideoOnly Then
+        FIRQDelay = 0
+    Else
+        FIRQDelay = CLng(1000000# / (SampleRate * 0.279365#) + .5)
+    End If
+Else
+    FIRQDelay = 0
+End If
 
 ReDim Shared pixelR(0 To FrameW - 1, 0 To FrameH - 1) As _Unsigned _Byte
 ReDim Shared pixelG(0 To FrameW - 1, 0 To FrameH - 1) As _Unsigned _Byte
@@ -362,20 +474,29 @@ ReDim Shared pixelB(0 To FrameW - 1, 0 To FrameH - 1) As _Unsigned _Byte
 ReDim Shared DitherOut(0 To FrameW - 1, 0 To FrameH - 1) As _Unsigned _Byte
 videoFrameBytes = VidSectors * BYTES_PER_SECTOR
 ReDim tempVideo(0 To videoFrameBytes - 1) As _Unsigned _Byte
-ReDim muxedFrame(0 To (AudSectors + VidSectors) * BYTES_PER_SECTOR - 1) As _Unsigned _Byte
-
-If _FileExists(AudioFile$) = 0 Then
-    Print "Error: audio file not found: "; AudioFile$
-    System
+If CoCo1VideoOnly Then
+    ReDim muxedFrame(0 To (AudSectors + VidSectors) * BYTES_PER_SECTOR - 1) As _Unsigned _Byte
+Else
+    ReDim muxedFrame(0 To (AudSectors + VidSectors) * BYTES_PER_SECTOR - 1) As _Unsigned _Byte
 End If
 
-AudioFH = FreeFile
-Open AudioFile$ For Binary As #AudioFH
-audioLen = LOF(AudioFH)
-If audioLen < 1 Then
-    Print "Error: audio file is empty: "; AudioFile$
-    Close #AudioFH
-    System
+If AudSectors > 0 And AudioFile$ <> "" Then
+    If _FileExists(AudioFile$) = 0 Then
+        Print "Error: audio file not found: "; AudioFile$
+        System
+    End If
+
+    AudioFH = FreeFile
+    Open AudioFile$ For Binary As #AudioFH
+    audioLen = LOF(AudioFH)
+    If audioLen < 1 Then
+        Print "Error: audio file is empty: "; AudioFile$
+        Close #AudioFH
+        System
+    End If
+Else
+    AudioFH = 0
+    audioLen = 0
 End If
 audioPos = 1
 
@@ -384,31 +505,61 @@ outFH = FreeFile
 Open OutFile$ For Binary As #outFH
 
 Cls
-Print "MakeNTM v"; VersionNumber$
+Print "MakeNTM v"; VersionNumber$; " by Glen Hewlett"
 Print
-Print "Resolution        "; FrameW; "x"; FrameH
-Print "Dither type       "; DitherType
-Print "Graphics mode     "; GMode; "  %"; ByteToBin$(GMode)
-Print "FPS               "; FPS
-If GModeIndex >= 100 And GModeIndex <= 165 Then Print "CoCo mode index   "; GModeIndex; "  "; GModeDesc$(GModeIndex)
-Print "Screen size       "; ScreenW; "x"; ScreenH
-Print "Screen bytes/row  "; ScreenBytesPerRow
-Print "Video start row   "; StartRow
-Print "Video start byte  "; StartByteX
-Print "Video bytes/frame "; VideoBytesPerFrame
-Print "Video sectors     "; VidSectors
-Print "Audio sectors     "; AudSectors
-Print "Audio bytes/frame "; AudioBytesPerFrame
-Print "Sample rate       "; SampleRate
-Print "Bytes/second      "; BytesPerSecond
-Print "FIRQ delay        "; FIRQDelay
-Print "Mem start          $"; Hex$(MemStart And &HFFFF)
-Print "Palette mode      "; PalMode
-Print "Palette chooser   "; PalettePickMethod
-Print "Shadow luma/grey  "; ShadowLumaGreyMode
-Print "Frame pattern      "; FramePattern$
-Print "Audio file         "; AudioFile$
-Print "Output file        "; OutFile$
+ReportLine "Resolution", _Trim$(Str$(FrameW)) + " x " + _Trim$(Str$(FrameH))
+ReportLine "Dither type", _Trim$(Str$(DitherType))
+ReportLine "Graphics mode", _Trim$(Str$(GMode)) + "   %" + ByteToBin$(GMode)
+ReportLine "FPS", _Trim$(Str$(FPS))
+If CoCo1VideoOnly Then
+    If GModeIndex = 8 Then
+        ReportLine "CoCo mode", "GMODE 8  64x192 SG24 audio-buffer stream"
+        If CoCo1ArtifactMode = 0 Then
+            ReportLine "SG24 mode", "0 pair colour matching"
+        Else
+            ReportLine "SG24 mode", "1 3-pixel look-ahead matching"
+        End If
+    ElseIf GModeIndex = 15 Then
+        ReportLine "CoCo mode", "GMODE 15  128x192x4 audio-buffer stream"
+        If CoCo1ArtifactMode = 0 Then
+            ReportLine "Colour set", "0 green/yellow/blue/red"
+        Else
+            ReportLine "Colour set", "1 buff/cyan/magenta/orange"
+        End If
+    Else
+        ReportLine "CoCo mode", "GMODE 16  256x192x2 audio-buffer stream"
+        Select Case CoCo1ArtifactMode
+            Case 0
+                ReportLine "Artifact mode", "0 current 1-bit B/W"
+            Case 1
+                ReportLine "Artifact mode", "1 solid 2-pixel B/W"
+            Case 2
+                ReportLine "Artifact mode", "2 black/red/blue/white artifact"
+            Case 3
+                ReportLine "Artifact mode", "3 2x2 artifact colour"
+        End Select
+    End If
+ElseIf GModeIndex >= 100 And GModeIndex <= 165 Then
+    ReportLine "CoCo mode index", _Trim$(Str$(GModeIndex)) + "   " + GModeDesc$(GModeIndex)
+End If
+ReportLine "Screen size", _Trim$(Str$(ScreenW)) + " x " + _Trim$(Str$(ScreenH))
+ReportLine "Screen bytes/row", _Trim$(Str$(ScreenBytesPerRow))
+ReportLine "Video start row", _Trim$(Str$(StartRow))
+ReportLine "Video start byte", _Trim$(Str$(StartByteX))
+ReportLine "Video bytes/frame", _Trim$(Str$(VideoBytesPerFrame))
+ReportLine "Video sectors", _Trim$(Str$(VidSectors))
+ReportLine "Audio sectors", _Trim$(Str$(AudSectors))
+ReportLine "Audio bytes/frame", _Trim$(Str$(AudioBytesPerFrame))
+ReportLine "Sample rate", _Trim$(Str$(SampleRate))
+ReportLine "Bytes/second", _Trim$(Str$(BytesPerSecond))
+ReportLine "FIRQ delay", _Trim$(Str$(FIRQDelay))
+ReportLine "Mem start", "$" + Hex$(MemStart And &HFFFF)
+ReportLine "Palette mode", _Trim$(Str$(PalMode))
+ReportLine "Palette chooser", _Trim$(Str$(PalettePickMethod))
+ReportLine "Shadow luma/grey", _Trim$(Str$(ShadowLumaGreyMode))
+ReportLine "Frame pattern", FramePattern$
+If AudSectors > 0 Then ReportLine "Audio file", AudioFile$
+ReportLine "Output file", OutFile$
 Print
 
 'Dim I As Integer
@@ -421,15 +572,36 @@ If MovieName$ = "" Then
     MovieName$ = Left$(OutFile$, Len(OutFile$) - 4)
 End If
 Mess$(0) = MovieName$
-If GModeIndex > 159 Then Mode$ = "NTSC" Else Mode$ = "RGB"
+If CoCo1VideoOnly Then
+    If GModeIndex = 8 Then
+        Mode$ = "CoCo 1 GMODE 8 A/V"
+    ElseIf GModeIndex = 15 Then
+        Mode$ = "CoCo 1 GMODE 15 A/V"
+    Else
+        Mode$ = "CoCo 1 GMODE 16 A/V"
+    End If
+ElseIf GModeIndex > 159 Then
+    Mode$ = "NTSC"
+Else
+    Mode$ = "RGB"
+End If
 Mess$(1) = "Resolution: " + _Trim$(Str$(FrameW)) + " x " + _Trim$(Str$(FrameH)) + ", FPS: " + _Trim$(Str$(FPS)) + ", " + Mode$
 'Mess$(2) = "Video Bytes Per Frame: " + _Trim$(Str$(VideoBytesPerFrame))
-Mess$(2) = "Audio Sample Rate: " + _Trim$(Str$(SampleRate))
+If AudSectors > 0 Then
+    Mess$(2) = "Audio Sample Rate: " + _Trim$(Str$(SampleRate))
+Else
+    Mess$(2) = "Video Only"
+End If
 Mess$(3) = "Bytes/second: " + _Trim$(Str$(BytesPerSecond))
 
 Mess$(5) = ProgramName$ + " " + VersionNumber$
 Mess$(6) = "Options: -g" + _Trim$(Str$(GModeIndex)) + " -d" + _Trim$(Str$(DitherType)) + " -p" + _Trim$(Str$(PalMode)) + " -c" + _Trim$(Str$(PalettePickMethod))
-Mess$(6) = Mess$(6) + " -l" + _Trim$(Str$(ShadowLumaGreyMode)) + " -a" + _Trim$(Str$(AudSectors))
+Mess$(6) = Mess$(6) + " -l" + _Trim$(Str$(ShadowLumaGreyMode))
+If CoCo1VideoOnly Then
+    Mess$(6) = Mess$(6) + " -t" + _Trim$(Str$(CoCo1ArtifactMode))
+ElseIf AudSectors > 0 Then
+    Mess$(6) = Mess$(6) + " -a" + _Trim$(Str$(AudSectors))
+End If
 
 For I2 = 0 To 279
     TextMessage(I2) = &H20 ' Fill is with spaces
@@ -502,13 +674,26 @@ Do
     Next groupIndex
 
     If headerWritten = 0 Then
-        If ScreenColors = 4 Then
+        If ScreenColors = 2 Then
+            PalMode = 0
+            InitPalette(0) = &H00
+            InitPalette(1) = &H3F
+            For check = 2 To 15
+                InitPalette(check) = 0
+            Next check
+        ElseIf ScreenColors = 4 Then
             PalMode = 0
             InitPalette(0) = &H00
             InitPalette(1) = &H07
             InitPalette(2) = &H38
             InitPalette(3) = &H3F
             For check = 4 To 15
+                InitPalette(check) = 0
+            Next check
+        ElseIf ScreenColors = 9 Then
+            PalMode = 0
+            InitPalette(0) = &H00
+            For check = 1 To 15
                 InitPalette(check) = 0
             Next check
         ElseIf GModeIndex >= 160 Then
@@ -525,8 +710,7 @@ Do
                 InitPalette(check) = groupPalettes(check)
             Next check
         End If
-        Print
-        Print "Writing header..."
+        WriteStatusLine 19, "Writing header..."
         WriteHeaderSector outFH
         headerWritten = -1
     End If
@@ -558,13 +742,26 @@ Do
 Loop
 
 If headerWritten = 0 Then
-    If ScreenColors = 4 Then
+    If ScreenColors = 2 Then
+        PalMode = 0
+        InitPalette(0) = &H00
+        InitPalette(1) = &H3F
+        For check = 2 To 15
+            InitPalette(check) = 0
+        Next check
+    ElseIf ScreenColors = 4 Then
         PalMode = 0
         InitPalette(0) = &H00
         InitPalette(1) = &H07
         InitPalette(2) = &H38
         InitPalette(3) = &H3F
         For check = 4 To 15
+            InitPalette(check) = 0
+        Next check
+    ElseIf ScreenColors = 9 Then
+        PalMode = 0
+        InitPalette(0) = &H00
+        For check = 1 To 15
             InitPalette(check) = 0
         Next check
     ElseIf GModeIndex >= 160 Then
@@ -577,20 +774,20 @@ If headerWritten = 0 Then
             InitPalette(check) = 0
         Next check
     End If
-    Print "Writing header..."
+    WriteStatusLine 19, "Writing header..."
     WriteHeaderSector outFH
 End If
 
 Close #outFH
-Close #AudioFH
+If AudioFH <> 0 Then Close #AudioFH
 WriteStatusLine 18, Space$(79)
 WriteStatusLine 19, Space$(79)
-Print
+Locate 20, 1
 Print "Done."
-Print "Input file        "; AudioFile$
-Print "Frames written :"; frameCount
-Print "Audio bytes used:"; audioPos - 1
-Print "Output file    :"; OutFile$
+If AudioFile$ <> "" Then ReportLine "Input file", AudioFile$
+ReportLine "Frames written", _Trim$(Str$(frameCount))
+If AudSectors > 0 Then ReportLine "Audio bytes used", _Trim$(Str$(audioPos - 1))
+ReportLine "Output file", OutFile$
 System
 
 OrderedDitherData:
@@ -1703,10 +1900,24 @@ Sub ConvertOneFrame (frameFile$, frameVideo() As _Unsigned _Byte, framePalette()
     _FreeImage img
     _FreeImage tempImg
 
-    If ScreenColors = 2 Then
-        ConvertFrameTo1BitBW frameVideo(), framePalette()
+    If ScreenColors = 9 Then
+        ConvertFrameToCoCo1SG24 frameVideo(), framePalette()
+    ElseIf ScreenColors = 2 Then
+        If CoCo1VideoOnly And CoCo1ArtifactMode = 1 Then
+            ConvertFrameToCoCo1SolidBW frameVideo(), framePalette()
+        ElseIf CoCo1VideoOnly And CoCo1ArtifactMode = 2 Then
+            ConvertFrameToCoCo1Artifact4Color frameVideo(), framePalette()
+        ElseIf CoCo1VideoOnly And CoCo1ArtifactMode = 3 Then
+            ConvertFrameToCoCo1Artifact2x2 frameVideo(), framePalette()
+        Else
+            ConvertFrameTo1BitBW frameVideo(), framePalette()
+        End If
     ElseIf ScreenColors = 4 Then
-        ConvertFrameToGMode151Grey frameVideo(), framePalette()
+        If CoCo1VideoOnly Then
+            ConvertFrameToCoCo1GMode15 frameVideo(), framePalette()
+        Else
+            ConvertFrameToGMode151Grey frameVideo(), framePalette()
+        End If
     ElseIf PalMode <> 0 Then
         BuildBest16CoCoPalette framePalette()
         PackFrameTo4Bit frameVideo(), framePalette()
@@ -1999,6 +2210,421 @@ Function QuantizeGrey2Bit% (grey As Integer)
         QuantizeGrey2Bit = 3
     End If
 End Function
+
+Sub ConvertFrameToCoCo1SG24 (frameVideo() As _Unsigned _Byte, framePalette() As _Unsigned _Byte)
+    Dim x As Integer, y As Integer
+    Dim p As Long
+    Dim c As Integer, mask As Integer
+    Dim palR(0 To 8) As Integer, palG(0 To 8) As Integer, palB(0 To 8) As Integer
+    Dim testR0 As Single, testG0 As Single, testB0 As Single
+    Dim testR1 As Single, testG1 As Single, testB1 As Single
+    Dim testR2 As Single, testG2 As Single, testB2 As Single
+    Dim outR0 As Integer, outG0 As Integer, outB0 As Integer
+    Dim outR1 As Integer, outG1 As Integer, outB1 As Integer
+    Dim errR As Single, errG As Single, errB As Single
+    Dim er As Single, eg As Single, eb As Single
+    Dim dr As Long, dg As Long, db As Long
+    Dim dist As Long, bestDist As Long
+    Dim bestColor As Integer, bestMask As Integer
+    Dim threshold As Integer
+    Dim lowNibble As Integer
+    Dim lum0 As Integer, lum1 As Integer
+    Dim forceBlack0 As Integer, forceBlack1 As Integer
+    Dim forceWhite0 As Integer, forceWhite1 As Integer
+    Dim candidateValid As Integer
+    Dim avgR As Long, avgG As Long, avgB As Long
+
+    palR(0) = 0: palG(0) = 0: palB(0) = 0
+    palR(1) = 0: palG(1) = 255: palB(1) = 0       ' green
+    palR(2) = 255: palG(2) = 255: palB(2) = 0     ' yellow
+    palR(3) = 0: palG(3) = 0: palB(3) = 255       ' blue
+    palR(4) = 255: palG(4) = 0: palB(4) = 0       ' red
+    palR(5) = 255: palG(5) = 245: palB(5) = 200   ' buff / white
+    palR(6) = 0: palG(6) = 255: palB(6) = 255     ' cyan
+    palR(7) = 255: palG(7) = 0: palB(7) = 255     ' magenta
+    palR(8) = 255: palG(8) = 128: palB(8) = 0     ' orange
+
+    For c = 0 To 15
+        framePalette(c) = 0
+    Next c
+
+    If DitherType = 1 Then
+        ReDim errR(0 To FrameW + 1, 0 To FrameH + 1) As Single
+        ReDim errG(0 To FrameW + 1, 0 To FrameH + 1) As Single
+        ReDim errB(0 To FrameW + 1, 0 To FrameH + 1) As Single
+    ElseIf DitherType = 2 Then
+        Randomize 1
+    End If
+
+    p = 0
+    For y = 0 To FrameH - 1
+        For x = 0 To FrameW - 1 Step 2
+            testR0 = pixelR(x, y)
+            testG0 = pixelG(x, y)
+            testB0 = pixelB(x, y)
+            If x + 1 < FrameW Then
+                testR1 = pixelR(x + 1, y)
+                testG1 = pixelG(x + 1, y)
+                testB1 = pixelB(x + 1, y)
+            Else
+                testR1 = 0
+                testG1 = 0
+                testB1 = 0
+            End If
+            If x + 2 < FrameW Then
+                testR2 = pixelR(x + 2, y)
+                testG2 = pixelG(x + 2, y)
+                testB2 = pixelB(x + 2, y)
+            Else
+                testR2 = testR1
+                testG2 = testG1
+                testB2 = testB1
+            End If
+
+            If DitherType = 1 Then
+                testR0 = testR0 + errR(x, y)
+                testG0 = testG0 + errG(x, y)
+                testB0 = testB0 + errB(x, y)
+                If x + 1 < FrameW Then
+                    testR1 = testR1 + errR(x + 1, y)
+                    testG1 = testG1 + errG(x + 1, y)
+                    testB1 = testB1 + errB(x + 1, y)
+                End If
+                If x + 2 < FrameW Then
+                    testR2 = testR2 + errR(x + 2, y)
+                    testG2 = testG2 + errG(x + 2, y)
+                    testB2 = testB2 + errB(x + 2, y)
+                End If
+            ElseIf DitherType = 2 Then
+                testR0 = testR0 + Int(Rnd * 65) - 32
+                testG0 = testG0 + Int(Rnd * 65) - 32
+                testB0 = testB0 + Int(Rnd * 65) - 32
+                testR1 = testR1 + Int(Rnd * 65) - 32
+                testG1 = testG1 + Int(Rnd * 65) - 32
+                testB1 = testB1 + Int(Rnd * 65) - 32
+                If x + 2 < FrameW Then
+                    testR2 = testR2 + Int(Rnd * 65) - 32
+                    testG2 = testG2 + Int(Rnd * 65) - 32
+                    testB2 = testB2 + Int(Rnd * 65) - 32
+                End If
+            ElseIf DitherType = 3 Then
+                threshold = (OrderedArray(x And 7, y And 7) - 128) \ 3
+                testR0 = testR0 + threshold
+                testG0 = testG0 + threshold
+                testB0 = testB0 + threshold
+                If x + 1 < FrameW Then threshold = (OrderedArray((x + 1) And 7, y And 7) - 128) \ 3
+                testR1 = testR1 + threshold
+                testG1 = testG1 + threshold
+                testB1 = testB1 + threshold
+                If x + 2 < FrameW Then
+                    threshold = (OrderedArray((x + 2) And 7, y And 7) - 128) \ 3
+                    testR2 = testR2 + threshold
+                    testG2 = testG2 + threshold
+                    testB2 = testB2 + threshold
+                End If
+            End If
+
+            If testR0 < 0 Then testR0 = 0
+            If testR0 > 255 Then testR0 = 255
+            If testG0 < 0 Then testG0 = 0
+            If testG0 > 255 Then testG0 = 255
+            If testB0 < 0 Then testB0 = 0
+            If testB0 > 255 Then testB0 = 255
+            If testR1 < 0 Then testR1 = 0
+            If testR1 > 255 Then testR1 = 255
+            If testG1 < 0 Then testG1 = 0
+            If testG1 > 255 Then testG1 = 255
+            If testB1 < 0 Then testB1 = 0
+            If testB1 > 255 Then testB1 = 255
+            If testR2 < 0 Then testR2 = 0
+            If testR2 > 255 Then testR2 = 255
+            If testG2 < 0 Then testG2 = 0
+            If testG2 > 255 Then testG2 = 255
+            If testB2 < 0 Then testB2 = 0
+            If testB2 > 255 Then testB2 = 255
+
+            lum0 = (77 * CInt(testR0) + 150 * CInt(testG0) + 29 * CInt(testB0)) \ 256
+            lum1 = (77 * CInt(testR1) + 150 * CInt(testG1) + 29 * CInt(testB1)) \ 256
+            forceBlack0 = (lum0 < 48)
+            forceBlack1 = (lum1 < 48)
+            forceWhite0 = (lum0 > 220)
+            forceWhite1 = (lum1 > 220)
+
+            bestDist = 2147483647
+            bestColor = 0
+            bestMask = 0
+
+            For c = 0 To 8
+                If c = 0 Then
+                    mask = 0
+                    If forceWhite0 = 0 And forceWhite1 = 0 Then
+                        outR0 = 0: outG0 = 0: outB0 = 0
+                        outR1 = 0: outG1 = 0: outB1 = 0
+                        dr = CLng(testR0) - outR0: dg = CLng(testG0) - outG0: db = CLng(testB0) - outB0
+                        dist = dr * dr + dg * dg + db * db
+                        dr = CLng(testR1) - outR1: dg = CLng(testG1) - outG1: db = CLng(testB1) - outB1
+                        dist = dist + dr * dr + dg * dg + db * db
+                        If dist < bestDist Then
+                            bestDist = dist
+                            bestColor = c
+                            bestMask = mask
+                        End If
+                    End If
+                Else
+                    For mask = 1 To 3
+                        candidateValid = -1
+                        If forceBlack0 <> 0 And ((mask And 1) <> 0) Then candidateValid = 0
+                        If forceBlack1 <> 0 And ((mask And 2) <> 0) Then candidateValid = 0
+                        If forceWhite0 Then
+                            If c <> 5 Or (mask And 1) = 0 Then candidateValid = 0
+                        End If
+                        If forceWhite1 Then
+                            If c <> 5 Or (mask And 2) = 0 Then candidateValid = 0
+                        End If
+                        If candidateValid = 0 Then GoTo NextSG24Mask
+
+                        If (mask And 1) <> 0 Then
+                            outR0 = palR(c): outG0 = palG(c): outB0 = palB(c)
+                        Else
+                            outR0 = 0: outG0 = 0: outB0 = 0
+                        End If
+                        If (mask And 2) <> 0 Then
+                            outR1 = palR(c): outG1 = palG(c): outB1 = palB(c)
+                        Else
+                            outR1 = 0: outG1 = 0: outB1 = 0
+                        End If
+                        dr = CLng(testR0) - outR0: dg = CLng(testG0) - outG0: db = CLng(testB0) - outB0
+                        dist = dr * dr + dg * dg + db * db
+                        dr = CLng(testR1) - outR1: dg = CLng(testG1) - outG1: db = CLng(testB1) - outB1
+                        dist = dist + dr * dr + dg * dg + db * db
+                        If CoCo1ArtifactMode = 1 And mask = 3 And x + 2 < FrameW Then
+                            avgR = (CLng(testR0) + CLng(testR1) + CLng(testR2)) \ 3
+                            avgG = (CLng(testG0) + CLng(testG1) + CLng(testG2)) \ 3
+                            avgB = (CLng(testB0) + CLng(testB1) + CLng(testB2)) \ 3
+                            dr = avgR - palR(c): dg = avgG - palG(c): db = avgB - palB(c)
+                            dist = (dist \ 2) + 2 * (dr * dr + dg * dg + db * db)
+                        End If
+                        If dist < bestDist Then
+                            bestDist = dist
+                            bestColor = c
+                            bestMask = mask
+                        End If
+NextSG24Mask:
+                    Next mask
+                End If
+            Next c
+
+            If DitherType = 1 Then
+                If (bestMask And 1) <> 0 Then
+                    outR0 = palR(bestColor): outG0 = palG(bestColor): outB0 = palB(bestColor)
+                Else
+                    outR0 = 0: outG0 = 0: outB0 = 0
+                End If
+                If (bestMask And 2) <> 0 Then
+                    outR1 = palR(bestColor): outG1 = palG(bestColor): outB1 = palB(bestColor)
+                Else
+                    outR1 = 0: outG1 = 0: outB1 = 0
+                End If
+
+                er = testR0 - outR0: eg = testG0 - outG0: eb = testB0 - outB0
+                If x < FrameW - 1 Then
+                    errR(x + 1, y) = errR(x + 1, y) + er * 7! / 16!
+                    errG(x + 1, y) = errG(x + 1, y) + eg * 7! / 16!
+                    errB(x + 1, y) = errB(x + 1, y) + eb * 7! / 16!
+                End If
+                If y < FrameH - 1 Then
+                    If x > 0 Then
+                        errR(x - 1, y + 1) = errR(x - 1, y + 1) + er * 3! / 16!
+                        errG(x - 1, y + 1) = errG(x - 1, y + 1) + eg * 3! / 16!
+                        errB(x - 1, y + 1) = errB(x - 1, y + 1) + eb * 3! / 16!
+                    End If
+                    errR(x, y + 1) = errR(x, y + 1) + er * 5! / 16!
+                    errG(x, y + 1) = errG(x, y + 1) + eg * 5! / 16!
+                    errB(x, y + 1) = errB(x, y + 1) + eb * 5! / 16!
+                    If x < FrameW - 1 Then
+                        errR(x + 1, y + 1) = errR(x + 1, y + 1) + er * 1! / 16!
+                        errG(x + 1, y + 1) = errG(x + 1, y + 1) + eg * 1! / 16!
+                        errB(x + 1, y + 1) = errB(x + 1, y + 1) + eb * 1! / 16!
+                    End If
+                End If
+
+                If x + 1 < FrameW Then
+                    er = testR1 - outR1: eg = testG1 - outG1: eb = testB1 - outB1
+                    If x + 2 < FrameW Then
+                        errR(x + 2, y) = errR(x + 2, y) + er * 7! / 16!
+                        errG(x + 2, y) = errG(x + 2, y) + eg * 7! / 16!
+                        errB(x + 2, y) = errB(x + 2, y) + eb * 7! / 16!
+                    End If
+                    If y < FrameH - 1 Then
+                        errR(x, y + 1) = errR(x, y + 1) + er * 3! / 16!
+                        errG(x, y + 1) = errG(x, y + 1) + eg * 3! / 16!
+                        errB(x, y + 1) = errB(x, y + 1) + eb * 3! / 16!
+                        errR(x + 1, y + 1) = errR(x + 1, y + 1) + er * 5! / 16!
+                        errG(x + 1, y + 1) = errG(x + 1, y + 1) + eg * 5! / 16!
+                        errB(x + 1, y + 1) = errB(x + 1, y + 1) + eb * 5! / 16!
+                        If x + 2 < FrameW Then
+                            errR(x + 2, y + 1) = errR(x + 2, y + 1) + er * 1! / 16!
+                            errG(x + 2, y + 1) = errG(x + 2, y + 1) + eg * 1! / 16!
+                            errB(x + 2, y + 1) = errB(x + 2, y + 1) + eb * 1! / 16!
+                        End If
+                    End If
+                End If
+            End If
+
+            lowNibble = 0
+            If (bestMask And 1) <> 0 Then lowNibble = lowNibble Or &H0A
+            If (bestMask And 2) <> 0 Then lowNibble = lowNibble Or &H05
+            If bestColor = 0 Then
+                frameVideo(p) = &H80
+            Else
+                frameVideo(p) = (&H80 + (bestColor - 1) * &H10) Or lowNibble
+            End If
+            p = p + 1
+        Next x
+    Next y
+
+    While p <= UBound(frameVideo)
+        frameVideo(p) = &H80
+        p = p + 1
+    Wend
+End Sub
+
+Sub ConvertFrameToCoCo1GMode15 (frameVideo() As _Unsigned _Byte, framePalette() As _Unsigned _Byte)
+    Dim x As Integer, y As Integer
+    Dim p As Long
+    Dim q0 As Integer, q1 As Integer, q2 As Integer, q3 As Integer
+    Dim palR(0 To 3) As Integer, palG(0 To 3) As Integer, palB(0 To 3) As Integer
+    Dim testR As Single, testG As Single, testB As Single
+    Dim errR As Single, errG As Single, errB As Single
+    Dim er As Single, eg As Single, eb As Single
+    Dim dr As Long, dg As Long, db As Long
+    Dim best As Integer, check As Integer, bestDist As Long, dist As Long
+    Dim threshold As Integer
+    Dim lum As Integer
+
+    If CoCo1ArtifactMode = 0 Then
+        ' PMODE 3 / GMODE 15 colour set 0: green, yellow, blue, red.
+        palR(0) = 0: palG(0) = 255: palB(0) = 0
+        palR(1) = 255: palG(1) = 255: palB(1) = 0
+        palR(2) = 0: palG(2) = 0: palB(2) = 255
+        palR(3) = 255: palG(3) = 0: palB(3) = 0
+    Else
+        ' PMODE 3 / GMODE 15 colour set 1: buff, cyan, magenta, orange.
+        palR(0) = 255: palG(0) = 245: palB(0) = 200
+        palR(1) = 0: palG(1) = 255: palB(1) = 255
+        palR(2) = 255: palG(2) = 0: palB(2) = 255
+        palR(3) = 255: palG(3) = 128: palB(3) = 0
+    End If
+
+    For check = 0 To 3
+        framePalette(check) = check
+    Next check
+    For check = 4 To 15
+        framePalette(check) = 0
+    Next check
+
+    If DitherType = 1 Then
+        ReDim errR(0 To FrameW + 1, 0 To FrameH + 1) As Single
+        ReDim errG(0 To FrameW + 1, 0 To FrameH + 1) As Single
+        ReDim errB(0 To FrameW + 1, 0 To FrameH + 1) As Single
+    ElseIf DitherType = 2 Then
+        Randomize 1
+    End If
+
+    For y = 0 To FrameH - 1
+        For x = 0 To FrameW - 1
+            testR = pixelR(x, y)
+            testG = pixelG(x, y)
+            testB = pixelB(x, y)
+
+            If DitherType = 1 Then
+                testR = testR + errR(x, y)
+                testG = testG + errG(x, y)
+                testB = testB + errB(x, y)
+            ElseIf DitherType = 2 Then
+                testR = testR + Int(Rnd * 65) - 32
+                testG = testG + Int(Rnd * 65) - 32
+                testB = testB + Int(Rnd * 65) - 32
+            ElseIf DitherType = 3 Then
+                threshold = (OrderedArray(x And 7, y And 7) - 128) \ 3
+                testR = testR + threshold
+                testG = testG + threshold
+                testB = testB + threshold
+            End If
+
+            If testR < 0 Then testR = 0
+            If testR > 255 Then testR = 255
+            If testG < 0 Then testG = 0
+            If testG > 255 Then testG = 255
+            If testB < 0 Then testB = 0
+            If testB > 255 Then testB = 255
+
+            lum = (77 * CInt(testR) + 150 * CInt(testG) + 29 * CInt(testB)) \ 256
+            If CoCo1ArtifactMode = 0 And lum < 64 Then
+                best = 2
+            ElseIf CoCo1ArtifactMode = 0 And lum > 192 Then
+                best = 1
+            Else
+                best = 0
+                bestDist = 2147483647
+                For check = 0 To 3
+                    dr = CLng(testR) - palR(check)
+                    dg = CLng(testG) - palG(check)
+                    db = CLng(testB) - palB(check)
+                    dist = dr * dr + dg * dg + db * db
+                    If dist < bestDist Then
+                        bestDist = dist
+                        best = check
+                    End If
+                Next check
+            End If
+            DitherOut(x, y) = best
+
+            If DitherType = 1 Then
+                er = testR - palR(best)
+                eg = testG - palG(best)
+                eb = testB - palB(best)
+                If x < FrameW - 1 Then
+                    errR(x + 1, y) = errR(x + 1, y) + er * 7! / 16!
+                    errG(x + 1, y) = errG(x + 1, y) + eg * 7! / 16!
+                    errB(x + 1, y) = errB(x + 1, y) + eb * 7! / 16!
+                End If
+                If y < FrameH - 1 Then
+                    If x > 0 Then
+                        errR(x - 1, y + 1) = errR(x - 1, y + 1) + er * 3! / 16!
+                        errG(x - 1, y + 1) = errG(x - 1, y + 1) + eg * 3! / 16!
+                        errB(x - 1, y + 1) = errB(x - 1, y + 1) + eb * 3! / 16!
+                    End If
+                    errR(x, y + 1) = errR(x, y + 1) + er * 5! / 16!
+                    errG(x, y + 1) = errG(x, y + 1) + eg * 5! / 16!
+                    errB(x, y + 1) = errB(x, y + 1) + eb * 5! / 16!
+                    If x < FrameW - 1 Then
+                        errR(x + 1, y + 1) = errR(x + 1, y + 1) + er * 1! / 16!
+                        errG(x + 1, y + 1) = errG(x + 1, y + 1) + eg * 1! / 16!
+                        errB(x + 1, y + 1) = errB(x + 1, y + 1) + eb * 1! / 16!
+                    End If
+                End If
+            End If
+        Next x
+    Next y
+
+    p = 0
+    For y = 0 To FrameH - 1
+        For x = 0 To FrameW - 1 Step 4
+            q0 = DitherOut(x, y) And 3
+            If x + 1 < FrameW Then q1 = DitherOut(x + 1, y) And 3 Else q1 = 0
+            If x + 2 < FrameW Then q2 = DitherOut(x + 2, y) And 3 Else q2 = 0
+            If x + 3 < FrameW Then q3 = DitherOut(x + 3, y) And 3 Else q3 = 0
+            frameVideo(p) = (q0 * 64) Or (q1 * 16) Or (q2 * 4) Or q3
+            p = p + 1
+        Next x
+    Next y
+
+    While p <= UBound(frameVideo)
+        frameVideo(p) = 0
+        p = p + 1
+    Wend
+End Sub
 
 Sub ConvertFrameToGMode151Grey (frameVideo() As _Unsigned _Byte, framePalette() As _Unsigned _Byte)
     Dim x As Integer, y As Integer
@@ -2337,8 +2963,90 @@ Sub BuildMuxedFrame (frameVideo() As _Unsigned _Byte, muxedFrame() As _Unsigned 
     Dim startPos As Long
     Dim ii2 As Integer
     Dim ii3 As Integer
+    Dim audioPosInFrame As Integer
+    Dim audioSample As Long
+    Dim audioEnd As Long
+    Dim groupLast As Long
     Dim a As _Unsigned _Byte
     Dim frameAudio As _Unsigned _Byte
+
+    If CoCo1VideoOnly Then
+        ReDim frameAudio(0 To AudSectors * BYTES_PER_SECTOR - 1) As _Unsigned _Byte
+        For ii2 = 0 To UBound(frameAudio)
+            If AudioFH <> 0 And audioPos <= audioLen Then
+                Get #AudioFH, audioPos, a
+                audioPos = audioPos + 1
+            Else
+                a = 128
+            End If
+            frameAudio(ii2) = a
+        Next ii2
+
+        outPos = 0
+        ' The CoCo 1 player now starts the audio-buffer load with:
+        '   LDD <$4A / STA <$20 / LDY #AudioBufferEnd+1 / STB -1,Y
+        ' The first LDD must therefore read audio byte 0 into A and byte 1
+        ' into B.  The following bytes are written with PSHS in normal
+        ' stack-blast order, and the final two bytes match the final
+        ' LDD <$4A / PSHS D at the end of the audio-buffer fill.
+        audioEnd = AudSectors * BYTES_PER_SECTOR - 1
+        muxedFrame(outPos) = frameAudio(0): outPos = outPos + 1
+        muxedFrame(outPos) = frameAudio(1): outPos = outPos + 1
+
+        audioSample = 2
+        Do While audioSample <= audioEnd - 2
+            groupLast = audioSample + 5
+            For ii3 = groupLast To audioSample Step -1
+                muxedFrame(outPos) = frameAudio(ii3)
+                outPos = outPos + 1
+            Next ii3
+            audioSample = groupLast + 1
+        Loop
+
+        muxedFrame(outPos) = frameAudio(audioEnd): outPos = outPos + 1
+        muxedFrame(outPos) = frameAudio(audioEnd - 1): outPos = outPos + 1
+
+        startPos = VidSectors * BYTES_PER_SECTOR - 1
+        For ii2 = 1 To VidSectors
+            For ii3 = 1 To 12 * 7 + 1
+                muxedFrame(outPos) = frameVideo(startPos - 5): outPos = outPos + 1
+                muxedFrame(outPos) = frameVideo(startPos - 4): outPos = outPos + 1
+                muxedFrame(outPos) = frameVideo(startPos - 3): outPos = outPos + 1
+                muxedFrame(outPos) = frameVideo(startPos - 2): outPos = outPos + 1
+                muxedFrame(outPos) = frameVideo(startPos - 1): outPos = outPos + 1
+                muxedFrame(outPos) = frameVideo(startPos): outPos = outPos + 1
+                startPos = startPos - 6
+            Next ii3
+            muxedFrame(outPos) = frameVideo(startPos - 1): outPos = outPos + 1
+            muxedFrame(outPos) = frameVideo(startPos): outPos = outPos + 1
+            startPos = startPos - 2
+        Next ii2
+        While outPos <= UBound(muxedFrame)
+            muxedFrame(outPos) = 0
+            outPos = outPos + 1
+        Wend
+        Exit Sub
+    End If
+
+    If AudSectors = 0 Then
+        outPos = 0
+        startPos = VidSectors * BYTES_PER_SECTOR - 1
+        For ii2 = 1 To VidSectors
+            For ii3 = 1 To 12 * 7 + 1
+                muxedFrame(outPos) = frameVideo(startPos - 5): outPos = outPos + 1
+                muxedFrame(outPos) = frameVideo(startPos - 4): outPos = outPos + 1
+                muxedFrame(outPos) = frameVideo(startPos - 3): outPos = outPos + 1
+                muxedFrame(outPos) = frameVideo(startPos - 2): outPos = outPos + 1
+                muxedFrame(outPos) = frameVideo(startPos - 1): outPos = outPos + 1
+                muxedFrame(outPos) = frameVideo(startPos): outPos = outPos + 1
+                startPos = startPos - 6
+            Next ii3
+            muxedFrame(outPos) = frameVideo(startPos - 1): outPos = outPos + 1
+            muxedFrame(outPos) = frameVideo(startPos): outPos = outPos + 1
+            startPos = startPos - 2
+        Next ii2
+        Exit Sub
+    End If
 
     ReDim frameAudio(0 To AudSectors * BYTES_PER_SECTOR - 1) As _Unsigned _Byte
 
@@ -2757,39 +3465,75 @@ End Sub
 
 Sub ShowUsage
     Print
-    Print "MakeNTM v"; VersionNumber$
+    Print "MakeNTM v"; VersionNumber$; " by Glen Hewlett"
     Print
-    Print "Creates CoCo 3 .NTM movie files from PNG frames and unsigned 8-bit audio."
+    Print "Creates CoCo .NTM movie files from PNG frames and unsigned 8-bit audio."
+    Print "Supports CoCo 1 GMODE 8/15/16 movies with audio-buffer stream playback."
     Print "It can also call ffprobe/ffmpeg directly to extract frames and audio from a movie source."
     Print
     Print "Usage:"
     Print "  MakeNTM [options] WxH AudioSectors FramePattern AudioFile OutputFile"
+    Print "  MakeNTM -g8 [options] WxH FramePattern OutputFile"
+    Print "  MakeNTM -g8 [options] WxH FramePattern AudioFile OutputFile"
+    Print "  MakeNTM -g15 [options] WxH FramePattern OutputFile"
+    Print "  MakeNTM -g15 [options] WxH FramePattern AudioFile OutputFile"
+    Print "  MakeNTM -g16 [options] WxH FramePattern OutputFile"
+    Print "  MakeNTM -g16 [options] WxH FramePattern AudioFile OutputFile"
     Print "  MakeNTM -i=input.mkv -o=movie.ntm -g136 -f12 -a2 [movie options]"
+    Print "  MakeNTM -i=input.mkv -o=movie.ntm -g8 [movie options]"
+    Print "  MakeNTM -i=input.mkv -o=movie.ntm -g15 [movie options]"
+    Print "  MakeNTM -i=input.mkv -o=movie.ntm -g16 [movie options]"
     Print
-    Print "Required arguments:"
+    Print "PNG/audio input arguments:"
     Print "  WxH           Input frame size, for example 128x107 or 256x192"
+    Print "                -g8 requires 64x192; -g15 requires 128x192;"
+    Print "                -g16 requires 256x192"
     Print "                You may also use the multiplication symbol instead of x."
     Print "  AudioSectors  Number of 512-byte audio sectors per frame"
+    Print "                Example: 2 gives FPS * 1024 audio bytes/second"
+    Print "                -g8/-g15/-g16 ignore this and always use two audio sectors"
     Print "  FramePattern  PNG filename pattern such as frames/frame%06d.png"
     Print "  AudioFile     Raw unsigned 8-bit mono audio file, usually .u8"
+    Print "                Optional for -g8/-g15/-g16; omitted audio is filled with silence"
     Print "  OutputFile    Output .NTM movie file to create"
     Print
-    Print "Options:"
-    Print "  -d#           Dither mode"
+    Print "Movie-source input arguments:"
+    Print "  -i=file       Input movie file.  This switches to ffmpeg/ffprobe mode."
+    Print "                In this mode, -i= is not the initial-palette option."
+    Print "                Example: -i=tears_of_steel_720p.mov"
+    Print "  -o=file       Output .NTM movie file"
+    Print "                Example: -o=TEST16.NTM"
+    Print "  -n=pattern    Optional extracted PNG frame pattern"
+    Print "                Default: frames/frame%06d.png"
+    Print "                Example: -n=tmp/frame%05d.png"
+    Print
+    Print "Common options:"
+    Print "  -d#           Dither mode used by the frame converter"
     Print "                -d0 = none"
     Print "                -d1 = Floyd-Steinberg"
     Print "                -d2 = blue-noise style"
     Print "                -d3 = ordered"
+    Print "                Example: -d1"
     Print
-    Print "  -l#           Shadow luma/grey Floyd mode for -p1 RGB 16-colour output"
-    Print "                -l0 = off, use classic RGB Floyd in dark areas"
-    Print "                -l1 = on, prefer luminance/grey handling in neutral shadows"
-    Print
-    Print "  -f#           Frames per second written into the .NTM header"
-    Print "                Also used to calculate audio sample rate"
+    Print "  -f# or -fps#  Frames per second written into the .NTM header"
+    Print "                Also used to calculate extracted audio sample rate"
+    Print "                -g8/-g15/-g16 always force 12 fps regardless of this value"
     Print "                Example: -f10"
     Print
-    Print "  -g#           CoCo 3 graphics mode selection"
+    Print "  -g#           Graphics mode selection"
+    Print "                -g8 selects CoCo 1 GMODE 8 / SG24, 64x192x9 stream"
+    Print "                -g15 selects CoCo 1 GMODE 15, 128x192x4 audio-buffer stream"
+    Print "                -g16 selects CoCo 1 GMODE 16, 256x192x2 audio-buffer stream"
+    Print "                It writes 14-sector frames: two 512-byte audio buffers,"
+    Print "                followed by twelve 512-byte stack-blasted video sectors."
+    Print "                With -g15, -t# selects PMODE 3 colour set:"
+    Print "                  -t0 = colour set 0, green/yellow/blue/red (default)"
+    Print "                  -t1 = colour set 1, buff/cyan/magenta/orange"
+    Print "                With -g16, -t# selects artifact conversion mode:"
+    Print "                  -t0 = current 1-bit black/white conversion"
+    Print "                  -t1 = solid black/white with two-pixel white pairs"
+    Print "                  -t2 = black/red/blue/white artifact matching (default)"
+    Print "                  -t3 = 2x2 CoCo artifact colour matching"
     Print "                If # is 100..165, the built-in mode table is used"
     Print "                Example: -g145 selects CoCo mode 145 = %00011110"
     Print "                If # is outside 100..165, it is used as the raw header byte"
@@ -2801,6 +3545,11 @@ Sub ShowUsage
     Print "                  -g151 = 512x192x4    byte 25   %00011001"
     Print "                  -g164 = 640x200x4    byte 61   %00111101"
     Print
+    Print "  -name=text    Movie title stored in the .NTM header"
+    Print "                Also accepted as --name=text in movie-source mode"
+    Print "                Example: -name=""GMODE 16 Test"""
+    Print
+    Print "Screen placement options:"
     Print "  -y#           Top row on screen where the video should start"
     Print "                If omitted, the movie is vertically centred on the screen"
     Print "                The program calculates the stack-blast start address for you"
@@ -2811,11 +3560,33 @@ Sub ShowUsage
     Print "  -maddr        Optional manual override for the stack-blast start address"
     Print "                Decimal, $hex, or &Hhex are accepted"
     Print "                This overrides -y# if both are supplied later on the command line"
+    Print "                Example: -m$E000"
+    Print
+    Print "GMODE 8/15/16 options:"
+    Print "  -t#           Colour/artifact conversion mode"
+    Print "                For -g8:"
+    Print "                  -t0 = SG24 pair colour matching (default)"
+    Print "                  -t1 = SG24 3-pixel look-ahead matching"
+    Print "                For -g15:"
+    Print "                  -t0 = colour set 0, green/yellow/blue/red (default)"
+    Print "                  -t1 = colour set 1, buff/cyan/magenta/orange"
+    Print "                For -g16:"
+    Print "                  -t0 = current 1-bit black/white conversion"
+    Print "                  -t1 = solid black/white with two-pixel white pairs"
+    Print "                  -t2 = black/red/blue/white artifact matching (default)"
+    Print "                  -t3 = 2x2 CoCo artifact colour matching"
+    Print "                Examples: -g8 -t1, -g15 -t0, -g16 -t2"
+    Print
+    Print "Audio and CoCo 3 palette options:"
+    Print "  -a#           Audio sectors per frame in movie-source mode"
+    Print "                In PNG/audio mode this is the positional AudioSectors argument"
+    Print "                Ignored by -g8/-g15/-g16, which always use two audio sectors"
+    Print "                Example: -a2"
     Print
     Print "  -p0           No per-frame palette sectors"
     Print "                Video is written using the non-palette path"
     Print "  -p1           Enable per-frame palette sectors"
-    Print "                Ignored for -g151 grayscale mode"
+    Print "                Ignored for -g151 grayscale mode and forced off for -g8/-g15/-g16"
     Print "                For CoCo 3 16-colour RGB modes this will:"
     Print "                  * reserve palette slot 0 for black ($00)"
     Print "                  * choose the best 15 remaining CoCo RGB colours"
@@ -2827,19 +3598,73 @@ Sub ShowUsage
     Print "  -c1           Palette chooser method 1"
     Print "                Choose 15 non-black colours using a frequency-weighted"
     Print "                diversity score so the palette spreads out more"
+    Print "                Used with -p1 RGB 16-colour output"
+    Print
+    Print "  -l#           Shadow luma/grey Floyd mode for -p1 RGB 16-colour output"
+    Print "                -l0 = off, use classic RGB Floyd in dark areas"
+    Print "                -l1 = on, prefer luminance/grey handling in neutral shadows"
+    Print "                Example: -l1"
     Print
     Print "  -i=v0,v1,...  Set the 16 initial palette bytes stored in the header"
+    Print "                PNG/audio input mode only; -i=file means movie input"
     Print "                Supply exactly 16 values from 0 to 63"
     Print "                Example:"
     Print "                  -i=0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15"
     Print
+    Print "  -sp#=value    Force one initial palette slot value in the header"
+    Print "                # must be 1..15, value is 0..63"
+    Print "                Palette slot 0 is reserved for black"
+    Print "                Example: -sp1=63"
+    Print
+    Print "Movie-source options:"
+    Print "  -r=WxH        Force active movie size before padding/placement"
+    Print "                Example: -r=256x144"
+    Print
+    Print "  -s=factor     Scale active movie size by factor 0 < factor <= 1"
+    Print "                Example: -s=.75"
+    Print
+    Print "  -pillar       Pad movie-source output to the selected screen width"
+    Print "                This is the default when needed"
+    Print "  -nopillar     Do not add side pillar bars in movie-source mode"
+    Print "                Example: -nopillar"
+    Print
+    Print "  -b0           Disable automatic ffmpeg crop detection"
+    Print "                Default is automatic crop detection"
+    Print "                Example: -b0"
+    Print
+    Print "  -k            Keep extracted frames/audio files after conversion"
+    Print "                Example: -k"
+    Print
+    Print "  --start=time  Start trim point for movie-source input"
+    Print "  --end=time    End trim point"
+    Print "  --length=time Duration to encode"
+    Print "                Short forms -start=, -end=, and -length= also work"
+    Print "                Times may be HH:MM:SS or seconds"
+    Print "                Examples: --start=00:05:00 --length=00:01:00"
+    Print
+    Print "  --audio-track=choice"
+    Print "                Audio stream preference: auto, mono, stereo, surround,"
+    Print "                a1/a2/... for ordinal audio track, or a stream index"
+    Print "                Example: --audio-track=a2"
+    Print
+    Print "  --audio-normalize=on|off"
+    Print "                Enables ffmpeg loudnorm/alimiter before resampling"
+    Print "                Default: on"
+    Print "                Example: --audio-normalize=off"
+    Print
+    Print "  --ffmpeg=path    Override ffmpeg executable"
+    Print "  --ffprobe=path   Override ffprobe executable"
+    Print "                   Example: --ffmpeg=/opt/homebrew/bin/ffmpeg"
+    Print
     Print "Calculated values:"
     Print "  Video sectors = ceiling(video bytes per frame / 512)"
     Print "  Audio rate    = FPS * AudioSectors * 512"
-    Print "  FIRQ delay    = 1000000 / (SampleRate * 0.279365)"
+    Print "  FIRQ delay    = 1000000 / (SampleRate * 0.279365), unused by -g8/-g15/-g16"
     Print
     Print "Video byte count:"
     Print "  Normal path   = Width * Height"
+    Print "  -g8 SG24 path = ((Width + 1) \ 2) * Height"
+    Print "                because SG24 stores 2 chunky pixels per byte"
     Print "  -p1 path      = ((Width + 1) \ 2) * Height"
     Print "                because 16-colour mode stores 2 pixels per byte"
     Print
@@ -2848,10 +3673,19 @@ Sub ShowUsage
     Print "  MakeNTM -d1 -f10 -g151 -y24 -p0 512x144 1 frames/frame%06d.png audio.u8 movie.ntm"
     Print "  MakeNTM -d1 -f10 -g136 -y0 -p1 -c0 256x192 2 frames/frame%06d.png audio.u8 movie.ntm"
     Print "  MakeNTM -d1 -f10 -g136 -p1 -c1 256x107 2 frames/frame%06d.png audio.u8 movie.ntm"
+    Print "  MakeNTM -d1 -g8 64x192 frames/frame%06d.png movie.ntm"
+    Print "  MakeNTM -i=input.mp4 -o=movie.ntm -g8 --length=00:01:00"
+    Print "  MakeNTM -d1 -g15 -t0 128x192 frames/frame%06d.png movie.ntm"
+    Print "  MakeNTM -i=input.mp4 -o=movie.ntm -g15 -t1 --length=00:01:00"
+    Print "  MakeNTM -d1 -g16 -t2 256x192 frames/frame%06d.png movie.ntm"
+    Print "  MakeNTM -d1 -g16 -t0 256x192 frames/frame%06d.png audio.u8 movie.ntm"
+    Print "  MakeNTM -i=input.mp4 -o=movie.ntm -g16 -t2 --start=00:05:00 --length=00:01:00"
+    Print "  MakeNTM -i=input.mov -o=movie.ntm -g136 -f12 -a2 -p1 -c1 -r=256x144"
     Print
     Print "Notes:"
     Print "  - The program writes a 512-byte .NTM header sector first."
     Print "  - Palette sectors are written every 32 frames when -p1 is used."
+    Print "  - -g8/-g15/-g16 always force 12 fps, -p0, and two audio sectors."
     Print "  - -g151 always forces -p0 and uses fixed grey palette 00,07,38,3F."
     Print "  - -g100..-g165 use the built-in CoCo 3 graphics mode table."
     Print "  - In -p1 mode, the header initial palette is taken from the first frame."
@@ -2983,6 +3817,13 @@ End Function
 Function GetModeInfo% (modeIndex As Integer, modeW As Integer, modeH As Integer, modeColors As Integer)
     Dim d$, p1 As Integer, p2 As Integer, p3 As Integer
     modeW = 0: modeH = 0: modeColors = 0
+    If modeIndex = 16 Then
+        modeW = 256
+        modeH = 192
+        modeColors = 2
+        GetModeInfo = -1
+        Exit Function
+    End If
     If modeIndex < 100 Or modeIndex > 165 Then
         GetModeInfo = 0
         Exit Function
@@ -3259,6 +4100,10 @@ End Sub
 Sub WriteStatusLine (row As Integer, msg$)
     Locate row, 1
     Print Left$(msg$ + Space$(79), 79);
+End Sub
+
+Sub ReportLine (label$, value$)
+    Print Left$(label$ + Space$(18), 18); value$
 End Sub
 
 Function BuildJumpSectorForPercent& (Percent As Integer, TotalFrames As Long, VideoSectors As Integer, AudioSectors As Integer, PalMode As Integer)
@@ -3723,12 +4568,14 @@ Function ExtractRawOptValue$ (rawCmd$, optA$, optB$)
     ExtractRawOptValue$ = out$
 End Function
 
-Function BuildVideoFilter$ (ffmpeg$, ffprobe$, inputFile$, fps As Integer, screenW As Integer, screenH As Integer, movieW As Integer, movieH As Integer, frameOutW As Integer, frameOutH As Integer, srcW As Integer, srcH As Integer, cropInfo$, hdrInfo$, scaleTxt$, resTxt$, autoCrop As Integer, startTime$, noPillar As Integer)
+Function BuildVideoFilter$ (ffmpeg$, ffprobe$, inputFile$, fps As Integer, screenW As Integer, screenH As Integer, movieW As Integer, movieH As Integer, frameOutW As Integer, frameOutH As Integer, srcW As Integer, srcH As Integer, cropInfo$, hdrInfo$, scaleTxt$, resTxt$, autoCrop As Integer, startTime$, noPillar As Integer, forceFullFrame As Integer)
     Dim filter$
     Dim info$, srcTransfer$, srcPrimaries$, srcColorSpace$
     filter$ = ""
     Dim logicalW As Integer, cropW As Integer, cropH As Integer, cropX As Integer, cropY As Integer
     Dim cropRes$, p1 As Long, p2 As Long, p3 As Long, useW As Integer, useH As Integer
+    Dim fitSrcW As Integer, fitSrcH As Integer, fitScale As Double
+    Dim fitLogicalW As Integer, movieDisplayW As Integer, pixelAspectDivisor As Integer
     info$ = CaptureCommandOutput$(ShellQuote$(ffprobe$) + " -v error -select_streams v:0 -show_entries stream=width,height,color_transfer,color_primaries,color_space -of default=noprint_wrappers=1:nokey=0 " + ShellQuote$(inputFile$))
     srcW = Val(GetFFProbeValue$(info$, "width"))
     srcH = Val(GetFFProbeValue$(info$, "height"))
@@ -3736,6 +4583,8 @@ Function BuildVideoFilter$ (ffmpeg$, ffprobe$, inputFile$, fps As Integer, scree
     srcPrimaries$ = LCase$(GetFFProbeValue$(info$, "color_primaries"))
     srcColorSpace$ = LCase$(GetFFProbeValue$(info$, "color_space"))
     If srcW < 1 Or srcH < 1 Then Exit Function
+    fitSrcW = srcW
+    fitSrcH = srcH
     logicalW = 256
     If resTxt$ = "" Then
         movieW = screenW
@@ -3763,6 +4612,8 @@ Function BuildVideoFilter$ (ffmpeg$, ffprobe$, inputFile$, fps As Integer, scree
                 cropH = Val(Mid$(cropRes$, p1 + 1, p2 - p1 - 1))
                 cropX = Val(Mid$(cropRes$, p2 + 1, p3 - p2 - 1))
                 cropY = Val(Mid$(cropRes$, p3 + 1))
+                fitSrcW = cropW
+                fitSrcH = cropH
                 If resTxt$ = "" Then
                     movieH = Int((logicalW * cropH / cropW) + .5)
                     If movieH > screenH Then movieH = screenH
@@ -3772,6 +4623,32 @@ Function BuildVideoFilter$ (ffmpeg$, ffprobe$, inputFile$, fps As Integer, scree
             End If
         End If
     End If
+    If forceFullFrame <> 0 And resTxt$ = "" Then
+        fitLogicalW = screenW
+        pixelAspectDivisor = 1
+        If screenW = 128 And screenH = 192 Then pixelAspectDivisor = 2
+        If screenW = 64 And screenH = 192 Then pixelAspectDivisor = 4
+        fitLogicalW = screenW * pixelAspectDivisor
+        fitScale = fitLogicalW / fitSrcW
+        If screenH / fitSrcH < fitScale Then fitScale = screenH / fitSrcH
+        movieDisplayW = Int(fitSrcW * fitScale + .5)
+        movieW = Int(movieDisplayW / pixelAspectDivisor + .5)
+        movieH = Int(fitSrcH * fitScale + .5)
+        If movieW < 1 Then movieW = 1
+        If movieH < 1 Then movieH = 1
+        If movieW > 1 And (movieW Mod 2) <> 0 Then movieW = movieW - 1
+        If movieH > 1 And (movieH Mod 2) <> 0 Then movieH = movieH - 1
+    End If
+    If forceFullFrame <> 0 And (movieW > screenW Or movieH > screenH) Then
+        fitScale = screenW / movieW
+        If screenH / movieH < fitScale Then fitScale = screenH / movieH
+        movieW = Int(movieW * fitScale + .5)
+        movieH = Int(movieH * fitScale + .5)
+        If movieW < 1 Then movieW = 1
+        If movieH < 1 Then movieH = 1
+        If movieW > 1 And (movieW Mod 2) <> 0 Then movieW = movieW - 1
+        If movieH > 1 And (movieH Mod 2) <> 0 Then movieH = movieH - 1
+    End If
     If srcTransfer$ = "smpte2084" Or srcTransfer$ = "arib-std-b67" Or srcPrimaries$ = "bt2020" Or srcColorSpace$ = "bt2020nc" Or srcColorSpace$ = "bt2020c" Then
         hdrInfo$ = "HDR"
     Else
@@ -3779,6 +4656,17 @@ Function BuildVideoFilter$ (ffmpeg$, ffprobe$, inputFile$, fps As Integer, scree
     End If
     useW = movieW: useH = movieH
     frameOutW = movieW: frameOutH = movieH
+    If forceFullFrame <> 0 Then
+        frameOutW = screenW
+        frameOutH = screenH
+        filter$ = filter$ + "fps=" + LTrim$(Str$(fps)) + ","
+        If hdrInfo$ = "HDR" Then
+            filter$ = filter$ + "zscale=transfer=linear:npl=100,format=gbrpf32le,tonemap=tonemap=mobius:desat=2:peak=100,zscale=primaries=bt709:transfer=bt709:matrix=bt709:range=full,"
+        End If
+        filter$ = filter$ + "scale=" + LTrim$(Str$(useW)) + ":" + LTrim$(Str$(useH)) + ":flags=lanczos+accurate_rnd+full_chroma_int,pad=" + LTrim$(Str$(screenW)) + ":" + LTrim$(Str$(screenH)) + ":(ow-iw)/2:(oh-ih)/2:black,setsar=1,format=rgb24"
+        BuildVideoFilter$ = filter$
+        Exit Function
+    End If
     If scaleTxt$ <> "" Then
         filter$ = filter$ + "fps=" + LTrim$(Str$(fps)) + ","
         If hdrInfo$ = "HDR" Then
@@ -3840,8 +4728,18 @@ Sub PrepareMovieInputMode (count As Integer, ResArg$, AudSectors As Integer, Fra
         If Left$(aLower$, 3) = "-i=" Then inputMovie$ = Mid$(a$, 4)
         If Left$(aLower$, 3) = "-o=" Then OutFile$ = Mid$(a$, 4)
         If Left$(aLower$, 2) = "-g" Then gm = Val(Mid$(a$, 3))
-        If Left$(aLower$, 2) = "-f" Then reqFPS = Val(Mid$(a$, 3))
-        If Left$(aLower$, 2) = "-a" Then AudSectors = Val(Mid$(a$, 3))
+        If Left$(aLower$, 4) = "-fps" Then
+            reqFPS = Val(Mid$(a$, 5))
+        ElseIf Left$(aLower$, 2) = "-f" Then
+            reqFPS = Val(Mid$(a$, 3))
+        End If
+        If Left$(aLower$, 2) = "-a" Then
+            AudSectors = Val(Mid$(a$, 3))
+        End If
+        If Left$(aLower$, 2) = "-t" Then
+            CoCo1ArtifactMode = Val(Mid$(a$, 3))
+            CoCo1ArtifactModeSpecified = -1
+        End If
         If Left$(aLower$, 2) = "-d" Then DitherType = Val(Mid$(a$, 3))
         If Left$(aLower$, 3) = "-sp" Then
             eqPos = InStr(a$, "=")
@@ -3889,16 +4787,34 @@ Sub PrepareMovieInputMode (count As Integer, ResArg$, AudSectors As Integer, Fra
     If rawStart$ <> "" Then startTime$ = rawStart$
     If rawEnd$ <> "" Then endTime$ = rawEnd$
     If rawLength$ <> "" Then lengthTime$ = rawLength$
-    If inputMovie$ = "" Or OutFile$ = "" Or gm = 0 Or reqFPS = 0 Or AudSectors = 0 Then
+    If gm = 8 Or gm = 15 Or gm = 16 Then
+        AudSectors = 2
+        reqFPS = 12
+    End If
+    If inputMovie$ = "" Or OutFile$ = "" Or gm = 0 Or reqFPS = 0 Or (gm <> 8 And gm <> 15 And gm <> 16 And AudSectors = 0) Then
         ShowUsage
         System
     End If
     GModeIndex = gm
     GMode = ResolveGModeArg(gm)
     FPS = reqFPS
-    If GetModeInfo(gm, screenW, screenH, colors) = 0 Then
-        Print "Error: could not decode CoCo mode "; gm
-        System
+    If gm = 8 Then
+        screenW = 64
+        screenH = 192
+        colors = 9
+    ElseIf gm = 15 Then
+        screenW = 128
+        screenH = 192
+        colors = 4
+    ElseIf gm = 16 Then
+        screenW = 256
+        screenH = 192
+        colors = 2
+    Else
+        If GetModeInfo(gm, screenW, screenH, colors) = 0 Then
+            Print "Error: could not decode CoCo mode "; gm
+            System
+        End If
     End If
     If scaleTxt$ <> "" Then
         resTxt$ = ComputeScaledRes$(screenW, screenH, scaleTxt$)
@@ -3907,7 +4823,7 @@ Sub PrepareMovieInputMode (count As Integer, ResArg$, AudSectors As Integer, Fra
             System
         End If
     End If
-    filter$ = BuildVideoFilter$(ffmpeg$, ffprobe$, inputMovie$, reqFPS, screenW, screenH, movieW, movieH, outW, outH, srcW, srcH, cropInfo$, hdrInfo$, scaleTxt$, resTxt$, autoCrop, startTime$, NoPillar)
+    filter$ = BuildVideoFilter$(ffmpeg$, ffprobe$, inputMovie$, reqFPS, screenW, screenH, movieW, movieH, outW, outH, srcW, srcH, cropInfo$, hdrInfo$, scaleTxt$, resTxt$, autoCrop, startTime$, NoPillar, gm = 8 Or gm = 15 Or gm = 16)
     If filter$ = "" Then
         Print "Error: could not build ffmpeg video filter"
         System
@@ -4089,4 +5005,412 @@ Sub ConvertFrameTo1BitBW (frameVideo() As _Unsigned _Byte, framePalette() As _Un
     Wend
 End Sub
 
+Sub PackDitherOutTo1Bit (frameVideo() As _Unsigned _Byte)
+    Dim x As Integer, y As Integer
+    Dim p As Long
+    Dim q0 As Integer, q1 As Integer, q2 As Integer, q3 As Integer
+    Dim q4 As Integer, q5 As Integer, q6 As Integer, q7 As Integer
 
+    p = 0
+    For y = 0 To FrameH - 1
+        For x = 0 To FrameW - 1 Step 8
+            q0 = DitherOut(x, y) And 1
+            If x + 1 < FrameW Then q1 = DitherOut(x + 1, y) And 1 Else q1 = 0
+            If x + 2 < FrameW Then q2 = DitherOut(x + 2, y) And 1 Else q2 = 0
+            If x + 3 < FrameW Then q3 = DitherOut(x + 3, y) And 1 Else q3 = 0
+            If x + 4 < FrameW Then q4 = DitherOut(x + 4, y) And 1 Else q4 = 0
+            If x + 5 < FrameW Then q5 = DitherOut(x + 5, y) And 1 Else q5 = 0
+            If x + 6 < FrameW Then q6 = DitherOut(x + 6, y) And 1 Else q6 = 0
+            If x + 7 < FrameW Then q7 = DitherOut(x + 7, y) And 1 Else q7 = 0
+            frameVideo(p) = (q0 * 128) Or (q1 * 64) Or (q2 * 32) Or (q3 * 16) Or (q4 * 8) Or (q5 * 4) Or (q6 * 2) Or q7
+            p = p + 1
+        Next x
+    Next y
+
+    While p <= UBound(frameVideo)
+        frameVideo(p) = 0
+        p = p + 1
+    Wend
+End Sub
+
+Sub ConvertFrameToCoCo1SolidBW (frameVideo() As _Unsigned _Byte, framePalette() As _Unsigned _Byte)
+    Dim x As Integer, y As Integer
+    Dim grey As Integer
+    Dim pairGrey As Integer
+    Dim q As Integer
+    Dim threshold As Integer
+    Dim errGrey As Single
+    Dim thisGrey As Single
+    Dim quantGrey As Integer
+    Dim e As Single
+
+    framePalette(0) = 0
+    framePalette(1) = 63
+    For x = 2 To 15
+        framePalette(x) = 0
+    Next x
+
+    Select Case DitherType
+        Case 1
+            ReDim errGrey(0 To (FrameW \ 2) + 1, 0 To FrameH + 1) As Single
+            For y = 0 To FrameH - 1
+                For x = 0 To FrameW - 1 Step 2
+                    grey = (77 * pixelR(x, y) + 150 * pixelG(x, y) + 29 * pixelB(x, y)) \ 256
+                    If x + 1 < FrameW Then
+                        grey = grey + ((77 * pixelR(x + 1, y) + 150 * pixelG(x + 1, y) + 29 * pixelB(x + 1, y)) \ 256)
+                        pairGrey = grey \ 2
+                    Else
+                        pairGrey = grey
+                    End If
+                    thisGrey = pairGrey + errGrey(x \ 2, y)
+                    If thisGrey < 0 Then thisGrey = 0
+                    If thisGrey > 255 Then thisGrey = 255
+                    q = QuantizeBW1Bit%(CInt(thisGrey))
+                    quantGrey = q * 255
+                    e = thisGrey - quantGrey
+                    DitherOut(x, y) = q
+                    If x + 1 < FrameW Then DitherOut(x + 1, y) = q
+                    If x < FrameW - 2 Then errGrey((x \ 2) + 1, y) = errGrey((x \ 2) + 1, y) + e * 7! / 16!
+                    If y < FrameH - 1 Then
+                        If x > 0 Then errGrey((x \ 2) - 1, y + 1) = errGrey((x \ 2) - 1, y + 1) + e * 3! / 16!
+                        errGrey(x \ 2, y + 1) = errGrey(x \ 2, y + 1) + e * 5! / 16!
+                        If x < FrameW - 2 Then errGrey((x \ 2) + 1, y + 1) = errGrey((x \ 2) + 1, y + 1) + e * 1! / 16!
+                    End If
+                Next x
+            Next y
+
+        Case 2
+            Randomize 1
+            For y = 0 To FrameH - 1
+                For x = 0 To FrameW - 1 Step 2
+                    grey = (77 * pixelR(x, y) + 150 * pixelG(x, y) + 29 * pixelB(x, y)) \ 256
+                    If x + 1 < FrameW Then
+                        grey = grey + ((77 * pixelR(x + 1, y) + 150 * pixelG(x + 1, y) + 29 * pixelB(x + 1, y)) \ 256)
+                        pairGrey = grey \ 2
+                    Else
+                        pairGrey = grey
+                    End If
+                    pairGrey = pairGrey + Int(Rnd * 65) - 32
+                    If pairGrey < 0 Then pairGrey = 0
+                    If pairGrey > 255 Then pairGrey = 255
+                    q = QuantizeBW1Bit%(pairGrey)
+                    DitherOut(x, y) = q
+                    If x + 1 < FrameW Then DitherOut(x + 1, y) = q
+                Next x
+            Next y
+
+        Case 3
+            For y = 0 To FrameH - 1
+                For x = 0 To FrameW - 1 Step 2
+                    grey = (77 * pixelR(x, y) + 150 * pixelG(x, y) + 29 * pixelB(x, y)) \ 256
+                    If x + 1 < FrameW Then
+                        grey = grey + ((77 * pixelR(x + 1, y) + 150 * pixelG(x + 1, y) + 29 * pixelB(x + 1, y)) \ 256)
+                        pairGrey = grey \ 2
+                    Else
+                        pairGrey = grey
+                    End If
+                    threshold = OrderedArray((x \ 2) And 7, y And 7) - 128
+                    pairGrey = pairGrey + threshold
+                    If pairGrey < 0 Then pairGrey = 0
+                    If pairGrey > 255 Then pairGrey = 255
+                    q = QuantizeBW1Bit%(pairGrey)
+                    DitherOut(x, y) = q
+                    If x + 1 < FrameW Then DitherOut(x + 1, y) = q
+                Next x
+            Next y
+
+        Case Else
+            For y = 0 To FrameH - 1
+                For x = 0 To FrameW - 1 Step 2
+                    grey = (77 * pixelR(x, y) + 150 * pixelG(x, y) + 29 * pixelB(x, y)) \ 256
+                    If x + 1 < FrameW Then
+                        grey = grey + ((77 * pixelR(x + 1, y) + 150 * pixelG(x + 1, y) + 29 * pixelB(x + 1, y)) \ 256)
+                        pairGrey = grey \ 2
+                    Else
+                        pairGrey = grey
+                    End If
+                    q = QuantizeBW1Bit%(pairGrey)
+                    DitherOut(x, y) = q
+                    If x + 1 < FrameW Then DitherOut(x + 1, y) = q
+                Next x
+            Next y
+    End Select
+
+    PackDitherOutTo1Bit frameVideo()
+End Sub
+
+Sub ConvertFrameToCoCo1Artifact4Color (frameVideo() As _Unsigned _Byte, framePalette() As _Unsigned _Byte)
+    Dim x As Integer, y As Integer
+    Dim srcR As Single, srcG As Single, srcB As Single
+    Dim testR As Single, testG As Single, testB As Single
+    Dim er As Single, eg As Single, eb As Single
+    Dim dr As Long, dg As Long, db As Long
+    Dim best As Integer, chosen As Integer, dist As Long, bestDist As Long
+    Dim cR(0 To 3) As Integer, cG(0 To 3) As Integer, cB(0 To 3) As Integer
+    Dim errR As Single, errG As Single, errB As Single
+    Dim threshold As Integer
+
+    framePalette(0) = 0
+    framePalette(1) = 63
+    For x = 2 To 15
+        framePalette(x) = 0
+    Next x
+
+    For y = 0 To FrameH - 1
+        For x = 0 To FrameW - 1
+            DitherOut(x, y) = 0
+        Next x
+    Next y
+
+    ' Standard CoCo 3 power-up artifact phase on composite CoCo 1/2:
+    ' 00 = black, 01 = red, 10 = blue, 11 = white.
+    cR(0) = 0: cG(0) = 0: cB(0) = 0
+    cR(1) = 255: cG(1) = 45: cB(1) = 35
+    cR(2) = 40: cG(2) = 75: cB(2) = 255
+    cR(3) = 255: cG(3) = 255: cB(3) = 255
+
+    If DitherType = 1 Then
+        ReDim errR(0 To (FrameW \ 2) + 1, 0 To FrameH + 1) As Single
+        ReDim errG(0 To (FrameW \ 2) + 1, 0 To FrameH + 1) As Single
+        ReDim errB(0 To (FrameW \ 2) + 1, 0 To FrameH + 1) As Single
+    ElseIf DitherType = 2 Then
+        Randomize 1
+    End If
+
+    For y = 0 To FrameH - 1
+        For x = 0 To FrameW - 2 Step 2
+            srcR = (pixelR(x, y) + pixelR(x + 1, y)) / 2!
+            srcG = (pixelG(x, y) + pixelG(x + 1, y)) / 2!
+            srcB = (pixelB(x, y) + pixelB(x + 1, y)) / 2!
+
+            If DitherType = 1 Then
+                testR = srcR + errR(x \ 2, y)
+                testG = srcG + errG(x \ 2, y)
+                testB = srcB + errB(x \ 2, y)
+            Else
+                testR = srcR
+                testG = srcG
+                testB = srcB
+            End If
+
+            If DitherType = 2 Then
+                testR = testR + Int(Rnd * 41) - 20
+                testG = testG + Int(Rnd * 41) - 20
+                testB = testB + Int(Rnd * 41) - 20
+            ElseIf DitherType = 3 Then
+                threshold = (OrderedArray((x \ 2) And 7, y And 7) - 128) \ 3
+                testR = testR + threshold
+                testG = testG + threshold
+                testB = testB + threshold
+            End If
+
+            If testR < 0 Then testR = 0
+            If testR > 255 Then testR = 255
+            If testG < 0 Then testG = 0
+            If testG > 255 Then testG = 255
+            If testB < 0 Then testB = 0
+            If testB > 255 Then testB = 255
+
+            best = 0
+            chosen = 0
+            bestDist = 2147483647
+            For best = 0 To 3
+                dr = CLng(testR) - cR(best)
+                dg = CLng(testG) - cG(best)
+                db = CLng(testB) - cB(best)
+                dist = dr * dr + dg * dg + db * db
+                If dist < bestDist Then
+                    bestDist = dist
+                    chosen = best
+                End If
+            Next best
+            DitherOut(x, y) = (chosen \ 2) And 1
+            DitherOut(x + 1, y) = chosen And 1
+
+            If DitherType = 1 Then
+                er = testR - cR(chosen)
+                eg = testG - cG(chosen)
+                eb = testB - cB(chosen)
+                If x < FrameW - 2 Then
+                    errR((x \ 2) + 1, y) = errR((x \ 2) + 1, y) + er * 7! / 16!
+                    errG((x \ 2) + 1, y) = errG((x \ 2) + 1, y) + eg * 7! / 16!
+                    errB((x \ 2) + 1, y) = errB((x \ 2) + 1, y) + eb * 7! / 16!
+                End If
+                If y < FrameH - 1 Then
+                    If x > 0 Then
+                        errR((x \ 2) - 1, y + 1) = errR((x \ 2) - 1, y + 1) + er * 3! / 16!
+                        errG((x \ 2) - 1, y + 1) = errG((x \ 2) - 1, y + 1) + eg * 3! / 16!
+                        errB((x \ 2) - 1, y + 1) = errB((x \ 2) - 1, y + 1) + eb * 3! / 16!
+                    End If
+                    errR(x \ 2, y + 1) = errR(x \ 2, y + 1) + er * 5! / 16!
+                    errG(x \ 2, y + 1) = errG(x \ 2, y + 1) + eg * 5! / 16!
+                    errB(x \ 2, y + 1) = errB(x \ 2, y + 1) + eb * 5! / 16!
+                    If x < FrameW - 2 Then
+                        errR((x \ 2) + 1, y + 1) = errR((x \ 2) + 1, y + 1) + er * 1! / 16!
+                        errG((x \ 2) + 1, y + 1) = errG((x \ 2) + 1, y + 1) + eg * 1! / 16!
+                        errB((x \ 2) + 1, y + 1) = errB((x \ 2) + 1, y + 1) + eb * 1! / 16!
+                    End If
+                End If
+            End If
+        Next x
+    Next y
+
+    PackDitherOutTo1Bit frameVideo()
+End Sub
+
+Sub ConvertFrameToCoCo1Artifact2x2 (frameVideo() As _Unsigned _Byte, framePalette() As _Unsigned _Byte)
+    Dim x As Integer, y As Integer, i As Integer
+    Dim bx As Integer, by As Integer
+    Dim srcR As Single, srcG As Single, srcB As Single
+    Dim testR As Single, testG As Single, testB As Single
+    Dim er As Single, eg As Single, eb As Single
+    Dim dr As Long, dg As Long, db As Long
+    Dim best As Integer, dist As Long, bestDist As Long
+    Dim pat As Integer
+    Dim errR As Single, errG As Single, errB As Single
+    Dim bitTL As Integer, bitTR As Integer, bitBL As Integer, bitBR As Integer
+    Dim rowCode As Integer
+    Dim rowR(0 To 3) As Integer, rowG(0 To 3) As Integer, rowB(0 To 3) As Integer
+    Dim patR(0 To 15) As Integer, patG(0 To 15) As Integer, patB(0 To 15) As Integer
+    Dim threshold As Integer
+
+    framePalette(0) = 0
+    framePalette(1) = 63
+    For x = 2 To 15
+        framePalette(x) = 0
+    Next x
+
+    For y = 0 To FrameH - 1
+        For x = 0 To FrameW - 1
+            DitherOut(x, y) = 0
+        Next x
+    Next y
+
+    ' Standard CoCo 3 power-up artifact phase on composite CoCo 1/2:
+    ' 01 = red, 10 = blue.  A 2x2 block blends the two row colours.
+    rowR(0) = 0: rowG(0) = 0: rowB(0) = 0
+    rowR(1) = 255: rowG(1) = 45: rowB(1) = 35
+    rowR(2) = 40: rowG(2) = 75: rowB(2) = 255
+    rowR(3) = 255: rowG(3) = 255: rowB(3) = 255
+
+    For pat = 0 To 15
+        bitTL = (pat \ 8) And 1
+        bitTR = (pat \ 4) And 1
+        bitBL = (pat \ 2) And 1
+        bitBR = pat And 1
+        rowCode = bitTL * 2 + bitTR
+        patR(pat) = rowR(rowCode)
+        patG(pat) = rowG(rowCode)
+        patB(pat) = rowB(rowCode)
+        rowCode = bitBL * 2 + bitBR
+        patR(pat) = (patR(pat) + rowR(rowCode)) \ 2
+        patG(pat) = (patG(pat) + rowG(rowCode)) \ 2
+        patB(pat) = (patB(pat) + rowB(rowCode)) \ 2
+    Next pat
+
+    If DitherType = 1 Then
+        ReDim errR(0 To (FrameW \ 2) + 1, 0 To (FrameH \ 2) + 1) As Single
+        ReDim errG(0 To (FrameW \ 2) + 1, 0 To (FrameH \ 2) + 1) As Single
+        ReDim errB(0 To (FrameW \ 2) + 1, 0 To (FrameH \ 2) + 1) As Single
+    ElseIf DitherType = 2 Then
+        Randomize 1
+    End If
+
+    For y = 0 To FrameH - 1 Step 2
+        by = y \ 2
+        For x = 0 To FrameW - 2 Step 2
+            bx = x \ 2
+            srcR = 0: srcG = 0: srcB = 0
+            For i = 0 To 3
+                If x + (i And 1) < FrameW And y + (i \ 2) < FrameH Then
+                    srcR = srcR + pixelR(x + (i And 1), y + (i \ 2))
+                    srcG = srcG + pixelG(x + (i And 1), y + (i \ 2))
+                    srcB = srcB + pixelB(x + (i And 1), y + (i \ 2))
+                End If
+            Next i
+            srcR = srcR / 4!
+            srcG = srcG / 4!
+            srcB = srcB / 4!
+
+            If DitherType = 1 Then
+                testR = srcR + errR(bx, by)
+                testG = srcG + errG(bx, by)
+                testB = srcB + errB(bx, by)
+            Else
+                testR = srcR
+                testG = srcG
+                testB = srcB
+            End If
+
+            If DitherType = 2 Then
+                testR = testR + Int(Rnd * 41) - 20
+                testG = testG + Int(Rnd * 41) - 20
+                testB = testB + Int(Rnd * 41) - 20
+            ElseIf DitherType = 3 Then
+                threshold = (OrderedArray(bx And 7, by And 7) - 128) \ 3
+                testR = testR + threshold
+                testG = testG + threshold
+                testB = testB + threshold
+            End If
+
+            If testR < 0 Then testR = 0
+            If testR > 255 Then testR = 255
+            If testG < 0 Then testG = 0
+            If testG > 255 Then testG = 255
+            If testB < 0 Then testB = 0
+            If testB > 255 Then testB = 255
+
+            best = 0
+            bestDist = 2147483647
+            For pat = 0 To 15
+                dr = CLng(testR) - patR(pat)
+                dg = CLng(testG) - patG(pat)
+                db = CLng(testB) - patB(pat)
+                dist = dr * dr + dg * dg + db * db
+                If dist < bestDist Then
+                    bestDist = dist
+                    best = pat
+                End If
+            Next pat
+
+            bitTL = (best \ 8) And 1
+            bitTR = (best \ 4) And 1
+            bitBL = (best \ 2) And 1
+            bitBR = best And 1
+            DitherOut(x, y) = bitTL
+            If x + 1 < FrameW Then DitherOut(x + 1, y) = bitTR
+            If y + 1 < FrameH Then
+                DitherOut(x, y + 1) = bitBL
+                If x + 1 < FrameW Then DitherOut(x + 1, y + 1) = bitBR
+            End If
+
+            If DitherType = 1 Then
+                er = testR - patR(best)
+                eg = testG - patG(best)
+                eb = testB - patB(best)
+                If x < FrameW - 2 Then
+                    errR(bx + 1, by) = errR(bx + 1, by) + er * 7! / 16!
+                    errG(bx + 1, by) = errG(bx + 1, by) + eg * 7! / 16!
+                    errB(bx + 1, by) = errB(bx + 1, by) + eb * 7! / 16!
+                End If
+                If y < FrameH - 2 Then
+                    If bx > 0 Then
+                        errR(bx - 1, by + 1) = errR(bx - 1, by + 1) + er * 3! / 16!
+                        errG(bx - 1, by + 1) = errG(bx - 1, by + 1) + eg * 3! / 16!
+                        errB(bx - 1, by + 1) = errB(bx - 1, by + 1) + eb * 3! / 16!
+                    End If
+                    errR(bx, by + 1) = errR(bx, by + 1) + er * 5! / 16!
+                    errG(bx, by + 1) = errG(bx, by + 1) + eg * 5! / 16!
+                    errB(bx, by + 1) = errB(bx, by + 1) + eb * 5! / 16!
+                    If x < FrameW - 2 Then
+                        errR(bx + 1, by + 1) = errR(bx + 1, by + 1) + er * 1! / 16!
+                        errG(bx + 1, by + 1) = errG(bx + 1, by + 1) + eg * 1! / 16!
+                        errB(bx + 1, by + 1) = errB(bx + 1, by + 1) + eb * 1! / 16!
+                    End If
+                End If
+            End If
+        Next x
+    Next y
+
+    PackDitherOutTo1Bit frameVideo()
+End Sub

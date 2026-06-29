@@ -1,0 +1,62 @@
+float *_FUNC_REPLACE_SINGLE_REPLACE=NULL;
+if(_FUNC_REPLACE_SINGLE_REPLACE==NULL){
+_FUNC_REPLACE_SINGLE_REPLACE=(float*)mem_static_malloc(4);
+*_FUNC_REPLACE_SINGLE_REPLACE=0;
+}
+qbs*oldstr816=NULL;
+if(_FUNC_REPLACE_STRING_TEXT->tmp||_FUNC_REPLACE_STRING_TEXT->fixed||_FUNC_REPLACE_STRING_TEXT->readonly){
+oldstr816=_FUNC_REPLACE_STRING_TEXT;
+if (oldstr816->cmem_descriptor){
+_FUNC_REPLACE_STRING_TEXT=qbs_new_cmem(oldstr816->len,0);
+}else{
+_FUNC_REPLACE_STRING_TEXT=qbs_new(oldstr816->len,0);
+}
+memcpy(_FUNC_REPLACE_STRING_TEXT->chr,oldstr816->chr,oldstr816->len);
+}
+qbs*oldstr817=NULL;
+if(_FUNC_REPLACE_STRING_OLD->tmp||_FUNC_REPLACE_STRING_OLD->fixed||_FUNC_REPLACE_STRING_OLD->readonly){
+oldstr817=_FUNC_REPLACE_STRING_OLD;
+if (oldstr817->cmem_descriptor){
+_FUNC_REPLACE_STRING_OLD=qbs_new_cmem(oldstr817->len,0);
+}else{
+_FUNC_REPLACE_STRING_OLD=qbs_new(oldstr817->len,0);
+}
+memcpy(_FUNC_REPLACE_STRING_OLD->chr,oldstr817->chr,oldstr817->len);
+}
+qbs*oldstr818=NULL;
+if(_FUNC_REPLACE_STRING_NEW->tmp||_FUNC_REPLACE_STRING_NEW->fixed||_FUNC_REPLACE_STRING_NEW->readonly){
+oldstr818=_FUNC_REPLACE_STRING_NEW;
+if (oldstr818->cmem_descriptor){
+_FUNC_REPLACE_STRING_NEW=qbs_new_cmem(oldstr818->len,0);
+}else{
+_FUNC_REPLACE_STRING_NEW=qbs_new(oldstr818->len,0);
+}
+memcpy(_FUNC_REPLACE_STRING_NEW->chr,oldstr818->chr,oldstr818->len);
+}
+float *_FUNC_REPLACE_SINGLE_FIND=NULL;
+if(_FUNC_REPLACE_SINGLE_FIND==NULL){
+_FUNC_REPLACE_SINGLE_FIND=(float*)mem_static_malloc(4);
+*_FUNC_REPLACE_SINGLE_FIND=0;
+}
+float *_FUNC_REPLACE_SINGLE_START=NULL;
+if(_FUNC_REPLACE_SINGLE_START==NULL){
+_FUNC_REPLACE_SINGLE_START=(float*)mem_static_malloc(4);
+*_FUNC_REPLACE_SINGLE_START=0;
+}
+float *_FUNC_REPLACE_SINGLE_COUNT=NULL;
+if(_FUNC_REPLACE_SINGLE_COUNT==NULL){
+_FUNC_REPLACE_SINGLE_COUNT=(float*)mem_static_malloc(4);
+*_FUNC_REPLACE_SINGLE_COUNT=0;
+}
+qbs *_FUNC_REPLACE_STRING_FIRST=NULL;
+if (!_FUNC_REPLACE_STRING_FIRST)_FUNC_REPLACE_STRING_FIRST=qbs_new(0,0);
+qbs *_FUNC_REPLACE_STRING_LAST=NULL;
+if (!_FUNC_REPLACE_STRING_LAST)_FUNC_REPLACE_STRING_LAST=qbs_new(0,0);
+byte_element_struct *byte_element_820=NULL;
+if (!byte_element_820){
+if ((mem_static_pointer+=12)<mem_static_limit) byte_element_820=(byte_element_struct*)(mem_static_pointer-12); else byte_element_820=(byte_element_struct*)mem_static_malloc(12);
+}
+byte_element_struct *byte_element_821=NULL;
+if (!byte_element_821){
+if ((mem_static_pointer+=12)<mem_static_limit) byte_element_821=(byte_element_struct*)(mem_static_pointer-12); else byte_element_821=(byte_element_struct*)mem_static_malloc(12);
+}

@@ -1,8 +1,0 @@
-if(__INTEGER_T1==NULL){
-__INTEGER_T1=(int16*)mem_static_malloc(2);
-*__INTEGER_T1=0;
-}
-if(__INTEGER_T2==NULL){
-__INTEGER_T2=(int16*)mem_static_malloc(2);
-*__INTEGER_T2=0;
-}

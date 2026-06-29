@@ -1,5 +1,3 @@
-int16 *__INTEGER_T1=NULL;
-int16 *__INTEGER_T2=NULL;
 int32 console=0;
 int32 screen_hide_startup=0;
 int32 asserts=0;

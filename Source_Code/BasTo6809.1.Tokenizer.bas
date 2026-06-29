@@ -319,6 +319,8 @@ Check$ = "THEN": GoSub FindGenCommandNumber ' Gets the General Command number of
 C_THEN = ii
 Check$ = "ELSE": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
 C_ELSE = ii
+Check$ = "CASE": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+C_CASE = ii
 Check$ = "GOTO": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
 C_GOTO = ii
 Check$ = "END": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
@@ -986,7 +988,14 @@ While x <= filesize
                         v = Array(x): x = x + 1 ' Get the IF Command #LSB
                         INArray(c) = v: c = c + 1 ' Write the IF Command #LSB
                     End If
-                    If Array(x) * 256 + Array(x + 1) = C_THEN Or Array(x) * 256 + Array(x + 1) = C_ELSE Then
+                    CmdCheck = Array(x) * 256 + Array(x + 1)
+                    PrevGenCmd = 0
+                    If CmdCheck = C_ELSE Then
+                        PrevScan = c - 2
+                        While PrevScan > 2 And INArray(PrevScan) = Asc(" "): PrevScan = PrevScan - 1: Wend
+                        If PrevScan > 2 And INArray(PrevScan - 2) = &HFF Then PrevGenCmd = INArray(PrevScan - 1) * 256 + INArray(PrevScan)
+                    End If
+                    If CmdCheck = C_THEN Or (CmdCheck = C_ELSE And PrevGenCmd <> C_CASE) Then
                         ' Found THEN or ELSE
                         c = c - 1
                         INArray(c) = &HF5: c = c + 1 ' add EOL
@@ -1414,7 +1423,7 @@ Wend
 
 If Verbose > 0 Then Print "Doing Pass 5 - Finding special cases that will need other files to be included..."
 x = 0
-Gmode = -1 ' Flag no GMODE command found
+CurrentGMode = -1 ' Flag no GMODE command found
 ScollBackground = -1 ' Flag no Scrollable background found
 While x < filesize
     v = Array(x): x = x + 1 ' get the command to do
@@ -1447,7 +1456,7 @@ While x < filesize
                 End If
             Case C_GMODE
                 ' Found a GMODE command
-                If Gmode = -1 Then
+                If CurrentGMode = -1 Then
                     ' This is the first GMODE command, the user should have entered the actual GMODE number used for the program here
                     Temp$ = ""
                     Tempx = x
@@ -1455,21 +1464,21 @@ While x < filesize
                         Temp$ = Temp$ + Chr$(Array(x))
                         x = x + 1
                     Wend
-                    Gmode = Val(Temp$)
+                    CurrentGMode = Val(Temp$)
                     x = Tempx 'Set things back to normal
                 End If
             Case C_PLAYFIELD
                 'Found a PLAYFIELD command, signify we will be scrolling the background and setup variables
                 ScollBackground = 1 ' Using scrolling
                 Tempx = x
-                ' get the Playfield option
+                ' get the CurrentPlayfield option
                 N$ = ""
                 While Array(x) < &HF0
                     N$ = N$ + Chr$(Array(x)): x = x + 1
                 Wend
-                ' Got the Playfield needed
-                Playfield = Val(N$)
-                If Playfield < 1 Or Playfield > 5 Then Print "Error: PLAYFIELD command, Must be an acutal number (not a variable) and can only handle values from 1 to 5";: GoTo FoundError
+                ' Got the CurrentPlayfield needed
+                CurrentPlayfield = Val(N$)
+                If CurrentPlayfield < 1 Or CurrentPlayfield > 5 Then Print "Error: PLAYFIELD command, Must be an acutal number (not a variable) and can only handle values from 1 to 5";: GoTo FoundError
                 x = Tempx 'Set things back to normal
             Case C_SPRITE
                 Sprites = 1
@@ -1715,18 +1724,20 @@ Next ii
 T1$ = "    ": T2$ = T1$ + T1$
 Open OutName$ For Output As #1
 
+CoCo12GraphicsBytes = 0
 For ii = 0 To 171
     If GModeLib(ii) = 1 Then
         If ii < 100 Then
             ' CoCo 1 & 2 graphics mode, Check if ProgramStart should be changed
-            '            If GModePageLib(ii) <> 0 Then
-            ' the user wants to use multiple graphics pages
-            PStart = Val("&H" + ProgramStart$) + Val("&H" + GModeScreenSize$(ii)) * (GModePageLib(ii) + 1)
-            ProgramStart$ = Hex$(PStart)
-            '            End If
+            TempVal = Val("&H" + GModeScreenSize$(ii)) * (GModePageLib(ii) + 1)
+            If CoCo12GraphicsBytes < TempVal Then CoCo12GraphicsBytes = TempVal
         End If
     End If
 Next ii
+If CoCo12GraphicsBytes <> 0 Then
+    PStart = Val("&H" + ProgramStart$) + CoCo12GraphicsBytes
+    ProgramStart$ = Hex$(PStart)
+End If
 ' If we are doing CoCo3 sprites load them first
 ' Add blocks needed per grapics screen if we are using a coco 3
 If CoCo3 = 1 And Sprites = 1 Then
@@ -1739,12 +1750,12 @@ If CoCo3 = 1 And Sprites = 1 Then
                 '                Print "CC3BlocksPerScreen"; CC3BlocksPerScreen
                 If CC3BlocksPerScreen <> Int(CC3BlocksPerScreen) Then CC3BlocksPerScreen = Int(CC3BlocksPerScreen) + 1
                 '                Print "CC3BlocksPerScreen"; CC3BlocksPerScreen
-                CC3SpritesStartAt = CC3BlocksPerScreen * GModePageLib(ii)
+                CC3SpritesStartAt = CC3BlocksPerScreen * (GModePageLib(ii) + 1)
                 '                Print "CC3SpritesStartAt"; CC3SpritesStartAt
             End If
         End If
     Next ii
-    Select Case Val(GModeColours$(Gmode))
+    Select Case Val(GModeColours$(CurrentGMode))
         Case 2
             ColourDiv = 8
         Case 4
@@ -1752,13 +1763,13 @@ If CoCo3 = 1 And Sprites = 1 Then
         Case 16
             ColourDiv = 2
     End Select
-    Num = (Val(GModeMaxX$(Gmode)) + 1) / ColourDiv: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+    Num = (Val(GModeMaxX$(CurrentGMode)) + 1) / ColourDiv: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
     Z$ = "GmodeBytesPerRow EQU     " + num$ + "    ; # of bytes per graphics row, used by the sprite rendering code": GoSub AO
-    Num = Val("&H" + GModeScreenSize$(Gmode)): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+    Num = Val("&H" + GModeScreenSize$(CurrentGMode)): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
     Z$ = "ScreenSize      EQU     " + num$ + "   ; Size of a graphics screen": GoSub AO
-    Num = Val(GModeMaxX$(Gmode)): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+    Num = Val(GModeMaxX$(CurrentGMode)): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
     Z$ = "PixelsMaxX      EQU     " + num$ + "     ; Screen width Max from 0 to this value": GoSub AO
-    Num = Val(GModeColours$(Gmode)): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+    Num = Val(GModeColours$(CurrentGMode)): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
     Z$ = "NumberOfColours EQU     " + num$ + "      ; Number of Colours on this screen": GoSub AO
     Z$ = "Artifacting     EQU     0       ; Not using Artifact colours with a CoCo 3 GMODE": GoSub AO
 
@@ -1857,7 +1868,7 @@ If CoCo3 = 1 And (SpritePointer <> -1 Or SamplePointer <> -1) Then
     A$ = "FCB": B$ = "$3F": C$ = "Blocks are back to normal": GoSub AO
 End If
 
-If Gmode > 99 Then
+If CurrentGMode > 99 Then
     ProgramStart$ = "E00" ' Force the CoCo 3 to start at $E00
 End If
 
@@ -1984,12 +1995,12 @@ Print #1, "SoundDuration   RMB     2     ; SOUND Command duration value"
 Print #1, "CASFLG          RMB     1     ; Case flag for keyboard output $FF=UPPER (normal), 0=LOWER"
 Print #1, "OriginalIRQ     RMB     3     ; We save the original branch and location of the IRQ here, restored before we exit"
 Print #1, "EndClearHere:" ' This is the end address of variables that will all be cleared to zero when the program starts
-Num = Playfield: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+Num = CurrentPlayfield: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
 Z$ = "PLAYFIELD   EQU     " + num$: GoSub AO
 If ScollBackground = 1 Then
     ' Add Scrolling Background code
     Temp$ = "GraphicCommands/CoCo3_ScrollingBackground": GoSub AddIncludeTemp
-    If Playfield = 1 Then
+    If CurrentPlayfield = 1 Then
         ' Calculating which row the sprite will be should be normal
         Z$ = "Scrolling   EQU     0": GoSub AO
         Z$ = "VideoRamBlock           FCB     %00000010       ; Set default to 1 Meg to 1.5 Meg location": GoSub AO
@@ -2049,13 +2060,13 @@ If CoCo3 = 1 Then
             If Sprites = 1 Then
                 ' include the cc3 sprite drawing code here:
                 ' Include the delay values for the scanline is on screen
-                If Val(GModeMaxY$(Gmode)) = 191 Then
+                If Val(GModeMaxY$(CurrentGMode)) = 191 Then
                     Print #1, T2$; "INCLUDE        ./Basic_Includes/CoCo3_FIRQ_Delay_192_Rows.asm"
                 End If
-                If Val(GModeMaxY$(Gmode)) = 199 Then
+                If Val(GModeMaxY$(CurrentGMode)) = 199 Then
                     Print #1, T2$; "INCLUDE        ./Basic_Includes/CoCo3_FIRQ_Delay_200_Rows.asm"
                 End If
-                If Val(GModeMaxY$(Gmode)) = 224 Then
+                If Val(GModeMaxY$(CurrentGMode)) = 224 Then
                     Print #1, T2$; "INCLUDE        ./Basic_Includes/CoCo3_FIRQ_Delay_225_Rows.asm"
                 End If
                 Z$ = "**************** VSyncIRQ *************************": GoSub AO
@@ -2099,13 +2110,13 @@ If CoCo3 = 1 Then
             If Sprites = 1 Then
                 ' include the cc3 sprite drawing code here:
                 ' Include the delay values for the scanline is on screen
-                If Val(GModeMaxY$(Gmode)) = 191 Then
+                If Val(GModeMaxY$(CurrentGMode)) = 191 Then
                     Print #1, T2$; "INCLUDE        ./Basic_Includes/CoCo3_FIRQ_Delay_192_Rows.asm"
                 End If
-                If Val(GModeMaxY$(Gmode)) = 199 Then
+                If Val(GModeMaxY$(CurrentGMode)) = 199 Then
                     Print #1, T2$; "INCLUDE        ./Basic_Includes/CoCo3_FIRQ_Delay_200_Rows.asm"
                 End If
-                If Val(GModeMaxY$(Gmode)) = 224 Then
+                If Val(GModeMaxY$(CurrentGMode)) = 224 Then
                     Print #1, T2$; "INCLUDE        ./Basic_Includes/CoCo3_FIRQ_Delay_225_Rows.asm"
                 End If
                 Z$ = "**************** VSyncIRQ *************************": GoSub AO
@@ -2373,7 +2384,7 @@ If CoCo3 = 1 And Sprites = 1 Then
     Print #1, T2$; "INCLUDE        ./CoCo3_Palette.asm" ' Add the CoCo3 Palette file that was generated by PNGtoCCSprite program
     For ii = 0 To 171
         If GModeLib(ii) = 1 Then
-            v1 = Val("&H" + GModeScreenSize$(Gmode))
+            v1 = Val("&H" + GModeScreenSize$(CurrentGMode))
             TempVal = 0
             While (TempVal < v1): TempVal = TempVal + &H2000: Wend ' Get the number of bytes needed per screen at this resolution
             TempVal = TempVal / &H2000 ' Get the block numbers required
@@ -2671,7 +2682,12 @@ For ii = 0 To GeneralCommandsFoundCount - 1
         Temp$ = "SDC_CompilerCode": GoSub AddIncludeTemp ' The compiler builds string @ ,S but the SDC library expects the fil
         Temp$ = "SDC_FileAccess": GoSub AddIncludeTemp ' Open a file for writing to or reading from the CoCoSDC ,filename is at _StrVar_PF00 and terminated with a zero
         Temp$ = "SDC_StreamFile_Library": GoSub AddIncludeTemp 'Open a file on the CoCoSDC and stream it using 512 bytes sectors
-        Temp$ = "SDC_Play_Movie": GoSub AddIncludeTemp ' Add code to playback movie file from the CoCoSDC
+        Temp$ = "Math_Integer32": GoSub AddIncludeTemp ' Add code for 32 bit jump math
+        If GModeLib(16) = 1 Or GModeLib(15) = 1 Or GModeLib(8) = 1 Then
+            Temp$ = "SDC_Play_Movie_CoCo1": GoSub AddIncludeTemp ' Add code to playback GMODE 16 movie file from the CoCoSDC
+        Else
+            Temp$ = "SDC_Play_Movie_CoCo3": GoSub AddIncludeTemp ' Add code to playback movie file from the CoCoSDC
+        End If
     End If
     If Temp$ = "SOUND" Then
         Temp$ = "Sound": GoSub AddIncludeTemp ' Add code for the sound command
@@ -2756,7 +2772,7 @@ Temp$ = "Random": GoSub AddIncludeTemp ' Add the code to do a Random number
 
 If Sprites = 1 Then
     Print #1, "; Adding the Compiled Sprites and pointers..."
-    Select Case Val(GModeColours$(Gmode))
+    Select Case Val(GModeColours$(CurrentGMode))
         Case 2
             ColourDiv = 8
         Case 4
@@ -2766,15 +2782,15 @@ If Sprites = 1 Then
     End Select
     If CoCo3 <> 1 Then
         ' Do this for CoCo 1 & 2
-        Num = (Val(GModeMaxX$(Gmode)) + 1) / ColourDiv: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+        Num = (Val(GModeMaxX$(CurrentGMode)) + 1) / ColourDiv: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
         Z$ = "GmodeBytesPerRow EQU     " + num$ + "        ; # of bytes per graphics row, used by the sprite rendering code": GoSub AO
-        Num = Val("&H" + GModeScreenSize$(Gmode)): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+        Num = Val("&H" + GModeScreenSize$(CurrentGMode)): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
         Z$ = "ScreenSize       EQU     " + num$ + "        ; Size of a graphics screen": GoSub AO
-        Num = Val(GModeMaxX$(Gmode)): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+        Num = Val(GModeMaxX$(CurrentGMode)): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
         Z$ = "PixelsMaxX       EQU     " + num$ + "        ; Screen width Max from 0 to this value": GoSub AO
-        Num = Val(GModeColours$(Gmode)): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+        Num = Val(GModeColours$(CurrentGMode)): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
         Z$ = "NumberOfColours  EQU     " + num$ + "        ; Number of Colours on this screen": GoSub AO
-        If Gmode = 18 Then
+        If CurrentGMode = 18 Then
             ' We are going to use CoCo 1 & 2 Hi-res artifacting mode
             Z$ = "Artifacting      EQU     1         ; Using Artifact colours": GoSub AO
         Else
@@ -3378,8 +3394,8 @@ While i <= Len(Expression$)
                             GoTo GettingGmodePage
                         End If
                         GotGModePage:
-                        If Len(V1$) = 0 Then V1$ = "0" ' If a variable is used then we will set it to two pages to be reserved
-                        vs1 = Val(V1$) + 1 ' vs1 = number of pages, zero based
+                        If Len(V1$) = 0 Then V1$ = "1" ' If a variable is used then we will set it to two pages to be reserved
+                        vs1 = Val(V1$) ' vs1 = highest zero based page number used
                         Temp2 = GModePageLib(Val(V$)) ' get the old value
                         If Temp2 < vs1 Then GModePageLib(Val(V$)) = vs1
                     End If
@@ -6067,5 +6083,3 @@ Function Replace (text$, old$, new$) 'can also be used as a SUB without the coun
     Loop While find
     Replace = count 'function returns the number of replaced words. Comment out in SUB
 End Function
-
-
