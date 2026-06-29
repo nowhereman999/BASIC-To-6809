@@ -1,4 +1,9 @@
-V$ = "5.30"
+V$ = "5.31"
+'       - Fixed LOADM command so it works proplery on real hardware  (initialized directory and other disk bytes)
+'       - LOADM now will add ".BIN" to a filename if it's missing
+'       - SDC_LOADM now will add ".BIN" to a filename if it's missing
+
+' V 5.30
 '       - Made the CoCo 1/2 Movie player use less RAM and it's own RAM for the Audio buffer, as it was previously using some test RAM that could
 '         have been user code and also previously also required the Math_Integer32 library.
 

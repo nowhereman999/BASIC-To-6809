@@ -303,6 +303,7 @@ DoSDC_LOADM:
 GoSub GetExpressionB4CommaEOL 'Handle an expression that ends with a comma or EOL, skip brackets
 GoSub ParseStringExpression ' Parse the String Expression, value will end up on the stack @ ,S
 A$ = "JSR": B$ = "SDC_FilenameToStrVar_PF00": C$ = "Copy filename off the stack into _StrVar_PF00": GoSub AO
+A$ = "JSR": B$ = "SDC_AddDefaultBinExtension": C$ = "Add .BIN to SDC_LOADM filename if no extension was provided": GoSub AO
 If Array(x) <> &HF5 Or Array(x + 1) <> &H2C Then Print "Can't find a comma after the filename for the SDC_LOADM command on";: GoTo FoundError
 x = x + 2 ' consume the ,
 GoSub GetExpressionB4CommaEOL 'Handle an expression that ends with a comma or EOL, skip brackets

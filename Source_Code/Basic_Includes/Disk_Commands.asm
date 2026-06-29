@@ -244,6 +244,7 @@ DFLBUF  EQU ATTCTR+1        ; INITIALIZED TO SECLEN BY DISKBAS
 ; Format _StrVar_PF00 to proper disk filename in DNAMBF (Disk name buffer)
 FixFileName:
         PULS    Y       ; Get the return address off the stack
+        CLR     DCDRV   ; Default to drive 0 unless filename has :0-:3
         LDX     #_StrVar_PF00
         LDB     ,S+
         STB     ,X+
@@ -254,34 +255,95 @@ FixFileName:
         PSHS    Y       ; Save Return address on the stack
         LDX     #_StrVar_PF00+1
         LDU     #DNAMBF
+        LDA     _StrVar_PF00
+        PSHS    A       ; Remaining source filename length
         LDB     #8
-!       LDA     ,X+
+CopyFilename:
+        TST     ,S
+        BEQ     PadFilenameUseDefaultExtension
+        LDA     ,X
         CMPA    #'.'
-        BEQ     PadFilename
-        STA     ,U+
-        DECB
-        BNE     <
-        LDA     ,X+     ; Skip the dot before the extension
-CopyExtension:
-        LDB     #3      ; Copy the extension
-!       LDA     ,X+
-        STA     ,U+
-        DECB
-        BNE     <
-; Check For a Disk number
+        BEQ     PadFilenameThenCopyExtension
+        CMPA    #':'
+        BEQ     PadFilenameUseDefaultExtension
         LDA     ,X+
-        CMPA    #':'    ; if we have a colon then the next value should be the drive number
-        BNE     >       ; if not a colon then there is no drive number, just return
-        LDA     ,X+     ; A = ascii drive number
-        SUBA    #48     ; A = A - 48, turn it into a number from zero to 3
-        STA     DCDRV   ; save as the current drive number
-!       RTS
-PadFilename:
+        DEC     ,S
+        STA     ,U+
+        DECB
+        BNE     CopyFilename
+FindExtensionOrDrive:
+        TST     ,S
+        BEQ     UseDefaultExtension
+        LDA     ,X
+        CMPA    #'.'
+        BEQ     FoundExtension
+        CMPA    #':'
+        BEQ     UseDefaultExtension
+        LEAX    1,X
+        DEC     ,S
+        BRA     FindExtensionOrDrive
+FoundExtension:
+        LEAX    1,X
+        DEC     ,S
+        BRA     CopyExtension
+
+PadFilenameThenCopyExtension:
         LDA     #' '
 !       STA     ,U+
         DECB
         BNE     <
+        LEAX    1,X     ; Skip the dot before the extension
+        DEC     ,S
         BRA     CopyExtension
+
+PadFilenameUseDefaultExtension:
+        LDA     #' '
+!       STA     ,U+
+        DECB
+        BNE     <
+UseDefaultExtension:
+        LDD     #'B'*256+'I'
+        STD     ,U++
+        LDA     #'N'
+        STA     ,U+
+        BRA     CheckForDiskNumber
+
+CopyExtension:
+        LDB     #3      ; Copy the extension
+CopyExtensionLoop:
+        TST     ,S
+        BEQ     PadExtension
+        LDA     ,X
+        CMPA    #':'
+        BEQ     PadExtension
+        LDA     ,X+
+        DEC     ,S
+        STA     ,U+
+        DECB
+        BNE     CopyExtensionLoop
+        BRA     CheckForDiskNumber
+PadExtension:
+        LDA     #' '
+!       STA     ,U+
+        DECB
+        BNE     <
+
+; Check For a Disk number
+CheckForDiskNumber:
+        TST     ,S
+        BEQ     FixFileNameDone
+        LDA     ,X+
+        DEC     ,S
+        CMPA    #':'    ; if we have a colon then the next value should be the drive number
+        BNE     CheckForDiskNumber
+        TST     ,S
+        BEQ     FixFileNameDone
+        LDA     ,X+     ; A = ascii drive number
+        SUBA    #48     ; A = A - 48, turn it into a number from zero to 3
+        STA     DCDRV   ; save as the current drive number
+FixFileNameDone:
+        LEAS    1,S     ; Drop remaining source filename length
+        RTS
 
 DiskError:
         JSR     PrintDiskErrorOnScreen
@@ -301,6 +363,23 @@ OpenFileU:
         STA     >$FFD8                 ; Put CoCo 3 in Regular speed mode
 !
 
+; Initialize the Disk BASIC workspace we depend on. On real hardware this RAM can
+; contain random power-on values; MAME often starts it as $FF.
+        CLR     DRGRAM                  ; Clear disk control register image
+        CLR     DVERFL                  ; Disable verify by default
+        CLR     NMIFLG                  ; No active disk NMI transfer
+        CLR     DCSTA                   ; Clear pending disk status
+        CLR     RDYTMR                  ; Clear motor timer
+        CLR     DEFDRV                  ; Default drive 0
+        CLR     DR0TRK                  ; Reset cached track positions
+        CLR     DR0TRK+1
+        CLR     DR0TRK+2
+        CLR     DR0TRK+3
+        CLR     DCOPC                   ; DSKCON operation 0 = restore current drive to track 0
+        JSR     DSKCON                  ; Put the controller/CoCoSDC into a known state
+        TST     DCSTA
+        LBNE    DiskError
+
 ; Track 17, Sector 3 to 11 contain directory entries
         LDD     #17*$100+3              ; A=Track 17, B=Sector 3
         LDX     #DBUF0                   ; X points at the directory buffer
@@ -313,12 +392,12 @@ DiskFindFilename:
         CMPA    #$FF
         BEQ     DiskFileNotFound        ; Go error out with file not found
 ; Test if filename matches
-        LDB     #10                     ; 11 characters to check for filename, 0 to 10
+        LDB     #10                     ; 11 characters to check for filename, 10 down to 0
 !       LDA     B,X                     ; Get filename in the buffer
         CMPA    B,U                     ; Compare it with the Filename user wants
         BNE     DiskCheckNextFilename   ; No match check next filename entry
         DECB
-        BNE     <
+        BPL     <
 ; If we get here then we found the file to open
 ; X points at the filename to open
         CLRA                            ; Clear carry flag, signify no error
@@ -804,8 +883,17 @@ LD89D           FCB         1               ; DRIVE SEL 0
 
 PrintDiskErrorOnScreen:
         PSHS    B
-        LDX     #_StrVar_PF00
-        LDB     ,X+
+        LDX     #DNAMBF
+        LDB     #8
+!       LDA     ,X+
+        CMPA    #' '
+        BEQ     >
+        JSR     PrintA_On_Screen
+        DECB
+        BNE     <
+!       LDA     #'.'
+        JSR     PrintA_On_Screen
+        LDB     #3
 !       LDA     ,X+
         JSR     PrintA_On_Screen
         DECB

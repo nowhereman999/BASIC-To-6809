@@ -59,6 +59,33 @@ SDCSetFilenameOpen:
 SDCOpenDone:
         PULS    D,PC            ; Restore and return
 
+; Add ".BIN" to _StrVar_PF00 if it has no extension.
+; Enter with _StrVar_PF00 as a length-prefixed filename string.
+SDC_AddDefaultBinExtension:
+        LDX     #_StrVar_PF00+1 ; Point at filename text
+        LDB     -1,X            ; Get filename length
+        BEQ     @UseDefaultExtension
+        TFR     B,A             ; Save length for append location
+@CheckForExtension:
+        LDB     ,X+
+        CMPB    #'.'
+        BEQ     @Return         ; Filename already has an extension
+        DECA
+        BNE     @CheckForExtension
+@UseDefaultExtension:
+        LDX     #_StrVar_PF00+1
+        LDB     _StrVar_PF00
+        ABX
+        LDD     #'.'*256+'B'
+        STD     ,X++
+        LDD     #'I'*256+'N'
+        STD     ,X
+        LDA     _StrVar_PF00
+        ADDA    #4
+        STA     _StrVar_PF00
+@Return:
+        RTS
+
 ; Send B to the SDC file 0 buffer, when the buffer reaches 256 bytes, it will be written to the SDC
 SDCPutByteB0:
         PSHS    D,X,U                   ; Save everything
@@ -510,4 +537,3 @@ SDCReset:
     STA   STATREG   * Send directly to $FF48
 * D should now = "PM" you can do a test here if you want to make sure the controller is in the Program Mode
     JMP   Speed_Restore  ; Restore the CPU speed and mode back to what the user set & Return
-
