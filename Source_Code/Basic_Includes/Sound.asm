@@ -1,7 +1,7 @@
 PlaySound:
         CLRB
-        BSR     Select_AnalogMuxer  ; CONNECT D/A SOUND INPUT TO OUTPUT OF SOUND MUX
-        BSR     AnalogMuxOn   ; TURN ON AUDIO - ENABLE SOUND MUX
+        JSR     Select_AnalogMuxer  ; CONNECT D/A SOUND INPUT TO OUTPUT OF SOUND MUX
+        JSR     AnalogMuxOn   ; TURN ON AUDIO - ENABLE SOUND MUX
 
         BSR     LA985         ; STORE 2.5 VOLTS TO D/A AND WAIT
         LDA     #$FE          ; DATA TO MAKE D/A OUT = 5 VOLTS

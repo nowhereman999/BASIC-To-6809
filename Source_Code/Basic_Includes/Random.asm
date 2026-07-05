@@ -55,14 +55,16 @@ RandomD:
       ADDD  #$0001      ; 1..max
       RTS
         
-Fast8BitRandCount FCB   $02
+Fast8BitRandCount FCB   $01
 ; B = Random number from 0 to 255
 ; Cycles through 4 different seeds (Seed1,2,3,4), so numbers can be repeated
 RandomFast8Bit:
       PSHS  A,X
       LDA   Fast8BitRandCount
+      INCA
+      ANDA  #%00000011  ; Cycle value from 0 to 3
+      STA   Fast8BitRandCount
       LDX   #Seed1
-@NextSeed1:
       LDB   A,X         ; Get last Random Number
       BEQ   @DoEOR      ; Handle input of zero
       ASLB              ; Shift it left, clear bit zero
@@ -72,7 +74,4 @@ RandomFast8Bit:
       EORB  #$1D        ; EOR with magic number %00011101
 @NoEOR:
       STB   A,X         ; Save the output as the new seed
-      INCA
-      ANDA  #%00000011  ; Cycle value from 0 to 3
-!     STA   Fast8BitRandCount
       PULS  A,X,PC      ; Restore and Return

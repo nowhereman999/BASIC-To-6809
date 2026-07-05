@@ -1,4 +1,8 @@
-V$ = "5.31"
+V$ = "5.32"
+'       - Fixed a bug in one of the Random routines where the initial entry might not be random
+'       - Fixed the calls to Select_AnalogMuxer and AnalogMuxOn from BSR to JSR as it could be necessary depending on the program
+
+' V = 5.31
 '       - Fixed LOADM command so it works proplery on real hardware  (initialized directory and other disk bytes)
 '       - LOADM now will add ".BIN" to a filename if it's missing
 '       - SDC_LOADM now will add ".BIN" to a filename if it's missing
