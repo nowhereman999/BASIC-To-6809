@@ -1,6 +1,9 @@
 ' Sprite Compiler & Background Image Renderer
 
-VersionNumber$ = "1.01"
+VersionNumber$ = "1.02"
+'       - Tweaked output x size when size of sprites are taken from a anim sheet where multiple sprites are in a row in the .PNG file
+
+' V1.01
 '       - Modified load location of hte NTSC composite file to only use block $C000 while loading using option -c4
 
 ' V1.00
@@ -943,6 +946,7 @@ End If
 'Print "Screen bytes per row is"; ScreenWidth / 8
 Print "Generating Sprite with the following info:"
 Print "Sprite Width:"; imageWidth / AnimFrames
+SpriteWidthPixels = imageWidth / AnimFrames
 Print "Sprite Height:"; imageHeight
 Print "Number of frames in this sprite:"; AnimFrames
 
@@ -971,7 +975,7 @@ OldXPos = 0: OldYPos = 0 ' Used to caclulate LEAU and ABX values
 Outname$ = FNameNoExt$ + ".asm"
 Open Outname$ For Output As #2
 Print #2, "; Sprite Name            : "; FNameNoExt$
-Print #2, "; Sprite Width in pixels :"; imageWidth - 1
+Print #2, "; Sprite Width in pixels :"; SpriteWidthPixels
 Print #2, "; Sprite Height in pixels:"; imageHeight
 Print #2, "; # of Colours           :"; Colours
 Print #2, "; # of Animation Frames  :"; AnimFrames
