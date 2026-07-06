@@ -14,8 +14,8 @@ For support goto the CoCo Nation Basic-to-6809 channel on discord:
 https://discord.com/channels/301741082600013824/460587865928105985
 
 V 5.33
-- Added command _FILEEXISTS("FILENAME") - check if a file exist on the floppy drive
-- Added command _SDC_FILEEXISTS("FILENAME",#) - check if a file exist on the SDC
+- Added command _FILEEXISTS("FILENAME") - check if a file exists on the floppy drive
+- Added command _SDC_FILEEXISTS("FILENAME",#) - check if a file exists on the SDC
 
 V 5.32
 - Fixed a bug in one of the Random routines where the initial entry might not be random
