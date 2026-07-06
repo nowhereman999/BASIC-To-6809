@@ -62,6 +62,10 @@ REM_CMD = ii
 Check$ = "'": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
 REM_Apostraphe_CMD = ii
 
+Check$ = "_FILEEXISTS": GoSub FindNumCommandNumber ' Gets the Numeric Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+FILEEXISTS_CMD = ii
+Check$ = "_SDC_FILEEXISTS": GoSub FindNumCommandNumber ' Gets the Numeric Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
+SDC_FILEEXISTS_CMD = ii
 Check$ = "ABS": GoSub FindNumCommandNumber ' Gets the Numeric Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
 ABS_CMD = ii
 Check$ = "ASC": GoSub FindNumCommandNumber ' Gets the Numeric Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found

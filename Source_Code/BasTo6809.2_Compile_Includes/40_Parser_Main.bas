@@ -693,7 +693,7 @@ While RPNEntry <= RPNLast
                 If Len(TempNext$) >= 3 Then
                     If Asc(Left$(TempNext$, 1)) = TK_NumericCommand Then
                         cmd16 = Asc(Mid$(TempNext$, 2, 1)) * 256 + Asc(Mid$(TempNext$, 3, 1))
-                        If cmd16 = VARPTR_CMD Then
+                        If cmd16 = VARPTR_CMD Or cmd16 = SDC_FILEEXISTS_CMD Then
                             ProcessRPNStackPointer = ProcessRPNStackPointer + 1
                             ProcessRPNStack$(ProcessRPNStackPointer) = I$
                             GoTo NumericVarDone
@@ -1997,6 +1997,14 @@ End If
                 If RPNEntry < RPNLast Then
                     TempNext$ = RPNOutput$(RPNEntry + 1)
                     If Len(TempNext$) >= 3 Then
+                        If Asc(Left$(TempNext$, 1)) = TK_NumericCommand Then
+                            cmd16 = Asc(Mid$(TempNext$, 2, 1)) * 256 + Asc(Mid$(TempNext$, 3, 1))
+                            If cmd16 = SDC_FILEEXISTS_CMD Then
+                                ProcessRPNStackPointer = ProcessRPNStackPointer + 1
+                                ProcessRPNStack$(ProcessRPNStackPointer) = I$
+                                GoTo NumericLiteralDone
+                            End If
+                        End If
                         If Asc(Left$(TempNext$, 1)) = TK_StringCommand Then
                             cmd16 = Asc(Mid$(TempNext$, 2, 1)) * 256 + Asc(Mid$(TempNext$, 3, 1))
                             Select Case cmd16

@@ -5129,6 +5129,17 @@ Sub reginternal
     id.hr_syntax = "PALETTEW Slot,Value"
     regid
 
+    clearid
+    id.n = "_SDC_FileExists"
+    id.subfunc = 1
+    id.callname = "sub_coco"
+    id.args = 1
+    id.arg = MKL$(STRINGTYPE - ISPOINTER) + MKL$(LONGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER
+    id.specialformat = "?,?" 
+    id.hr_syntax = "_SDC_FILEEXISTS(fileName$,#)"
+    regid
+
 reginternalsubfunc = 0
 
 END SUB

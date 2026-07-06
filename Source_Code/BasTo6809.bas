@@ -1,4 +1,8 @@
-V$ = "5.32"
+V$ = "5.33"
+'       - Added command _FILEEXISTS("FILENAME") - check if a file exist on the floppy drive
+'       - Added command _SDC_FILEEXISTS("FILENAME",#) - check if a file exist on the SDC
+
+' V = 5.32
 '       - Fixed a bug in one of the Random routines where the initial entry might not be random
 '       - Fixed the calls to Select_AnalogMuxer and AnalogMuxOn from BSR to JSR as it could be necessary depending on the program
 

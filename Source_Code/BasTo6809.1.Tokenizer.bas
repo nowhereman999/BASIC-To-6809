@@ -1720,6 +1720,16 @@ For ii = 0 To GeneralCommandsFoundCount - 1
     End If
 Next ii
 
+For ii = 0 To NumericCommandsFoundCount - 1
+    Temp$ = UCase$(NumericCommandsFound$(ii))
+    If Temp$ = "_FILEEXISTS" Then
+        Disk = 1 ' Flag that we use Disk access
+    End If
+    If Temp$ = "_SDC_FILEEXISTS" Then
+        SDCVersionCheck = 1 ' include code to make sure we have the correct SDC firmware
+    End If
+Next ii
+
 ' *** Start writing to the .asm file ***
 T1$ = "    ": T2$ = T1$ + T1$
 Open OutName$ For Output As #1
@@ -2730,7 +2740,7 @@ For ii = 0 To NumericCommandsFoundCount - 1
     If Left$(Temp$, 8) = "COCOMP3_" Then
         Temp$ = "CoCoMP3_Compiler_Library": GoSub AddIncludeTemp ' Add code for handling the CoCoMP3
     End If
-    If Temp$ = "SDC_GETBYTE" Or Temp$ = "SDC_MKDIR" Or Temp$ = "SDC_SETDIR" Or Temp$ = "SDC_INITDIR" Or Temp$ = "SDC_DELETE" Then
+    If Temp$ = "SDC_GETBYTE" Or Temp$ = "SDC_MKDIR" Or Temp$ = "SDC_SETDIR" Or Temp$ = "SDC_INITDIR" Or Temp$ = "SDC_DELETE" Or Temp$ = "_SDC_FILEEXISTS" Then
         Temp$ = "SDC_Comm": GoSub AddIncludeTemp
         Temp$ = "SDC_CompilerCode": GoSub AddIncludeTemp
         Temp$ = "SDC_FileAccess": GoSub AddIncludeTemp
@@ -2744,6 +2754,12 @@ For ii = 0 To NumericCommandsFoundCount - 1
         Temp$ = "DecimalStringToD": GoSub AddIncludeTemp
         Temp$ = "HexStringToD": GoSub AddIncludeTemp
     End If
+
+    If Temp$ = "_FILEEXISTS" Then
+        Disk = 1 ' Flag that we use Disk access
+        Temp$ = "Disk_Commands": GoSub AddIncludeTemp ' Add code for Disk commands
+    End If
+
 Next ii
 If NumArrayVarsUsedCounter > 0 Or StringArrayVarsUsedCounter > 0 Then Temp$ = "ArrayHandler": GoSub AddIncludeTemp 'Add routines to handle Arrays
 

@@ -12,13 +12,47 @@ SDC_BufferPointer1 RMB  2       ; pointer to keep track of the location in the 2
 SDC_WriteMode0  RMB     1       ; 0 = read mode, 1 = write mode
 SDC_WriteMode1  RMB     1       ; 0 = read mode, 1 = write mode
 
+
+; We are setting up for reading from the CoCoSDC
+; Filename already is in buffer _StrVar_PF00
+; Input B = file number
+; Return:
+; A bit 0 = result, = 0 then found, = 1 then not found
+SDCFileExists:
+        PSHS    B               ; Save File number on the stack
+        LDX     #SDC_WriteMode0 ; Get the address of the write mode flags
+        STA     B,X             ; Set the Read/write mode flags
+        LDA     #'m'            ; m is for reading from a file
+!       JSR     SDCSetName      ; Add letter in A & ":" to the beginning of the name in _StrVar_PF00 final version 
+                                ; will be stored at _StrVar_PF01 and will be null terminted and U pointing at the start
+        LDX     #$0000
+        LDA     ,S              ; Get the file number
+        BNE     >               ; if it is <> 0 then we are opening file 1
+        LDD     #SDC_Buffer0    ; Get buffer start address for file 0 (aligned to $100 so B=0)
+        STD     SDC_BufferPointer0 ; Save the buffer pointer for file 0
+        LDA     #$E0            ; Command Code ($E0 for drive slot 0/file 0) for Mounting a New Image
+        STB     SDC_LBN0
+        STX     SDC_LBN0+1      ; Clear the LBN for file 0
+        BRA     @SDCSetFilenameOpen
+;
+!       LDD     #SDC_Buffer1    ; Get buffer start address for file 1 (aligned to $100 so B=0)
+        STD     SDC_BufferPointer1 ; Save the buffer pointer for file 1
+        LDA     #$E1            ; Command Code ($E1 for drive slot 1/file 1) for Mounting a New Image
+        STB     SDC_LBN1
+        STX     SDC_LBN1+1      ; Clear the LBN for file 1
+@SDCSetFilenameOpen:
+        JSR     CommSDC         ; Send the command to the SDC - carry set = fail
+        ROL     ,-S             ; Save the carry on the stack
+        LDB     1,S             ; Get the filenumber off the stack
+        JSR     SDC_CloseFileB  ; Close open file B
+        PULS    D,PC            ; Restore and return
+
 ; We are setting up for writing to the CoCoSDC
 ; Put "m:" at the start of the filename this sets the CoCoSDC to write/read a file
 ; If writing, it will create a new file (not a disk image file)
 ; If reading, it will get the file ready to be read with Logical block reads (not as a disk image file)
 ; A = File read mode (0) or write mode (1)
 ; B = File number (0 or 1)
-
 SDCOpenFile:
         PSHS    D               ; Save A & B
         LDX     #SDC_WriteMode0 ; Get the address of the write mode flags

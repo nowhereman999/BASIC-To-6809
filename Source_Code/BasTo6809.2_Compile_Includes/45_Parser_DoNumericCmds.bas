@@ -6,6 +6,91 @@ cmd16 = Asc(Mid$(i$, 2, 1)) * 256 + Asc(Mid$(i$, 3, 1))
 ArgCnt = 1
 If Len(i$) >= 4 Then ArgCnt = Asc(Mid$(i$, 4, 1))
 Select Case cmd16
+    Case FILEEXISTS_CMD
+        ' _FILEEXISTS(fileName$) : one numeric arg -> returns NT_Byte
+        If ArgCnt <> 1 Then
+            Print "Error: _FILEEXISTS() expects one argument";: GoTo FoundError
+        End If
+        ' ------------------------------------------------------------
+        ' POP: pull the argument token off the ProcessRPN stack
+        ' (it should be on the top because RPN puts args before the func)
+        ' ------------------------------------------------------------
+        Arg1$ = ProcessRPNStack$(ProcessRPNStackPointer)
+        ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        ' Type check: _FILEEXISTS requires a string
+        Temp$ = Arg1$: GoSub IsStringToken
+        If IsStrFlag% = 0 Then
+            Print "Error: _FILEEXISTS() expects a string";: GoTo FoundError
+        End If
+        ' ------------------------------------------------------------
+        ' PUSH: put the argument value onto the 6809 stack
+        ' This will do the right thing for:
+        '   - string var (F3...)
+        '   - string literal (F5 22 ... F5 22)
+        '   - string result marker (TK_STR_ONSTACK) => already on 6809 stack
+        ' ------------------------------------------------------------
+        Temp$ = Arg1$: GoSub PushOneStringTokenOnStack
+        ' Call runtime: consumes string @,S and leaves length (NT_UByte) @,S
+        A$ = "JSR": B$ = "FixFileName": C$ = "Format _StrVar_PF00 to proper disk filename format in memory at DNAMBF": GoSub AO
+        A$ = "LDU": B$ = "#DNAMBF": C$ = "U points at the filename to open": GoSub AO
+        ' Open the the File pointed at by U
+        ' Enter with U pointing at the properly formatted filename (8 character filename padded with spaces) and a 3 character extension
+        ' Exits with X pointing at the filename entry in the disk directory
+        ' Carry flag will be set if it couldn't find the filename, cleared otherwise
+        A$ = "JSR": B$ = "OpenFileU": C$ = "Go open file": GoSub AO
+        A$ = "LDB": B$ = "#$FF": C$ = "B = -1, Default file exists": GoSub AO
+        A$ = "BCC": B$ = ">": C$ = "Carry is clear, file exists, all good": GoSub AO
+        A$ = "CLRB": C$ = "B = 0, Flag file doesn't exist": GoSub AO
+        Z$ = "!": GoSub AO
+        A$ = "PSHS": B$ = "B": C$ = "save value on the stack": GoSub AO
+        ' ------------------------------------------------------------
+        ' PUSH RESULT: replace stack top with numeric-on-6809-stack marker
+        ' Net effect: 1 arg popped, 1 result pushed.
+        ' ------------------------------------------------------------
+        ProcessRPNStackPointer = ProcessRPNStackPointer + 1
+        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(NT_Byte)
+        Return
+    Case SDC_FILEEXISTS_CMD
+        ' _SDC_FILEEXISTS(fileName$,#) -> returns NT_Byte
+        If ArgCnt <> 2 Then
+            Print "Error: _SDC_FILEEXISTS() expects 2 arguments on";: GoTo FoundError
+        End If
+        ' Pop args (RIGHTMOST first): SDC Number, then source string
+        LenTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        StrTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        ' Push String first
+        Temp$ = StrTok$: GoSub PushOneStringTokenOnStack
+        
+        A$ = "NOP": C$ = "Nop 1": GoSub AO
+
+        A$ = "JSR": B$ = "SDC_FilenameToStrVar_PF00": C$ = "Copy filename off the stack into _StrVar_PF00": GoSub AO
+        A$ = "JSR": B$ = "SDC_AddDefaultBinExtension": C$ = "Add .BIN to SDC_LOADM filename if no extension was provided": GoSub AO
+
+        A$ = "NOP": C$ = "Nop 2": GoSub AO
+
+        ' Push SDC Number on the stack 
+        Temp$ = LenTok$: GoSub PushOneValueTokenOnStack
+        LastType = PushedType
+        NVT = NT_UByte ' Make sure it's 0 to 255 range
+        GoSub ConvertLastType2NVT
+
+        A$ = "NOP": C$ = "Nop 3": GoSub AO
+
+        A$ = "PULS": B$ = "B": C$ = "B = SDC file number": GoSub AO
+        A$ = "JSR": B$ = "SDCFileExists": C$ = "Test if file is found on the SDC": GoSub AO
+        A$ = "RORA": C$ = "Move result of exists flag to carry": GoSub AO
+        A$ = "LDB": B$ = "#$FF": C$ = "B = -1, Default file exists": GoSub AO
+        A$ = "BCC": B$ = ">": C$ = "Carry is clear, file exists, all good": GoSub AO
+        A$ = "CLRB": C$ = "B = 0, Flag file doesn't exist": GoSub AO
+        Z$ = "!": GoSub AO
+        A$ = "PSHS": B$ = "B": C$ = "save value on the stack": GoSub AO
+        ' ------------------------------------------------------------
+        ' PUSH RESULT: replace stack top with numeric-on-6809-stack marker
+        ' Net effect: 1 arg popped, 1 result pushed.
+        ' ------------------------------------------------------------
+        ProcessRPNStackPointer = ProcessRPNStackPointer + 1
+        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(NT_Byte)
+        Return
     Case LPEEK_CMD
         ' LPEEK(addr) : one numeric arg -> returns UInt16
         If ArgCnt <> 1 Then

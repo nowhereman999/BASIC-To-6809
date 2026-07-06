@@ -162,6 +162,12 @@ listOfKeywords$ = listOfKeywords$ +_
 "" +_
 ""
 
+' [CoCo BASIC to 6809 commands] (_)
+listOfCustomKeywords$ = listOfCustomKeywords$ +_
+"_SDC_FileExists"+_
+"" +_
+""
+
 ' [CoCo BASIC to 6809 commands] (A to E)
 listOfCustomKeywords$ = listOfCustomKeywords$ +_
 "ATTR@AUDIO@BUTTON@CMP@COCOHARDWARE@"+_
