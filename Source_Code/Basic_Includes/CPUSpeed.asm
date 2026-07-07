@@ -1,8 +1,8 @@
 ; Set the CPU Speed
 ;
-; Normal speed is 14.31818 divided by 16 = 0.89488625 Mhz
-; Double speed is 14.31818 divided by 8 = 1.7897725 Mhz
-;   High speed is 14.31818 divided by 5 = 2.863636 Mhz
+; Normal speed is 14.31818 (clock crystal) divided by 16 = 0.89488625 Mhz
+; Double speed is 14.31818 (clock crystal) divided by 8 = 1.7897725 Mhz
+;   High speed is 14.31818 (clock crystal) divided by 5 = 2.863636 Mhz
 ;
 ; Enter with value in B
 ; If B=1 then set the CPU in Emulation mode and set the speed at .895 Mhz
