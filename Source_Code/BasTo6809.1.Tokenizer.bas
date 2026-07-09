@@ -2470,13 +2470,13 @@ If PrintGraphicsText6 = 1 Then
 End If
 For ii = 0 To GeneralCommandsFoundCount - 1
     Temp$ = UCase$(GeneralCommandsFound$(ii))
-    If Temp$ = "SET" Then
-        For i3 = 0 To 171
-            If GModeLib(i3) = 1 Then
-                Temp$ = "GraphicCommands/" + GModeName$(i3) + "/" + GModeName$(i3) + "_Line": GoSub AddIncludeTemp
-            End If
-        Next i3
-    End If
+    '    If Temp$ = "SET" Then
+    '        For i3 = 0 To 171
+    '            If GModeLib(i3) = 1 Then
+    '                Temp$ = "GraphicCommands/" + GModeName$(i3) + "/" + GModeName$(i3) + "_Line": GoSub AddIncludeTemp
+    '            End If
+    '        Next i3
+    '    End If
     If Temp$ = "CIRCLE" Then
         For i3 = 0 To 171
             If GModeLib(i3) = 1 Then
