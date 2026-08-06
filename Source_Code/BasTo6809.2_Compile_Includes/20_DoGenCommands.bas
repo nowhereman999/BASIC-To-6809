@@ -3088,7 +3088,7 @@ CaseItemCount = 0
 
 Dim depth As Integer
 Dim inQ As Integer
-Dim startPos As Integer
+Dim CaseItemStart As Integer
 Dim i As Integer
 Dim ch As Integer
 Dim ch2 As Integer
@@ -3096,7 +3096,7 @@ Dim item$
 
 depth = 0
 inQ = 0
-startPos = 1
+CaseItemStart = 1
 i = 1
 Do While i <= Len(CaseTemp$)
     ch = Asc(Mid$(CaseTemp$, i, 1))
@@ -3128,13 +3128,13 @@ Do While i <= Len(CaseTemp$)
             ' Top-level comma token: split HERE, consuming both bytes
             If ch2 = TK_Comma And depth = 0 Then
                 CaseItemCount = CaseItemCount + 1
-                item$ = Mid$(CaseTemp$, startPos, i - startPos)
+                item$ = Mid$(CaseTemp$, CaseItemStart, i - CaseItemStart)
                 CaseItem$(CaseItemCount) = LTrim$(RTrim$(item$))
                 If Len(CaseItem$(CaseItemCount)) = 0 Then
                     Print "Error: empty expression in CASE list on";
                     GoTo FoundError
                 End If
-                startPos = i + 2
+                CaseItemStart = i + 2
                 i = i + 2
                 GoTo SplitNextChar
             End If
@@ -3146,7 +3146,7 @@ Do While i <= Len(CaseTemp$)
     SplitNextChar:
 Loop
 CaseItemCount = CaseItemCount + 1
-item$ = Mid$(CaseTemp$, startPos)
+item$ = Mid$(CaseTemp$, CaseItemStart)
 CaseItem$(CaseItemCount) = LTrim$(RTrim$(item$))
 If Len(CaseItem$(CaseItemCount)) = 0 Then
     Print "Error: empty expression in CASE list on";

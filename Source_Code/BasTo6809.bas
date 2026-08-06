@@ -1,6 +1,7 @@
 V$ = "5.33"
 '       - Added command _FILEEXISTS("FILENAME") - check if a file exists on the floppy drive
 '       - Added command _SDC_FILEEXISTS("FILENAME",#) - check if a file exists on the SDC
+'       - Extended the size of some pointers from integer to LONG as source files that were 32k or larger were failing.
 
 ' V = 5.32
 '       - Fixed a bug in one of the Random routines where the initial entry might not be random
@@ -328,8 +329,8 @@ ProgramStart$ = "E00" ' $2600, PMODE 4 graphics screen will be from $E00 to $25F
 'Dim commands$(100)
 Dim numCommands As Integer
 numCommands = 0
-Dim i As Integer
-Dim Start As Integer
+Dim i As Long
+Dim Start As Long
 'Dim functionName$
 Dim Found As Integer
 
@@ -1152,4 +1153,3 @@ Else
     End If
 End If
 Return
-

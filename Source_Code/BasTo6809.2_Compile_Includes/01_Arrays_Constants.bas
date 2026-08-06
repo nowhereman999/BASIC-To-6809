@@ -104,7 +104,7 @@ Dim Shared CaseItemCount
 Dim CaseListIndex As Integer
 Dim CaseListIndex2 As Integer
 
-Dim ii As Integer
+Dim ii As Long
 Dim x As Long
 Dim y As Long
 Dim v As Long
@@ -294,7 +294,11 @@ Dim One$
 Dim DefLabelCount As Integer
 Dim DefVarCount As Integer
 Dim OK%
-Dim ScanPos As Integer
+Dim ScanPos As Long
+Dim FirstIFLocation As Long
+Dim PrevScan As Long
+Dim StartPos As Long
+Dim Difference As Long
 Dim IFNum$
 Dim Regs$
 Dim RPNEntry As Integer
@@ -315,14 +319,14 @@ Dim IdxVal As Integer
 Dim IFSP As Integer
 Dim TopOp As Integer
 Dim WHILEStackPointer As Integer
-Dim EndPos As Integer
+Dim EndPos As Long
 Dim Length As Long
-Dim PointAtTo As Integer
+Dim PointAtTo As Long
 Dim Q%
 Dim ContinueLine As Integer
 'Dim IsLastAndInIF%
 'Dim IsLastOrInIF%
-Dim RemStart As Integer
+Dim RemStart As Long
 Dim StringVar$
 Dim HasAndOverall%
 Dim I7%
@@ -355,7 +359,7 @@ Dim IFCount As Integer
 Dim DOCount As Integer
 Dim WHILECount As Integer
 Dim SELECTCount As Integer
-Dim FixSpot As Integer
+Dim FixSpot As Long
 Dim NextCaseNumber$
 Dim CaseTemp$
 Dim NextKind As Integer
@@ -383,8 +387,8 @@ Dim PullRegs$
 Dim OutPush$
 Dim OutPull$
 Dim RegsRaw$
-Dim AmountToCopy As Integer
-Dim EndX As Integer
+Dim AmountToCopy As Long
+Dim EndX As Long
 Dim P%
 Dim Op$
 

@@ -13,6 +13,9 @@ https://wordpress.com/post/nowhereman999.wordpress.com/5054
 For support goto the CoCo Nation Basic-to-6809 channel on discord:
 https://discord.com/channels/301741082600013824/460587865928105985
 
+V 5.34
+- Extended the size of some pointers from integer to LONG as source files that were larger than 32k were failing.
+
 V 5.33
 - Added command _FILEEXISTS("FILENAME") - check if a file exists on the floppy drive
 - Added command _SDC_FILEEXISTS("FILENAME",#) - check if a file exists on the SDC

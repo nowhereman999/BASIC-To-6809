@@ -247,21 +247,23 @@ ENDIFCheck = 1 ' we're looking for our own END IF (depth = 1)
 FoundELSE = 0
 
 ScanAheadLoop:
-If ScanPos + 3 > Filesize Then GoTo DoneScanning ' (malformed BASIC? just bail)
+If ScanPos >= Filesize Then GoTo DoneScanning ' (malformed BASIC? just bail)
 v = Array(ScanPos): ScanPos = ScanPos + 1 ' read one byte of token
-' Check if we've hit another "IF" at depth > 0
-If v = &HFF And Array(ScanPos) * 256 + Array(ScanPos + 1) = IF_CMD Then
-    ' Look ahead to see if this is actually "END IF" or a fresh IF
-    If (Array(ScanPos - 4) = &HFF And Array(ScanPos - 3) * 256 + Array(ScanPos - 2) = END_CMD) Then
-        ' That was an "END IF," so do NOT treat as a nested IF
-    Else
-        ENDIFCheck = ENDIFCheck + 1
-    End If
-End If
 
-' Check if this byte sequence is ELSE or ELSEIF
-If v = &HFF Then
+If v = &HFF And ScanPos + 1 < Filesize Then
     cmd16 = Array(ScanPos) * 256 + Array(ScanPos + 1)
+
+    ' Check if we've hit another "IF" at depth > 0
+    If cmd16 = IF_CMD Then
+        ' Look back to see if this is actually "END IF" or a fresh IF
+        If ScanPos >= 4 And (Array(ScanPos - 4) = &HFF And Array(ScanPos - 3) * 256 + Array(ScanPos - 2) = END_CMD) Then
+            ' That was an "END IF," so do NOT treat as a nested IF
+        Else
+            ENDIFCheck = ENDIFCheck + 1
+        End If
+    End If
+
+    ' Check if this byte sequence is ELSE or ELSEIF
     PrevGenCmd = 0
     If cmd16 = ELSE_CMD Then
         PrevScan = ScanPos - 2
@@ -274,16 +276,16 @@ If v = &HFF Then
             GoTo DoneScanning
         End If
     End If
-End If
 
-' Check if this byte sequence is END IF
-    If v = &HFF _
-       And Array(ScanPos)*256 + Array(ScanPos+1) = END_CMD _
+    ' Check if this byte sequence is END IF
+    If ScanPos + 4 < Filesize _
+       And cmd16 = END_CMD _
        And Array(ScanPos+2) = &HFF _
        And Array(ScanPos+3)*256 + Array(ScanPos+4) = IF_CMD Then
 
-    ENDIFCheck = ENDIFCheck - 1
-    If ENDIFCheck = 0 Then GoTo DoneScanning
+        ENDIFCheck = ENDIFCheck - 1
+        If ENDIFCheck = 0 Then GoTo DoneScanning
+    End If
 End If
 
 GoTo ScanAheadLoop

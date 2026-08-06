@@ -6,6 +6,27 @@ Verbose = 0
 Dim Array(270000) As _Unsigned _Byte
 Dim INArray(270000) As _Unsigned _Byte
 
+Dim x As Long
+Dim y As Long
+Dim v As Long
+Dim i As Long
+Dim ii As Long
+Dim c As Long
+Dim OP As Long
+Dim INx As Long
+Dim length As Long
+Dim filesize As Long
+Dim Start As Long
+Dim Tempx As Long
+Dim PrevScan As Long
+Dim ArrayStart As Long
+Dim BracketStart As Long
+Dim CheckStart As Long
+Dim LabelStart As Long
+Dim StartLine As Long
+Dim EndLine As Long
+Dim Pointer1 As Long
+
 Dim LabelName$(100000)
 
 Dim NumericVariable$(100000)
