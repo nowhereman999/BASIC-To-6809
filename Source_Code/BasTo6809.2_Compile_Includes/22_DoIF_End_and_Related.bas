@@ -232,6 +232,8 @@ Return
 DoIF:
 LastDataTypeSize = -1
 ' --- Step 1: Assign a unique ID to this new IF and push it onto the IF-stack ---
+If IFCount >= MAX_CONTROL_COUNT Then Print "Error, too many IF statements. Limit is"; MAX_CONTROL_COUNT; " on";: GoTo FoundError
+If IFSP >= MAX_CONTROL_NEST Then Print "Error, IF nesting too deep. Limit is"; MAX_CONTROL_NEST; " on";: GoTo FoundError
 IFCount = IFCount + 1 ' e.g. 0→1→2→3_ each time you hit a brand-new IF
 IFSP = IFSP + 1 ' "push" a new stack slot
 IFProc = IFSP ' index into IFStack/ElseStack arrays

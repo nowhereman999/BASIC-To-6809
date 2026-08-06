@@ -90,7 +90,9 @@ Dim FoldSign As Integer
 ' SELECT / CASE nesting state
 ' Keep ALL per-SELECT arrays the same size
 ' ============================================================
-Const MAX_SELECT_NEST = 1000
+Const MAX_CONTROL_NEST = 32767
+Const MAX_CONTROL_COUNT = 32767
+Const MAX_SELECT_NEST = MAX_CONTROL_NEST
 Dim SELECTStack(MAX_SELECT_NEST) As Integer
 Dim SELECTStackPointer As Integer
 Dim Shared SelIsString(MAX_SELECT_NEST) As Integer ' Flag whether this is a SELECT CASE String$ or not
@@ -110,8 +112,8 @@ Dim y As Long
 Dim v As Long
 
 Dim VarptrDepth As Integer
-Dim DOStack(1000) As Integer
-Dim WHILEStack(1000) As Integer
+Dim DOStack(MAX_CONTROL_NEST) As Integer
+Dim WHILEStack(MAX_CONTROL_NEST) As Integer
 Dim DatatypeStack(100, 100) As _Unsigned _Byte
 Dim DStackPointer(100) As Integer
 Dim LargestDataType(100) As _Unsigned _Byte
@@ -188,13 +190,13 @@ Dim VarInt64 As _Integer64
 Dim VarUInt64 As _Unsigned _Integer64
 
 ' Need to keep track of FOR LOOPs
-Dim FORSTack(10000)
+Dim FORSTack(MAX_CONTROL_NEST) As Integer
 
 ' Stuff for IF/THEN/ELSE/ENDIF
-Dim IFSTack(10000) As Integer 'If Stack
-Dim ElseStack(10000) As Integer ' Else Stack
-Dim ELSELocation(10000) As Integer 'Flag if the IF has an ELSE
-Dim ElseIfIndex(10000) As Integer ' 0 = first alternate entry (ELSE), 1.. = ELSEIF chain labels
+Dim IFSTack(MAX_CONTROL_NEST) As Integer 'If Stack
+Dim ElseStack(MAX_CONTROL_NEST) As Integer ' Else Stack
+Dim ELSELocation(MAX_CONTROL_NEST) As Integer 'Flag if the IF has an ELSE
+Dim ElseIfIndex(MAX_CONTROL_NEST) As Integer ' 0 = first alternate entry (ELSE), 1.. = ELSEIF chain labels
 
 Dim ForceLitType As Integer ' If non-zero, unsuffixed numeric literals default to this type during expression parsing
 

@@ -1,7 +1,12 @@
-V$ = "5.33"
+V$ = "5.35"
+'       - All loop counters now are set to 32k
+
+' V = 5.34
+'       - Extended the size of some pointers from integer to LONG as source files that were larger than 32k were failing.
+
+' V = 5.33
 '       - Added command _FILEEXISTS("FILENAME") - check if a file exists on the floppy drive
 '       - Added command _SDC_FILEEXISTS("FILENAME",#) - check if a file exists on the SDC
-'       - Extended the size of some pointers from integer to LONG as source files that were 32k or larger were failing.
 
 ' V = 5.32
 '       - Fixed a bug in one of the Random routines where the initial entry might not be random
@@ -526,7 +531,7 @@ Next check
 
 If BASICMode = 0 Then
     ' Let's detect the input filetype
-    v = INArray(0): If v = &HFF Then BASICMode = 1
+    V = INArray(0): If V = &HFF Then BASICMode = 1
 End If
 
 OutName$ = Left$(Fname$, Len(Fname$) - 4) + ".asm"
@@ -585,15 +590,15 @@ If BASICMode = 1 Then
     Print "DeTokenizing CoCo BASIC program"
     GoSub FillCommandArray ' Get the commands and extended commands in C$() & C2$()
     x = 0
-    v = INArray(x): x = x + 1
-    If v <> &HFF Then Print "Error, not a tokenized CoCo BASIC program": System
+    V = INArray(x): x = x + 1
+    If V <> &HFF Then Print "Error, not a tokenized CoCo BASIC program": System
     size = INArray(x) * 256 + INArray(x + 1): x = x + 2
     HighestStringCount = 0
     y = 0
     Array(y) = &H0D: y = y + 1 ' Start with an End Of Line
     While x + 3 < size
-        v = INArray(x): x = x + 1 'ignore memory location MSB for new line
-        v = INArray(x): x = x + 1 'ignore memory location LSB for new line
+        V = INArray(x): x = x + 1 'ignore memory location MSB for new line
+        V = INArray(x): x = x + 1 'ignore memory location LSB for new line
         num = INArray(x) * 256: x = x + 1 'get MSB line number for new line
         num = num + INArray(x): x = x + 1 'get LSB line number for new line
         GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
@@ -603,9 +608,9 @@ If BASICMode = 1 Then
         Array(y) = &H20: y = y + 1 ' Add a space after the line number
         qflag = 0 ' Flag within a quote off, this is because the CoCo's text within quotes isn't exactly ASCII
         GetFirstByte:
-        v = INArray(x): x = x + 1
-        If v = &H3A Then GoTo GetFirstByte 'skip colons at the beginning of a line
-        While v <> 0 ' copy until we get to the end of a line
+        V = INArray(x): x = x + 1
+        If V = &H3A Then GoTo GetFirstByte 'skip colons at the beginning of a line
+        While V <> 0 ' copy until we get to the end of a line
             GoSub ExpandTokens
         Wend
         Array(y) = &H0D: y = y + 1 ' Add an End Of Line
@@ -616,8 +621,8 @@ If BASICMode = 1 Then
     ExpandTokens:
     ParseTokenExpression:
     GoSub ParseTokenCommand
-    While v <> 0 And v < &H80 ' while v<>0 or a colon
-        If v = &H22 Then
+    While V <> 0 And V < &H80 ' while v<>0 or a colon
+        If V = &H22 Then
             ' Found a quote
             q = q + 1
             If (q And 1) = 1 Then
@@ -627,35 +632,35 @@ If BASICMode = 1 Then
                 End If
             End If
         End If
-        Array(y) = v: y = y + 1 ' write a byte
-        v = INArray(x): x = x + 1 'get next byte
+        Array(y) = V: y = y + 1 ' write a byte
+        V = INArray(x): x = x + 1 'get next byte
     Wend
     Return
     ParseTokenCommand:
-    If v = &HFF Then ' do we have an extended command?
+    If V = &HFF Then ' do we have an extended command?
         'Deal with extended Commands
-        v = INArray(x): x = x + 1 'get next byte which is the extended command
-        Temp$ = C2$(v)
+        V = INArray(x): x = x + 1 'get next byte which is the extended command
+        Temp$ = C2$(V)
         '      Array(y) = &H20: y = y + 1 ' Add a space
         For i = 1 To Len(Temp$)
-            v = Asc(Mid$(Temp$, i, 1))
-            Array(y) = v: y = y + 1 ' write a byte
+            V = Asc(Mid$(Temp$, i, 1))
+            Array(y) = V: y = y + 1 ' write a byte
         Next i
         '   If v = &H93 Then GoTo NoOtherValue 'MEM
-        v = INArray(x): x = x + 1 'get next byte
+        V = INArray(x): x = x + 1 'get next byte
         GoSub ParseTokenExpression
     Else
-        If v >= &H80 Then
-            Temp$ = C$(v)
-            If v = &H81 Then
+        If V >= &H80 Then
+            Temp$ = C$(V)
+            If V = &H81 Then
                 'We found a GO
-                v = INArray(x): x = x + 1
-                If v = &HA5 Then Temp$ = " GOTO ": GoTo FoundGo
-                If v = &HA6 Then Temp$ = " GOSUB ": GoTo FoundGo
+                V = INArray(x): x = x + 1
+                If V = &HA5 Then Temp$ = " GOTO ": GoTo FoundGo
+                If V = &HA6 Then Temp$ = " GOSUB ": GoTo FoundGo
                 Print "Error detokenizing, found a GO but no TO or SUB on line:"; num: System
                 FoundGo:
             End If
-            If v = &HB3 Then
+            If V = &HB3 Then
                 ' we found an = (check for a dot after the = change it to 0)
                 i = x
                 While INArray(x) = &H20: x = x + 1: Wend 'skip any spaces
@@ -667,10 +672,10 @@ If BASICMode = 1 Then
             End If
             '       Array(y) = &H20: y = y + 1 ' Add a space
             For i = 1 To Len(Temp$)
-                v = Asc(Mid$(Temp$, i, 1))
-                Array(y) = v: y = y + 1 ' write a byte
+                V = Asc(Mid$(Temp$, i, 1))
+                Array(y) = V: y = y + 1 ' write a byte
             Next i
-            v = INArray(x): x = x + 1 'get next byte
+            V = INArray(x): x = x + 1 'get next byte
             GoSub ParseTokenExpression
         End If
     End If
@@ -680,10 +685,10 @@ Else
     x = 0: q = 0
     Dim i2 As Long
     For i2 = 0 To length - 1
-        v = INArray(i2)
-        Array(x) = v: x = x + 1
-        If v = &H0D Or v = &H0A Then q = 0 ' if at an EOL then reset the quote counter
-        If v = &H22 Then
+        V = INArray(i2)
+        Array(x) = V: x = x + 1
+        If V = &H0D Or V = &H0A Then q = 0 ' if at an EOL then reset the quote counter
+        If V = &H22 Then
             ' Found a quote
             q = q + 1
             If (q And 1) = 0 Then
@@ -702,8 +707,8 @@ ProgramIsNowText:
 c = 0: x = 0
 Temp$ = ""
 While x <= length - 1
-    v = Array(x): x = x + 1
-    If v = &H0D Or v = &H0A Then
+    V = Array(x): x = x + 1
+    If V = &H0D Or V = &H0A Then
         ' We've reached the end of the line
         'skip any extra EOL/LineFeeds
         While Array(x) = &H0D Or Array(x) = &H0A
@@ -722,7 +727,7 @@ While x <= length - 1
         End If
         Temp$ = ""
     Else
-        Temp$ = Temp$ + Chr$(v)
+        Temp$ = Temp$ + Chr$(V)
     End If
 Wend
 If Temp$ <> "" Then
@@ -809,10 +814,10 @@ While x <= length - 1
     ' read a full line
     y = x
     Temp$ = ""
-    v = Array(x): x = x + 1
-    While x <= length - 1 And v <> &H0D
-        Temp$ = Temp$ + Chr$(v)
-        v = Array(x): x = x + 1
+    V = Array(x): x = x + 1
+    While x <= length - 1 And V <> &H0D
+        Temp$ = Temp$ + Chr$(V)
+        V = Array(x): x = x + 1
     Wend
     Temp$ = Temp$ + Chr$(&H0D)
     p = InStr(Temp$, "ADDASSEM")
@@ -824,10 +829,10 @@ While x <= length - 1
         'copy lines unaltered until we get an ENDASSEM
         REM_AddCode:
         Temp$ = ""
-        v = Array(x): x = x + 1
-        While v <> &H0D
-            Temp$ = Temp$ + Chr$(v)
-            v = Array(x): x = x + 1
+        V = Array(x): x = x + 1
+        While V <> &H0D
+            Temp$ = Temp$ + Chr$(V)
+            V = Array(x): x = x + 1
             ' If x > length - 1 Then Print "WHAT!": System
         Wend
         Temp1$ = ""
@@ -853,16 +858,16 @@ While x <= length - 1
         x = y
     End If
 
-    v = Array(x): x = x + 1
-    If v = &H22 Then
-        INArray(c) = v: c = c + 1 ' Copy the open quote
-        v = Array(x): x = x + 1
+    V = Array(x): x = x + 1
+    If V = &H22 Then
+        INArray(c) = V: c = c + 1 ' Copy the open quote
+        V = Array(x): x = x + 1
         ' Copy all until we find another quote or end of line
-        While v <> &H0D And v <> &H0A And v <> &H22
-            INArray(c) = v: c = c + 1 ' Copy the open quote
-            v = Array(x): x = x + 1
+        While V <> &H0D And V <> &H0A And V <> &H22
+            INArray(c) = V: c = c + 1 ' Copy the open quote
+            V = Array(x): x = x + 1
         Wend
-        If v <> &H22 Then
+        If V <> &H22 Then
             'Not a quote to end this string, add one
             INArray(c) = &H22: c = c + 1 ' add a close quote
         End If
@@ -870,7 +875,7 @@ While x <= length - 1
         For ii = 1 To OperatorCommandsCount
             If Len(OperatorCommands$(ii)) = 1 Then
                 T = Asc(Left$(OperatorCommands$(ii), 1))
-                If v = T Then
+                If V = T Then
                     'Make sure there is a space before and after the equal sign
                     If INArray(c - 1) <> Asc(" ") Then
                         ' no space before, add a space
@@ -880,13 +885,13 @@ While x <= length - 1
                     If Array(x) <> Asc(" ") Then
                         ' No Space after, add one
                         INArray(c) = T: c = c + 1
-                        v = Asc(" ")
+                        V = Asc(" ")
                     End If
                 End If
             End If
         Next ii
         ' Check for a comma and add a space in before and after
-        If v = Asc(",") Then
+        If V = Asc(",") Then
             'Make sure there is a space before and after the comma
             If INArray(c - 1) <> Asc(" ") Then
                 ' no space before, add a space
@@ -896,11 +901,11 @@ While x <= length - 1
             If Array(x) <> Asc(" ") Then
                 ' No Space after, add one
                 INArray(c) = Asc(","): c = c + 1
-                v = Asc(" ")
+                V = Asc(" ")
             End If
         End If
         ' Check for a semicolon and add a space in before and after
-        If v = Asc(";") Then
+        If V = Asc(";") Then
             'Make sure there is a space before and after the semicolon
             If INArray(c - 1) <> Asc(" ") Then
                 ' no space before, add a space
@@ -910,11 +915,11 @@ While x <= length - 1
             If Array(x) <> Asc(" ") Then
                 ' No Space after, add one
                 INArray(c) = Asc(";"): c = c + 1
-                v = Asc(" ")
+                V = Asc(" ")
             End If
         End If
         ' Check for an apostrophe and add a space before and after
-        If v = Asc("'") Then
+        If V = Asc("'") Then
             'Make sure there is a space before and after the apostrophe
             If c > 0 Then
                 If INArray(c - 1) <> Asc(" ") Then
@@ -928,11 +933,11 @@ While x <= length - 1
             If Array(x) <> Asc(" ") Then
                 ' No Space after, add one
                 INArray(c) = Asc("'"): c = c + 1
-                v = Asc(" ")
+                V = Asc(" ")
             End If
         End If
     End If
-    INArray(c) = v: c = c + 1
+    INArray(c) = V: c = c + 1
 Wend
 
 'Now that it's formatted copy INArray to array

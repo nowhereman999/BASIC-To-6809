@@ -3158,12 +3158,10 @@ Return
 ' DoSELECT:  SELECT CASE <expr>   or   SELECT EVERYCASE <expr>
 ' ============================================================
 DoSELECT:
+If SELECTCount >= MAX_CONTROL_COUNT Then Print "Error, too many SELECT CASE statements. Limit is"; MAX_CONTROL_COUNT; " on";: GoTo FoundError
+If SELECTStackPointer >= MAX_SELECT_NEST Then Print "Error, SELECT CASE nesting too deep. Limit is"; MAX_SELECT_NEST; " on";: GoTo FoundError
 SELECTCount = SELECTCount + 1
 SELECTStackPointer = SELECTStackPointer + 1
-If SELECTStackPointer > MAX_SELECT_NEST Then
-    Print "Error, SELECT CASE nesting too deep on";
-    GoTo FoundError
-End If
 
 SELECTStack(SELECTStackPointer) = SELECTCount
 
@@ -3463,6 +3461,8 @@ End If
 Print "Don't know what kind of EXIT to do on";: GoTo FoundError
 
 DoDO:
+If DOCount >= MAX_CONTROL_COUNT Then Print "Error, too many DO loops. Limit is"; MAX_CONTROL_COUNT; " on";: GoTo FoundError
+If DOStackPointer >= MAX_CONTROL_NEST Then Print "Error, DO loop nesting too deep. Limit is"; MAX_CONTROL_NEST; " on";: GoTo FoundError
 DOCount = DOCount + 1
 DOStackPointer = DOStackPointer + 1
 DOStack(DOStackPointer) = DOCount
@@ -3591,6 +3591,8 @@ End If
 Print "Don't know what kind of DO command to do on";: GoTo FoundError
 
 DoWHILE:
+If WHILECount >= MAX_CONTROL_COUNT Then Print "Error, too many WHILE loops. Limit is"; MAX_CONTROL_COUNT; " on";: GoTo FoundError
+If WHILEStackPointer >= MAX_CONTROL_NEST Then Print "Error, WHILE loop nesting too deep. Limit is"; MAX_CONTROL_NEST; " on";: GoTo FoundError
 WhileCount = WhileCount + 1
 WhileStackPointer = WhileStackPointer + 1
 WHILEStack(WhileStackPointer) = WhileCount
@@ -3631,6 +3633,8 @@ Return
 
 
 DoFOR:
+If FORCount >= MAX_CONTROL_COUNT Then Print "Error, too many FOR loops. Limit is"; MAX_CONTROL_COUNT; " on";: GoTo FoundError
+If FORStackPointer >= MAX_CONTROL_NEST Then Print "Error, FOR loop nesting too deep. Limit is"; MAX_CONTROL_NEST; " on";: GoTo FoundError
 FORCount = FORCount + 1
 FORStackPointer = FORStackPointer + 1
 FORSTack(FORStackPointer) = FORCount
