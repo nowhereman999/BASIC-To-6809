@@ -1,0 +1,5 @@
+echo "Processing "
+Processing 
+./BasTo6809 -ascii -b1 
+make: ./BasTo6809: No such file or directory
+make: *** [defaultF11] Error 1

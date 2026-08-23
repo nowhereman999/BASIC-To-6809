@@ -1,0 +1,4 @@
+*__UBYTE_A=0;
+*__UBYTE_R=0;
+__STRING_I->len=0;
+__STRING_D->len=0;

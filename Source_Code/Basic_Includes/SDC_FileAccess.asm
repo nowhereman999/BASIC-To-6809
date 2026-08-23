@@ -304,6 +304,19 @@ SDC_FileInfo:
         LBCS    SDCError        ; SDC Error, go show the error and halt program
         RTS
 
+; SDC_LOF(B)
+; Return the open file's unsigned 32-bit length in D:X (MSW:LSW).
+; SDC file-info bytes 28-31 store the length least-significant byte first.
+SDC_LOF:
+        BSR     SDC_FileInfo
+        LDA     _StrVar_IFRight+31
+        LDB     _StrVar_IFRight+30
+        TFR     D,X                     ; X = most-significant word temporarily
+        LDA     _StrVar_IFRight+29
+        LDB     _StrVar_IFRight+28       ; D = least-significant word
+        EXG     D,X                     ; D:X = MSW:LSW
+        RTS
+
 ; Initiate a directory listing
 ;
 ; Command code: $E0

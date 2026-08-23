@@ -13,6 +13,78 @@ https://wordpress.com/post/nowhereman999.wordpress.com/5054
 For support goto the CoCo Nation Basic-to-6809 channel on discord:
 https://discord.com/channels/301741082600013824/460587865928105985
 
+V 5.45
+- Made the CoCo 1/2 SDC_PLAYMOVIE frame buffers follow GRAPHICS_PAGE_START for -notext and -rxxxx layouts
+- CoCo 1/2 movie builds always reserve both $1800-byte frame pages and reject an overlapping explicit -p address
+- Fixed direct EOF, stream EOF, and BREAK movie exits so each restores the stack according to its actual entry path
+- CoCo 1/2 movie playback now restores the BASIC program's selected graphics page before returning
+- Fixed INITDIR wildcard fields so patterns such as *.DAT preserve the first extension character
+- Fixed DIRPAGE controller initialization on its first disk read
+- DIRPAGE now returns end-of-directory status 4 without starting an unnecessary disk operation
+- Removed the obsolete -bx branch-length option from the compiler interface
+- CHAIN and SDC_CHAIN now force all-RAM mode before loading, so a normally loaded small
+  first program can safely chain to a large program with segments above $7FFF
+
+' V 5.44
+- Added QB64-compatible LOF(handle) for open DECB files; returns an unsigned 32-bit file length
+- Added SDC_LOF(handle) for open CoCoSDC files with the same unsigned 32-bit result
+- Updated the SDECB IDE syntax checking and highlighting for SDC_LOF
+
+' V 5.43
+- Fixed GETBYTE returning zero for valid bytes: DiskReadByteA now explicitly clears carry after a successful read
+- Sequential reads now distinguish a valid byte, including $00, from the internal end-of-file condition
+
+' V 5.42
+- Fixed sequential disk OPEN "R": DiskOpenFileAB now preserves the requested mode and handle while initializing stream state
+- Prevents a read-open from becoming an empty write stream and fixes OPEN/GETBYTE/CLOSE file-reading loops
+
+' V 5.41
+- INPUT and READ/DATA use a dedicated integer ASCII converter with -i, so no floating-point library is included
+- Fixed the integer-only VAL parser so hexadecimal values and all internal branches assemble correctly
+- Context-free VAL() now defaults to INTEGER with -i instead of requesting the default floating-point type
+- Exponentiation now reports a compile-time error with -i because the current power routines require floating point
+
+' V 5.40
+- Fixed CoCo 1/2 startup when disk support is included: DiskInitialize now preserves the IRQ-vector register
+- Prevents the first IRQ from following the old $010C ROM vector into RAM after a cc1sl load
+
+' V 5.39
+- Disk_Commands.asm now owns all controller variables, stream state, and sector buffers as relocatable resident data
+- Added independent 256-byte input and output buffers so one DECB reader and one DECB writer can remain open together
+- Reader and writer handles retain independent filenames, drives, track/sector positions, FAT state, and 32-bit positions
+- Added per-drive track images so alternating input and output on different physical drives is safe
+- LOADM and SAVEM reject ranges that would overwrite the resident disk state or either active sector buffer
+- SDECB IDE highlighting and syntax checking now recognize all flat DECB file commands
+- Sequential OPEN "W" safely replaces/truncates existing files; old granules are freed only after publishing the replacement
+
+' V 5.38
+- Added flat DECB file commands: OPEN, CLOSE, PUTBYTE0/1, GETBYTE, SETPOS0/1, FILEINFO$,
+  DELETE, INITDIR, DIRPAGE, and DIRLIST$
+- DECB byte reads honor the exact last-sector length; writes commit FAT and directory data on CLOSE
+- DECB directory pages use the existing string scratch buffer and do not reserve another disk sector buffer
+- Handles 0 and 1 are accepted for SDC source compatibility
+- Added -notext to release the normal $0400-$05FF text page and begin the low-memory layout at $0400
+- Resident SDC_CHAIN and CHAIN loaders are packed before shared RAM and CoCo 1/2 graphics pages
+- Added -rxxxx to reserve an exact hexadecimal byte count for data shared by CHAINed programs
+- Program placement is calculated after loaders, shared RAM, and screens; unsafe explicit -p addresses are errors
+- The generated assembly exports CHAIN_SHARED_START/END/SIZE, GRAPHICS_PAGE_START, and PROGRAM_SAFE_START
+- Added CHAIN filename$ with optional :0 through :3 floppy drive suffix
+- CHAIN uses a stand-alone read-only loader at $0800, a sector buffer at $0200, and stack at $0400
+- LOADM, SAVEM, CHAIN, and SDC_CHAIN share temporary low RAM safely; the disk sector buffer is $0200-$02FF
+- Replaced Disk BASIC's fixed $0600-$0DFF workspace with compact scratch memory at $0179-$02FF
+- LOADM now uses one shared 256-byte sector buffer instead of multiple buffers and four FAT tables
+- Verified LOADM files larger than 64K: all DECB segments are processed through the complete FAT chain,
+  including CoCo 3 files that select an 8K MMU block through $FFA0-$FFA7 before loading each data segment
+- Added SAVEM filename$,start,end,exec with optional :0 through :3 floppy drive suffix
+- The Super Duper Extended Colour Basic (SDECB) IDE OPTION command is now ignored by the compiler
+  such as "OPTION _EXPLICIT" which will identify variables that are not being used
+- New command SDC_CHAIN "FILENAME.BIN",slot to load and execute another program directly from CoCoSDC slot 0 or 1
+- LEFT$, RIGHT$, and MID$ now safely handle zero and out-of-range unsigned lengths
+- Added -i strict integer-only mode for smaller binaries without floating-point libraries
+- Added setting individual string sizes using DIM name$ AS STRING * size, where size is from 1 to 255
+- Values assigned, INPUT, or READ into a fixed-capacity string are truncated to the declared maximum
+- LOADM filenames now support a :0 through :3 floppy drive number
+
 V 5.35
 - Source .BAS files can now have 32k IF/FOR/LOOP counts
 

@@ -168,6 +168,8 @@ Check$ = "SDC_DIRPAGE": GoSub FindNumCommandNumber ' Gets the Numeric Command nu
 SDC_DIRPAGE_CMD=ii
 Check$ = "SDC_GETBYTE": GoSub FindNumCommandNumber ' Gets the Numeric Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
 SDC_GETBYTE_CMD=ii
+Check$ = "SDC_LOF": GoSub FindNumCommandNumber
+SDC_LOF_CMD = ii
 Check$ = "SDC_INITDIR": GoSub FindNumCommandNumber ' Gets the Numeric Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
 SDC_INITDIR_CMD=ii
 Check$ = "SDC_DELETE": GoSub FindNumCommandNumber ' Gets the Numeric Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
@@ -176,6 +178,16 @@ Check$ = "SDC_SETDIR": GoSub FindNumCommandNumber ' Gets the Numeric Command num
 SDC_SETDIR_CMD=ii
 Check$ = "SDC_MKDIR": GoSub FindNumCommandNumber ' Gets the Numeric Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
 SDC_MKDIR_CMD=ii
+Check$ = "GETBYTE": GoSub FindNumCommandNumber
+GETBYTE_CMD = ii
+Check$ = "LOF": GoSub FindNumCommandNumber
+LOF_CMD = ii
+Check$ = "DIRPAGE": GoSub FindNumCommandNumber
+DIRPAGE_CMD = ii
+Check$ = "INITDIR": GoSub FindNumCommandNumber
+INITDIR_CMD = ii
+Check$ = "DELETE": GoSub FindNumCommandNumber
+DELETE_CMD = ii
 Check$ = "SGN": GoSub FindNumCommandNumber ' Gets the Numeric Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
 SGN_CMD = ii
 Check$ = "SQR": GoSub FindNumCommandNumber ' Gets the Numeric Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
@@ -221,3 +233,7 @@ Check$ = "SDC_GETCURDIR$": GoSub FindStrCommandNumber ' Gets the String Command 
 SDC_GETCURDIR_CMD = ii
 Check$ = "SDC_DIRLIST$": GoSub FindStrCommandNumber ' Gets the String Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
 SDC_DIRLIST_CMD = ii
+Check$ = "FILEINFO$": GoSub FindStrCommandNumber
+FILEINFO_CMD = ii
+Check$ = "DIRLIST$": GoSub FindStrCommandNumber
+DIRLIST_CMD = ii

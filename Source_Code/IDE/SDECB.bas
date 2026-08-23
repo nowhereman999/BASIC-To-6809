@@ -8121,6 +8121,30 @@ Do
                 autoIncForceUScore = 1
                 If validname(varname$) = 0 Then a$ = "Invalid variable name": GoTo errmes
 
+                ' BASTo6809 extension: retain the traditional $ suffix while
+                ' accepting a fixed maximum string length declaration such as:
+                '     DIM name$ AS STRING * 32
+                ' Internally this remains a normal $ string.  The BASTo6809
+                ' compiler owns the maximum-length allocation and truncation.
+                If s$ = "$" And d$ = "AS" Then
+                    If i + 2 <= n Then
+                        If getelement$(a$, i) = "STRING" And getelement$(a$, i + 1) = "*" Then
+                            fixedStringLength$ = getelement$(a$, i + 2)
+                            typ$ = s$
+                            dimmethod = 1
+                            appendname$ = typ$
+                            appendtype$ = sp + SCase$("As") + sp + SCase$("String") + sp + "*" + sp + fixedStringLength$
+                            i = i + 3
+                            If i <= n Then
+                                d$ = getelement$(a$, i): i = i + 1
+                            Else
+                                d$ = ""
+                            End If
+                            GoTo dimgottyp
+                        End If
+                    End If
+                End If
+
                 If s$ <> "" Then
                     typ$ = s$
                     dimmethod = 1
@@ -9820,18 +9844,28 @@ Do
                 If firstelement$ = "OPEN" Then
                     'gwbasic or qbasic version?
                     B = 0
+                    s = 0 'number of top-level commas
+                    a3$ = "" 'first element of OPEN's second argument
                     For x = 2 To n
                         a2$ = getelement$(a$, x)
                         If a2$ = "(" Then B = B + 1
                         If a2$ = ")" Then B = B - 1
                         If a2$ = "FOR" Or a2$ = "AS" Then Exit For 'qb style open verified
-                        If B = 0 And a2$ = "," Then 'the gwbasic version includes a comma after the first string expression
-                            findanotherid = 1
-                            try = findid(firstelement$) 'id of sub_open_gwbasic
-                            If Error_Happened Then GoTo errmes
-                            Exit For
+                        If B = 0 And a2$ = "," Then
+                            s = s + 1
+                            If s = 1 And x < n Then a3$ = getelement$(a$, x + 1)
                         End If
                     Next
+                    If x > n Then
+                        findanotherid = 1
+                        try = findid(firstelement$) 'id of sub_open_gwbasic
+                        If Error_Happened Then GoTo errmes
+                        If s = 2 And (InStr(a3$, CHR$(34)) Or Right$(a3$, 1) = "$") Then
+                            findanotherid = 1
+                            try = findid(firstelement$) 'compiler OPEN filename$, mode$, handle
+                            If Error_Happened Then GoTo errmes
+                        End If
+                    End If
                 End If
 
 
@@ -24075,4 +24109,3 @@ DefLng A-Z
 '-------- Optional IDE Component (2/2) --------
 '$Include:'ide\config\cfg_methods.bas'
 '$Include:'ide\ide_methods.bas'
-

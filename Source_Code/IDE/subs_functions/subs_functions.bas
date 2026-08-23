@@ -1894,7 +1894,7 @@ Sub reginternal
     id.callname = "sub_chain"
     id.args = 1
     id.arg = MKL$(STRINGTYPE - ISPOINTER)
-    id.hr_syntax = "CHAIN moduleName$"
+    id.hr_syntax = "CHAIN fileName$[:drive 0-3]"
     regid
 
     clearid
@@ -2321,7 +2321,7 @@ Sub reginternal
     id.callname = "func_lof"
     id.args = 1
     id.arg = MKL$(LONGTYPE - ISPOINTER)
-    id.ret = LONGTYPE - ISPOINTER
+    id.ret = ULONGTYPE - ISPOINTER
     id.hr_syntax = "LOF(fileNumber&)"
     regid
 
@@ -4317,6 +4317,128 @@ Sub reginternal
     regid
 
     clearid
+    id.n = "SaveM"
+    id.subfunc = 2
+    id.callname = "sub_coco"
+    id.args = 4
+    id.arg = MKL$(STRINGTYPE - ISPOINTER) + MKL$(LONGTYPE - ISPOINTER) + MKL$(LONGTYPE - ISPOINTER) + MKL$(LONGTYPE - ISPOINTER)
+    id.specialformat = "?,?,?,?"
+    id.hr_syntax = "SAVEM fileName$,start_address,end_address,exec_address"
+    regid
+
+    clearid
+    id.n = "Open"
+    id.subfunc = 2
+    id.callname = "sub_coco"
+    id.args = 3
+    id.arg = MKL$(STRINGTYPE - ISPOINTER) + MKL$(STRINGTYPE - ISPOINTER) + MKL$(LONGTYPE - ISPOINTER)
+    id.specialformat = "?,?,?"
+    id.hr_syntax = "OPEN fileName$, " + CHR$(34) + "R" + CHR$(34) + " or " + CHR$(34) + "W" + CHR$(34) + ", File # 0 or 1"
+    regid
+
+    clearid
+    id.n = "Delete"
+    id.subfunc = 1
+    id.callname = "sub_coco"
+    id.args = 1
+    id.arg = MKL$(STRINGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER
+    id.hr_syntax = "DELETE(fileName$)"
+    regid
+
+    clearid
+    id.n = "DirPage"
+    id.subfunc = 1
+    id.callname = "sub_coco"
+    id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER
+    id.hr_syntax = "DIRPAGE(0)"
+    regid
+
+    clearid
+    id.n = "DirList"
+    id.musthave = "$"
+    id.subfunc = 1
+    id.callname = "sub_coco"
+    id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER)
+    id.ret = STRINGTYPE - ISPOINTER
+    id.hr_syntax = "DIRLIST$(directory_entry_0_to_15)"
+    regid
+
+    clearid
+    id.n = "FileInfo"
+    id.musthave = "$"
+    id.subfunc = 1
+    id.callname = "sub_coco"
+    id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER)
+    id.ret = STRINGTYPE - ISPOINTER
+    id.hr_syntax = "FILEINFO$(file_number_0_or_1)"
+    regid
+
+    clearid
+    id.n = "GetByte"
+    id.subfunc = 1
+    id.callname = "sub_coco"
+    id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER
+    id.hr_syntax = "GETBYTE(file_number_0_or_1)"
+    regid
+
+    clearid
+    id.n = "InitDir"
+    id.subfunc = 1
+    id.callname = "sub_coco"
+    id.args = 1
+    id.arg = MKL$(STRINGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER
+    id.hr_syntax = "INITDIR(file_pattern$)"
+    regid
+
+    clearid
+    id.n = "PutByte0"
+    id.subfunc = 2
+    id.callname = "sub_coco"
+    id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER)
+    id.specialformat = "?"
+    id.hr_syntax = "PUTBYTE0 value"
+    regid
+
+    clearid
+    id.n = "PutByte1"
+    id.subfunc = 2
+    id.callname = "sub_coco"
+    id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER)
+    id.specialformat = "?"
+    id.hr_syntax = "PUTBYTE1 value"
+    regid
+
+    clearid
+    id.n = "SetPos0"
+    id.subfunc = 2
+    id.callname = "sub_coco"
+    id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER)
+    id.specialformat = "(?)"
+    id.hr_syntax = "SETPOS0(position)"
+    regid
+
+    clearid
+    id.n = "SetPos1"
+    id.subfunc = 2
+    id.callname = "sub_coco"
+    id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER)
+    id.specialformat = "(?)"
+    id.hr_syntax = "SETPOS1(position)"
+    regid
+
+    clearid
     id.n = "Playfield"
     id.subfunc = 2
     id.callname = "sub_coco"
@@ -4344,6 +4466,16 @@ Sub reginternal
     id.arg = MKL$(STRINGTYPE - ISPOINTER) + MKL$(LONGTYPE - ISPOINTER)
     id.specialformat = "?,?"
     id.hr_syntax = "SDC_BIGLOADM fileName$,File # 0 or 1"
+    regid
+
+    clearid
+    id.n = "SDC_Chain"
+    id.subfunc = 2
+    id.callname = "sub_coco"
+    id.args = 2
+    id.arg = MKL$(STRINGTYPE - ISPOINTER) + MKL$(LONGTYPE - ISPOINTER)
+    id.specialformat = "?,?"
+    id.hr_syntax = "SDC_CHAIN fileName$, File # 0 or 1"
     regid
 
     clearid
@@ -4396,6 +4528,16 @@ Sub reginternal
     id.arg = MKL$(LONGTYPE - ISPOINTER)
     id.ret = STRINGTYPE - ISPOINTER
     id.hr_syntax = "SDC_FILEINFO$(file number 0 or 1)"
+    regid
+
+    clearid
+    id.n = "SDC_LOF"
+    id.subfunc = 1
+    id.callname = "sub_coco"
+    id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER)
+    id.ret = ULONGTYPE - ISPOINTER
+    id.hr_syntax = "SDC_LOF(file number 0 or 1)"
     regid
 
     clearid
@@ -5143,5 +5285,3 @@ Sub reginternal
 reginternalsubfunc = 0
 
 END SUB
-
-

@@ -6,11 +6,37 @@
 ;
 ;
 ; CoCo 1 RAM layout used by this player:
-;   $0E00-$25FF  screen buffer 0
-;   $2600-$3DFF  screen buffer 1
+;   GRAPHICS_PAGE_START-$17FF bytes later  screen buffer 0
+;   the following $1800 bytes              screen buffer 1
 ;   NTMovCacheEndframe-NTMovCacheEnd  32 byte runtime header cache
 ;   NTMovAudioBuffer-NTMovAudioBufferEnd  1K local audio/header buffer
 ;
+; GRAPHICS_PAGE_START is emitted by the compiler after resident loaders and
+; shared CHAIN RAM have been placed.  This lets -notext and -rxxxx relocate
+; both movie buffers together with the rest of the CoCo 1/2 graphics memory.
+        IFNDEF  GRAPHICS_PAGE_START
+GRAPHICS_PAGE_START      EQU   $0E00
+        ENDC
+NTMovScreenSize          EQU   $1800
+NTMovScreen0Start        EQU   GRAPHICS_PAGE_START
+NTMovScreen0End          EQU   NTMovScreen0Start+NTMovScreenSize
+NTMovScreen1Start        EQU   NTMovScreen0End
+NTMovScreen1End          EQU   NTMovScreen1Start+NTMovScreenSize
+NTMovScreen0SAM          EQU   NTMovScreen0Start/$0200
+NTMovScreen1SAM          EQU   NTMovScreen1Start/$0200
+
+        IFNE    NTMovScreen0Start-(NTMovScreen0SAM*$0200)
+        FAIL    "CoCo 1 movie buffers must start on a $0200-byte boundary"
+        ENDC
+        IFGT    NTMovScreen1End-$10000
+        FAIL    "CoCo 1 movie buffers extend beyond $FFFF"
+        ENDC
+        IFDEF   PROGRAM_SAFE_START
+        IFGT    NTMovScreen1End-PROGRAM_SAFE_START
+        FAIL    "CoCo 1 movie buffers overlap the calculated program area"
+        ENDC
+        ENDC
+
 NTMovCurFrameCount      EQU   Temp2                         ; 3 byte's to keep track of the currently played frame
 ;
 ; CoCo 1 audio timing:
@@ -68,18 +94,16 @@ SDCPLAYMOVIE:
 ; For the CoCo 256x192x2 GMODE 16 screen size is 6144 bytes
 ; it will require 12 (512 byte) sectors
 
-; Coco 1 will be setup so that:
-; page 0 is at $E00 to $25FF
-; page 1 is at $2600 to $3DFF
+; The compiler supplies two consecutive, relocatable $1800-byte pages.
 
 ; Make both screen buffers black (all zeros)
       LDD   #$0000            ; Colour all zeros (black)
       TFR   D,X               ; X = D
       LEAY  ,X                ; Y = X
 @BankLoop:
-      LDU   #$3E00
+      LDU   #NTMovScreen1End
 !     PSHU  D,X,Y             ; Fill the two buffers with zeros
-      CMPU  #$E00
+      CMPU  #NTMovScreen0Start
       BNE   <
 
 MovieSDCStack:
@@ -116,12 +140,10 @@ MovieSDCStack:
       DECB
       BNE   @CopyHeaderPercentCache
 ; Check if SDC is ready for the first frame sector.
-      LEAS  -2,S              ; Temp stack placement, just in case it exits below
 !     LDA   <$48              ; Poll status byte for the next 512 byte sector
       ASRA                    ; Shift the BUSY bit to the carry
       LBCC  SDCMovieDone      ; Done if BUSY bit is cleared
       BEQ   <                 ; If A = 0 then keep waiting
-      LEAS  2,S               ; Fix the stack
 
       LDA	#2		      ; Enable only keyboard interrupt
 	STA	<$92
@@ -156,8 +178,7 @@ NTMovPercentLBN   EQU   NTMovJumpSectorRateNum+2 ; 9 * 3 = 27 bytes the LBN valu
 ; Continue from here after a jump in playback
 NTMovContinueMovie:
       CLR   <$02                          ; $FF02 clear keyboard check
-; page 0 is at $E00 to $25FF
-; page 1 is at $2600 to $3DFF
+; screen 0 and screen 1 start at the compiler-selected graphics base.
 
 !     LDA   <$48              ; Poll status byte for the next 512 byte sector
       ASRA                    ; Shift the BUSY bit to the carry
@@ -183,7 +204,7 @@ NTMovMainLoop:
 
 NTMovEnterHere:
 ; load video buffer 1
-      LDU   #$3E00                  ; 3 Point at the end of buffer 1
+      LDU   #NTMovScreen1End        ; 3 Point at the end of buffer 1
       JSR   NTMovLoadVideoBuff      ; 8 load a frame, U points at the end of the buffer
 
       BRN   *                       ; 3 Waste CPU cycles, two bytes
@@ -200,7 +221,7 @@ NTMovEnterHere:
 ; show video buffer 1
       JSR   NTMovWaitVsyncShowBuffer1     ; 8
 ; load video buffer 0
-      LDU   #$2600                        ; 3 Point at the end of buffer 0
+      LDU   #NTMovScreen0End              ; 3 Point at the end of buffer 0
       JSR   NTMovLoadVideoBuff            ; 8 load a frame, U points at the end of the buffer
       BRA   NTMovMainLoop                 ; 3
 ; Loop end
@@ -221,13 +242,13 @@ NTMovWaitVsyncShowBuffer0:
       NOP                                 ; 2 Waste CPU cycles, one byte
       TST   <$03                          ; 6 Check for vsync interrupt
       BPL   @NoVSYNC_Yet                  ; 3
-      STA   <$C7                          ; 4 F0 set
-      STA   <$C9                          ; 4 F1 set
-      STA   <$CB                          ; 4 F2 set
-      STA   <$CC                          ; 4 F3 clear
-      STA   <$CE                          ; 4 F4 clear
-      STA   <$D0                          ; 4 F5 clear
-      STA   <$D2                          ; 4 F6 clear
+      STA   <($C6+((NTMovScreen0SAM/1)&1))    ; 4 set/clear F0
+      STA   <($C8+((NTMovScreen0SAM/2)&1))    ; 4 set/clear F1
+      STA   <($CA+((NTMovScreen0SAM/4)&1))    ; 4 set/clear F2
+      STA   <($CC+((NTMovScreen0SAM/8)&1))    ; 4 set/clear F3
+      STA   <($CE+((NTMovScreen0SAM/16)&1))   ; 4 set/clear F4
+      STA   <($D0+((NTMovScreen0SAM/32)&1))   ; 4 set/clear F5
+      STA   <($D2+((NTMovScreen0SAM/64)&1))   ; 4 set/clear F6
 @CheckY:
       LDA   ,-Y                           ; 6
       STA   <$20                          ; 4
@@ -256,13 +277,13 @@ NTMovWaitVsyncShowBuffer1:
       NOP                                 ; 2 Waste CPU cycles, one byte
       TST   <$03                          ; 6 Check for vsync interrupt
       BPL   @NoVSYNC_Yet                  ; 3
-      STA   <$C7                          ; 4 F0 set
-      STA   <$C9                          ; 4 F1 set
-      STA   <$CA                          ; 4 F2 clear
-      STA   <$CC                          ; 4 F3 clear
-      STA   <$CF                          ; 4 F4 set
-      STA   <$D0                          ; 4 F5 clear
-      STA   <$D2                          ; 4 F6 clear
+      STA   <($C6+((NTMovScreen1SAM/1)&1))    ; 4 set/clear F0
+      STA   <($C8+((NTMovScreen1SAM/2)&1))    ; 4 set/clear F1
+      STA   <($CA+((NTMovScreen1SAM/4)&1))    ; 4 set/clear F2
+      STA   <($CC+((NTMovScreen1SAM/8)&1))    ; 4 set/clear F3
+      STA   <($CE+((NTMovScreen1SAM/16)&1))   ; 4 set/clear F4
+      STA   <($D0+((NTMovScreen1SAM/32)&1))   ; 4 set/clear F5
+      STA   <($D2+((NTMovScreen1SAM/64)&1))   ; 4 set/clear F6
 @CheckY:
       LDA   ,-Y                           ; 6
       STA   <$20                          ; 4
@@ -500,8 +521,9 @@ NTMovNewFrameSectorCount:
 ;
 NTMovStreamDoneCoCo1:
       LDS   NTMovRestoreStackCoCo1+2
-; S now points at NTMovLoadVideoBuff's return address.  SDCMovieDone's
-; LEAS 2,S will discard that return address before restoring CC/DP.
+; S now points at NTMovLoadVideoBuff's return address. Discard only that
+; return address; direct EOF and BREAK exits do not have it on the stack.
+      LEAS  2,S
       JMP   SDCMovieDone
 
 ; Select the internal 6-bit DAC on the CoCo audio mux and enable sound output.
@@ -526,12 +548,10 @@ NTMovSelectDACMux:
 NTMovBreakPressed:
       LDB   #$D0              ; Send abort I/O command..
       STB   <$48              ; ..to the controller
-      LEAS  -2,S              ; Stack will get changed below
 ;
 ; Exit
 SDCMovieDone:
       ORCC  #$50              ; Disable the Interrupts
-      LEAS  2,S               ; Fix stack as it gets here only while reading bytes from the CoCoSDC and jumps out of the subroutine
       CLR   <$40              ; put SDC controller back in floppy mode
 
 * Set the Printer port (RS232 serial) back to output
@@ -563,6 +583,12 @@ SDCMovieDone:
       LDA   #'G'              ; Write "G" to exit program mode and do a soft reset of the controller
       LDU   #$FFFF            ; Signify we don't want to fill a 256 byte buffer
       JSR   CommSDC           ; Send to the CoCoSDC
+
+; Put the VDG back on the graphics page selected by the BASIC program.
+; Force an extended read so this remains safe with any restored DP value.
+      LDA   >BEGGRP
+      LSRA                    ; A = selected graphics address / $0200
+      JSR   SetGraphicsStartA
 
       JSR   Speed_Restore     ; Restore the CPU Speed back to what the user set
       JMP   AnalogMuxOff      ; DISABLE ANA MUX AND RETURN
@@ -778,12 +804,13 @@ NTMovResumePlayback:
       JMP   >$FFFF            ; Self-modified by NTMovSomeKeyPressed
 
 
-NTMovSkipForwardSecs    EQU   10                      ; Amount of seconds to move forward when right arrow is pressed
-NTMovSkipBackwardSecs   EQU   10                      ; Amount of seconds to move backwards when left arrow is pressed
+NTMovSkipForwardSecs    EQU   120                     ; Amount of seconds to move forward when right arrow is pressed
+NTMovSkipBackwardSecs   EQU   NTMovSkipForwardSecs/2  ; Amount of seconds to move backwards when left arrow is pressed
 ;
 ; NTMovCurFrameCount = 24 bit value, current frame being played
 ; TargetFrame = CurrentFrame - BackSeconds * FPS
 NTMovSkipBackward:
+      LDX   #NTMovSkipBackwardSecs
       JSR   NTMovCalcSkipFrames
       LDD   >NTMovCurFrameCount+1
       SUBD  >NTMovSkipFrames
@@ -804,6 +831,7 @@ NTMovSkipBackward:
 ; NTMovCurFrameCount = 24 bit value, current frame being played
 ; TargetFrame = CurrentFrame + ForwardSeconds * FPS
 NTMovSkipForward:
+      LDX   #NTMovSkipForwardSecs
       JSR   NTMovCalcSkipFrames
       LDD   >NTMovCurFrameCount+1
       ADDD  >NTMovSkipFrames
@@ -815,23 +843,14 @@ NTMovSkipForward:
       JSR   NTMovFrameToLBN
       JMP   NTMovJupLBN
 ;
-; Calculate 10 seconds of frames as a 16-bit value: FPS * 10.
+; Calculate the requested skip interval in X as a 16-bit frame count.
 ; CoCo 1 movie playback uses small fixed FPS values, so 16 bits is enough.
 NTMovCalcSkipFrames:
       CLRA
       LDB   >NTMovCacheFPS
-      TFR   D,X
-      ASLB
-      ROLA
-      STD   >NTMovSkipFrames              ; FPS * 2
-      TFR   X,D
-      ASLB
-      ROLA
-      ASLB
-      ROLA
-      ASLB
-      ROLA                                ; FPS * 8
-      ADDD  >NTMovSkipFrames              ; FPS * 10
+      PSHS  D,X
+      JSR   MUL16                         ; FPS * seconds, low 16-bit result at ,S
+      PULS  D
       STD   >NTMovSkipFrames
       RTS
 ;

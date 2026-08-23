@@ -222,9 +222,10 @@ If VALPreferredType = 0 Then
     End If
 End If
 
-' If still unknown, default to Single
+' If still unknown, use the mode's default numeric type. Integer-only mode
+' must never make a context-free VAL() request a floating-point library.
 If VALPreferredType = 0 Then
-    VALPreferredType = NT_Single
+    If IntegerOnly Then VALPreferredType = NT_Int16 Else VALPreferredType = NT_Single
 End If
 
 ' For safety, map unsupported/awkward targets to better runtime choices
@@ -307,6 +308,7 @@ Return
 
 HandleStringVariable:
 v = Array(x) * 256 + Array(x + 1): x = x + 2
+StringVarMax = StringVariableMax(v)
 StringVar$ = "_StrVar_" + StringVariable$(v)
 DestStringVar$ = StringVar$
 If Verbose > 3 Then Print "String variable is: "; StringVar$
@@ -318,6 +320,17 @@ GoSub GetExpressionB4EOL ' Get the expression before an End of Line in Expressio
 GoSub ParseStringExpression
 Z$ = "; String is on the stack, deal with it here:": GoSub AO
 A$ = "PULS": B$ = "B": C$ = "B = length of the source string": GoSub AO
+If StringVarMax < 255 Then
+    A$ = "LDY": B$ = "#0": C$ = "No bytes to discard unless the source is truncated": GoSub AO
+    Num = StringVarMax: GoSub NumAsString
+    A$ = "CMPB": B$ = "#" + Num$: C$ = "Compare source length with the DIM string maximum": GoSub AO
+    A$ = "BLS": B$ = ">": C$ = "Source already fits": GoSub AO
+    A$ = "SUBB": B$ = "#" + Num$: C$ = "B = source bytes that will not be copied": GoSub AO
+    A$ = "CLRA": C$ = "Make the discard count 16 bit": GoSub AO
+    A$ = "TFR": B$ = "D,Y": C$ = "Y = source bytes to discard after the copy": GoSub AO
+    A$ = "LDB": B$ = "#" + Num$: C$ = "Truncate the stored length to its DIM maximum": GoSub AO
+    Z$ = "!": GoSub AO
+End If
 A$ = "LDX": B$ = "#" + DestStringVar$: C$ = "X points at the length of the destination string": GoSub AO
 A$ = "STB": B$ = ",X+": C$ = "Set the size of the destination string, X now points at the beginning of the destination data": GoSub AO
 A$ = "BEQ": B$ = "@Done": C$ = "If the length of the string is zero then don't copy it (Skip ahead)": GoSub AO
@@ -327,6 +340,10 @@ A$ = "STA": B$ = ",X+": C$ = "Write the destination byte": GoSub AO
 A$ = "DECB": C$ = "Decrement the counter": GoSub AO
 A$ = "BNE": B$ = "<": C$ = "Loop until all data is copied to the destination string": GoSub AO
 Z$ = "@Done": GoSub AO
+If StringVarMax < 255 Then
+    A$ = "TFR": B$ = "Y,D": C$ = "D = source bytes omitted by truncation": GoSub AO
+    A$ = "LEAS": B$ = "D,S": C$ = "Remove the omitted source bytes from the expression stack": GoSub AO
+End If
 Print #1, "" ' Leave a space between sections so @Done will work for each section
 Return
 

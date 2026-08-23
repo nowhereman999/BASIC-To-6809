@@ -6,6 +6,67 @@ cmd16 = Asc(Mid$(i$, 2, 1)) * 256 + Asc(Mid$(i$, 3, 1))
 ArgCnt = 1
 If Len(i$) >= 4 Then ArgCnt = Asc(Mid$(i$, 4, 1))
 Select Case cmd16
+    Case LOF_CMD, SDC_LOF_CMD
+        If ArgCnt <> 1 Then Print "Error: LOF()/SDC_LOF() expects one file number";: GoTo FoundError
+        Arg1$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        Temp$ = Arg1$: GoSub IsStringToken
+        If IsStrFlag% Then Print "Error: LOF()/SDC_LOF() expects file number 0 or 1";: GoTo FoundError
+        Temp$ = Arg1$: GoSub PushOneValueTokenOnStack
+        LastType = PushedType: NVT = NT_UByte: GoSub ConvertLastType2NVT
+        A$ = "PULS": B$ = "B": C$ = "Get the file handle": GoSub AO
+        If cmd16 = LOF_CMD Then
+            A$ = "ANDB": B$ = "#$01": C$ = "Limit DECB handle to 0 or 1": GoSub AO
+            A$ = "JSR": B$ = "DiskLOFB": C$ = "Return the DECB file length in D:X": GoSub AO
+        Else
+            A$ = "ANDB": B$ = "#$01": C$ = "Limit SDC handle to 0 or 1": GoSub AO
+            A$ = "JSR": B$ = "SDC_LOF": C$ = "Return the SDC file length in D:X": GoSub AO
+        End If
+        A$ = "PSHS": B$ = "D,X": C$ = "Push the unsigned 32-bit file length": GoSub AO
+        ProcessRPNStackPointer = ProcessRPNStackPointer + 1
+        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(NT_UInt32)
+        Return
+    Case GETBYTE_CMD
+        If ArgCnt <> 1 Then Print "Error: GETBYTE() expects one file number";: GoTo FoundError
+        Arg1$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        Temp$ = Arg1$: GoSub IsStringToken
+        If IsStrFlag% Then Print "Error: GETBYTE() expects file number 0 or 1";: GoTo FoundError
+        Temp$ = Arg1$: GoSub PushOneValueTokenOnStack
+        LastType = PushedType: NVT = NT_UByte: GoSub ConvertLastType2NVT
+        A$ = "PULS": B$ = "B": C$ = "Get the DECB stream handle": GoSub AO
+        A$ = "ANDB": B$ = "#$01": C$ = "Limit handle to 0 or 1": GoSub AO
+        A$ = "JSR": B$ = "DiskGetByteB": C$ = "Read the next DECB file byte into B; zero at EOF": GoSub AO
+        A$ = "PSHS": B$ = "B": C$ = "Push the byte result": GoSub AO
+        ProcessRPNStackPointer = ProcessRPNStackPointer + 1
+        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(NT_UByte)
+        Return
+    Case DELETE_CMD, INITDIR_CMD
+        If ArgCnt <> 1 Then Print "Error: DELETE()/INITDIR() expects one string";: GoTo FoundError
+        Arg1$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        Temp$ = Arg1$: GoSub IsStringToken
+        If IsStrFlag% = 0 Then Print "Error: DELETE()/INITDIR() expects a string";: GoTo FoundError
+        Temp$ = Arg1$: GoSub PushOneStringTokenOnStack
+        If cmd16 = DELETE_CMD Then
+            A$ = "JSR": B$ = "FixFileName": C$ = "Format the DECB filename to delete": GoSub AO
+            A$ = "JSR": B$ = "DiskDeleteFile": C$ = "Delete the DECB file and return status in B": GoSub AO
+        Else
+            A$ = "JSR": B$ = "FixFileName": C$ = "Format the flat DECB wildcard and optional drive": GoSub AO
+            A$ = "JSR": B$ = "DiskInitDirectory": C$ = "Initialize the flat DECB directory listing": GoSub AO
+        End If
+        A$ = "PSHS": B$ = "B": C$ = "Push the status result": GoSub AO
+        ProcessRPNStackPointer = ProcessRPNStackPointer + 1
+        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(NT_UByte)
+        Return
+    Case DIRPAGE_CMD
+        If ArgCnt <> 1 Then Print "Error: DIRPAGE() expects one argument";: GoTo FoundError
+        Arg1$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        Temp$ = Arg1$: GoSub PushOneValueTokenOnStack
+        LastType = PushedType: NVT = NT_UByte: GoSub ConvertLastType2NVT
+        A$ = "LEAS": B$ = "1,S": C$ = "DIRPAGE uses the initialized DECB listing": GoSub AO
+        A$ = "JSR": B$ = "DiskDirectoryPage": C$ = "Build the next 16-entry page in _StrVar_PF01": GoSub AO
+        A$ = "PSHS": B$ = "B": C$ = "Push the directory status": GoSub AO
+        ProcessRPNStackPointer = ProcessRPNStackPointer + 1
+        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(NT_UByte)
+        Return
     Case FILEEXISTS_CMD
         ' _FILEEXISTS(fileName$) : one numeric arg -> returns NT_Byte
         If ArgCnt <> 1 Then
@@ -31,6 +92,7 @@ Select Case cmd16
         ' ------------------------------------------------------------
         Temp$ = Arg1$: GoSub PushOneStringTokenOnStack
         ' Call runtime: consumes string @,S and leaves length (NT_UByte) @,S
+        A$ = "JSR": B$ = "DiskRequireNoStreams": C$ = "File existence checks cannot disturb an open stream": GoSub AO
         A$ = "JSR": B$ = "FixFileName": C$ = "Format _StrVar_PF00 to proper disk filename format in memory at DNAMBF": GoSub AO
         A$ = "LDU": B$ = "#DNAMBF": C$ = "U points at the filename to open": GoSub AO
         ' Open the the File pointed at by U
@@ -38,6 +100,9 @@ Select Case cmd16
         ' Exits with X pointing at the filename entry in the disk directory
         ' Carry flag will be set if it couldn't find the filename, cleared otherwise
         A$ = "JSR": B$ = "OpenFileU": C$ = "Go open file": GoSub AO
+        A$ = "PSHS": B$ = "CC": C$ = "Preserve the file-found result while restoring CPU speed": GoSub AO
+        A$ = "JSR": B$ = "SetCPUSpeed": C$ = "Restore the requested CPU speed after disk access": GoSub AO
+        A$ = "PULS": B$ = "CC": C$ = "Restore the file-found carry flag": GoSub AO
         A$ = "LDB": B$ = "#$FF": C$ = "B = -1, Default file exists": GoSub AO
         A$ = "BCC": B$ = ">": C$ = "Carry is clear, file exists, all good": GoSub AO
         A$ = "CLRB": C$ = "B = 0, Flag file doesn't exist": GoSub AO

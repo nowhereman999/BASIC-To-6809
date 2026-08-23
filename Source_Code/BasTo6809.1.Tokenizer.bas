@@ -39,6 +39,7 @@ Dim NumericArrayType(65535) As _Byte ' Holds the type of every Numeric Array
 Dim StringArrayBits(100000) As Integer
 Dim StringArrayVariables$(100000), StringArrayDimensions(100000) As Integer, StringArrayDimensionsVal$(100000)
 Dim StringVariable$(100000)
+Dim StringVariableMax(100000) As Integer
 Dim StringVariableCounter As Integer
 
 Dim ConstName$(20000)
@@ -397,6 +398,8 @@ Check$ = "_INTEGER64": GoSub FindGenCommandNumber ' Gets the General Command num
 C_INTEGER64 = ii
 Check$ = "SINGLE": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
 C_SINGLE = ii
+Check$ = "STRING": GoSub FindGenCommandNumber ' Fixed-capacity scalar string type
+C_STRING = ii
 Check$ = "DOUBLE": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
 C_DOUBLE = ii
 Check$ = "_FLOAT": GoSub FindGenCommandNumber ' Gets the General Command number of Check$, returns with number in ii, Found=1 if found and Found=0 if not found
@@ -430,7 +433,8 @@ If count = 0 Then
     Print "Compiler has no options given to it"
     System
 End If
-nt = 0: newp = 0: endp = 0: StringArraySize = 16: AutoStart = 0: FloatType = 0: KeepTempFiles = 0:
+nt = 0: newp = 0: endp = 0: StringArraySize = 16: AutoStart = 0: FloatType = 0: KeepTempFiles = 0: IntegerOnly = 0
+NoText = 0: ReserveBytes = 0: ProgramStartExplicit = 0
 Optimize = 2 ' Default to optimize level 2
 For check = 1 To count
     N$ = Command$(check)
@@ -439,11 +443,15 @@ For check = 1 To count
     If LCase$(Left$(N$, 2)) = "-o" Then Optimize = Val(Right$(N$, Len(N$) - 2)): GoTo CheckNextCMDOption
     If LCase$(Left$(N$, 2)) = "-v" Then Verbose = Val(Right$(N$, Len(N$) - 2)): GoTo CheckNextCMDOption
     If LCase$(Left$(N$, 2)) = "-k" Then KeepTempFiles = 1: GoTo CheckNextCMDOption
-    If LCase$(Left$(N$, 2)) = "-p" Then ProgramStart$ = Right$(N$, Len(N$) - 2): GoTo CheckNextCMDOption
+    If LCase$(Left$(N$, 2)) = "-p" Then ProgramStart$ = Right$(N$, Len(N$) - 2): ProgramStartExplicit = 1: GoTo CheckNextCMDOption
     If LCase$(Left$(N$, 2)) = "-f" Then Font$ = Right$(N$, Len(N$) - 2): GoTo CheckNextCMDOption
     If LCase$(Left$(N$, 2)) = "-a" Then AutoStart = 1: GoTo CheckNextCMDOption
     If LCase$(Left$(N$, 7)) = "-dragon" Then Dragon = 1: GoTo CheckNextCMDOption
     If LCase$(Left$(N$, 2)) = "-m" Then FloatType = Val(Right$(N$, Len(N$) - 2)): GoTo CheckNextCMDOption
+    If LCase$(N$) = "-i" Then IntegerOnly = 1: GoTo CheckNextCMDOption
+    If LCase$(N$) = "-notext" Then NoText = 1: GoTo CheckNextCMDOption
+    If LCase$(N$) = "-r" Then GoTo CheckNextCMDOption ' Return-to-BASIC option; layout reserve requires digits
+    If LCase$(Left$(N$, 2)) = "-r" Then ReserveBytes = Val("&H" + Right$(N$, Len(N$) - 2)): GoTo CheckNextCMDOption
     ' check if we got a file name yet if so then the next filename will be output
     OutName$ = N$
     CheckNextCMDOption:
@@ -821,6 +829,15 @@ While x < length - 1 ' Loop until we've processed the entire BASIC program
             Expression$ = Left$(Expression$, InStr(0, Expression$, "THEN " + Chr$(&HF5) + ":") + 4) + Right$(Expression$, Len(Expression$) - InStr(0, Expression$, "THEN " + Chr$(&HF5) + ":") - 6)
         Wend
     End If
+    ' OPTION directives belong to the source IDE/QB64 environment and do not
+    ' affect generated 6809 code. Ignore OPTION and everything following it.
+    Temp$ = LTrim$(Expression$)
+    If UCase$(Left$(Temp$, 6)) = "OPTION" Then
+        If Len(Temp$) = 6 Or Mid$(Temp$, 7, 1) = " " Then
+            Tokenized$ = ""
+            GoTo LabelOnlyLine
+        End If
+    End If
     '   show$ = Expression$: GoSub show
     ' Handle CONST:
     '   - CONST lines are compile-time only and are removed from output.
@@ -840,6 +857,18 @@ While x < length - 1 ' Loop until we've processed the entire BASIC program
     Next ii
     ScanNextLine:
 Wend
+
+' Strict integer-only mode rejects functions whose implementations require
+' floating-point arithmetic before any assembly is generated.
+If IntegerOnly Then
+    For ii = 0 To NumericCommandsFoundCount - 1
+        Temp$ = UCase$(NumericCommandsFound$(ii))
+        If Temp$ = "ATN" Or Temp$ = "COS" Or Temp$ = "EXP" Or Temp$ = "LOG" Or Temp$ = "SIN" Or Temp$ = "SQR" Or Temp$ = "TAN" Then
+            Print "Error: "; Temp$; "() requires floating-point math and is not allowed with the -i integer-only option"
+            System
+        End If
+    Next ii
+End If
 
 If Verbose > 0 Then
     ' Print the commands used and variables used by this BASIC program
@@ -1306,7 +1335,13 @@ While x <= filesize
             ' Add the type
             If NumericArrayType(MSB * 256 + LSB) = 0 Then
                 ' This variable hasn't been assigned a value, so we make it a Single which is the default
-                INArray(c) = 11: c = c + 1 'write byte to ouput array
+                If IntegerOnly Then
+                    NumericArrayType(MSB * 256 + LSB) = NT_Int16
+                    INArray(c) = NT_Int16
+                Else
+                    INArray(c) = NT_Single
+                End If
+                c = c + 1 'write byte to output array
             Else
                 ' Set the value type of this variable
                 INArray(c) = NumericArrayType(MSB * 256 + LSB): c = c + 1 'write byte to ouput array
@@ -1319,7 +1354,13 @@ While x <= filesize
             INArray(c) = LSB: c = c + 1 'write byte to ouput array
             If NumericVarType(MSB * 256 + LSB) = 0 Then
                 ' This variable hasn't been assigned a value, so we make it a Single which is the default
-                INArray(c) = 11: c = c + 1 'write byte to ouput array
+                If IntegerOnly Then
+                    NumericVarType(MSB * 256 + LSB) = NT_Int16
+                    INArray(c) = NT_Int16
+                Else
+                    INArray(c) = NT_Single
+                End If
+                c = c + 1 'write byte to output array
             Else
                 ' Set the value type of this variable
                 INArray(c) = NumericVarType(MSB * 256 + LSB): c = c + 1 'write byte to ouput array
@@ -1397,13 +1438,17 @@ While x <= filesize
                                 Temp$ = "Math_Integer64": GoSub AddIncludeTemp ' Add code for 64 bit math, some routines use integer 64 Add/Subtract
                                 x = x + 2
                             End If
-                        Case Else ' If unknown, probably should add a Single
-                            Select Case FloatType
-                                Case 0
-                                    Temp$ = "Math_Fast_Floating_Point": GoSub AddIncludeTemp ' Add code for my 3 byte fast floating point math routines
-                                Case 1
-                                    Temp$ = "Math_Floating_Point5": GoSub AddIncludeTemp ' Add code for 5 byte Single floating point math routines
-                            End Select
+                        Case Else ' If unknown, a normal build may need the default Single type
+                            ' In strict integer-only mode, unsuffixed values are INTEGER and
+                            ' punctuation such as the comma in GMODE 16,1 must not pull in FP.
+                            If IntegerOnly = 0 Then
+                                Select Case FloatType
+                                    Case 0
+                                        Temp$ = "Math_Fast_Floating_Point": GoSub AddIncludeTemp ' Add code for my 3 byte fast floating point math routines
+                                    Case 1
+                                        Temp$ = "Math_Floating_Point5": GoSub AddIncludeTemp ' Add code for 5 byte Single floating point math routines
+                                End Select
+                            End If
                     End Select
                 End If
             Case &HFB: ' Found a DEF FN Function
@@ -1628,6 +1673,7 @@ Close #1
 Open "StringVariablesUsed.txt" For Output As #1
 For i = 0 To StringVariableCounter - 1
     Print #1, StringVariable$(i)
+    Print #1, StringVariableMax(i)
 Next i
 Close #1
 Open "GeneralCommandsFound.txt" For Output As #1
@@ -1723,9 +1769,11 @@ Close #1
 'See if we should need to use Disk access and Background sound
 For ii = 0 To GeneralCommandsFoundCount - 1
     Temp$ = UCase$(GeneralCommandsFound$(ii))
-    If Temp$ = "LOADM" Then
+    If Temp$ = "LOADM" Or Temp$ = "SAVEM" Or Temp$ = "OPEN" Or Temp$ = "CLOSE" Or Temp$ = "PUTBYTE0" Or Temp$ = "PUTBYTE1" Or Temp$ = "SETPOS0" Or Temp$ = "SETPOS1" Then
         Disk = 1 ' Flag that we use Disk access
     End If
+    If Temp$ = "CHAIN" Then DiskChainUsed = 1
+    If Temp$ = "SDC_CHAIN" Then SDCChainUsed = 1
     If Temp$ = "PLAY" Then
         PlayCommand = 1 ' Flag that we use the Play Command
     End If
@@ -1736,7 +1784,8 @@ For ii = 0 To GeneralCommandsFoundCount - 1
         SDCPLAY = 1 ' Flag that we need extra SDCPlayback buffer space
         SDCVersionCheck = 1 ' include code to make sure we have the correct SDC firmware
     End If
-    If Temp$ = "SDC_OPEN" Or Temp$ = "SDC_LOADM" Or Temp$ = "SDC_SAVEM" Then
+    If Temp$ = "SDC_PLAYMOVIE" Then SDCPlayMovieUsed = 1
+    If Temp$ = "SDC_OPEN" Or Temp$ = "SDC_LOADM" Or Temp$ = "SDC_SAVEM" Or Temp$ = "SDC_CHAIN" Then
         SDCVersionCheck = 1 ' include code to make sure we have the correct SDC firmware
     End If
 Next ii
@@ -1746,7 +1795,8 @@ For ii = 0 To NumericCommandsFoundCount - 1
     If Temp$ = "_FILEEXISTS" Then
         Disk = 1 ' Flag that we use Disk access
     End If
-    If Temp$ = "_SDC_FILEEXISTS" Then
+    If Temp$ = "GETBYTE" Or Temp$ = "LOF" Or Temp$ = "DELETE" Or Temp$ = "INITDIR" Or Temp$ = "DIRPAGE" Then Disk = 1
+    If Temp$ = "_SDC_FILEEXISTS" Or Temp$ = "SDC_LOF" Then
         SDCVersionCheck = 1 ' include code to make sure we have the correct SDC firmware
     End If
 Next ii
@@ -1754,6 +1804,29 @@ Next ii
 ' *** Start writing to the .asm file ***
 T1$ = "    ": T2$ = T1$ + T1$
 Open OutName$ For Output As #1
+
+' Build one deterministic low-memory layout. The two loader lengths are
+' checked again by LWASM inside their include files, so a future loader edit
+' cannot silently invalidate these calculations.
+If NoText = 1 Then LayoutBase = &H400 Else LayoutBase = &H600
+LoaderCursor = LayoutBase
+If SDCChainUsed = 1 Then
+    SDCChainBase = LoaderCursor
+    LoaderCursor = LoaderCursor + &H1A6
+Else
+    SDCChainBase = LayoutBase
+End If
+If DiskChainUsed = 1 Then
+    DiskChainBase = LoaderCursor
+    LoaderCursor = LoaderCursor + &H3F0
+Else
+    DiskChainBase = LoaderCursor
+End If
+SharedStart = LoaderCursor
+SharedEnd = SharedStart + ReserveBytes
+If SharedEnd > 65536 Then Print "Memory layout error: -r reserve extends beyond $FFFF.": System
+' VDG/GIME low-memory screens must begin on a 512-byte boundary.
+GraphicsStart = Int((SharedEnd + &H1FF) / &H200) * &H200
 
 CoCo12GraphicsBytes = 0
 For ii = 0 To 171
@@ -1765,10 +1838,67 @@ For ii = 0 To 171
         End If
     End If
 Next ii
-If CoCo12GraphicsBytes <> 0 Then
-    PStart = Val("&H" + ProgramStart$) + CoCo12GraphicsBytes
+' The CoCo 1/2 movie player always double-buffers two $1800-byte frames.
+' Reserve both pages even when the BASIC program only explicitly selected
+' GMODE page 0, otherwise the second movie page could overwrite program code.
+CoCo12MoviePlayer = 0
+If SDCPlayMovieUsed = 1 Then
+    If GModeLib(16) = 1 Or GModeLib(15) = 1 Or GModeLib(8) = 1 Then
+        CoCo12MoviePlayer = 1
+        If CoCo12GraphicsBytes < &H3000 Then CoCo12GraphicsBytes = &H3000
+    End If
+End If
+For ii = 0 To 99
+    GModeStartAddress$(ii) = Hex$(GraphicsStart)
+Next ii
+
+WideTextBytes = 0
+If NoText = 1 And WidthVal$ <> "" Then Print "Memory layout error: -notext cannot be used with WIDTH "; WidthVal$; ".": System
+If WidthVal$ <> "" And WidthVal$ <> "32" Then
+    WideTextBytes = Val(WidthVal$) * 2 * 29
+End If
+ScreenBytes = CoCo12GraphicsBytes
+If WideTextBytes > ScreenBytes Then ScreenBytes = WideTextBytes
+AutoProgramStart = Int((GraphicsStart + ScreenBytes + &HFF) / &H100) * &H100
+' Preserve $3E00 as the minimum normal-layout program address for CoCo 1/2
+' movie builds. With -notext the movie pages and safe program limit are
+' deliberately allowed to move down with GRAPHICS_PAGE_START.
+If CoCo12MoviePlayer = 1 And NoText = 0 And AutoProgramStart < &H3E00 Then AutoProgramStart = &H3E00
+If AutoProgramStart > 65535 Then Print "Memory layout error: resident loaders, shared RAM, and screens leave no address for program code.": System
+If ProgramStartExplicit = 1 Then
+    PStart = Val("&H" + ProgramStart$)
+    If PStart < AutoProgramStart Then
+        If CoCo12MoviePlayer = 1 Then
+            Print "Memory layout error: -p"; ProgramStart$; " overlaps the CoCo 1/2 SDC_PLAYMOVIE buffers. Lowest safe address is -p"; Hex$(AutoProgramStart); "."
+        Else
+            Print "Memory layout error: -p"; ProgramStart$; " overlaps reserved memory. Lowest safe address is -p"; Hex$(AutoProgramStart); "."
+        End If
+        System
+    End If
+Else
+    PStart = AutoProgramStart
     ProgramStart$ = Hex$(PStart)
 End If
+WideTextStart$ = Hex$(GraphicsStart)
+
+Print #1, "; Automatically calculated low-memory layout"
+Print #1, "NOTEXT_LAYOUT       EQU     "; NoText; "       ; 1 means the normal $0400-$05FF text page is not reserved"
+Print #1, "MEMORY_LAYOUT_BASE  EQU     $"; Hex$(LayoutBase)
+Print #1, "SDC_CHAIN_BASE      EQU     $"; Hex$(SDCChainBase)
+Print #1, "DISK_CHAIN_BASE     EQU     $"; Hex$(DiskChainBase)
+Print #1, "CHAIN_LOADERS_END   EQU     $"; Hex$(LoaderCursor); "       ; First byte after resident loaders"
+Print #1, "CHAIN_SHARED_START  EQU     $"; Hex$(SharedStart)
+Print #1, "CHAIN_SHARED_SIZE   EQU     $"; Hex$(ReserveBytes)
+Print #1, "CHAIN_SHARED_END    EQU     $"; Hex$(SharedEnd); "       ; Exclusive end address"
+Print #1, "GRAPHICS_PAGE_START EQU     $"; Hex$(GraphicsStart)
+Print #1, "PROGRAM_SAFE_START  EQU     $"; Hex$(AutoProgramStart)
+Print #1,
+
+Open "MemoryLayout.txt" For Output As #2
+Print #2, NoText
+Print #2, Hex$(GraphicsStart)
+Print #2, Hex$(GraphicsStart)
+Close #2
 ' If we are doing CoCo3 sprites load them first
 ' Add blocks needed per grapics screen if we are using a coco 3
 If CoCo3 = 1 And Sprites = 1 Then
@@ -1899,21 +2029,14 @@ If CoCo3 = 1 And (SpritePointer <> -1 Or SamplePointer <> -1) Then
     A$ = "FCB": B$ = "$3F": C$ = "Blocks are back to normal": GoSub AO
 End If
 
-If CurrentGMode > 99 Then
-    ProgramStart$ = "E00" ' Force the CoCo 3 to start at $E00
-End If
-
 If WidthVal$ <> "" And WidthVal$ <> "32" Then
     TextRows = 28
     Select Case WidthVal$
         Case "40"
-            ProgramStart$ = Hex$(Val("&H0E00") + 40 * 2 * (TextRows + 1)) ' 40 characters per line * 2 (attribute byte) * TextRows rows
             CC3Width$ = "0"
         Case "64"
-            ProgramStart$ = Hex$(Val("&H0E00") + 64 * 2 * (TextRows + 1)) ' 64 characters per line * 2 (attribute byte) * TextRows rows
             CC3Width$ = "1"
         Case "80"
-            ProgramStart$ = Hex$(Val("&H0E00") + 80 * 2 * (TextRows + 1)) ' 80 characters per line * 2 (attribute byte) * TextRows rows
             CC3Width$ = "2"
     End Select
 End If
@@ -2272,7 +2395,8 @@ Print #1, "; String Variables Used:"; StringVariableCounter
 For ii = 0 To StringVariableCounter - 1
     Z$ = "_StrVar_" + StringVariable$(ii): GoSub AO
     A$ = "RMB": B$ = "1": C$ = "String Variable " + StringVariable$(ii) + " length (0 to 255) initialized to 0": GoSub AO
-    A$ = "RMB": B$ = "255": C$ = "255 bytes available for string variable " + StringVariable$(ii): GoSub AO
+    Num = StringVariableMax(ii): GoSub NumAsString
+    A$ = "RMB": B$ = Num$: C$ = Num$ + " bytes available for string variable " + StringVariable$(ii): GoSub AO
 Next ii
 Print #1, "; Numeric Arrays Used:"; NumArrayVarsUsedCounter
 If NumArrayVarsUsedCounter > 0 Then
@@ -2634,12 +2758,16 @@ For ii = 0 To GeneralCommandsFoundCount - 1
         Temp$ = "GetJoyD": GoSub AddIncludeTemp ' Add code to quickly get the Joystick values and set the values of 0,31 or 63
     End If
     If Temp$ = "DATA" Then
-        Select Case FloatType
-            Case 0
-                Temp$ = "ASCIIToNumbers_FFP": GoSub AddIncludeTemp ' Inlcude code to convert ASCII numbers to other formats (Integer/ FFP...)
-            Case 1
-                Temp$ = "ASCIIToNumbers_FP5": GoSub AddIncludeTemp ' Inlcude code to convert ASCII numbers to other formats (Integer/ FFP...)
-        End Select
+        If IntegerOnly Then
+            Temp$ = "ASCIIToNumbers_Integer": GoSub AddIncludeTemp ' Integer READ/DATA conversion without floating-point dependencies
+        Else
+            Select Case FloatType
+                Case 0
+                    Temp$ = "ASCIIToNumbers_FFP": GoSub AddIncludeTemp ' Include code to convert ASCII numbers to integer/FFP formats
+                Case 1
+                    Temp$ = "ASCIIToNumbers_FP5": GoSub AddIncludeTemp ' Include code to convert ASCII numbers to integer/FP5 formats
+            End Select
+        End If
     End If
     If Temp$ = "INPUT" Then
         If Dragon = 1 Then
@@ -2656,16 +2784,23 @@ For ii = 0 To GeneralCommandsFoundCount - 1
                     Temp$ = "INPUTCode": GoSub AddIncludeTemp
             End Select
         End If
-        Select Case FloatType
-            Case 0
-                Temp$ = "ASCIIToNumbers_FFP": GoSub AddIncludeTemp ' Inlcude code to convert ASCII numbers to other formats (Integer/ FFP...)
-            Case 1
-                Temp$ = "ASCIIToNumbers_FP5": GoSub AddIncludeTemp ' Inlcude code to convert ASCII numbers to other formats (Integer/ FFP...)
-        End Select
+        If IntegerOnly Then
+            Temp$ = "ASCIIToNumbers_Integer": GoSub AddIncludeTemp ' Integer INPUT conversion without floating-point dependencies
+        Else
+            Select Case FloatType
+                Case 0
+                    Temp$ = "ASCIIToNumbers_FFP": GoSub AddIncludeTemp ' Include code to convert ASCII numbers to integer/FFP formats
+                Case 1
+                    Temp$ = "ASCIIToNumbers_FP5": GoSub AddIncludeTemp ' Include code to convert ASCII numbers to integer/FP5 formats
+            End Select
+        End If
         Temp$ = "DecimalStringToD": GoSub AddIncludeTemp ' Add commands for converting decimal numbers to D
     End If
-    If Temp$ = "LOADM" Then
+    If Temp$ = "LOADM" Or Temp$ = "SAVEM" Or Temp$ = "OPEN" Or Temp$ = "CLOSE" Or Temp$ = "PUTBYTE0" Or Temp$ = "PUTBYTE1" Or Temp$ = "SETPOS0" Or Temp$ = "SETPOS1" Then
         Temp$ = "Disk_Commands": GoSub AddIncludeTemp ' Add code for Disk commands
+    End If
+    If Temp$ = "CHAIN" Then
+        Temp$ = "Disk_ChainLoader": GoSub AddIncludeTemp ' Add standalone floppy CHAIN loader
     End If
     If Temp$ = "PLAY" Then
         Temp$ = "Play": GoSub AddIncludeTemp ' Add code for PLAY command
@@ -2700,6 +2835,10 @@ For ii = 0 To GeneralCommandsFoundCount - 1
         Temp$ = "SDC_CompilerCode": GoSub AddIncludeTemp
         Temp$ = "SDC_FileAccess": GoSub AddIncludeTemp
         Temp$ = "SDC_LoadmSavem": GoSub AddIncludeTemp
+    End If
+    If Temp$ = "SDC_CHAIN" Then
+        Temp$ = "SDC_CompilerCode": GoSub AddIncludeTemp
+        Temp$ = "SDC_ChainLoader": GoSub AddIncludeTemp
     End If
     If Temp$ = "SDC_BIGLOADM" Then
         Temp$ = "SDC_Comm": GoSub AddIncludeTemp ' CoCo SDC Low-level interface routine
@@ -2744,6 +2883,10 @@ For ii = 0 To StringCommandsFoundCount - 1
         Temp$ = "SDC_FileAccess": GoSub AddIncludeTemp
         '  Temp$ = "SDCVersionCheck": GoSub AddIncludeTemp
     End If
+    If Temp$ = "FILEINFO$" Or Temp$ = "DIRLIST$" Then
+        Disk = 1
+        Temp$ = "Disk_Commands": GoSub AddIncludeTemp
+    End If
 Next ii
 For ii = 0 To NumericCommandsFoundCount - 1
     Temp$ = UCase$(NumericCommandsFound$(ii))
@@ -2761,7 +2904,7 @@ For ii = 0 To NumericCommandsFoundCount - 1
     If Left$(Temp$, 8) = "COCOMP3_" Then
         Temp$ = "CoCoMP3_Compiler_Library": GoSub AddIncludeTemp ' Add code for handling the CoCoMP3
     End If
-    If Temp$ = "SDC_GETBYTE" Or Temp$ = "SDC_MKDIR" Or Temp$ = "SDC_SETDIR" Or Temp$ = "SDC_INITDIR" Or Temp$ = "SDC_DELETE" Or Temp$ = "_SDC_FILEEXISTS" Then
+    If Temp$ = "SDC_GETBYTE" Or Temp$ = "SDC_LOF" Or Temp$ = "SDC_MKDIR" Or Temp$ = "SDC_SETDIR" Or Temp$ = "SDC_INITDIR" Or Temp$ = "SDC_DELETE" Or Temp$ = "_SDC_FILEEXISTS" Then
         Temp$ = "SDC_Comm": GoSub AddIncludeTemp
         Temp$ = "SDC_CompilerCode": GoSub AddIncludeTemp
         Temp$ = "SDC_FileAccess": GoSub AddIncludeTemp
@@ -2779,6 +2922,10 @@ For ii = 0 To NumericCommandsFoundCount - 1
     If Temp$ = "_FILEEXISTS" Then
         Disk = 1 ' Flag that we use Disk access
         Temp$ = "Disk_Commands": GoSub AddIncludeTemp ' Add code for Disk commands
+    End If
+    If Temp$ = "GETBYTE" Or Temp$ = "LOF" Or Temp$ = "DELETE" Or Temp$ = "INITDIR" Or Temp$ = "DIRPAGE" Then
+        Disk = 1
+        Temp$ = "Disk_Commands": GoSub AddIncludeTemp
     End If
 
 Next ii
@@ -2969,7 +3116,7 @@ If CoCo3 = 1 Then
 
         Case "40"
             ' Use the CoCo 3 40 column text screen
-            A$ = "LDX": B$ = "#$0E00": C$ = "Text screen starts here": GoSub AO
+            A$ = "LDX": B$ = "#$" + WideTextStart$: C$ = "Text screen starts here": GoSub AO
             A$ = "STX": B$ = "BEGGRP": C$ = "Update the Screen starting location": GoSub AO
             Z$ = "; $FF98 = 0x00100011 - Text Mode,Extra Descenders,Colour,60 Hz,8 lines per character": GoSub AO
             Z$ = "; $FF99 = 0x01100101 - 40 Column mode": GoSub AO
@@ -2983,11 +3130,11 @@ If CoCo3 = 1 Then
             A$ = "STA": B$ = "$FF9C": C$ = "Vertical scroll register - VSC": GoSub AO
             A$ = "STA": B$ = "$FF9F": C$ = "Clear the Horizontal register": GoSub AO
             '$FF9D-$FF9E Vertical offset register
-            A$ = "LDD": B$ = "#$" + Hex$((&H38 * &H2000 + &HE00) / 8): GoSub AO
+            A$ = "LDD": B$ = "#$" + Hex$((&H38 * &H2000 + Val("&H" + WideTextStart$)) / 8): GoSub AO
             A$ = "STD": B$ = "$FF9D": C$ = "Vertical offset register": GoSub AO
         Case "64"
             ' Use the CoCo 3 64 column text screen
-            A$ = "LDX": B$ = "#$0E00": C$ = "Text screen starts here": GoSub AO
+            A$ = "LDX": B$ = "#$" + WideTextStart$: C$ = "Text screen starts here": GoSub AO
             A$ = "STX": B$ = "BEGGRP": C$ = "Update the Screen starting location": GoSub AO
             Z$ = "; $FF98 = 0x00100011 - Text Mode,Extra Descenders,Colour,60 Hz,8 lines per character": GoSub AO
             Z$ = "; $FF99 = 0x01111001 - 64 Column mode": GoSub AO
@@ -3001,11 +3148,11 @@ If CoCo3 = 1 Then
             A$ = "STA": B$ = "$FF9C": C$ = "Vertical scroll register - VSC": GoSub AO
             A$ = "STA": B$ = "$FF9F": C$ = "Clear the Horizontal register": GoSub AO
             '$FF9D-$FF9E Vertical offset register
-            A$ = "LDD": B$ = "#$" + Hex$((&H38 * &H2000 + &HE00) / 8): GoSub AO
+            A$ = "LDD": B$ = "#$" + Hex$((&H38 * &H2000 + Val("&H" + WideTextStart$)) / 8): GoSub AO
             A$ = "STD": B$ = "$FF9D": C$ = "Vertical offset register": GoSub AO
         Case "80"
             ' Use the CoCo 3 80 column text screen
-            A$ = "LDX": B$ = "#$0E00": C$ = "Text screen starts here": GoSub AO
+            A$ = "LDX": B$ = "#$" + WideTextStart$: C$ = "Text screen starts here": GoSub AO
             A$ = "STX": B$ = "BEGGRP": C$ = "Update the Screen starting location": GoSub AO
             Z$ = "; $FF98 = 0x00100011 - Text Mode,Extra Descenders,Colour,60 Hz,8 lines per character": GoSub AO
             Z$ = "; $FF99 = 0x01110101 - 80 Column mode": GoSub AO
@@ -3019,7 +3166,7 @@ If CoCo3 = 1 Then
             A$ = "STA": B$ = "$FF9C": C$ = "Vertical scroll register - VSC": GoSub AO
             A$ = "STA": B$ = "$FF9F": C$ = "Clear the Horizontal register": GoSub AO
             '$FF9D-$FF9E Vertical offset register
-            A$ = "LDD": B$ = "#$" + Hex$((&H38 * &H2000 + &HE00) / 8): GoSub AO
+            A$ = "LDD": B$ = "#$" + Hex$((&H38 * &H2000 + Val("&H" + WideTextStart$)) / 8): GoSub AO
             A$ = "STD": B$ = "$FF9D": C$ = "Vertical offset register": GoSub AO
     End Select
 End If
@@ -3036,7 +3183,7 @@ If LineCommand = 1 Then
 End If
 If PrintGraphicsText = 1 Or PrintGraphicsText6 = 1 Then
     ' Found program uses PRINT #-3, to print to the graphics screen
-    A$ = "LDD": B$ = "#$0E00": C$ = "Set D to the top left of the screen": GoSub AO
+    A$ = "LDD": B$ = "#$" + Hex$(GraphicsStart): C$ = "Set D to the top left of the screen": GoSub AO
     A$ = "STD": B$ = "GraphicCURPOS": C$ = "Set the graphics cursor to the top left corner": GoSub AO
 End If
 If PrintGraphicsText = 1 Or PrintGraphicsText6 = 1 Then
@@ -3201,6 +3348,9 @@ A$ = "STD": B$ = "1,U": C$ = "Backup the Address of the IRQ": GoSub AO
 ' Set the CPU to the Max speed
 A$ = "CLRB": C$ = "B=0, make the CPU max speed as default": GoSub AO
 A$ = "JSR": B$ = "SetCPUSpeedB": C$ = "Save max speed and set the CPU to Max speed it can handle": GoSub AO
+If Disk = 1 Then
+    A$ = "JSR": B$ = "DiskInitialize": C$ = "Clear the resident disk state before enabling interrupts": GoSub AO
+End If
 
 A$ = "LDB": B$ = "#$7E": C$ = "JMP instruction": GoSub AO
 If Disk = 1 Then
@@ -3392,6 +3542,12 @@ While i <= Len(Expression$)
                     'This general command does have an open bracket
                     RightSpace = 1
                 End If
+            End If
+            If Temp$ = "CLOSE" Then
+                If Mid$(BaseString$, 6, 1) = "(" Then RightSpace = 1
+            End If
+            If Temp$ = "SETPOS0" Or Temp$ = "SETPOS1" Then
+                If Mid$(BaseString$, 8, 1) = "(" Then RightSpace = 1
             End If
             If Temp$ = "SDC_SETPOS" Then
                 ' found a 9 character general command
@@ -4865,6 +5021,7 @@ For ii = 0 To StringVariableCounter
     End If
 Next ii
 StringVariable$(StringVariableCounter) = Left$(Temp$, Len(Temp$) - 1)
+StringVariableMax(StringVariableCounter) = 255
 StringVariableCounter = StringVariableCounter + 1
 Return
 ' Add variable Temp$ to the Numeric array variable List and the number of dimensions the Numeric array has
@@ -4987,7 +5144,8 @@ DoDim:
 ' -----------------------------------------------------------------------------
 
 DimList$ = "" ' packed triples: Kind, ID_MSB, ID_LSB  (Kind: 0=var, 1=num array)
-DimType = 11 ' default type (Single) unless overridden by AS
+StringDimList$ = "" ' packed pairs: string variable ID_MSB, ID_LSB
+If IntegerOnly Then DimType = NT_Int16 Else DimType = NT_Single
 
 DoDim_Loop:
 v = Array(x): x = x + 1
@@ -5021,6 +5179,33 @@ If v = &HFF Then
     Cmd16 = Array(x) * 256 + Array(x + 1): x = x + 2
 
     If Cmd16 = C_AS Then
+        ' DIM A$ AS STRING * n (also supports a grouped list of scalar strings)
+        If Array(x) = &HFF And Array(x + 1) * 256 + Array(x + 2) = C_STRING Then
+            x = x + 3
+            If Len(DimList$) > 0 Or Len(StringDimList$) = 0 Then
+                Print "Error: AS STRING can only be used with scalar string variables on";: GoTo FoundError
+            End If
+            If Array(x) <> &HFC Or Array(x + 1) <> Asc("*") Then
+                Print "Error: expected * size after AS STRING on";: GoTo FoundError
+            End If
+            x = x + 2
+            Temp$ = ""
+            Do While Array(x) < &HF0
+                If Array(x) <> Asc(" ") Then Temp$ = Temp$ + Chr$(Array(x))
+                x = x + 1
+            Loop
+            StringMax = Val(Temp$)
+            If Temp$ = "" Or StringMax < 1 Or StringMax > 255 Then
+                Print "Error: string size must be from 1 to 255 on";: GoTo FoundError
+            End If
+            p = 1
+            Do While p <= Len(StringDimList$)
+                ii = Asc(Mid$(StringDimList$, p, 1)) * 256 + Asc(Mid$(StringDimList$, p + 1, 1))
+                StringVariableMax(ii) = StringMax
+                p = p + 2
+            Loop
+            Return
+        End If
         ' Found AS: parse the type and apply it to ALL collected numeric vars/arrays
         GoSub FoundAS
 
@@ -5151,6 +5336,13 @@ If v = &HF2 Then
     GoTo DoDim_Loop
 End If
 
+If v = &HF3 Then
+    ' Scalar string variable; retain it in case this is AS STRING * n.
+    ii = Array(x) * 256 + Array(x + 1): x = x + 2
+    StringDimList$ = StringDimList$ + Chr$(ii \ 256) + Chr$(ii And 255)
+    GoTo DoDim_Loop
+End If
+
 ' Unknown token in DIM line: keep scanning
 GoTo DoDim_Loop
 
@@ -5234,6 +5426,10 @@ Else
             Print "Error: Unknown value after AS on";: GoTo FoundError
     End Select
 End If
+If IntegerOnly And DimType >= NT_Single Then
+    Print "Error: floating-point DIM types are not allowed with the -i integer-only option on";
+    GoTo FoundError
+End If
 Return
 ' Send assembly instructions out to .asm file
 AO:
@@ -5249,6 +5445,12 @@ Z$ = "": A$ = "": B$ = "": C$ = "" 'Clear the strings so next entry won't be rep
 Return
 
 AddIncludeTemp:
+If IntegerOnly Then
+    If Left$(Temp$, Len("Math_Fast_Floating_Point")) = "Math_Fast_Floating_Point" Or Left$(Temp$, Len("Math_Floating_Point")) = "Math_Floating_Point" Or Left$(Temp$, Len("Math_IEEE_754")) = "Math_IEEE_754" Then
+        Print "Error: floating-point operation is not allowed with the -i integer-only option on";
+        GoTo FoundError
+    End If
+End If
 Found = 0
 For AI = 1 To IncludeCount
     If IncludeList$(AI) = Temp$ Then Found = 1: Exit For

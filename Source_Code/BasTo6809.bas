@@ -1,18 +1,91 @@
-V$ = "5.35"
-'       - All loop counters now are set to 32k
+V$ = "5.45"
+' V 5.45
+'       - Made the CoCo 1/2 SDC_PLAYMOVIE frame buffers follow GRAPHICS_PAGE_START for -notext and -rxxxx layouts
+'       - CoCo 1/2 movie builds always reserve both $1800-byte frame pages and reject an overlapping explicit -p address
+'       - Fixed direct EOF, stream EOF, and BREAK movie exits so each restores the stack according to its actual entry path
+'       - CoCo 1/2 movie playback now restores the BASIC program's selected graphics page before returning
+'       - Fixed INITDIR wildcard fields so patterns such as *.DAT preserve the first extension character
+'       - Fixed DIRPAGE controller initialization on its first disk read
+'       - DIRPAGE now returns end-of-directory status 4 without starting an unnecessary disk operation
+'       - Removed the obsolete -bx branch-length option from the compiler interface
+'       - CHAIN and SDC_CHAIN now force all-RAM mode before loading, so a normally loaded small
+'         first program can safely chain to a large program with segments above $7FFF
 
-' V = 5.34
+' V 5.44
+'       - Added QB64-compatible LOF(handle) for open DECB files; returns an unsigned 32-bit file length
+'       - Added SDC_LOF(handle) for open CoCoSDC files with the same unsigned 32-bit result
+'       - Updated the SDECB IDE syntax checking and highlighting for SDC_LOF
+
+' V 5.43
+'       - Fixed GETBYTE returning zero for valid bytes: DiskReadByteA now explicitly clears carry after a successful read
+'       - Sequential reads now distinguish a valid byte, including $00, from the internal end-of-file condition
+
+' V 5.42
+'       - Fixed sequential disk OPEN "R": DiskOpenFileAB now preserves the requested mode and handle while initializing stream state
+'       - Prevents a read-open from becoming an empty write stream and fixes OPEN/GETBYTE/CLOSE file-reading loops
+
+' V 5.41
+'       - INPUT and READ/DATA use a dedicated integer ASCII converter with -i, so no floating-point library is included
+'       - Fixed the integer-only VAL parser so hexadecimal values and all internal branches assemble correctly
+'       - Context-free VAL() now defaults to INTEGER with -i instead of requesting the default floating-point type
+'       - Exponentiation now reports a compile-time error with -i because the current power routines require floating point
+
+' V 5.40
+'       - Fixed CoCo 1/2 startup when disk support is included: DiskInitialize now preserves the IRQ-vector register
+'       - Prevents the first IRQ from following the old $010C ROM vector into RAM after a cc1sl load
+
+' V 5.39
+'       - Disk_Commands.asm now owns all controller variables, stream state, and sector buffers as relocatable resident data
+'       - Added independent 256-byte input and output buffers so one DECB reader and one DECB writer can remain open together
+'       - Reader and writer handles retain independent filenames, drives, track/sector positions, FAT state, and 32-bit positions
+'       - Added per-drive track images so alternating input and output on different physical drives is safe
+'       - LOADM and SAVEM reject ranges that would overwrite the resident disk state or either active sector buffer
+'       - SDECB IDE highlighting and syntax checking now recognize all flat DECB file commands
+'       - Sequential OPEN "W" safely replaces/truncates existing files; old granules are freed only after publishing the replacement
+
+' V 5.38
+'       - Added flat DECB file commands: OPEN, CLOSE, PUTBYTE0/1, GETBYTE, SETPOS0/1, FILEINFO$,
+'         DELETE, INITDIR, DIRPAGE, and DIRLIST$
+'       - DECB byte reads honor the exact last-sector length; writes commit FAT and directory data on CLOSE
+'       - DECB directory pages use the existing string scratch buffer and do not reserve another disk sector buffer
+'       - Handles 0 and 1 are accepted for SDC source compatibility
+'       - Added -notext to release the normal $0400-$05FF text page and begin the low-memory layout at $0400
+'       - Resident SDC_CHAIN and CHAIN loaders are packed before shared RAM and CoCo 1/2 graphics pages
+'       - Added -rxxxx to reserve an exact hexadecimal byte count for data shared by CHAINed programs
+'       - Program placement is calculated after loaders, shared RAM, and screens; unsafe explicit -p addresses are errors
+'       - The generated assembly exports CHAIN_SHARED_START/END/SIZE, GRAPHICS_PAGE_START, and PROGRAM_SAFE_START
+'       - Added CHAIN filename$ with optional :0 through :3 floppy drive suffix
+'       - CHAIN uses a stand-alone read-only loader at $0800, a sector buffer at $0200, and stack at $0400
+'       - LOADM, SAVEM, CHAIN, and SDC_CHAIN share temporary low RAM safely; the disk sector buffer is $0200-$02FF
+'       - Replaced Disk BASIC's fixed $0600-$0DFF workspace with compact scratch memory at $0179-$02FF
+'       - LOADM now uses one shared 256-byte sector buffer instead of multiple buffers and four FAT tables
+'       - Verified LOADM files larger than 64K: all DECB segments are processed through the complete FAT chain,
+'         including CoCo 3 files that select an 8K MMU block through $FFA0-$FFA7 before loading each data segment
+'       - Added SAVEM filename$,start,end,exec with optional :0 through :3 floppy drive suffix
+'       - The Super Duper Extended Colour Basic (SDECB) IDE OPTION command is now ignored by the compiler
+'         such as "OPTION _EXPLICIT" which will identify variables that are not being used
+'       - New command SDC_CHAIN "FILENAME.BIN",slot to load and execute another program directly from CoCoSDC slot 0 or 1
+'       - LEFT$, RIGHT$, and MID$ now safely handle zero and out-of-range unsigned lengths
+'       - Added -i strict integer-only mode for smaller binaries without floating-point libraries
+'       - Added setting individual string sizes using DIM name$ AS STRING * size, where size is from 1 to 255
+'       - Values assigned, INPUT, or READ into a fixed-capacity string are truncated to the declared maximum
+'       - LOADM filenames now support a :0 through :3 floppy drive number
+
+' V 5.35
+'       - Source .BAS files can now have 32k IF/FOR/LOOP counts
+
+' V 5.34
 '       - Extended the size of some pointers from integer to LONG as source files that were larger than 32k were failing.
 
-' V = 5.33
+' V 5.33
 '       - Added command _FILEEXISTS("FILENAME") - check if a file exists on the floppy drive
 '       - Added command _SDC_FILEEXISTS("FILENAME",#) - check if a file exists on the SDC
 
-' V = 5.32
+' V 5.32
 '       - Fixed a bug in one of the Random routines where the initial entry might not be random
 '       - Fixed the calls to Select_AnalogMuxer and AnalogMuxOn from BSR to JSR as it could be necessary depending on the program
 
-' V = 5.31
+' V 5.31
 '       - Fixed LOADM command so it works proplery on real hardware  (initialized directory and other disk bytes)
 '       - LOADM now will add ".BIN" to a filename if it's missing
 '       - SDC_LOADM now will add ".BIN" to a filename if it's missing
@@ -327,7 +400,7 @@ $Console
 _Dest _Console
 
 ' Address in RAM where the compiled program starts
-ProgramStart$ = "E00" ' $2600, PMODE 4 graphics screen will be from $E00 to $25FF
+ProgramStart$ = "" ' Empty means let the tokenizer calculate the safe program location
 
 'Dim CommandsUsed$(2000)
 ' Initialize variables for processing
@@ -457,7 +530,8 @@ If count = 0 Then
     Print "Takes a BASIC program and converts it to 6809 Assembly Language that can be assembled with LWASM"
     Print "The output from LWASM can then be executed on a TRS-80 Color Computer"
     Print
-    Print "Usage: BasTo6809 [-coco] [-ascii] [-sxxx] [-ox] [-bx] [-pxxxx] [-v] [-Vx] [-k] [-fxxxx] [-h] program.bas"
+    Print "Usage: BasTo6809 [-coco] [-ascii] [-i] [-notext] [-rxxxx] [-sxxx] [-ox] [-pxxxx]"
+    Print "                 [-v] [-Vx] [-k] [-fxxxx] [-h] program.bas"
     Print "Where: program.bas is the basic program you want to convert to assembly language"
     Print "       outputs program.asm which is ready to be used with LWASM to convert it to a machine language program for the CoCo"
     Print "       It will autodetect a coco program or ASCII file but just in case the detection is not working you can manually"
@@ -466,15 +540,15 @@ If count = 0 Then
     Print "       -ascii    - A plain text BASIC program in regular ASCII, from a text editor or a program like QB64"
     Print "       -dragon   - Destination code is for a Dragon computer (Keyboard layout is different than a CoCo)"
     Print "       -mx       - Sets the Accuracy of Single Type math numbers (0 = 3 bytes, 1 = 5 bytes)"
+    Print "       -i        - Strict integer-only mode; default numeric type is INTEGER and floating point is an error"
     Print "       -sxxx     - Sets the max length to reserve for strings in an array (default and max is 255 bytes)"
     Print "                   If your program needs more space and you aren't using larger strings this option"
     Print "                   can make your program use a lot less RAM"
     Print "       -ox       - Optimize level x (default is 2), 2 is the max value, 0 will turn off optimizing (not suggested)"
-    Print "       -bx       - Optimize branch lengths; this affects how fast and efficiently LWASM will assemble your program."
-    Print "                   0 means some branches will be longer than they need to be resulting in a larger/slower program (default)"
-    Print "                   1 means all branches will be as short as possible making your program smaller and faster, but"
-    Print "                   LWASM will take a long time to assemble your program"
-    Print "       -pxxxx    - Program starting location in RAM, xxxx = address in hexidecimal"
+    Print "       -notext   - No text screen; low-memory layout begins at $0400 instead of $0600"
+    Print "       -rxxxx    - Reserve xxxx hexadecimal bytes for data shared by CHAINed programs"
+    Print "       -pxxxx    - Explicit program starting location in RAM, xxxx = hexadecimal address"
+    Print "                   It must be at or above the automatically calculated safe address"
     Print "       -v        - Show the version number for this compiler"
     Print "       -Vx       - Verbose level x (default is 0 = no output while compiling)"
     Print "       -k        - Keep miscelaneus files generated by the compiler (default is erase files and only leave the .asm file)"
@@ -487,7 +561,8 @@ If count = 0 Then
     Print "See Manual.pdf file for more help"
     System
 End If
-nt = 0: newp = 0: endp = 0: StringArraySize = 16: KeepTempFiles = 0: AutoStart = 0: FloatType = 0
+nt = 0: newp = 0: endp = 0: StringArraySize = 16: KeepTempFiles = 0: AutoStart = 0: FloatType = 0: IntegerOnly = 0
+NoText = 0: ReserveBytes = 0: ProgramStartExplicit = 0
 Optimize = 2 ' Default to optimize level 2
 Font$ = "Arcade_B0_F1" ' Default font to use for graphics screen
 
@@ -499,11 +574,14 @@ For check = 1 To count
     If LCase$(Left$(N$, 2)) = "-s" Then StringArraySize = Val(Right$(N$, Len(N$) - 2)): GoTo CheckNextCMDOption
     If LCase$(Left$(N$, 2)) = "-o" Then Optimize = Val(Right$(N$, Len(N$) - 2)): GoTo CheckNextCMDOption
     If Left$(N$, 2) = "-V" Then Verbose = Val(Right$(N$, Len(N$) - 2)): GoTo CheckNextCMDOption
-    If LCase$(Left$(N$, 2)) = "-p" Then ProgramStart$ = Right$(N$, Len(N$) - 2): GoTo CheckNextCMDOption
+    If LCase$(Left$(N$, 2)) = "-p" Then ProgramStart$ = Right$(N$, Len(N$) - 2): ProgramStartExplicit = 1: GoTo CheckNextCMDOption
     If LCase$(Left$(N$, 2)) = "-k" Then KeepTempFiles = 1: GoTo CheckNextCMDOption
     If LCase$(Left$(N$, 2)) = "-f" Then Font$ = Right$(N$, Len(N$) - 2): GoTo CheckNextCMDOption
     If LCase$(Left$(N$, 2)) = "-a" Then AutoStart = 1: GoTo CheckNextCMDOption
-    If LCase$(Left$(N$, 2)) = "-r" Then Ret2Basic = 1: GoTo CheckNextCMDOption
+    If LCase$(N$) = "-notext" Then NoText = 1: GoTo CheckNextCMDOption
+    If LCase$(N$) = "-r" Then Ret2Basic = 1: GoTo CheckNextCMDOption
+    If LCase$(Left$(N$, 2)) = "-r" Then ReserveHex$ = Right$(N$, Len(N$) - 2): GoTo CheckNextCMDOption
+    If LCase$(N$) = "-i" Then IntegerOnly = 1: GoTo CheckNextCMDOption
     If LCase$(Left$(N$, 2)) = "-m" Then FloatType = Val(Right$(N$, Len(N$) - 2)): GoTo CheckNextCMDOption
     If Left$(N$, 2) = "-v" Then
         ' Show the Version number and exit
@@ -560,12 +638,16 @@ If InStr(LCase$(I$), "compileoptions") > 0 Then
         If LCase$(Left$(N$, 2)) = "-s" Then StringArraySize = Val(Right$(N$, Len(N$) - 2))
         If LCase$(Left$(N$, 2)) = "-o" Then Optimize = Val(Right$(N$, Len(N$) - 2))
         If Left$(N$, 2) = "-V" Then Verbose = Val(Right$(N$, Len(N$) - 2))
-        If LCase$(Left$(N$, 2)) = "-p" Then ProgramStart$ = Right$(N$, Len(N$) - 2)
+        If LCase$(Left$(N$, 2)) = "-p" Then ProgramStart$ = Right$(N$, Len(N$) - 2): ProgramStartExplicit = 1
         If LCase$(Left$(N$, 2)) = "-k" Then KeepTempFiles = 1
         If LCase$(Left$(N$, 2)) = "-f" Then Font$ = Right$(N$, Len(N$) - 2)
         If LCase$(Left$(N$, 2)) = "-a" Then AutoStart = 1
         If LCase$(Left$(N$, 7)) = "-dragon" Then Dragon = 1
+        If LCase$(N$) = "-notext" Then NoText = 1
+        If LCase$(N$) = "-r" Then Ret2Basic = 1
+        If LCase$(Left$(N$, 2)) = "-r" And LCase$(N$) <> "-r" Then ReserveHex$ = Right$(N$, Len(N$) - 2)
         If LCase$(Left$(N$, 2)) = "-m" Then FloatType = Val(Right$(N$, Len(N$) - 2))
+        If LCase$(N$) = "-i" Then IntegerOnly = 1
         If Left$(N$, 2) = "-v" Then
             ' Show the Version number and exit
             Print "BasTo6809 - BASIC to 6809 Assembly converter V"; V$
@@ -575,6 +657,25 @@ If InStr(LCase$(I$), "compileoptions") > 0 Then
     Loop
 End If
 Close #1
+
+' Validate hexadecimal memory-layout options here so malformed values never
+' silently become zero through VAL().
+If ProgramStartExplicit = 1 Then
+    If Len(ProgramStart$) < 1 Or Len(ProgramStart$) > 4 Then Print "Error: -p requires a 1 to 4 digit hexadecimal address.": System
+    For HexCheck = 1 To Len(ProgramStart$)
+        HexChar$ = UCase$(Mid$(ProgramStart$, HexCheck, 1))
+        If InStr("0123456789ABCDEF", HexChar$) = 0 Then Print "Error: invalid hexadecimal -p address: "; ProgramStart$: System
+    Next HexCheck
+    ProgramStart$ = Hex$(Val("&H" + ProgramStart$))
+End If
+If ReserveHex$ <> "" Then
+    If Len(ReserveHex$) > 4 Then Print "Error: -rxxxx accepts at most four hexadecimal digits.": System
+    For HexCheck = 1 To Len(ReserveHex$)
+        HexChar$ = UCase$(Mid$(ReserveHex$, HexCheck, 1))
+        If InStr("0123456789ABCDEF", HexChar$) = 0 Then Print "Error: invalid hexadecimal -r reserve size: "; ReserveHex$: System
+    Next HexCheck
+    ReserveBytes = Val("&H" + ReserveHex$)
+End If
 
 If StringArraySize < 1 Or StringArraySize > 255 Then Print "String Array size option of"; StringArraySize; "is out of range. Must be between 1 and 255": System
 
@@ -979,13 +1080,16 @@ num = Optimize: GoSub NumAsString 'Convert number in Num to a string without spa
 o$ = " -o" + Num$ + " "
 num = Verbose: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
 Verbose$ = " -v" + Num$ + " "
-p$ = " -p" + ProgramStart$ + " "
+If ProgramStartExplicit = 1 Then p$ = " -p" + ProgramStart$ + " " Else p$ = ""
 f$ = "-f" + Font$ + " "
 
 If Dragon = 1 Then Dragon$ = " -dragon " Else Dragon$ = ""
 If KeepTempFiles = 1 Then KeepTempFiles$ = " -k " Else KeepTempFiles$ = ""
 If AutoStart = 1 Then AutoStart$ = " -a " Else AutoStart$ = ""
 If Ret2Basic = 1 Then Ret2Basic$ = " -r " Else Ret2Basic$ = ""
+If IntegerOnly = 1 Then IntegerOnlyOption$ = " -i " Else IntegerOnlyOption$ = ""
+If NoText = 1 Then NoTextOption$ = " -notext " Else NoTextOption$ = ""
+If ReserveBytes <> 0 Then ReserveOption$ = " -r" + Hex$(ReserveBytes) + " " Else ReserveOption$ = ""
 
 ' We now have the BASIC program in a good text format as the file BASIC_Text.bas
 ' Tokenize the BASIC Program
@@ -995,11 +1099,15 @@ If InStr(CompilerVersion$, "[MACOSX]") > 0 Or InStr(CompilerVersion$, "[LINUX]")
 Else
     PreString$ = ".\"
 End If
-returncode = Shell(PreString$ + "BasTo6809.1.Tokenizer " + c$ + s$ + m$ + o$ + b$ + Dragon$ + Verbose$ + p$ + f$ + AutoStart$ + Ret2Basic$ + OutName$)
+TokenizerCommand$ = PreString$ + "BasTo6809.1.Tokenizer " + c$ + s$ + m$ + o$ + Dragon$ + Verbose$
+TokenizerCommand$ = TokenizerCommand$ + p$ + f$ + AutoStart$ + Ret2Basic$ + IntegerOnlyOption$ + NoTextOption$ + ReserveOption$ + OutName$
+returncode = Shell(TokenizerCommand$)
 If returncode = 0 Then System
 ' We now have the BASIC program in a good tokenized format as the file BasicTokenized.bin
 ' Call the compiler with a few command line options to pass through to the compiler
-returncode = Shell(PreString$ + "BasTo6809.2.Compile " + c$ + s$ + m$ + o$ + b$ + Dragon$ + Verbose$ + KeepTempFiles$ + AutoStart$ + Ret2Basic$ + OutName$)
+CompileCommand$ = PreString$ + "BasTo6809.2.Compile " + c$ + s$ + m$ + o$ + Dragon$ + Verbose$ + KeepTempFiles$
+CompileCommand$ = CompileCommand$ + AutoStart$ + Ret2Basic$ + IntegerOnlyOption$ + OutName$
+returncode = Shell(CompileCommand$)
 If returncode = 0 Then System
 System
 

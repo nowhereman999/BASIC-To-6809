@@ -131,6 +131,7 @@ Dim NumericArrayVariables$(100000), NumericArrayDimensions(100000) As Integer
 
 Dim StringArrayBits(100000) As Integer
 Dim StringVariable$(100000)
+Dim StringVariableMax(100000) As Integer
 Dim StringVariableCounter As _Unsigned Long
 Dim StringArrayVariables$(100000), StringArrayDimensions(100000) As Integer
 

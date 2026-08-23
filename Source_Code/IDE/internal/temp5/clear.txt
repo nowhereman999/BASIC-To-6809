@@ -1,0 +1,1 @@
+__STRING_I->len=0;

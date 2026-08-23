@@ -514,6 +514,10 @@ Return
 ' Enter with LeftType set, RightType set & LargestType set
 ' Value1 & Value2 are on the stack LeftType=Value1 Type & RightType=Value2 Type, Set LargestType
 NumFunctionExponent:
+If IntegerOnly Then
+    Print "Error: exponentiation (^) requires floating-point math and is not allowed with the -i integer-only option on";
+    GoTo FoundError
+End If
 Z$ = "; Doing Exponents, Left & right are already the same size": GoSub AO
 ' Make Types the same
 Z$ = "; Makeboth the same type": GoSub AO
@@ -1180,4 +1184,3 @@ Case 12 ' Both are FP 10 bytes
         A$ = "JSR": B$ = "DB_FLOOR": C$ = "Compute INT(x) x is @ ,S return with Double value @,S which is the INTeger vale of ,S": GoSub AO
 End Select
 Return
-

@@ -72,6 +72,22 @@ Select Case GeneralCommands$(v)
         GoTo DoLPOKE
     Case "LOADM"
         GoTo DoLOADM
+    Case "OPEN"
+        GoTo DoDISK_OPEN
+    Case "CLOSE"
+        GoTo DoDISK_CLOSE
+    Case "PUTBYTE0"
+        GoTo DoDISK_PUTBYTE0
+    Case "PUTBYTE1"
+        GoTo DoDISK_PUTBYTE1
+    Case "SETPOS0"
+        GoTo DoDISK_SETPOS0
+    Case "SETPOS1"
+        GoTo DoDISK_SETPOS1
+    Case "SAVEM"
+        GoTo DoSAVEM
+    Case "CHAIN"
+        GoTo DoCHAIN
     Case "LOCATE"
         GoTo DoLOCATE
     Case "LOOP"
@@ -118,6 +134,8 @@ Select Case GeneralCommands$(v)
         GoTo DoSCREEN
     Case "SDC_BIGLOADM"
         GoTo DoSDC_BIGLOADM
+    Case "SDC_CHAIN"
+        GoTo DoSDC_CHAIN
     Case "SDC_CLOSE"
         GoTo DoSDC_CLOSE
     Case "SDC_LOADM"
@@ -256,6 +274,36 @@ GoSub ParseNumericExpression_UByte ' Parse Number and return with value as Unsig
 A$ = "JSR": B$ = "SDC_CloseFileB": C$ = "Close file # in B": GoSub AO
 Return ' Return with D = the value in the INT
 
+' CLOSE(#) - close the active DECB stream. Only one DECB stream is resident.
+DoDISK_CLOSE:
+x = x + 2
+If Array(x - 1) <> &H28 Then Print "Can't find open bracket for CLOSE command on";: GoTo FoundError
+GoSub GetExpressionMidB4EndBracket: x = x + 2
+GoSub ParseNumericExpression_UByte
+A$ = "ANDB": B$ = "#$01": C$ = "DECB stream handle is 0 or 1": GoSub AO
+A$ = "JSR": B$ = "DiskCloseFileB": C$ = "Close the DECB stream and turn off the motor": GoSub AO
+Return
+
+' SETPOS0/1(x) - set a 32-bit byte position in the active DECB stream.
+DoDISK_SETPOS0:
+DiskSetPosHandle = 0
+GoTo DoDISK_SETPOS
+DoDISK_SETPOS1:
+DiskSetPosHandle = 1
+DoDISK_SETPOS:
+x = x + 2
+If Array(x - 1) <> &H28 Then Print "Can't find open bracket for SETPOS command on";: GoTo FoundError
+GoSub GetExpressionMidB4EndBracket: x = x + 2
+GoSub ParseNumericExpression
+NVT = NT_UInt32
+GoSub ConvertLastType2NVT
+A$ = "LDX": B$ = "#" + LTrim$(Str$(DiskSetPosHandle)): C$ = "DECB stream handle": GoSub AO
+A$ = "TFR": B$ = "X,D": C$ = "Put stream handle in B": GoSub AO
+A$ = "TFR": B$ = "S,X": C$ = "X points at the unsigned 32-bit file position": GoSub AO
+A$ = "JSR": B$ = "DiskSetPosBX": C$ = "Set the DECB byte position": GoSub AO
+A$ = "LEAS": B$ = "4,S": C$ = "Remove the 32-bit position": GoSub AO
+Return
+
 ' SDC_SETPOS0(x)
 ' set the position in a open file # at position x
 ' # is 0 or 1
@@ -296,6 +344,18 @@ A$ = "STU": B$ = "1,X": C$ = "Save U as the Logical Sector number": GoSub AO
 A$ = "LDB": B$ = ",S+": C$ = "Get LS Byte of the 32 bit value off the stack": GoSub AO
 A$ = "STB": B$ = "4,X": C$ = "Save the byte offset in the sector": GoSub AO
 A$ = "JSR": B$ = "SDC_ReadBuffer1": C$ = "Fill buffer 1 from the the SDC file 1": GoSub AO
+Return
+
+' SDC_LOADM a file directly off the CoCoSDC - SDC_LOADM"FILENAME.BIN",#[,Offset]
+DoSDC_CHAIN:
+GoSub GetExpressionB4CommaEOL ' Get the filename expression
+GoSub ParseStringExpression ' Filename value is returned on the stack
+A$ = "JSR": B$ = "SDC_FilenameToStrVar_PF00": C$ = "Copy SDC_CHAIN filename into _StrVar_PF00": GoSub AO
+If Array(x) <> &HF5 Or Array(x + 1) <> &H2C Then Print "Can't find a comma after the filename for the SDC_CHAIN command on";: GoTo FoundError
+x = x + 2 ' consume the comma
+GoSub GetExpressionB4EOL
+GoSub ParseNumericExpression_UByte ' Return the SDC slot number in B
+A$ = "JSR": B$ = "SDCChainStart": C$ = "Replace this program with the SDC binary and execute it": GoSub AO
 Return
 
 ' SDC_LOADM a file directly off the CoCoSDC - SDC_LOADM"FILENAME.BIN",#[,Offset]
@@ -376,6 +436,19 @@ DoSDC_PUTBYTE1:
 GoSub GetExpressionB4EOL 'Handle an expression that ends with a colon or End of a Line
 GoSub ParseNumericExpression_UByte ' Parse Number and return with value as Unsigned value in B
 A$ = "JSR": B$ = "SDCPutByteB1": C$ = "Send byte B to file 1": GoSub AO
+Return
+
+' PUTBYTE0/1 value - append one byte to the active DECB output stream.
+DoDISK_PUTBYTE0:
+GoSub GetExpressionB4EOL
+GoSub ParseNumericExpression_UByte
+A$ = "JSR": B$ = "DiskPutByteB0": C$ = "Write B to DECB stream handle 0": GoSub AO
+Return
+
+DoDISK_PUTBYTE1:
+GoSub GetExpressionB4EOL
+GoSub ParseNumericExpression_UByte
+A$ = "JSR": B$ = "DiskPutByteB1": C$ = "Write B to DECB stream handle 1": GoSub AO
 Return
 
 DoSDC_PLAY_MOVIE:
@@ -476,6 +549,29 @@ A$ = "BEQ": B$ = ">": C$ = "Skip if it's zero": GoSub AO
 A$ = "LDA": B$ = "#1": C$ = "Make A a 1": GoSub AO
 Z$ = "!": A$ = "LEAS": B$ = "2,S": C$ = "Fix the stack": GoSub AO
 A$ = "JSR": B$ = "SDCOpenFile": C$ = "Open File, A=0 Read or A=1 Write, file number in B (0 or 1)": GoSub AO
+Return
+
+' OPEN "FILENAME.EXT[:drive]","R|W",#
+DoDISK_OPEN:
+GoSub GetExpressionB4CommaEOL
+GoSub ParseStringExpression
+A$ = "JSR": B$ = "FixFileName": C$ = "Format the DECB filename and optional drive suffix": GoSub AO
+If Array(x) <> &HF5 Or Array(x + 1) <> &H2C Then Print "Can't find a comma after the filename for OPEN on";: GoTo FoundError
+x = x + 2
+GoSub GetExpressionB4CommaEOL
+GoSub ParseStringExpression
+If Array(x) <> &HF5 Or Array(x + 1) <> &H2C Then Print "Can't find the second comma for OPEN on";: GoTo FoundError
+x = x + 2
+GoSub GetExpressionB4CommaEOL
+GoSub ParseNumericExpression_UByte
+A$ = "ANDB": B$ = "#$01": C$ = "DECB stream handle is 0 or 1": GoSub AO
+A$ = "LDA": B$ = "1,S": C$ = "Get R or W from the mode string": GoSub AO
+A$ = "ANDA": B$ = "#$DF": C$ = "Make the mode uppercase": GoSub AO
+A$ = "SUBA": B$ = "#'R'": C$ = "A=0 for read; nonzero becomes write": GoSub AO
+A$ = "BEQ": B$ = ">": C$ = "Keep read mode zero": GoSub AO
+A$ = "LDA": B$ = "#1": C$ = "A=1 for write mode": GoSub AO
+Z$ = "!": A$ = "LEAS": B$ = "2,S": C$ = "Remove the one-character mode string": GoSub AO
+A$ = "JSR": B$ = "DiskOpenFileAB": C$ = "Open the DECB stream, A=mode and B=handle": GoSub AO
 Return
 
 DoEXEC:
@@ -622,6 +718,7 @@ Else
     A$ = "CLR": B$ = "_Var_PF10": C$ = "Set _Var_PF10 to zero as the LOADM offset value": GoSub AO
     A$ = "CLR": B$ = "_Var_PF10+1": C$ = "Set _Var_PF10 to zero as the LOADM offset value": GoSub AO
 End If
+A$ = "JSR": B$ = "DiskRequireNoStreams": C$ = "LOADM cannot share the resident disk buffers with open streams": GoSub AO
 A$ = "JSR": B$ = "FixFileName": C$ = "Format _StrVar_PF00 to proper disk filename format in memory at DNAMBF": GoSub AO
 A$ = "LDU": B$ = "#DNAMBF": C$ = "U points at the filename to open": GoSub AO
 ' Open the the File pointed at by U
@@ -649,6 +746,40 @@ A$ = "JSR": B$ = "InitFile": C$ = "Prep open file for reading": GoSub AO
 ' Adds the 16 bit value stored in _Var_PF10 to the Load Address and the EXEC address
 A$ = "JSR": B$ = "DiskLOADM": C$ = "Load the ML program": GoSub AO
 Return ' we have reached the end of the line return
+
+' CHAIN filename$ -- replace this program with a DECB ML file and execute it.
+' A :0 through :3 suffix on the filename selects the floppy drive.
+DoCHAIN:
+GoSub GetExpressionB4EOL
+GoSub ParseStringExpression ' Counted filename is left on the 6809 stack
+A$ = "JSR": B$ = "DiskChainStart": C$ = "Replace this program with the disk binary and execute it": GoSub AO
+Return
+
+' SAVEM filename$,start_address,end_address,exec_address
+DoSAVEM:
+GoSub GetExpressionB4CommaEOL ' Get filename expression before the first comma
+GoSub ParseStringExpression ' String value is placed on the 6809 stack
+If Array(x) <> &HF5 Or Array(x + 1) <> &H2C Then Print "Can't find a comma after the filename for the SAVEM command on";: GoTo FoundError
+A$ = "JSR": B$ = "FixFileName": C$ = "Format filename and optional :0-:3 drive suffix": GoSub AO
+x = x + 2 ' consume comma
+
+GoSub GetExpressionB4CommaEOL
+GoSub ParseNumericExpression_UInt16
+A$ = "STD": B$ = "DiskSaveStart": C$ = "Save SAVEM start address": GoSub AO
+If Array(x) <> &HF5 Or Array(x + 1) <> &H2C Then Print "Can't find the second comma for the SAVEM command on";: GoTo FoundError
+x = x + 2
+
+GoSub GetExpressionB4CommaEOL
+GoSub ParseNumericExpression_UInt16
+A$ = "STD": B$ = "DiskSaveEnd": C$ = "Save SAVEM end address": GoSub AO
+If Array(x) <> &HF5 Or Array(x + 1) <> &H2C Then Print "Can't find the third comma for the SAVEM command on";: GoTo FoundError
+x = x + 2
+
+GoSub GetExpressionB4EOL
+GoSub ParseNumericExpression_UInt16
+A$ = "STD": B$ = "DiskSaveExec": C$ = "Save SAVEM EXEC address": GoSub AO
+A$ = "JSR": B$ = "DiskSAVEM": C$ = "Write the DECB machine-language file": GoSub AO
+Return
 
 DoColor:
 ' Get the numeric value before a comma
@@ -1301,8 +1432,8 @@ Select Case v$
         A$ = "JSR": B$ = "SetGraphicsStartA": C$ = "Go set the address of the screen": GoSub AO
     Case "40"
         ' Use the CoCo 3 40 column text screen
-        '            A$ = "LDX": B$ = "#$0E00": C$ = "Text screen starts here": GoSub AO
-        '            A$ = "STX": B$ = "BEGGRP": C$ = "Update the Screen starting location": GoSub AO
+        A$ = "LDX": B$ = "#$" + WideTextStart$: C$ = "Relocated text screen starts here": GoSub AO
+        A$ = "STX": B$ = "BEGGRP": C$ = "Update the screen starting location": GoSub AO
         Z$ = "; $FF98 = 0x00100011 - Text Mode,Extra Descenders,Colour,60 Hz,8 lines per character": GoSub AO
         Z$ = "; $FF99 = 0x01100101 - 40 Column mode": GoSub AO
         ' A$ = "LDA": B$ = "#%00100011": GoSub AO
@@ -1314,12 +1445,12 @@ Select Case v$
         A$ = "STA": B$ = "$FF9C": C$ = "Vertical scroll register - VSC": GoSub AO
         A$ = "STA": B$ = "$FF9F": C$ = "Clear the Horizontal register": GoSub AO
         '$FF9D-$FF9E Vertical offset register
-        A$ = "LDD": B$ = "#$" + Hex$((&H38 * &H2000 + &HE00) / 8): GoSub AO
+        A$ = "LDD": B$ = "#$" + Hex$((&H38 * &H2000 + Val("&H" + WideTextStart$)) / 8): GoSub AO
         A$ = "STD": B$ = "$FF9D": C$ = "Vertical offset register": GoSub AO
     Case "64"
         ' Use the CoCo 3 64 column text screen
-        '            A$ = "LDX": B$ = "#$0E00": C$ = "Text screen starts here": GoSub AO
-        '            A$ = "STX": B$ = "BEGGRP": C$ = "Update the Screen starting location": GoSub AO
+        A$ = "LDX": B$ = "#$" + WideTextStart$: C$ = "Relocated text screen starts here": GoSub AO
+        A$ = "STX": B$ = "BEGGRP": C$ = "Update the screen starting location": GoSub AO
         Z$ = "; $FF98 = 0x00100011 - Text Mode,Extra Descenders,Colour,60 Hz,8 lines per character": GoSub AO
         Z$ = "; $FF99 = 0x01111001 - 64 Column mode": GoSub AO
         ' A$ = "LDA": B$ = "#%00100011": GoSub AO
@@ -1331,12 +1462,12 @@ Select Case v$
         A$ = "STA": B$ = "$FF9C": C$ = "Vertical scroll register - VSC": GoSub AO
         A$ = "STA": B$ = "$FF9F": C$ = "Clear the Horizontal register": GoSub AO
         '$FF9D-$FF9E Vertical offset register
-        A$ = "LDD": B$ = "#$" + Hex$((&H38 * &H2000 + &HE00) / 8): GoSub AO
+        A$ = "LDD": B$ = "#$" + Hex$((&H38 * &H2000 + Val("&H" + WideTextStart$)) / 8): GoSub AO
         A$ = "STD": B$ = "$FF9D": C$ = "Vertical offset register": GoSub AO
     Case "80"
         ' Use the CoCo 3 80 column text screen
-        '            A$ = "LDX": B$ = "#$0E00": C$ = "Text screen starts here": GoSub AO
-        '            A$ = "STX": B$ = "BEGGRP": C$ = "Update the Screen starting location": GoSub AO
+        A$ = "LDX": B$ = "#$" + WideTextStart$: C$ = "Relocated text screen starts here": GoSub AO
+        A$ = "STX": B$ = "BEGGRP": C$ = "Update the screen starting location": GoSub AO
         Z$ = "; $FF98 = 0x00100011 - Text Mode,Extra Descenders,Colour,60 Hz,8 lines per character": GoSub AO
         Z$ = "; $FF99 = 0x01110101 - 80 Column mode": GoSub AO
         ' A$ = "LDA": B$ = "#%00100011": GoSub AO
@@ -1348,7 +1479,7 @@ Select Case v$
         A$ = "STA": B$ = "$FF9C": C$ = "Vertical scroll register - VSC": GoSub AO
         A$ = "STA": B$ = "$FF9F": C$ = "Clear the Horizontal register": GoSub AO
         '$FF9D-$FF9E Vertical offset register
-        A$ = "LDD": B$ = "#$" + Hex$((&H38 * &H2000 + &HE00) / 8): GoSub AO
+        A$ = "LDD": B$ = "#$" + Hex$((&H38 * &H2000 + Val("&H" + WideTextStart$)) / 8): GoSub AO
         A$ = "STD": B$ = "$FF9D": C$ = "Vertical offset register": GoSub AO
 End Select
 Return
@@ -1783,11 +1914,13 @@ Do Until v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A)
         If v = &HF3 Then
             ' We are inputting a string variable
             v = Array(x) * 256 + Array(x + 1): x = x + 2
+            StringDestMax = StringVariableMax(v)
             Print #1, ""
             A$ = "LDX": B$ = "#_StrVar_" + StringVariable$(v): C$ = "X = destination address": GoSub AO
             A$ = "PSHS": B$ = "X": C$ = "Save the location the array is pointing at on the stack": GoSub AO
         Else
             ' We are inputting a string array
+            StringDestMax = StringArraySize
             Print #1, "; Getting the String array memory location in X"
             If Verbose > 3 Then Print "Going to deal with String array"
             v = Array(x) * 256 + Array(x + 1): x = x + 2
@@ -1867,13 +2000,21 @@ Do Until v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A)
         A$ = "PULS": B$ = "X": C$ = "Get destination address from the stack": GoSub AO
         A$ = "LDU": B$ = "DATAPointer": C$ = "U = source starts address": GoSub AO
         A$ = "LDB": B$ = ",U": C$ = "Get the string length": GoSub AO
+        A$ = "CLRA": C$ = "D = full source length": GoSub AO
+        A$ = "LEAY": B$ = "D,U": C$ = "Y points at the final source character": GoSub AO
+        A$ = "LEAY": B$ = "1,Y": C$ = "Y = next DATA item after the complete source string": GoSub AO
+        Num = StringDestMax: GoSub NumAsString
+        A$ = "CMPB": B$ = "#" + Num$: C$ = "Apply destination string maximum": GoSub AO
+        A$ = "BLS": B$ = ">": C$ = "Source fits": GoSub AO
+        A$ = "LDB": B$ = "#" + Num$: C$ = "Truncate READ string": GoSub AO
+        Z$ = "!": GoSub AO
         A$ = "INCB": C$ = "Include the string length byte": GoSub AO
         Z$ = "!"
         A$ = "LDA": B$ = ",U+": GoSub AO
         A$ = "STA": B$ = ",X+": C$ = "Save into variable space": GoSub AO
         A$ = "DECB": C$ = "Decrement the counter": GoSub AO
         A$ = "BNE": B$ = "<": GoSub AO
-        A$ = "STU": B$ = "DATAPointer": C$ = "Save the updated pointer": GoSub AO
+        A$ = "STY": B$ = "DATAPointer": C$ = "Advance past the complete source, including truncated bytes": GoSub AO
         GoTo DoREAD
     End If
 Loop
@@ -2170,11 +2311,13 @@ If count = 0 Then
             If v = &HF3 Then
                 ' We are inputting a string variable
                 v = Array(x) * 256 + Array(x + 1): x = x + 2
+                StringDestMax = StringVariableMax(v)
                 Print #1, ""
                 A$ = "LDX": B$ = "#_StrVar_" + StringVariable$(v): C$ = "X = destination address": GoSub AO
                 A$ = "PSHS": B$ = "X": C$ = "Save the location the array is pointing at on the stack": GoSub AO
             Else
                 ' We are inputting a string array
+                StringDestMax = StringArraySize
                 Print #1, "; Getting the String array memory location in X"
                 If Verbose > 3 Then Print "Going to deal with String array"
                 v = Array(x) * 256 + Array(x + 1): x = x + 2
@@ -2263,10 +2406,18 @@ If count = 0 Then
             Z$ = "!"
             A$ = "INCB": C$ = "Increment the counter": GoSub AO
             A$ = "LDA": B$ = ",U+": GoSub AO
+            Num = StringDestMax: GoSub NumAsString
+            A$ = "CMPB": B$ = "#" + Num$: C$ = "Do not write beyond the DIM string maximum": GoSub AO
+            A$ = "BHI": B$ = "@InputSkipStore": C$ = "Keep scanning input but skip this destination byte": GoSub AO
             A$ = "STA": B$ = ",X+": C$ = "Add it to the end of the buffer": GoSub AO
+            Z$ = "@InputSkipStore": GoSub AO
             A$ = "CMPA": B$ = "#','": C$ = "Did we find a comma?": GoSub AO
             A$ = "BNE": B$ = "<": GoSub AO
             A$ = "DECB": C$ = "Decrement the counter": GoSub AO
+            A$ = "CMPB": B$ = "#" + Num$: C$ = "Limit stored INPUT string length": GoSub AO
+            A$ = "BLS": B$ = ">": C$ = "Input fits": GoSub AO
+            A$ = "LDB": B$ = "#" + Num$: C$ = "Truncate INPUT string length": GoSub AO
+            Z$ = "!": GoSub AO
             A$ = "STB": B$ = "[,S++]": C$ = "Save the length of the string and fix the stack": GoSub AO
         Else
             Print "Error2, can't figure out the INPUT variable in";: GoTo FoundError
@@ -2549,11 +2700,13 @@ Do Until v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A)
             If v = &HF3 Then
                 ' We are inputting a string variable
                 v = Array(x) * 256 + Array(x + 1): x = x + 2
+                StringDestMax = StringVariableMax(v)
                 Print #1, ""
                 A$ = "LDX": B$ = "#_StrVar_" + StringVariable$(v): C$ = "X = destination address": GoSub AO
                 A$ = "PSHS": B$ = "X": C$ = "Save the location the array is pointing at on the stack": GoSub AO
             Else
                 ' We are inputting a string array
+                StringDestMax = StringArraySize
                 Print #1, "; Getting the String array memory location in X"
                 If Verbose > 3 Then Print "Going to deal with String array"
                 v = Array(x) * 256 + Array(x + 1): x = x + 2
@@ -2640,10 +2793,18 @@ Do Until v = &HF5 And (Array(x) = &H0D Or Array(x) = &H3A)
             Z$ = "!"
             A$ = "INCB": C$ = "Increment the counter": GoSub AO
             A$ = "LDA": B$ = ",U+": GoSub AO
+            Num = StringDestMax: GoSub NumAsString
+            A$ = "CMPB": B$ = "#" + Num$: C$ = "Do not write beyond the DIM string maximum": GoSub AO
+            A$ = "BHI": B$ = "@InputSkipStore": C$ = "Keep scanning input but skip this destination byte": GoSub AO
             A$ = "STA": B$ = ",X+": C$ = "Add it to the end of the buffer": GoSub AO
+            Z$ = "@InputSkipStore": GoSub AO
             A$ = "CMPA": B$ = "#','": C$ = "Did we find a comma?": GoSub AO
             A$ = "BNE": B$ = "<": GoSub AO
             A$ = "DECB": C$ = "Decrement the counter": GoSub AO
+            A$ = "CMPB": B$ = "#" + Num$: C$ = "Limit stored INPUT string length": GoSub AO
+            A$ = "BLS": B$ = ">": C$ = "Input fits": GoSub AO
+            A$ = "LDB": B$ = "#" + Num$: C$ = "Truncate INPUT string length": GoSub AO
+            Z$ = "!": GoSub AO
             A$ = "STB": B$ = "[,S++]": C$ = "Save the length of the string and fix the stack": GoSub AO
             A$ = "STU": B$ = "Temp1": C$ = "Update the start of the next input after the last comma": GoSub AO
         Else
@@ -2841,12 +3002,7 @@ Else
     A$ = "CLRA": C$ = "Get the screen Page #": GoSub AO
     A$ = "LDB": B$ = "GModePage": C$ = "Get the screen Page #": GoSub AO
     A$ = "BEQ": B$ = ">": C$ = "If first page then skip calc where to set the graphics page viewer": GoSub AO
-    If Gmode = 0 Or Gmode = 1 Or Gmode = 2 Or Gmode = 4 Then
-        ' For the Text screen we move past the Disk variable area
-        TempVal = GScreenStart + &HE00 - &H400 - &H200 '2nd page start here
-    Else
-        TempVal = GScreenStart '1st Page starts here
-    End If
+    TempVal = GScreenStart ' All relocated CoCo 1/2 pages are contiguous.
     '    A$ = "CLRA": C$ = "Clear MSB of D": GoSub AO
     '    A$ = "LDB": B$ = "GModePage": C$ = "D = the screen Page #": GoSub AO
     '    A$ = "DECB": C$ = "D = the screen Page # - 1": GoSub AO
@@ -2983,7 +3139,7 @@ Else
     A$ = "JSR": B$ = "MUL16": C$ = "16 bit multiply ,S * 2,S D = high 16 bits of the result, X and ,S = low 16 bits": GoSub AO
     A$ = "PULS": B$ = "D": C$ = "Get the low 16 bit result in D, fix the stack": GoSub AO
     Z$ = "@Skip1"
-    A$ = "ADDD": B$ = "#$0E00": C$ = "D = Screen Page + Screen start location": GoSub AO
+    A$ = "ADDD": B$ = "#$" + GModeStartAddress$(Gmode): C$ = "D = Screen Page + relocated screen start location": GoSub AO
     Z$ = "@UpdateScreenStart": GoSub AO
     A$ = "STD": B$ = "BEGGRP": C$ = "Update the Screen starting location": GoSub AO
     A$ = "LDA": B$ = "#" + GMode$(Gmode): C$ = "A = Graphic mode requested": GoSub AO

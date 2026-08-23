@@ -266,6 +266,7 @@ If KeepTempFiles = 0 Then
     Kill "DefVarUsed.txt"
     Kill "SpritesUsed.txt"
     Kill "SamplesUsed.txt"
+    Kill "MemoryLayout.txt"
     Kill "BASIC_Text.bas"
     Kill "BasicTokenized.bin"
     Kill "BasicTokenizedB4Pass2.bin"
@@ -273,4 +274,3 @@ If KeepTempFiles = 0 Then
 End If
 If Verbose > 0 Then Print "All Done :)"
 System 1 ' 1 signifies exit with no errors :)
-

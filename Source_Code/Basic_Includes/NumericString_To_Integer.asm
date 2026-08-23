@@ -129,13 +129,13 @@ NegateMag32:
         COM     VALI_Mag2
         COM     VALI_Mag3     ; Invert LSB
         INC     VALI_Mag3     ; Add 1 to low byte
-        BNE     @Done         ; If no carry, finished
+        BNE     VALNegateDone ; If no carry, finished
         INC     VALI_Mag2     ; Carry into next byte
-        BNE     @Done         ; If no carry, finished
+        BNE     VALNegateDone ; If no carry, finished
         INC     VALI_Mag1     ; Carry into next byte
-        BNE     @Done         ; If no carry, finished
+        BNE     VALNegateDone ; If no carry, finished
         INC     VALI_Mag0     ; Carry into top byte
-@Done
+VALNegateDone
         RTS
 ; ============================================================
 ; ParseIntegerPrefixToU32
@@ -173,7 +173,7 @@ ParseIntegerPrefixToU32:
       LEAX    3,S
 @SkipLead
       LDB     VALI_Len
-      BEQ     @Done
+      LBEQ    VALParseDone
       LDA     ,X
       CMPA    #' '
       BEQ     @ConsumeLead
@@ -186,7 +186,7 @@ ParseIntegerPrefixToU32:
       BRA     @SkipLead
 @CheckSign
       LDB     VALI_Len
-      BEQ     @Done
+      LBEQ    VALParseDone
       LDA     ,X
       CMPA    #'+'
       BEQ     @ConsumeSign
@@ -218,15 +218,15 @@ ParseIntegerPrefixToU32:
       BRA     @HexLoopStart
 @DigitLoopStart
       LDB     VALI_Len
-      BEQ     @Done
+      LBEQ    VALParseDone
 @DigitLoop
       LDB     VALI_Len
-      BEQ     @Done
+      BEQ     VALParseDone
       LDA     ,X
       CMPA    #'0'
-      BLO     @Done
+      LBLO    VALParseDone
       CMPA    #'9'
-      BHI     @Done
+      LBHI    VALParseDone
       SUBA    #'0'
       STA     VALI_Digit
       BSR     Mul10AddDigit_U32
@@ -235,13 +235,13 @@ ParseIntegerPrefixToU32:
       BRA     @DigitLoop
 @HexLoopStart
       LDB     VALI_Len
-      BEQ     @Done
+      LBEQ    VALParseDone
 @HexLoop
       LDB     VALI_Len
-      BEQ     @Done
+      LBEQ    VALParseDone
       LDA     ,X
       CMPA    #'0'
-      BLO     @Done
+      LBLO    VALParseDone
       CMPA    #'9'
       BLS     @HexIs09
       CMPA    #'A'
@@ -250,23 +250,23 @@ ParseIntegerPrefixToU32:
       BLS     @HexIsAF
 @HexCheckLower
       CMPA    #'a'
-      BLO     @Done
+      LBLO    VALParseDone
       CMPA    #'f'
-      BHI     @Done
-      SUBA    #('a' - 10)
+      LBHI    VALParseDone
+      SUBA    #$57                    ; 'a'-10
       BRA     @HexHaveDigit
 @HexIsAF
-      SUBA    #('A' - 10)
+      SUBA    #$37                    ; 'A'-10
       BRA     @HexHaveDigit
 @HexIs09
       SUBA    #'0'
 @HexHaveDigit
       STA     VALI_Digit
-      BSR     Mul16AddDigit_U32
+      LBSR    Mul16AddDigit_U32
       LEAX    1,X
       DEC     VALI_Len
       BRA     @HexLoop
-@Done
+VALParseDone
       RTS
 
 ; ============================================================
@@ -307,24 +307,24 @@ Mul10AddDigit_U32:
         ROL     VALI_Mag2
         ROL     VALI_Mag1
         ROL     VALI_Mag0
-        BCS     @Saturate     ; Carry out of top bit -> overflow
+        BCS     VALMul10Saturate ; Carry out of top bit -> overflow
         ; tmp = tmp * 8
         ; Do three left shifts
         LSL     VALI_Tmp3
         ROL     VALI_Tmp2
         ROL     VALI_Tmp1
         ROL     VALI_Tmp0
-        BCS     @Saturate
+        BCS     VALMul10Saturate
         LSL     VALI_Tmp3
         ROL     VALI_Tmp2
         ROL     VALI_Tmp1
         ROL     VALI_Tmp0
-        BCS     @Saturate
+        BCS     VALMul10Saturate
         LSL     VALI_Tmp3
         ROL     VALI_Tmp2
         ROL     VALI_Tmp1
         ROL     VALI_Tmp0
-        BCS     @Saturate
+        BCS     VALMul10Saturate
         ; mag = mag + tmp
         ; Now mag = x*2 + x*8 = x*10
         LDD     VALI_Mag2
@@ -336,7 +336,7 @@ Mul10AddDigit_U32:
         LDA     VALI_Mag0
         ADCA    VALI_Tmp0
         STA     VALI_Mag0
-        BCS     @Saturate     ; Carry out -> overflow
+        BCS     VALMul10Saturate ; Carry out -> overflow
         ; mag = mag + digit
         ; Add digit into low byte, propagate carry upward
         LDA     VALI_Mag3
@@ -350,7 +350,7 @@ Mul10AddDigit_U32:
         INC     VALI_Mag0
         BNE       >           ; Success, no overflow
 ; Fall through if we saturated
-@Saturate
+VALMul10Saturate
         ; Clamp parsed value to max unsigned 32-bit
         LDA     #$FF
         STA     VALI_Mag0
@@ -390,34 +390,34 @@ Mul16AddDigit_U32:
         ROL     VALI_Mag2
         ROL     VALI_Mag1
         ROL     VALI_Mag0
-        BCS     @Saturate
+        BCS     VALMul16Saturate
         LSL     VALI_Mag3
         ROL     VALI_Mag2
         ROL     VALI_Mag1
         ROL     VALI_Mag0
-        BCS     @Saturate
+        BCS     VALMul16Saturate
         LSL     VALI_Mag3
         ROL     VALI_Mag2
         ROL     VALI_Mag1
         ROL     VALI_Mag0
-        BCS     @Saturate
+        BCS     VALMul16Saturate
         LSL     VALI_Mag3
         ROL     VALI_Mag2
         ROL     VALI_Mag1
         ROL     VALI_Mag0
-        BCS     @Saturate
+        BCS     VALMul16Saturate
         ; mag = mag + digit
         LDA     VALI_Mag3
         ADDA    VALI_Digit
         STA     VALI_Mag3
-        BCC     @Done
+        BCC     VALMul16Done
         INC     VALI_Mag2
-        BNE     @Done
+        BNE     VALMul16Done
         INC     VALI_Mag1
-        BNE     @Done
+        BNE     VALMul16Done
         INC     VALI_Mag0
-        BNE     @Done
-@Saturate
+        BNE     VALMul16Done
+VALMul16Saturate
         LDA     #$FF
         STA     VALI_Mag0
         STA     VALI_Mag1
@@ -426,7 +426,7 @@ Mul16AddDigit_U32:
         LDA     VALI_Flags
         ORA     #%00000001
         STA     VALI_Flags
-@Done
+VALMul16Done
         RTS
 
 ; Fake doing U64 versions

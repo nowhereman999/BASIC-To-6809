@@ -5,7 +5,7 @@ If count = 0 Then
     Print "Compiler has no options given to it"
     System
 End If
-nt = 0: newp = 0: endp = 0: StringArraySize = 255: KeepTempFiles = 0: AutoStart = 0: FloatType = 0
+nt = 0: newp = 0: endp = 0: StringArraySize = 255: KeepTempFiles = 0: AutoStart = 0: FloatType = 0: IntegerOnly = 0
 Optimize = 2 ' Default to optimize level 2
 For check = 1 To count
     N$ = Command$(check)
@@ -17,6 +17,7 @@ For check = 1 To count
     If LCase$(Left$(N$, 2)) = "-a" Then AutoStart = 1: GoTo CheckNextCMDOption
     If LCase$(Left$(N$, 2)) = "-r" Then Ret2Basic = 1: GoTo CheckNextCMDOption
     If LCase$(Left$(N$, 2)) = "-m" Then FloatType = Val(Right$(N$, Len(N$) - 2)): GoTo CheckNextCMDOption
+    If LCase$(N$) = "-i" Then IntegerOnly = 1: GoTo CheckNextCMDOption
     ' check if we got a file name yet if so then the next filename will be output
     OutName$ = N$
     CheckNextCMDOption:
@@ -25,6 +26,16 @@ FName$ = "BasicTokenized.bin"
 Open FName$ For Append As #1
 length = LOF(1)
 Close #1
+' Memory layout calculated by the tokenizer. CoCo 1/2 graphics commands must
+' use the same relocated screen base that was reserved in the assembly file.
+Open "MemoryLayout.txt" For Input As #1
+Input #1, NoText
+Input #1, GraphicsStart$
+Input #1, WideTextStart$
+Close #1
+For I = 0 To 99
+    GModeStartAddress$(I) = GraphicsStart$
+Next I
 If length < 1 Then Print "Error file: "; FName$; " is 0 bytes. Or doesn't exist.": Kill FName$: System
 If Verbose > 0 Then Print "Length of Input file in bytes:"; length
 Open FName$ For Binary As #1
@@ -99,6 +110,7 @@ StringVariableCounter = 0
 Open "StringVariablesUsed.txt" For Input As #1
 While EOF(1) = 0
     Input #1, StringVariable$(StringVariableCounter)
+    Input #1, StringVariableMax(StringVariableCounter)
     StringVariableCounter = StringVariableCounter + 1
 Wend
 Close #1

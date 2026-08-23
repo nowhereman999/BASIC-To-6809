@@ -232,9 +232,7 @@ If p + 2 <= Len(Expression$) Then
         Case "~%%"
             ManualType = NT_UByte: p = p + 3: Return
         Case "~&&"
-            ' Too large for 32-bit integer literals: default to Single.
-            ' Use explicit suffixes (e.g., ~&& or &&) if you truly want 64-bit integer literals.
-            ManualType = NT_Single: p = p + 3: Return
+            ManualType = NT_UInt64: p = p + 3: Return
     End Select
 End If
 If p + 1 <= Len(Expression$) Then

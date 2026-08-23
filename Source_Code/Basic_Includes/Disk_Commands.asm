@@ -1,250 +1,64 @@
-; Disk Controller Reference
+; Compact DECB disk support for LOADM, SAVEM, _FILEEXISTS, sequential byte
+; files, file information, deletion, and flat-directory enumeration.
 ;
-; $FF40 (65344) Disk Controller DSKREG
-DSKREG      EQU $FF40   ; Disk Controller Command Register - DSKREG
-; ---------------------------------------
-; Bit 7: halt flag 0 = disabled 1 = enabled
-; Bit 6: drive select 3
-; Bit 5: density flag 0 = single 1 = double
-; Bit 4: write precompensation 0 = no precomp 1 = precomp
-; Bit 3: drive motor enable 0 = motors off 1 = motors on
-; Bit 2: drive select 2
-; Bit 1: drive select 1
-; Bit 0: drive select 0
+; This module owns the disk-controller NMI for the lifetime of the compiled
+; program. The compiler installs DNMISV at $0109 on a CoCo 1/2 or $FEFD on a
+; CoCo 3. No Disk BASIC RAM between $0600 and $0DFF is used.
 ;
-; 1. Write precomp should be on for tracks over 22
-; 2. Disk communication is done through $FF48-$FF4B as follows:
+; All controller variables, stream state, allocation data, and the independent
+; 256-byte input/output buffers are resident labels in this module. No disk
+; workspace is placed under the compiler stack. The stand-alone CHAIN loaders
+; may continue using lower RAM because they never return to an open stream.
 ;
-;     Reg      | Read Operation | Write Operation
-;     -----------------------------------------
-;     $FF48    | Status          | Command
-;     $FF49    | Track           | Track
-;     $FF4A    | Sector          | Sector
-;     $FF4B    | Data            | Data
-; ---------------------------------------
-; Status/Command ($FF48)
-FDCREG      EQU $FF48  ; Floppy Disk Controller STATUS/COMMAND REGISTER FDCREG
-; ---------------------------------------
-; $FF48 (65352) Floppy Disk Controller
+; Compiler syntax (flat DECB filesystem, optional :0 through :3 drive suffix):
+;   OPEN "NAME.EXT:drive","R|W",handle   handle is 0 or 1
+;   CLOSE(handle)                         one reader and one writer may be open
+;   PUTBYTE0 value / PUTBYTE1 value
+;   value = GETBYTE(handle)               returns zero after EOF
+;   SETPOS0(position) / SETPOS1(position) unsigned 32-bit byte position
+;   length = LOF(handle)                   unsigned 32-bit file length
+;   info$ = FILEINFO$(handle)             32 bytes, size at 29-32 LSB first
+;   status = DELETE(filename$)
+;   status = INITDIR(pattern$)             use *.* for every file
+;   status = DIRPAGE(0)                    16 records in scratch page
+;   entry$ = DIRLIST$(0-15)                16 bytes, size at 13-16 MSB first
 ;
-; (1) Write sends a command, then read to get status
-;
-;     Commands          Type    Code
-;     - RESTORE          I      $03
-;     - SEEK             I      $17
-;     - STEP             I      $23
-;     - STEP IN          I      $43
-;     - STEP OUT         I      $53
-;     - READ SECTOR      II     $80
-;     - WRITE SECTOR     II     $A0
-;     - READ ADDRESS     III    $C0
-;     - READ TRACK       III    $E4
-;     - WRITE TRACK      III    $F4
-;     - FORCE INTERRUPT  IV     $D0
-;
-; (2) Read obtains status resulting from a command.
-;
-; (3) Commands:
-;  Bit: 7 6 5 4 3 2 1 0  Command
-;     - 0 0 0 x x x x x  Restore to track 0
-;     - 0 0 0 1 x x x x  Seek
-;     - 0 0 1 x x x x x  Step
-;     - 0 1 0 x x x x x  Step in
-;     - 0 1 1 x x x x x  Step out
-;
-;     Bits:
-;     4: 0 = No update of track reg, 1 = Update track register
-;     3: 0 = Unload head at start, 1 = Load head at start
-;     2: 0 = No verify of track no, 1 = Verify track no. on disc
-;
-;     Read as 2-bit stepping rate:
-;     - 00 = 6ms
-;     - 01 = 12ms
-;     - 10 = 20ms
-;     - 11 = 30ms
-;
-;     - 1 0 0 x x x x 0  Read sector
-;     - 1 0 1 x x x x x  Write sector
-;     - 1 1 0 0 x x x 0  Read address
-;     - 1 1 1 0 0 x x 0  Read track
-;     - 1 1 1 1 0 x x x  Write track
-;
-;     Bits:
-;     4: 0 = Read/write 1 sector, 1 = Read all sectors till end of a track
-;     3: Interpretation of 2-bit sector length field in sector header:
-;         00 = 256 bytes/sector
-;         01 = 512 bytes/sector
-;         10 = 1024 bytes/sector
-;         11 = 128 bytes/sector
-;     2: 0 = No head loading delay, 1 = Head loading delay of 30ms prior to read/writes.
-;     1: 0 = Set side select o/p to 0, 1 = Set side select o/p to 1
-;     0: 0 = Write Data Address Mark, 1 = Write Deleted Data
-;
-;     Address Mark:
-;     - 1 1 0 1 x x x x  Force Interrupt
-;     Generate an interrupt & terminate the current operation on:
-;
-;     Bits set:
-;     0 - Drive status transition Not-Ready to Ready
-;     1 - Drive status transition Ready to Not-Ready
-;     2 - Index pulse
-;     3 - Immediate interrupt
-;     Bits clear: No interrupt occurs, all operations terminated ($D0)
-;
-; ---------------------------------------
-; Status (read) when set:
-;
-;     Status bits may have different meanings depending on the command being performed.
-;
-;     0 - Drive busy
-;     1 - Data Request (Data Read/Data Written) OR Index Pulse
-;     2 - Lost Data/Track 00
-;     3 - CRC error
-;     4 - Record Not Found/Seek Err
-;     5 - Data Address Mark:
-;         0: Data Address Mark read
-;         1: Deleted Data Address Mark read OR Head Loaded
-;     6 - Write Protect
-;     7 - Not Ready
-;
-; ---------------------------------------
-; Track $FF49
-FDC_TRACK    EQU $FF49  ; Track register
-; ---------------------------------------
-; $FF49 (65353) FDC Track Register
-;
-;     Bits 7 - 0  Disk Controller Track Register
-;
-;     (1) Track is 0-34 decimal
-;     (2) Do not write directly, but use SEEK command
-; ---------------------------------------
-; Sector $FF4A
-FDC_SECTOR   EQU $FF4A  ; Sector register
-; ---------------------------------------
-; $FF4A (65354) FDC Sector Register
-;
-;     Bits 7 - 0  Disk Controller Sector Register
-;
-;     (1) Sector is 1-18 decimal
-;     (2) Can write directly
-; ---------------------------------------
-; Data $FF4B
-FDC_DATA     EQU $FF4B  ; Data register
-; ---------------------------------------
-; $FF4B (65355) FDC Data Register
-;
-;     Bits 7 - 0  Disk Controller Data Register
-;
-;     (1) Read or write data bytes from/to the disk controller
-;     (2) Must do so at the exact needed rate or there will be errors
-; ---------------------------------------
+; Read seeks restart the FAT chain. Forward write seeks zero-fill the gap;
+; backward write seeks are rejected. Directory commands cannot run while a
+; stream is open. Input and output have independent state and sector buffers.
 
-DOSBUF  EQU $2600       ; RAM LOAD LOCATION FOR THE DOS COMMAND
-FATCON  EQU 6           ; NUMBER OF CONTROL BYTES BEFORE FAT
-FCBCON  EQU 25          ; NUMBER OF CONTROL BYTES BEFORE FCB
-DIRLEN  EQU 32          ; NUMBER OF BYTES IN DIRECTORY ENTRY
-SECLEN  EQU 256         ; LENGTH OF SECTOR IN BYTES
-SECMAX  EQU 18          ; MAXIMUM NUMBER OF SECTORS PER TRACK
-TRKLEN  EQU SECMAX*SECLEN   ; LENGTH OF TRACK IN BYTES
-TRKMAX  EQU 35              ; MAX NUMBER OF TRACKS
-FATLEN  EQU 6+(TRKMAX-1)*2  ; FILE ALLOCATION TABLE LENGTH
-GRANMX  EQU (TRKMAX-1)*2    ; MAXIMUM NUMBER OF GRANULES
-FCBLEN  EQU SECLEN+25       ; FILE CONTROL BLOCK LENGTH
-INPFIL  EQU $10         ; INPUT FILE TYPE
-OUTFIL  EQU $20         ; OUTPUT FILE TYPE
-RANFIL  EQU $40         ; RANDOM/DIRECT FILE TYPE
+DSKREG          EQU     $FF40
+FDCREG          EQU     $FF48
+SECLEN          EQU     256
+GRANMX          EQU     68
+DIRLEN          EQU     32
+MAXSAVEGRAN     EQU     29
 
-* OFFSETS TO FAT CONTROL BYTES
-FAT0    EQU 0           ; ACTIVE FILE COUNTER: DISK TO RAM FAT IMAGE DISABLE
-FAT1    EQU 1           ; VALID DATA FLAG: 0=DISK DATA VALID, <> 0 = NEW FAT
-*                       ; DATA - DISK DATA INVALID
-*       2 TO 5          ; NOT USED
-;FATCON  EQU 6           ; OFFSET TO START OF FAT DATA (68 BYTES)
+DIRTYP          EQU     11
+DIRASC          EQU     12
+DIRGRN          EQU     13
 
-*
-**
-**** DIRECTORY ENTRY FORMAT
-**
-*
-* THE DIRECTORY IS USED TO KEEP TRACK OF HOW MANY FILES ARE STORED ON A DISKETTE
-* AND WHERE THE FILE IS STORED ON THE DISK. THE FIRST GRANULE USED BY THE FILE WILL
-* ALLOW THE FAT TO TRACK DOWN ALL OF THE GRANULES USED BY THE FILE. IF THE FIRST
-* BYTE OF THE DIRECTORY ENTRY IS ZERO, THE FILE HAS BEEN KILLED;
-* IF THE FIRST BYTE IS $FF THEN THE DIRECTORY ENTRY HAS NEVER BEEN USED.
-*
-*       BYTE            ; DESCRIPTION
-DIRNAM  EQU 0           ; FILE NAME
-DIREXT  EQU 8           ; FILE EXTENSION
-DIRTYP  EQU 11          ; FILE TYPE
-DIRASC  EQU 12          ; ASCII FLAG
-DIRGRN  EQU 13          ; FIRST GRANULE IN FILE
-DIRLST  EQU 14          ; NUMBER OF BYTES IN LAST SECTOR
-*           16 TO 31    ; UNUSED
+DEFDRV          EQU     DCDRV           ; compatibility name
 
-* DSKCON VARIABLES
-DCOPC   EQU $00EA           ; PV DSKCON OPERATION CODE 0-3
-DCDRV   EQU DCOPC+1         ; PV DSKCON DRIVE NUMBER 0 3
-DCTRK   EQU DCDRV+1         ; PV DSKCON TRACK NUMBER 0 34
-DSEC    EQU DCTRK+1         ; PV DSKCON SECTOR NUMBER 1-18
-DCBPT   EQU DSEC+1          ; PV DSKCON DATA POINTER
-DCSTA   EQU DCBPT+2         ; PV DSKCON STATUS BYTE
+; Clear all resident controller and stream state before the compiler enables
+; its IRQ. Sector buffers need no initialization because reads fill them and
+; the writer explicitly pads its final sector.
+DiskInitialize:
+        PSHS    D,X                     ; startup still needs its IRQ-vector X
+        LDX     #DiskWorkspaceStart
+        CLRA
+!       STA     ,X+
+        CMPX    #DiskInputBuffer
+        BNE     <
+        LDD     #$4446                  ; stream workspace signature "DF"
+        STD     DiskStreamMagic
+        PULS    D,X,PC
 
-*START OF ADDITIONAL RAM VARIABLE STORAGE (DISK BASIC ONLY)
-DBUF0   EQU $0600           ; I/O BUFFER #0
-DBUF1   EQU DBUF0+SECLEN    ; I/O BUFFER #1
-FATBL0  EQU DBUF1+SECLEN    ; FILE ALLOCATION TABLE - DRIVE 0
-FATBL1  EQU FATBL0+FATLEN   ; FILE ALLOCATION TABLE - DRIVE 1
-FATBL2  EQU FATBL1+FATLEN   ; FILE ALLOCATION TABLE - DRIVE 2
-FATBL3  EQU FATBL2+FATLEN   ; FILE ALLOCATION TABLE - DRIVE 3
-FBV1    EQU FATBL3+FATLEN   ; FILE BUFFER VECTORS (15 USER, 1 SYSTEM)
-RNBFAD  EQU FBV1+16*2       ; START OF FREE RANDOM FILE BUFFER AREA
-FCBAD   EQU RNBFAD+2        ; START OF FILE CONTROL BLOCKS
-
-DNAMBF  EQU FCBAD+2         ; DISK FILE NAME BUFFER
-DEXTBF  EQU DNAMBF+8        ; DISK FILE EXTENSION NAME BUFFER
-DFLTFP  EQU DEXTBF+3        ; *+DV* DISK FILE TYPE: 0=BASIC, 1=DATA, 2=MACHINE
-                            ; * LANGUAGE, 3=TEXT EDITOR SOURCE FILE
-DASCFIL EQU DFLTFP+1        ; *+DV* ASCII FLAG: 0=CRUNCHED OR BINARY, $FF=ASCII
-DRUNFL  EQU DASCFIL+1       ; RUN FLAG: (IF BIT 1=1 THEN RUN, IF BIT 0=1, THEN CLOSE
-                            ; ALL FILES BEFORE RUNNING)
-DEFDRV  EQU DRUNFL+1        ; DEFAULT DRIVE NUMBER
-FCBACT  EQU DEFDRV+1        ; NUMBER OF FCBS ACTIVE
-DRESFL  EQU FCBACT+1        ; RESET FLAG: <>0 WILL CAUSE A 'NEW' & SHUT DOWN ALL FCBS
-DLADOLF EQU DRESFL+1        ; LOAD FLAG: CAUSE A 'NEW' FOLLOWING A LOAD ERROR
-DMRGFL  EQU DLADOLF+1       ; MERGE FLAG: 0=N0 MERGE, $FF=MERGE
-DUSRVC  EQU DMRGFL+1        ; DISK BASIC USR COMMAND VECTORS
-
-*** DISK FILE WORK AREA FOR DIRECTORY SEARCH
-* EXISTING FILE
-V973    EQU DUSRVC+20       ; SECTOR NUMBER
-V974    EQU V973+1          ; RAM DIRECTORY IMAGE ADDRESS
-V976    EQU V974+2          ; FIRST GRANULE NUMBER
-
-* UNUSED FILE
-V977    EQU V976+1          ; SECTOR NUMBER
-V978    EQU V977+1          ; RAM DIRECTORY IMAGE ADDRESS
-
-WFATVL  EQU V978+2          ; WRITE FAT VALUE: NUMBER OF FREE GRANULES WHICH MUST BE TAKEN
-                            ; FROM THE FAT TO TRIGGER A WRITE FAT TO DISK SEQUENCE
-DFFLEN  EQU WFATVL+2        ; DIRECT ACCESS FILE RECORD LENGTH
-DR0TRK  EQU DFFLEN+2        ; CURRENT TRACK NUMBER, DRIVES 0,1,2,3
-NMIFLG  EQU DR0TRK+4        ; NMI FLAG: 0=DON'T VECTOR <>0=VECTOR OUT
-DNMIVC  EQU NMIFLG+1        ; NMI VECTOR: WHERE TO JUMP FOLLOWING AN NMI
-* INTERRUPT IF THE NMI FLAG IS SET
-RDYTMR  EQU DNMIVC+2        ; MOTOR TURN OFF TIMER
-DRGRAM  EQU RDYTMR+1        ; RAM IMAGE OF DISKREG ($FF40)
-DVERFL  EQU DRGRAM+1        ; VERIFY FLAG: 0=OFF, $FF=ON
-ATTCTR  EQU DVERFL+1        ; READ/WRITE ATTEMPT COUNTER: NUMBER OF TIMES THE DISK WILL ATTEMPT TO RETRIEVE OR WRITE DATA
-                            ; BEFORE IT GIVES UP AND ISSUES AN ERROR.
-DFLBUF  EQU ATTCTR+1        ; INITIALIZED TO SECLEN BY DISKBAS    
-; Reserve SECLEN space here
-;
-; Disk commands and operations start here:
-;
-; Format _StrVar_PF00 to proper disk filename in DNAMBF (Disk name buffer)
+; Convert compiler string at ,S to DNAMBF. Missing extension defaults to BIN.
+; A trailing :0 through :3 selects the floppy drive.
 FixFileName:
-        PULS    Y       ; Get the return address off the stack
-        CLR     DCDRV   ; Default to drive 0 unless filename has :0-:3
+        PULS    Y
+        CLR     DCDRV
         LDX     #_StrVar_PF00
         LDB     ,S+
         STB     ,X+
@@ -252,635 +66,1535 @@ FixFileName:
         STA     ,X+
         DECB
         BNE     <
-        PSHS    Y       ; Save Return address on the stack
+        PSHS    Y
         LDX     #_StrVar_PF00+1
         LDU     #DNAMBF
         LDA     _StrVar_PF00
-        PSHS    A       ; Remaining source filename length
+        PSHS    A                       ; remaining source length
         LDB     #8
-CopyFilename:
+DiskCopyFilename:
         TST     ,S
-        BEQ     PadFilenameUseDefaultExtension
+        BEQ     DiskPadNameDefaultExt
         LDA     ,X
         CMPA    #'.'
-        BEQ     PadFilenameThenCopyExtension
+        BEQ     DiskPadNameCopyExt
         CMPA    #':'
-        BEQ     PadFilenameUseDefaultExtension
+        BEQ     DiskPadNameDefaultExt
         LDA     ,X+
         DEC     ,S
         STA     ,U+
         DECB
-        BNE     CopyFilename
-FindExtensionOrDrive:
+        BNE     DiskCopyFilename
+DiskFindExtension:
         TST     ,S
-        BEQ     UseDefaultExtension
+        BEQ     DiskUseDefaultExt
         LDA     ,X
         CMPA    #'.'
-        BEQ     FoundExtension
+        BEQ     DiskFoundExtension
         CMPA    #':'
-        BEQ     UseDefaultExtension
+        BEQ     DiskUseDefaultExt
         LEAX    1,X
         DEC     ,S
-        BRA     FindExtensionOrDrive
-FoundExtension:
+        BRA     DiskFindExtension
+DiskFoundExtension:
         LEAX    1,X
         DEC     ,S
-        BRA     CopyExtension
-
-PadFilenameThenCopyExtension:
+        BRA     DiskCopyExtension
+DiskPadNameCopyExt:
         LDA     #' '
 !       STA     ,U+
         DECB
         BNE     <
-        LEAX    1,X     ; Skip the dot before the extension
+        LEAX    1,X
         DEC     ,S
-        BRA     CopyExtension
-
-PadFilenameUseDefaultExtension:
+        BRA     DiskCopyExtension
+DiskPadNameDefaultExt:
         LDA     #' '
 !       STA     ,U+
         DECB
         BNE     <
-UseDefaultExtension:
+DiskUseDefaultExt:
         LDD     #'B'*256+'I'
         STD     ,U++
         LDA     #'N'
         STA     ,U+
-        BRA     CheckForDiskNumber
-
-CopyExtension:
-        LDB     #3      ; Copy the extension
-CopyExtensionLoop:
+        BRA     DiskCheckDriveSuffix
+DiskCopyExtension:
+        LDB     #3
+DiskCopyExtensionLoop:
         TST     ,S
-        BEQ     PadExtension
+        BEQ     DiskPadExtension
         LDA     ,X
         CMPA    #':'
-        BEQ     PadExtension
+        BEQ     DiskPadExtension
         LDA     ,X+
         DEC     ,S
         STA     ,U+
         DECB
-        BNE     CopyExtensionLoop
-        BRA     CheckForDiskNumber
-PadExtension:
+        BNE     DiskCopyExtensionLoop
+        BRA     DiskCheckDriveSuffix
+DiskPadExtension:
         LDA     #' '
 !       STA     ,U+
         DECB
         BNE     <
-
-; Check For a Disk number
-CheckForDiskNumber:
+DiskCheckDriveSuffix:
         TST     ,S
-        BEQ     FixFileNameDone
+        BEQ     DiskFixNameDone
         LDA     ,X+
         DEC     ,S
-        CMPA    #':'    ; if we have a colon then the next value should be the drive number
-        BNE     CheckForDiskNumber
+        CMPA    #':'
+        BNE     DiskCheckDriveSuffix
         TST     ,S
-        BEQ     FixFileNameDone
-        LDA     ,X+     ; A = ascii drive number
-        SUBA    #48     ; A = A - 48, turn it into a number from zero to 3
-        STA     DCDRV   ; save as the current drive number
-FixFileNameDone:
-        LEAS    1,S     ; Drop remaining source filename length
+        BEQ     DiskFixNameDone
+        LDA     ,X+
+        SUBA    #'0'
+        CMPA    #3
+        BHI     DiskFixNameDone
+        STA     DCDRV
+DiskFixNameDone:
+        LEAS    1,S
         RTS
 
+; Put the controller in a known state without relying on Disk BASIC RAM.
+DiskBegin:
+        LDA     >CoCoHardware
+        BPL     >
+        FCB     $11,$3D,%00000000       ; LDMD #0: 6309 emulation mode
+!       RORA
+        BCC     >
+        STA     >$FFD8                  ; CoCo 3 normal speed
+!       CLR     DRGRAM
+        CLR     NMIFLG
+        CLR     DCSTA
+        CLR     RDYTMR
+        CLR     DCOPC
+        JSR     DSKCON                  ; restore selected drive to track zero
+        TST     DCSTA
+        LBNE    DiskIOError
+        RTS
+
+; Search directory for the name at U. Remember first reusable slot for SAVEM.
+; C clear/X=entry if found; C set if absent. FreeDirSec=$FF means full.
+OpenFileU:
+        LDX     #DiskInputBuffer
+        BRA     OpenFileWithBuffer
+OpenFileWriteU:
+        LDX     #DiskOutputBuffer
+OpenFileWithBuffer:
+        STX     DiskWorkBuffer
+        STU     DiskSearchName
+        JSR     DiskBegin
+        LDU     DiskSearchName
+        LDA     #$FF
+        STA     DiskFreeDirSec
+        LDA     #3
+        STA     DiskDirSector
+DiskScanNextSector:
+        LDA     #17
+        LDB     DiskDirSector
+        LDX     DiskWorkBuffer
+        JSR     ReadSectorDtoX
+        LDX     DiskWorkBuffer
+        CLRA                            ; byte offset in directory sector
+DiskScanNextEntry:
+        LDB     ,X
+        BEQ     DiskRememberFreeEntry
+        CMPB    #$FF
+        BEQ     DiskRememberLastFree
+        PSHS    A,X,U
+        LDB     #11
+DiskCompareName:
+        LDA     ,X+
+        CMPA    ,U+
+        BNE     DiskNameMismatch
+        DECB
+        BNE     DiskCompareName
+        PULS    A,X,U
+        ANDCC   #$FE
+        RTS
+DiskNameMismatch:
+        PULS    A,X,U
+        BRA     DiskAdvanceDirEntry
+DiskRememberLastFree:
+        BSR     DiskRememberFree
+        LDB     #DiskErrorFileNotFound
+        ORCC    #1
+        RTS
+DiskRememberFreeEntry:
+        BSR     DiskRememberFree
+DiskAdvanceDirEntry:
+        LEAX    DIRLEN,X
+        ADDA    #DIRLEN
+        BNE     DiskScanNextEntry       ; wraps after eight entries
+        INC     DiskDirSector
+        LDA     DiskDirSector
+        CMPA    #12
+        BLO     DiskScanNextSector
+        LDB     #DiskErrorFileNotFound
+        ORCC    #1
+        RTS
+DiskRememberFree:
+        PSHS    A
+        LDA     DiskFreeDirSec
+        CMPA    #$FF
+        BNE     >
+        LDA     DiskDirSector
+        STA     DiskFreeDirSec
+        PULS    A
+        STA     DiskFreeDirOff
+        RTS
+!       PULS    A,PC
+
+; Initialize found directory entry for sequential file reads.
+InitFile:
+        LDD     14,X
+        CMPD    #SECLEN
+        LBHI    DiskBadMLFile
+        STD     DiskReadLastLen
+        LDA     DIRASC,X
+        ANDA    #$F0
+        ORA     DIRTYP,X
+        STA     DiskFileType
+        LDA     DIRGRN,X
+        STA     DiskCurrentGran
+        STA     DiskFirstGran
+        JSR     DiskLoadPrepareGranule
+        LBCS    DiskBadMLFile
+        RTS
+
+; Reuse DiskBuffer for the FAT lookup, then load first data sector.
+DiskLoadPrepareGranule:
+        LDD     #17*$100+2
+        LDX     #DiskBuffer
+        JSR     ReadSectorDtoX
+        LDA     DiskCurrentGran
+        CMPA    #GRANMX
+        BHS     DiskLoadBadChain
+        LDB     A,X
+        STB     DiskNextGran
+        CLR     DiskLastGran
+        CMPB    #$C0
+        BLO     DiskLoadFullGranule
+        COM     DiskLastGran
+        ANDB    #$3F
+        BEQ     DiskLoadBadChain
+        CMPB    #9
+        BHI     DiskLoadBadChain
+        PSHS    B
+        JSR     DiskMapCurrentGranule
+        ADDB    ,S+
+        STB     DiskGranuleEnd
+        BRA     DiskLoadFirstSector
+DiskLoadFullGranule:
+        CMPB    #GRANMX
+        BHS     DiskLoadBadChain
+        JSR     DiskMapCurrentGranule
+        ADDB    #9
+        STB     DiskGranuleEnd
+DiskLoadFirstSector:
+        LDD     DCTRK
+        LDX     #DiskBuffer
+        JSR     ReadSectorDtoX
+        STX     DiskBufferPtr
+        BSR     DiskSetReadLimit
+        ANDCC   #$FE
+        RTS
+DiskLoadBadChain:
+        ORCC    #1
+        RTS
+
+DiskSetReadLimit:
+        PSHS    D
+        LDD     #DiskBuffer+SECLEN
+        TST     DiskLastGran
+        BEQ     DiskStoreReadLimit
+        LDA     DSEC
+        INCA
+        CMPA    DiskGranuleEnd
+        BNE     DiskStoreReadLimit
+        LDD     DiskReadLastLen
+        BNE     >
+        LDD     #SECLEN
+!       ADDD    #DiskBuffer
+DiskStoreReadLimit:
+        STD     DiskReadLimit
+        PULS    D,PC
+
+; Map granule 0-67 to track/starting sector, skipping directory track 17.
+DiskMapCurrentGranule:
+        LDA     DiskCurrentGran
+DiskMapGranuleA:
+        LDB     #1
+        BITA    #1
+        BEQ     >
+        LDB     #10
+!       CMPA    #34
+        BLO     >
+        ADDA    #2
+!       LSRA
+        STA     DCTRK
+        STB     DSEC
+        RTS
+
+; LOADM reader. _Var_PF10 is added to every load and EXEC address.
+; There is deliberately no aggregate 16-bit file-length counter: every DECB
+; segment has its own 16-bit length/address and parsing continues through the
+; complete FAT chain until the postamble. This permits files larger than 64K,
+; including CoCo 3 files which alternate a write to $FFA0-$FFA7 with an 8K
+; data segment in the newly mapped logical window. Use offset zero for those
+; bank-selector segments so the $FFAx destination is not relocated.
+DiskLOADM:
+        LDA     DiskFileType
+        CMPA    #$02
+        LBNE    DiskBadMLFile
+DiskGetMLBlock:
+        BSR     DiskReadByteA
+        TSTA
+        BEQ     DiskDoPreamble
+        CMPA    #$FF
+        LBNE    DiskBadMLFile
+        BSR     DiskReadWordD
+        CMPD    #0
+        LBNE    DiskBadMLFile
+        BSR     DiskReadWordD
+        ADDD    _Var_PF10
+        STD     EXECAddress
+        JSR     SetCPUSpeed
+        RTS
+DiskDoPreamble:
+        BSR     DiskReadWordD
+        TFR     D,X
+        BSR     DiskReadWordD
+        ADDD    _Var_PF10
+        TFR     D,U
+        BSR     DiskCheckLoadWorkspace
+!       BSR     DiskReadByteA
+        STA     ,U+
+        LEAX    -1,X
+        BNE     <                       ; X=0 represents 65536 bytes
+        BRA     DiskGetMLBlock
+
+; Reject a LOADM segment which would overwrite the resident disk state or
+; either sector buffer before the operation can finish. U=start, X=length;
+; X=0 is the DECB encoding for a full 65536-byte segment.
+DiskCheckLoadWorkspace:
+        CMPX    #0
+        BEQ     DiskLoadWorkspaceError
+        STU     DiskLoadStart
+        TFR     X,D
+        ADDD    DiskLoadStart
+        STD     DiskLoadEnd
+        BCS     DiskLoadRangeWraps
+        CMPU    #DiskWorkspaceEnd
+        BHS     DiskLoadWorkspaceSafe
+        CMPD    #DiskWorkspaceStart
+        BLS     DiskLoadWorkspaceSafe
+        BRA     DiskLoadWorkspaceError
+DiskLoadRangeWraps:
+        CMPD    #DiskWorkspaceStart
+        BHI     DiskLoadWorkspaceError
+        CMPU    #DiskWorkspaceEnd
+        BLO     DiskLoadWorkspaceError
+DiskLoadWorkspaceSafe:
+        RTS
+DiskLoadWorkspaceError:
+        LBRA    DiskSaveWorkspaceError
+DiskReadWordD:
+        BSR     DiskReadByteA
+        TFR     A,B
+        BSR     DiskReadByteA
+        EXG     A,B
+        RTS
+DiskReadByteA:
+        PSHS    B,X,U
+        LDX     DiskBufferPtr
+        CMPX    DiskReadLimit
+        BNE     DiskReadHaveByte
+        INC     DSEC
+        LDB     DSEC
+        CMPB    DiskGranuleEnd
+        BLO     DiskReadNextSector
+        TST     DiskLastGran
+        BNE     DiskReadPastEOF
+        LDA     DiskNextGran
+        STA     DiskCurrentGran
+        JSR     DiskLoadPrepareGranule
+        BCS     DiskReadPastEOF
+        LDX     DiskBufferPtr
+        BRA     DiskReadHaveByte
+DiskReadNextSector:
+        LDA     DCTRK
+        LDX     #DiskBuffer
+        JSR     ReadSectorDtoX
+        STX     DiskBufferPtr
+        LBSR    DiskSetReadLimit
+        LDX     DiskBufferPtr
+DiskReadHaveByte:
+        LDA     ,X+
+        STX     DiskBufferPtr
+        ANDCC   #$FE                    ; carry clear means a byte was read
+        PULS    B,X,U,PC
+DiskReadPastEOF:
+        PULS    B,X,U
+        TST     DiskReadOpen
+        BEQ     DiskBadMLFile
+        ORCC    #1
+        RTS
+DiskBadMLFile:
+        LDB     #DiskErrorNotMLFileType
+        JMP     DiskError
+
+************************************************************************
+* Compiler-facing sequential DECB file API. Handles 0 and 1 are accepted so
+* SDC source is easy to port. One reader and one writer may be open together.
+************************************************************************
+; A=0 read or 1 write, B=logical handle, DNAMBF/DCDRV already formatted.
+DiskOpenFileAB:
+        PSHS    D                       ; preserve A=mode and B=handle
+        LBSR    DiskEnsureStreamInit
+        PULS    D
+        ANDB    #1
+        PSHS    A
+        TST     ,S+
+        BNE     DiskOpenWrite
+DiskOpenRead:
+        TST     DiskReadOpen
+        LBNE    DiskStreamBusyError
+        TST     DiskWriteOpen
+        BEQ     >
+        CMPB    DiskWriteHandle
+        LBEQ    DiskStreamBusyError
+!       STB     DiskReadHandle
+        LBSR    DiskSaveReadIdentity
+        CLR     DiskFilePosition
+        CLR     DiskFilePosition+1
+        CLR     DiskFilePosition+2
+        CLR     DiskFilePosition+3
+        LDU     #DNAMBF
+        JSR     OpenFileU
+        LBCS    DiskOpenNotFound
+        LDA     DIRGRN,X
+        STA     DiskFirstGran
+        LDD     14,X
+        STD     DiskReadLastLen
+        JSR     DiskCalculateFileSize
+        LDU     #DNAMBF
+        JSR     OpenFileU
+        LBCS    DiskOpenNotFound
+        JSR     InitFile
+        LBSR    DiskSaveReadLocation
+        COM     DiskReadOpen
+        RTS
+DiskOpenWrite:
+        TST     DiskWriteOpen
+        LBNE    DiskStreamBusyError
+        TST     DiskReadOpen
+        BEQ     >
+        CMPB    DiskReadHandle
+        LBEQ    DiskStreamBusyError
+!       STB     DiskWriteHandle
+        LBSR    DiskSaveWriteIdentity
+        CLR     DiskWriteFilePosition
+        CLR     DiskWriteFilePosition+1
+        CLR     DiskWriteFilePosition+2
+        CLR     DiskWriteFilePosition+3
+        LDA     #1                      ; DECB data file
+        STA     DiskOutputFileType
+        CLR     DiskOutputASCII
+        COM     DiskOverwriteAllowed    ; OPEN "W" creates or truncates
+        JSR     DiskWriterBegin
+        CLR     DiskOverwriteAllowed
+        LBSR    DiskSaveWriteLocation
+        COM     DiskWriteOpen
+        RTS
+
+DiskCloseFileB:
+        ANDB    #1
+        TST     DiskReadOpen
+        BEQ     DiskCloseCheckWrite
+        CMPB    DiskReadHandle
+        BNE     DiskCloseCheckWrite
+        LBSR    DiskActivateRead
+        CLR     DiskReadOpen
+        JSR     SetCPUSpeed
+        RTS
+DiskCloseCheckWrite:
+        TST     DiskWriteOpen
+        LBEQ    DiskStreamClosedError
+        CMPB    DiskWriteHandle
+        LBNE    DiskStreamClosedError
+        LBSR    DiskActivateWrite
+        TST     DiskWriteAny
+        LBEQ    DiskEmptyStreamError
+        JSR     DiskFinishWriteBuffer
+        JSR     DiskWriterCommit
+        CLR     DiskWriteOpen
+        JSR     SetCPUSpeed
+        RTS
+
+DiskPutByteB0:
+        PSHS    B
+        CLRB
+        BRA     DiskPutByteHandleReady
+DiskPutByteB1:
+        PSHS    B
+        LDB     #1
+DiskPutByteHandleReady:
+        CMPB    DiskWriteHandle
+        LBNE    DiskPutWrongHandle
+        TST     DiskWriteOpen
+        LBEQ    DiskPutWrongHandle
+        LBSR    DiskActivateWrite
+        PULS    B
+        JSR     DiskWriteByteB
+        BSR     DiskIncrementWritePosition
+        LBSR    DiskSaveWriteLocation
+        RTS
+DiskPutWrongHandle:
+        LEAS    1,S
+        LBRA    DiskStreamClosedError
+
+; B=handle, returns next byte in B. EOF returns zero.
+DiskGetByteB:
+        ANDB    #1
+        CMPB    DiskReadHandle
+        LBNE    DiskStreamClosedError
+        TST     DiskReadOpen
+        LBEQ    DiskStreamClosedError
+        LBSR    DiskActivateRead
+        JSR     DiskReadByteA
+        BCS     DiskGetByteEOF
+        LBSR    DiskSaveReadLocation
+        TFR     A,B
+        BSR     DiskIncrementPosition
+        RTS
+DiskGetByteEOF:
+        LBSR    DiskSaveReadLocation
+        CLRB
+        RTS
+
+DiskIncrementPosition:
+        INC     DiskFilePosition+3
+        BNE     >
+        INC     DiskFilePosition+2
+        BNE     >
+        INC     DiskFilePosition+1
+        BNE     >
+        INC     DiskFilePosition
+!       RTS
+
+DiskIncrementWritePosition:
+        INC     DiskWriteFilePosition+3
+        BNE     >
+        INC     DiskWriteFilePosition+2
+        BNE     >
+        INC     DiskWriteFilePosition+1
+        BNE     >
+        INC     DiskWriteFilePosition
+!       RTS
+
+; B=handle and X -> unsigned big-endian 32-bit byte offset.
+DiskSetPosBX:
+        ANDB    #1
+        PSHS    B
+        LDD     ,X
+        STD     DiskSeekTarget
+        LDD     2,X
+        STD     DiskSeekTarget+2
+        LDB     ,S+
+        TST     DiskReadOpen
+        BEQ     DiskSeekCheckWrite
+        CMPB    DiskReadHandle
+        BNE     DiskSeekCheckWrite
+        LBSR    DiskActivateRead
+        BRA     DiskSeekRead
+DiskSeekCheckWrite:
+        TST     DiskWriteOpen
+        LBEQ    DiskStreamClosedError
+        CMPB    DiskWriteHandle
+        LBNE    DiskStreamClosedError
+        LBSR    DiskActivateWrite
+; Writes may seek forward by filling the gap with zeroes.
+        LDX     #DiskSeekTarget
+        LDU     #DiskWriteFilePosition
+        LDB     #4
+!       LDA     ,X+
+        CMPA    ,U+
+        LBLO    DiskBackwardWriteSeekError
+        BHI     DiskSeekWriteForward
+        DECB
+        BNE     <
+        BRA     DiskSeekWriteDone
+DiskSeekWriteForward:
+        LDD     DiskWriteFilePosition
+        CMPD    DiskSeekTarget
+        BNE     >
+        LDD     DiskWriteFilePosition+2
+        CMPD    DiskSeekTarget+2
+        BEQ     DiskSeekWriteDone
+!       CLRB
+        JSR     DiskWriteByteB
+        LBSR    DiskIncrementWritePosition
+        BRA     DiskSeekWriteForward
+DiskSeekWriteDone:
+        LBSR    DiskSaveWriteLocation
+        RTS
+DiskSeekRead:
+; Restart the FAT chain, then discard bytes to the requested position.
+        LDU     #DNAMBF
+        JSR     OpenFileU
+        LBCS    DiskOpenNotFound
+        JSR     InitFile
+        CLR     DiskFilePosition
+        CLR     DiskFilePosition+1
+        CLR     DiskFilePosition+2
+        CLR     DiskFilePosition+3
+DiskSeekReadLoop:
+        LDD     DiskFilePosition
+        CMPD    DiskSeekTarget
+        BNE     >
+        LDD     DiskFilePosition+2
+        CMPD    DiskSeekTarget+2
+        BEQ     DiskSeekDone
+!       JSR     DiskReadByteA
+        BCS     DiskSeekDone             ; clamp a seek beyond EOF to EOF
+        LBSR    DiskIncrementPosition
+        BRA     DiskSeekReadLoop
+DiskSeekDone:
+        LBSR    DiskSaveReadLocation
+        RTS
+
+; Calculate exact size using DiskFirstGran/DiskReadLastLen. Result is the
+; unsigned big-endian 32-bit value at DiskFileSize.
+DiskCalculateFileSize:
+        CLR     DiskFileSize
+        CLR     DiskFileSize+1
+        CLR     DiskFileSize+2
+        CLR     DiskFileSize+3
+        LDD     #17*$100+2
+        LDX     #DiskBuffer
+        JSR     ReadSectorDtoX
+        LDA     DiskFirstGran
+DiskSizeGranuleLoop:
+        CMPA    #GRANMX
+        LBHS    DiskBadMLFile
+        LDB     A,X
+        CMPB    #$C0
+        BHS     DiskSizeLastGranule
+        CMPB    #GRANMX
+        LBHS    DiskBadMLFile
+        PSHS    B
+        LDD     DiskFileSize+2
+        ADDD    #9*SECLEN
+        STD     DiskFileSize+2
+        BCC     >
+        LDD     DiskFileSize
+        ADDD    #1
+        STD     DiskFileSize
+!       PULS    A
+        BRA     DiskSizeGranuleLoop
+DiskSizeLastGranule:
+        ANDB    #$3F
+        LBEQ    DiskBadMLFile
+        CMPB    #9
+        LBHI    DiskBadMLFile
+        DECB
+        CLRA
+        ADDB    DiskFileSize+2           ; add complete sectors * 256
+        STB     DiskFileSize+2
+        BCC     >
+        INC     DiskFileSize+1
+        BNE     >
+        INC     DiskFileSize
+!       LDD     DiskReadLastLen
+        BNE     >
+        LDD     #SECLEN
+!       ADDD    DiskFileSize+2
+        STD     DiskFileSize+2
+        BCC     >
+        LDD     DiskFileSize
+        ADDD    #1
+        STD     DiskFileSize
+!       RTS
+
+; B=handle. Build the SDC-compatible 32-byte record in _StrVar_IFRight.
+DiskFileInfoB:
+        ANDB    #1
+        TST     DiskReadOpen
+        BEQ     DiskFileInfoCheckWrite
+        CMPB    DiskReadHandle
+        BNE     DiskFileInfoCheckWrite
+        LDX     #DiskReadName
+        LDU     #DiskFileSize
+        BRA     DiskFileInfoSelected
+DiskFileInfoCheckWrite:
+        TST     DiskWriteOpen
+        LBEQ    DiskStreamClosedError
+        CMPB    DiskWriteHandle
+        LBNE    DiskStreamClosedError
+        LDX     #DiskWriteName
+        LDU     #DiskWriteFilePosition
+DiskFileInfoSelected:
+        STU     DiskInfoSizePtr
+        PSHS    X
+        LDX     #_StrVar_IFRight
+        CLRA
+        LDB     #32
+!       STA     ,X+
+        DECB
+        BNE     <
+        PULS    X
+        LDU     #_StrVar_IFRight
+        LDB     #11
+!       LDA     ,X+
+        STA     ,U+
+        DECB
+        BNE     <
+        CLR     _StrVar_IFRight+11       ; no FAT32 attribute flags on DECB
+        LDX     DiskInfoSizePtr
+        LDD     ,X
+        STA     _StrVar_IFRight+31
+        STB     _StrVar_IFRight+30
+        LDD     2,X
+        STA     _StrVar_IFRight+29
+        STB     _StrVar_IFRight+28
+        RTS
+
+; B=handle. Return the unsigned 32-bit length in D:X (MSW:LSW).
+; An input stream returns its complete file length. An output stream returns
+; the number of bytes written so far, including buffered bytes.
+DiskLOFB:
+        ANDB    #1
+        TST     DiskReadOpen
+        BEQ     DiskLOFCheckWrite
+        CMPB    DiskReadHandle
+        BNE     DiskLOFCheckWrite
+        LDD     DiskFileSize
+        LDX     DiskFileSize+2
+        RTS
+DiskLOFCheckWrite:
+        TST     DiskWriteOpen
+        LBEQ    DiskStreamClosedError
+        CMPB    DiskWriteHandle
+        LBNE    DiskStreamClosedError
+        LDD     DiskWriteFilePosition
+        LDX     DiskWriteFilePosition+2
+        RTS
+
+DiskEnsureStreamInit:
+        LDD     DiskStreamMagic
+        CMPD    #$4446                  ; "DF"
+        BEQ     >
+        CLR     DiskReadOpen
+        CLR     DiskWriteOpen
+        CLR     DiskDirNextEntry
+        CLR     DiskDirInitialized
+        LDD     #$4446
+        STD     DiskStreamMagic
+!       RTS
+
+DiskRequireNoStreams:
+        LBSR    DiskEnsureStreamInit
+        TST     DiskReadOpen
+        LBNE    DiskStreamBusyError
+        TST     DiskWriteOpen
+        LBNE    DiskStreamBusyError
+        RTS
+
+DiskSaveReadIdentity:
+        LDA     DCDRV
+        STA     DiskReadDrive
+        LDX     #DNAMBF
+        LDU     #DiskReadName
+        BRA     DiskCopyIdentity
+DiskSaveWriteIdentity:
+        LDA     DCDRV
+        STA     DiskWriteDrive
+        LDX     #DNAMBF
+        LDU     #DiskWriteName
+DiskCopyIdentity:
+        LDB     #11
+!       LDA     ,X+
+        STA     ,U+
+        DECB
+        BNE     <
+        RTS
+
+DiskActivateRead:
+        LDA     DiskReadDrive
+        STA     DCDRV
+        LDX     #DiskReadName
+        LDU     #DNAMBF
+        BSR     DiskCopyIdentity
+        LDD     DiskReadTrack
+        STD     DCTRK
+        RTS
+DiskActivateWrite:
+        LDA     DiskWriteDrive
+        STA     DCDRV
+        LDX     #DiskWriteName
+        LDU     #DNAMBF
+        BSR     DiskCopyIdentity
+        LDD     DiskWriteTrack
+        STD     DCTRK
+        RTS
+
+DiskSaveReadLocation:
+        PSHS    D
+        LDD     DCTRK
+        STD     DiskReadTrack
+        PULS    D,PC
+DiskSaveWriteLocation:
+        PSHS    D
+        LDD     DCTRK
+        STD     DiskWriteTrack
+        PULS    D,PC
+
+; Initialize a flat directory wildcard. DNAMBF is already formatted by
+; FixFileName. '*' and '?' match any remaining/individual character.
+DiskInitDirectory:
+        LBSR    DiskEnsureStreamInit
+        TST     DiskReadOpen
+        LBNE    DiskStreamBusyError
+        TST     DiskWriteOpen
+        LBNE    DiskStreamBusyError
+        LDX     #DNAMBF
+        LDU     #DiskDirPattern
+        LDB     #8
+        BSR     DiskCopyPatternField
+        LDB     #3
+        BSR     DiskCopyPatternField
+        CLR     DiskDirNextEntry
+        COM     DiskDirInitialized
+        CLRB
+        RTS
+DiskCopyPatternField:
+        LDA     ,X+
+        CMPA    #'?'
+        BEQ     DiskPatternWildcardOne
+        CMPA    #'*'
+        BEQ     DiskPatternWildcardRest
+        STA     ,U+
+        DECB
+        BNE     DiskCopyPatternField
+        RTS
+DiskPatternWildcardOne:
+        LDA     #$FF
+        STA     ,U+
+        DECB
+        BNE     DiskCopyPatternField
+        RTS
+DiskPatternWildcardRest:
+        LEAX    -1,X                    ; LDA ,X+ already advanced past '*'
+        LDA     #$FF
+!       STA     ,U+
+        LEAX    1,X
+        DECB
+        BNE     <
+        RTS
+
+; Return the next SDC-compatible page: 16 records x 16 bytes in _StrVar_PF01.
+; B=0 success (including a final partial/zero page), B=4 after all 72 slots.
+DiskDirectoryPage:
+        LBSR    DiskEnsureStreamInit
+        TST     DiskReadOpen
+        LBNE    DiskStreamBusyError
+        TST     DiskWriteOpen
+        LBNE    DiskStreamBusyError
+        TST     DiskDirInitialized
+        LBEQ    DiskDirectoryAtEnd
+        LDA     DiskDirNextEntry
+        CMPA    #72
+        BHS     DiskDirectoryAtEnd
+        JSR     DiskBegin               ; restore/synchronize only when disk I/O is required
+        LDX     #_StrVar_PF01
+        CLRA
+        LDB     #0                       ; wraps after clearing 256 bytes
+!       STA     ,X+
+        DECB
+        BNE     <
+        LDU     #_StrVar_PF01
+        CLR     DiskDirPageCount
+DiskDirectoryScan:
+        LDA     DiskDirNextEntry
+        CMPA    #72
+        BHS     DiskDirectoryPageDone
+        INC     DiskDirNextEntry
+        BSR     DiskReadDirectoryEntryA
+        LDA     ,X
+        BEQ     DiskDirectoryScan
+        CMPA    #$FF
+        BEQ     DiskDirectoryScan
+        PSHS    X,U
+        LDY     #DiskDirPattern
+        LDB     #11
+DiskDirectoryMatch:
+        LDA     ,Y+
+        CMPA    #$FF
+        BEQ     >
+        CMPA    ,X
+        BNE     DiskDirectoryNoMatch
+!       LEAX    1,X
+        DECB
+        BNE     DiskDirectoryMatch
+        PULS    X,U
+; Copy name/ext and build the record before the size calculation reuses buffer.
+        PSHS    U
+        LDB     #11
+!       LDA     ,X+
+        STA     ,U+
+        DECB
+        BNE     <
+        LDA     #$20                     ; regular file attribute
+        STA     ,U+
+        LDA     2,X                      ; first granule; X is entry+11
+        STA     DiskFirstGran
+        LDD     14-11,X
+        STD     DiskReadLastLen
+        JSR     DiskCalculateFileSize
+        LDD     DiskFileSize
+        STD     ,U++                     ; directory size is MSB first
+        LDD     DiskFileSize+2
+        STD     ,U
+        PULS    U
+        LEAU    16,U
+        INC     DiskDirPageCount
+        LDA     DiskDirPageCount
+        CMPA    #16
+        BLO     DiskDirectoryScan
+DiskDirectoryPageDone:
+        JSR     SetCPUSpeed
+        CLRB
+        RTS
+DiskDirectoryNoMatch:
+        PULS    X,U
+        BRA     DiskDirectoryScan
+DiskDirectoryAtEnd:
+        JSR     SetCPUSpeed
+        LDB     #4
+        RTS
+
+; A=directory slot 0-71. Return X pointing at its 32-byte entry.
+DiskReadDirectoryEntryA:
+        LDB     #3
+!       CMPA    #8
+        BLO     >
+        SUBA    #8
+        INCB
+        BRA     <
+!       PSHS    A
+        LDA     #17
+        LDX     #DiskBuffer
+        JSR     ReadSectorDtoX
+        PULS    B
+        LSLB
+        LSLB
+        LSLB
+        LSLB
+        LSLB
+        LDX     #DiskBuffer
+        ABX
+        RTS
+
+; Delete DNAMBF. Return SDC-like status B=0 success or B=5 not found.
+DiskDeleteFile:
+        LBSR    DiskEnsureStreamInit
+        TST     DiskReadOpen
+        LBNE    DiskStreamBusyError
+        TST     DiskWriteOpen
+        LBNE    DiskStreamBusyError
+        LDU     #DNAMBF
+        JSR     OpenFileU
+        LBCS    DiskDeleteNotFound
+        LDA     DIRGRN,X
+        STA     DiskFirstGran
+; Validate the complete FAT chain before changing the directory.
+        LDD     #17*$100+2
+        LDX     #DiskBuffer
+        JSR     ReadSectorDtoX
+        LDA     DiskFirstGran
+        LDB     #GRANMX
+        PSHS    B
+DiskDeleteValidate:
+        CMPA    #GRANMX
+        LBHS    DiskDeleteBadChain
+        LDB     A,X
+        CMPB    #$C0
+        BLO     >
+        ANDB    #$3F
+        BEQ     DiskDeleteBadChain
+        CMPB    #9
+        BHI     DiskDeleteBadChain
+        BRA     DiskDeleteValidated
+!       CMPB    #GRANMX
+        BHS     DiskDeleteBadChain
+        TFR     B,A
+        DEC     ,S
+        BNE     DiskDeleteValidate
+DiskDeleteBadChain:
+        LEAS    1,S
+        LBRA    DiskBadMLFile
+DiskDeleteValidated:
+        LEAS    1,S
+; Publish deletion first, so no directory entry can reference freed granules.
+        LDU     #DNAMBF
+        JSR     OpenFileU
+        LBCS    DiskDeleteNotFound
+        LDA     #$FF
+        STA     ,X
+        LDA     #17
+        LDB     DiskDirSector
+        LDX     #DiskBuffer
+        JSR     WriteSectorDFromX
+; Free every granule in the FAT.
+        LDD     #17*$100+2
+        LDX     #DiskBuffer
+        JSR     ReadSectorDtoX
+        LDB     DiskFirstGran
+DiskDeleteFreeLoop:
+        LDA     B,X                     ; next link
+        PSHS    A
+        LDA     #$FF
+        STA     B,X
+        PULS    A
+        CMPA    #$C0
+        BHS     DiskDeleteWriteFAT
+        TFR     A,B
+        BRA     DiskDeleteFreeLoop
+DiskDeleteWriteFAT:
+        LDD     #17*$100+2
+        LDX     #DiskBuffer
+        JSR     WriteSectorDFromX
+        JSR     SetCPUSpeed
+        CLRB
+        RTS
+DiskDeleteNotFound:
+        JSR     SetCPUSpeed
+        LDB     #5
+        RTS
+
+; SAVEM "NAME.BIN[:drive]",start,end,exec
+; Existing files are not overwritten, matching Disk BASIC's FE error.
+DiskSAVEM:
+        LBSR    DiskRequireNoStreams
+        LDD     DiskSaveEnd
+        CMPD    DiskSaveStart
+        LBLO    DiskSaveRangeError
+        CMPD    #DiskWorkspaceStart
+        BLO     DiskSaveRangeIsSafe
+        LDD     DiskSaveStart
+        CMPD    #DiskWorkspaceEnd
+        LBLO    DiskSaveWorkspaceError
+DiskSaveRangeIsSafe:
+        LDA     #2
+        STA     DiskOutputFileType
+        CLR     DiskOutputASCII
+        CLR     DiskOverwriteAllowed    ; SAVEM retains FE-on-existing behavior
+        JSR     DiskWriterBegin
+
+; Preamble: 00, length, load address.
+        CLRB
+        JSR     DiskWriteByteB
+        LDD     DiskSaveEnd
+        SUBD    DiskSaveStart
+        ADDD    #1
+        JSR     DiskWriteWordD
+        LDD     DiskSaveStart
+        JSR     DiskWriteWordD
+
+; Save inclusive range. Compare before increment so end=$FFFF works.
+        LDU     DiskSaveStart
+DiskSaveDataLoop:
+        LDB     ,U
+        JSR     DiskWriteByteB
+        CMPU    DiskSaveEnd
+        BEQ     DiskSaveDataDone
+        LEAU    1,U
+        BRA     DiskSaveDataLoop
+DiskSaveDataDone:
+        LDB     #$FF
+        JSR     DiskWriteByteB
+        CLRB
+        JSR     DiskWriteByteB
+        JSR     DiskWriteByteB
+        LDD     DiskSaveExec
+        JSR     DiskWriteWordD
+        JSR     DiskFinishWriteBuffer
+        JSR     DiskWriterCommit
+        RTS
+
+DiskWriterBegin:
+        CLR     DiskReplaceExisting
+        LDU     #DNAMBF
+        JSR     OpenFileWriteU
+        BCS     DiskWriterUseFreeSlot
+        TST     DiskOverwriteAllowed
+        LBEQ    DiskSaveFileExists
+; Keep the existing entry and FAT chain intact until its replacement has been
+; written and published successfully.
+        STA     DiskWriteDirOff
+        LDA     DiskDirSector
+        STA     DiskWriteDirSec
+        LDA     DIRGRN,X
+        STA     DiskReplaceFirstGran
+        COM     DiskReplaceExisting
+        BRA     DiskWriterGatherFree
+DiskWriterUseFreeSlot:
+        LDA     DiskFreeDirSec
+        CMPA    #$FF
+        LBEQ    DiskSaveDirectoryFull
+        STA     DiskWriteDirSec
+        LDA     DiskFreeDirOff
+        STA     DiskWriteDirOff
+
+; Gather free granules without modifying the disk FAT.
+DiskWriterGatherFree:
+        LDD     #17*$100+2
+        LDX     #DiskOutputBuffer
+        JSR     ReadSectorDtoX
+        LDX     #DiskOutputBuffer
+        LDU     #DiskGranuleList
+        CLR     DiskSaveListCnt
+        CLRA
+DiskSaveFindFree:
+        LDB     ,X+
+        CMPB    #$FF
+        BNE     DiskSaveNotFree
+        LDB     DiskSaveListCnt
+        CMPB    #MAXSAVEGRAN
+        BHS     DiskSaveFreeListDone
+        STA     ,U+
+        INC     DiskSaveListCnt
+DiskSaveNotFree:
+        INCA
+        CMPA    #GRANMX
+        BLO     DiskSaveFindFree
+DiskSaveFreeListDone:
+        TST     DiskSaveListCnt
+        LBEQ    DiskSaveDiskFull
+        CLR     DiskSaveListPos
+        CLR     DiskSaveSectors
+        LDD     #DiskOutputBuffer
+        STD     DiskWriteBufferPtr
+        LDA     DiskGranuleList
+        STA     DiskWriteCurrentGran
+        JSR     DiskMapGranuleA
+        CLR     DiskWriteAny
+        RTS
+
+; Commit FAT after every data sector has succeeded.
+DiskWriterCommit:
+        LDD     #17*$100+2
+        LDX     #DiskOutputBuffer
+        JSR     ReadSectorDtoX
+        LDU     #DiskOutputBuffer
+        LDX     #DiskGranuleList
+        LDB     DiskSaveListPos
+        BEQ     DiskSaveMarkLastGranule
+DiskSaveLinkGranules:
+        LDA     ,X+
+        PSHS    B
+        LDB     ,X
+        STB     A,U
+        PULS    B
+        DECB
+        BNE     DiskSaveLinkGranules
+DiskSaveMarkLastGranule:
+        LDA     ,X
+        LDB     DiskSaveSectors
+        ORB     #$C0
+        STB     A,U
+        LDD     #17*$100+2
+        LDX     #DiskOutputBuffer
+        JSR     WriteSectorDFromX
+
+; Publish directory entry last.
+        LDA     #17
+        LDB     DiskWriteDirSec
+        LDX     #DiskOutputBuffer
+        JSR     ReadSectorDtoX
+        LDX     #DiskOutputBuffer
+        LDB     DiskWriteDirOff
+        ABX
+        PSHS    X
+        LDB     #DIRLEN
+        CLRA
+!       STA     ,X+
+        DECB
+        BNE     <
+        PULS    X
+        LDU     #DNAMBF
+        LDB     #11
+!       LDA     ,U+
+        STA     ,X+
+        DECB
+        BNE     <
+        LDA     DiskOutputFileType
+        STA     ,X+
+        LDA     DiskOutputASCII
+        STA     ,X+
+        LDA     DiskGranuleList
+        STA     ,X+
+        LDD     DiskSaveLastLen
+        STD     ,X
+        LDA     #17
+        LDB     DiskWriteDirSec
+        LDX     #DiskOutputBuffer
+        JSR     WriteSectorDFromX
+; The directory now points at the new chain. Release the old chain afterward;
+; an error before this point leaves the old file usable, while an error during
+; cleanup can only leak old granules.
+        TST     DiskReplaceExisting
+        BEQ     DiskWriterCommitDone
+        LDD     #17*$100+2
+        LDX     #DiskOutputBuffer
+        JSR     ReadSectorDtoX
+        LDB     DiskReplaceFirstGran
+        LDA     #GRANMX
+        PSHS    A
+DiskWriterFreeOldChain:
+        CMPB    #GRANMX
+        BHS     DiskWriterOldChainDone
+        LDA     B,X
+        PSHS    A
+        LDA     #$FF
+        STA     B,X
+        PULS    A
+        CMPA    #$C0
+        BHS     DiskWriterOldChainDone
+        CMPA    #GRANMX
+        BHS     DiskWriterOldChainDone
+        TFR     A,B
+        DEC     ,S
+        BNE     DiskWriterFreeOldChain
+DiskWriterOldChainDone:
+        LEAS    1,S
+        LDD     #17*$100+2
+        LDX     #DiskOutputBuffer
+        JSR     WriteSectorDFromX
+DiskWriterCommitDone:
+        JSR     SetCPUSpeed
+        RTS
+
+DiskWriteWordD:
+        STD     DiskSaveWord
+        LDB     DiskSaveWord
+        BSR     DiskWriteByteB
+        LDB     DiskSaveWord+1
+        BRA     DiskWriteByteB
+
+; Append B. Select another granule only when another byte is actually needed.
+DiskWriteByteB:
+        PSHS    A,X
+        LDX     DiskWriteBufferPtr
+        CMPX    #DiskOutputBuffer
+        BNE     DiskWriteStoreByte
+        LDA     DiskSaveSectors
+        CMPA    #9
+        BNE     DiskWriteStoreByte
+        PSHS    B                       ; preserve pending data byte
+        INC     DiskSaveListPos
+        LDA     DiskSaveListPos
+        CMPA    DiskSaveListCnt
+        BHS     DiskWriteOutOfSpaceSavedB
+        LDX     #DiskGranuleList
+        LDA     A,X
+        STA     DiskWriteCurrentGran
+        CLR     DiskSaveSectors
+        JSR     DiskMapGranuleA
+        LDX     #DiskOutputBuffer
+        PULS    B                       ; restore pending data byte
+DiskWriteStoreByte:
+        LDA     #$FF
+        STA     DiskWriteAny
+        STB     ,X+
+        STX     DiskWriteBufferPtr
+        CMPX    #DiskOutputBuffer+SECLEN
+        BNE     DiskWriteByteDone
+        BSR     DiskFlushWriteSector
+DiskWriteByteDone:
+        PULS    A,X,PC
+DiskWriteOutOfSpace:
+        PULS    A,X
+        LBRA    DiskSaveDiskFull
+DiskWriteOutOfSpaceSavedB:
+        LEAS    1,S                     ; discard saved pending data byte
+        BRA     DiskWriteOutOfSpace
+
+DiskFlushWriteSector:
+        PSHS    D,X
+        LDD     DCTRK
+        LDX     #DiskOutputBuffer
+        JSR     WriteSectorDFromX
+        INC     DSEC
+        INC     DiskSaveSectors
+        LDD     #DiskOutputBuffer
+        STD     DiskWriteBufferPtr
+        PULS    D,X,PC
+
+DiskFinishWriteBuffer:
+        LDX     DiskWriteBufferPtr
+        CMPX    #DiskOutputBuffer
+        BEQ     DiskLastSectorWasFull
+        TFR     X,D
+        SUBD    #DiskOutputBuffer
+        STD     DiskSaveLastLen
+        CLRA
+!       STA     ,X+
+        CMPX    #DiskOutputBuffer+SECLEN
+        BNE     <
+        BSR     DiskFlushWriteSector
+        RTS
+DiskLastSectorWasFull:
+        LDD     #SECLEN
+        STD     DiskSaveLastLen
+        RTS
+
+DiskSaveFileExists:
+        LDB     #DiskErrorFileExists
+        LBRA    DiskError
+DiskSaveDiskFull:
+        LDB     #DiskErrorDiskFull
+        LBRA    DiskError
+DiskSaveDirectoryFull:
+        LDB     #DiskErrorDirectoryFull
+        LBRA    DiskError
+DiskSaveRangeError:
+        LDB     #DiskErrorBadRange
+        LBRA    DiskError
+DiskSaveWorkspaceError:
+        LDB     #DiskErrorWorkspaceOverlap
+        LBRA    DiskError
+DiskOpenNotFound:
+        LDB     #DiskErrorFileNotFound
+        LBRA    DiskError
+DiskStreamClosedError:
+        LDB     #DiskErrorStreamClosed
+        LBRA    DiskError
+DiskStreamBusyError:
+        LDB     #DiskErrorStreamBusy
+        LBRA    DiskError
+DiskBackwardWriteSeekError:
+        LDB     #DiskErrorBackwardSeek
+        LBRA    DiskError
+DiskEmptyStreamError:
+        LDB     #DiskErrorEmptyFile
+        LBRA    DiskError
+
+; Sector I/O wrappers.
+WriteSectorDFromX:
+        PSHS    A
+        LDA     #3
+        STA     DCOPC
+        PULS    A
+        BRA     DiskUpdateLocation
+ReadSectorDtoX:
+        PSHS    A
+        LDA     #2
+        STA     DCOPC
+        PULS    A
+DiskUpdateLocation:
+        STD     DCTRK
+        STX     DCBPT
+        BSR     DSKCON
+        TST     DCSTA
+        BEQ     >
+        LDA     DCSTA
+        LDB     #DiskErrorWriteProtected
+        BITA    #$40
+        LBNE    DiskError
+DiskIOError:
+        LDB     #DiskErrorIOError
+        LBRA    DiskError
+!       RTS
+
+; Standalone WD17xx restore/read/write driver.
+DSKCON:
+        PSHS    U,Y,X,B,A
+        LDA     #5
+        PSHS    A
+DiskCommandRetry:
+        CLR     RDYTMR
+        LDB     DCDRV
+        LDX     #DiskDriveMasks
+        LDA     DRGRAM
+        ANDA    #$A8
+        ORA     B,X
+        ORA     #$20                    ; double density
+        LDB     DCTRK
+        CMPB    #22
+        BLO     >
+        ORA     #$10                    ; write precompensation
+!       TFR     A,B
+        ORA     #$08
+        STA     DRGRAM
+        STA     DSKREG
+        BITB    #$08
+        BNE     DiskMotorReady
+        LDX     #0
+!       LEAX    -1,X
+        BNE     <
+        LDX     #0
+!       LEAX    -1,X
+        BNE     <
+DiskMotorReady:
+        BSR     DiskWaitNotBusy
+        BNE     DiskCommandResult
+        CLR     DCSTA
+        LDX     #DiskCommandVectors
+        LDB     DCOPC
+        ASLB
+        JSR     [B,X]
+DiskCommandResult:
+        PULS    A
+        LDB     DCSTA
+        BEQ     DiskCommandDone
+        DECA
+        BEQ     DiskCommandDone
+        PSHS    A
+        BSR     DiskRestore
+        BNE     DiskCommandResult
+        BRA     DiskCommandRetry
+DiskCommandDone:
+        LDA     #120
+        STA     RDYTMR
+        PULS    A,B,X,Y,U,PC
+
+DiskRestore:
+        LDB     DCDRV
+        LDX     #DiskTrackImages
+        CLR     B,X                     ; each physical drive has its own head
+        LDA     #$03
+        STA     FDCREG
+        EXG     A,A
+        EXG     A,A
+        BSR     DiskWaitNotBusy
+        BSR     DiskMediumDelay
+        ANDA    #$10
+        STA     DCSTA
+DiskNoOperation:
+        RTS
+DiskWaitNotBusy:
+        LDX     #0
+!       LEAX    -1,X
+        BEQ     DiskForceInterrupt
+        LDA     FDCREG
+        BITA    #1
+        BNE     <
+        RTS
+DiskForceInterrupt:
+        LDA     #$D0
+        STA     FDCREG
+        EXG     A,A
+        EXG     A,A
+        LDA     FDCREG
+        LDA     #$80
+        STA     DCSTA
+        RTS
+DiskMediumDelay:
+        LDX     #8750
+!       LEAX    -1,X
+        BNE     <
+        RTS
+
+DiskReadSectorCommand:
+        LDA     #$80
+        BRA     DiskStartSectorCommand
+DiskWriteSectorCommand:
+        LDA     #$A0
+DiskStartSectorCommand:
+        PSHS    A
+        LDB     DCDRV
+        LDX     #DiskTrackImages
+        LDB     B,X
+        STB     FDCREG+1
+        CMPB    DCTRK
+        BEQ     DiskHeadPositioned
+        LDA     DCTRK
+        STA     FDCREG+3
+        LDB     DCDRV
+        LDX     #DiskTrackImages
+        STA     B,X
+        LDA     #$17
+        STA     FDCREG
+        EXG     A,A
+        EXG     A,A
+        BSR     DiskWaitNotBusy
+        BNE     DiskSeekFailed
+        BSR     DiskMediumDelay
+        ANDA    #$18
+        BEQ     DiskHeadPositioned
+        STA     DCSTA
+DiskSeekFailed:
+        PULS    A,PC
+DiskHeadPositioned:
+        LDA     DSEC
+        STA     FDCREG+2
+        LDX     #DiskSectorComplete
+        STX     DNMIVC
+        LDX     DCBPT
+        LDA     FDCREG
+        LDA     DRGRAM
+        ORA     #$80
+        PULS    B
+        LDY     #0
+        LDU     #FDCREG
+        COM     NMIFLG
+        ORCC    #$50
+        STB     FDCREG
+        EXG     A,A
+        EXG     A,A
+        CMPB    #$80
+        BEQ     DiskWaitReadDRQ
+        LDB     #2
+DiskWaitWriteDRQ:
+        BITB    ,U
+        BNE     DiskWriteDataByte
+        LEAY    -1,Y
+        BNE     DiskWaitWriteDRQ
+        BRA     DiskTransferTimeout
+DiskWriteDataByte:
+        LDB     ,X+
+        STB     FDCREG+3
+        STA     DSKREG
+        BRA     DiskWriteDataByte
+DiskWaitReadDRQ:
+        LDB     #2
+!       BITB    ,U
+        BNE     DiskReadDataByte
+        LEAY    -1,Y
+        BNE     <
+DiskTransferTimeout:
+        CLR     NMIFLG
+        ANDCC   #$AF
+        JMP     DiskForceInterrupt
+DiskReadDataByte:
+        LDB     FDCREG+3
+        STB     ,X+
+        STA     DSKREG
+        BRA     DiskReadDataByte
+
+; DNMISV replaces the stacked return PC with this completion routine.
+DiskSectorComplete:
+        ANDCC   #$AF
+        LDA     FDCREG
+        ANDA    #$7C
+        STA     DCSTA
+        RTS
+
+DiskCommandVectors:
+        FDB     DiskRestore
+        FDB     DiskNoOperation
+        FDB     DiskReadSectorCommand
+        FDB     DiskWriteSectorCommand
+DiskDriveMasks:
+        FCB     1,2,4,$40
+
+; Fatal disk errors retain the compiler's existing print-and-stop behavior.
 DiskError:
         JSR     PrintDiskErrorOnScreen
         BRA     *
-
-; Open the the File pointed at by U
-; Enter with U pointing at the properly formatted filename (8 character filename padded with spaces) and a 3 character extension
-; Exits with X pointing at the filename entry in the disk directory
-; Carry flag will be set if it couldn't find the filename, cleared otherwise
-OpenFileU:
-* Check and disable any high speed options
-        LDA     >CoCoHardware           ; Get the CoCo Hardware info byte
-        BPL     >                       ; If bit 7 is clear then skip forward it's a 6809
-        FCB     $11,$3D,%00000000       ; otherwise, put the 6309 in emulation mode.  This is LDMD  #%00000000
-!       RORA                            ; Move bit 0 to the Carry bit
-        BCC     >                       ; if the Carry bit is clear, then not a CoCo 3, skip ahead
-        STA     >$FFD8                 ; Put CoCo 3 in Regular speed mode
-!
-
-; Initialize the Disk BASIC workspace we depend on. On real hardware this RAM can
-; contain random power-on values; MAME often starts it as $FF.
-        CLR     DRGRAM                  ; Clear disk control register image
-        CLR     DVERFL                  ; Disable verify by default
-        CLR     NMIFLG                  ; No active disk NMI transfer
-        CLR     DCSTA                   ; Clear pending disk status
-        CLR     RDYTMR                  ; Clear motor timer
-        CLR     DEFDRV                  ; Default drive 0
-        CLR     DR0TRK                  ; Reset cached track positions
-        CLR     DR0TRK+1
-        CLR     DR0TRK+2
-        CLR     DR0TRK+3
-        CLR     DCOPC                   ; DSKCON operation 0 = restore current drive to track 0
-        JSR     DSKCON                  ; Put the controller/CoCoSDC into a known state
-        TST     DCSTA
-        LBNE    DiskError
-
-; Track 17, Sector 3 to 11 contain directory entries
-        LDD     #17*$100+3              ; A=Track 17, B=Sector 3
-        LDX     #DBUF0                   ; X points at the directory buffer
-DiskCheckNextSector:
-        JSR     ReadSectorDtoX          ; Go read the sector D to RAM at X
-        PSHS    D,X             
-DiskFindFilename:
-        LDA     ,X
-        BEQ     DiskCheckNextFilename   ; If first character of filename is $00 then this file was killed, check next
-        CMPA    #$FF
-        BEQ     DiskFileNotFound        ; Go error out with file not found
-; Test if filename matches
-        LDB     #10                     ; 11 characters to check for filename, 10 down to 0
-!       LDA     B,X                     ; Get filename in the buffer
-        CMPA    B,U                     ; Compare it with the Filename user wants
-        BNE     DiskCheckNextFilename   ; No match check next filename entry
-        DECB
-        BPL     <
-; If we get here then we found the file to open
-; X points at the filename to open
-        CLRA                            ; Clear carry flag, signify no error
-        PULS    D,U,PC                  ; Fix the stack and return with X pointing at the filename entry
-DiskCheckNextFilename:
-        LEAX    32,X
-        CMPX    #DBUF0+$100
-        BNE     DiskFindFilename
-        PULS    D,X
-        INCB
-        CMPB    #12                     ; Have we reached sector 12 yet?
-        BNE     DiskCheckNextSector     ; If not keep checking
-; If we get here then the file wasn't found in the directory
-DiskFileNotFound:
-        COMB                            ; Set carry flag, signify an error
-        LEAS    4,S                     ; Fix the stack
-        LDB     #DiskErrorFileNotFound  ; B = Message DiskErrorFileNotFound
-        RTS
-
-; Initialize File for reading:
-; *** Enter with: X points at the filename to open
-; Copy the file info to the file control block
-; Copy Granule table for the file on the correct drive
-; setup the end sector to compare with for this granule
-; setup the track to read from
-; copy the first 256 bytes of the file into the file buffer
-; set the buffer pointer to the beginning of the buffer
-; Load the first sector of the file into the file buffer
-; At this point the file is ready to be read from by calling either DiskReadByteA or DiskReadWordD
-; *** Exit with: Y pointing at the FATBLx associated with the drive DCDRV (preserve Y until file has been closed)
-InitFile:
-; FATBL0 format
-; 0     - Current granule #
-; 1 & 2 - Number of bytes in the last sector
-; 3 & 4 - Current buffer pointer
-; 5     - ASCII Code (MS nibble) & File type (LS nibble)
-;         ASCII Code 0x=CRUNCHED $Fx=ASCII
-;         File type x0=BASIC, x1=DATA, x2=MACHINE LANGUAGE, x3=TEXT EDITOR SOURCE FILE
-; 6     - Granule table for the disk in this drive
-        LDA     DCDRV           ; A = Drive number 0 to 3
-        LDB     #FATLEN         ; FILE ALLOCATION TABLE LENGTH
-        MUL                     ; D = A * B
-        ADDD    #FATBL0         ; D = D + FATBL0
-        TFR     D,Y             ; Y = D which points to the FATBlock for the disk in the current drive
-!       LDA     DIRGRN,X        ; Get the First granule pointer of this file
-        STA     ,Y              ; Save the first granule pointer
-        LDD     DIRLST,X        ; Get the number of bytes in the last sector
-        STD     1,Y             ; Save the number of bytes in the last sector
-        LDD     #DBUF0          ; Set the input buffer pointer to the beginning
-        STD     3,Y             ; Save buffer pointer
-        LDA     DIRASC,X        ; A = the ASCII Flag (0=CRUNCHED OR BINARY, $FF=ASCII)
-        LSLA
-        LSLA
-        LSLA
-        LSLA                    ; Move value to the Most significant nibble)
-        ADDA    DIRTYP,X        ; Make th Least significant nibble the File type (0=BASIC, 1=DATA, 2=MACHINE LANGUAGE, 3=TEXT EDITOR SOURCE FILE)
-        STA     5,Y             ; Save ASCII Code and File Type
-; Copy the granule table for this drive
-; Track 17, Sector 2 is the Granule table
-        LDD     #17*$100+2      ; A=Track 17, B=Sector 2
-        LDX     #DBUF0          ; X points at the 1st directory buffer
-        JSR     ReadSectorDtoX  ; Go read the Track/Sector D to RAM at X - DBUF0 now has a copy of the granule table
-        LEAU    6,Y             ; U points at the granule table Image Start
-        LDB     #GRANMX         ; # of granules in the granule table
-!       LDA     ,X+             ; Get the granule number
-        STA     ,U+             ; Save the granule number
-        DECB                    ; Decrement the counter
-        BNE     <               ; Keep looping until we've copied all the granules
-; 0     - Current granule #
-; 1 & 2 - Number of bytes in the last sector
-; 3 & 4 - Current buffer pointer
-; 5     - ASCII Code (MS nibble) & File type (LS nibble)
-;         ASCII Code 0x=CRUNCHED $Fx=ASCII
-;         File type x0=BASIC, x1=DATA, x2=MACHINE LANGUAGE, x3=TEXT EDITOR SOURCE FILE
-; 6     - Granule table for the disk in this drive
-GetNextGranule:
-; Setup which sector to end reading until we reach the end of the granule
-        LDA     ,Y              ; A = current granule # for the file
-        LEAU    6,Y             ; U points at the granule table Image Start        
-        LDB     A,U             ; B = granule table entry for the current granule
-        BITB    #%10000000      ; Is this flagged as the last granule?
-        BEQ     NotLastGranule  ; Skip ahead if the granule is not the last granule associated with the file
-; If we get here then the granule is the last granule associated with the file
-        ANDB    #%00111111      ; Clear the last granule flags, B now is the last sector number
-        INCB                    ; Increment the last sector number
-        PSHS    B               ; Save the last sector number
-        CMPA    #34             ; See if track is the directory track or higher (17 * 2 = 34)
-        BLO     >               ; if not leave value as it is
-        ADDA    #2              ; otherwise skip over the directory track
-!       LSRA                    ; Divide by 2 to get the track and sector starting location on disk
-        STA     DCTRK           ; Save the starting track
-        LDA     #10             ; Start Sector of the granule if Carry is set
-        BCS     >               ; Skip ahead if carry flag is set
-        LDA     #1              ; Starting Sector of the granule if Carry is clear
-!       STA     DSEC            ; Save the starting sector
-        ADDA    ,S+             ; A = A + last sector number, fix the stack
-        STA     GranuleEnd+1    ; Save the compare value for the last sector of this granule (self mod)
-        BRA     LoadFirstSector ; Go read the first sector of the granule
-; Normal Granule (not the last granule)
-NotLastGranule
-        LDB     #10             ; Start Sector of the granule if Carry is set
-        CMPA    #34             ; See if track is the directory track or higher (17 * 2 = 34)
-        BLO     >               ; if not leave value as it is
-        ADDA    #2              ; otherwise skip over the directory track
-!       LSRA                    ; Divide by 2 to get the track and sector starting location on disk
-        STA     DCTRK           ; Save the starting track
-        LDA     #19             ; End sector + 1, if Carry is set
-        BCS     >               ; Skip ahead if carry flag is set
-        LDD     #10*$100+1      ; A = Sector compare value of 10 and Set the sector start number to 1, Carry is not set
-!       STA     GranuleEnd+1    ; Save the compare value for the last sector of this granule (self mod)
-        STB     DSEC            ; Save the start sector
-; Read the first sector of the new granule
-LoadFirstSector:
-        LDD     DCTRK           ; Get the current track and sector
-        LDX     #DBUF0          ; X points at the 1st directory buffer
-        JSR     ReadSectorDtoX  ; Go read the Track/Sector D to RAM at X - DBUF0 now has a copy of the granule table
-        LDA     ,Y              ; A = current granule # for the file
-        LDA     A,U             ; A = granule table entry for the current granule
-        STA     ,Y              ; Save the new granule number
-        STX     3,Y             ; Save the buffer pointer
-        RTS
-
-; Do a LOADM command
-; File must already be Initialized
-; *** Enter with: Y pointing at the FATBLx associated with the drive DCDRV
-; * Loads a Machine Language file from the disk
-; Adds the 16 bit value stored in _Var_PF10 to the Load Address and the EXEC address
-DiskLOADM:
-        LDA     5,Y             ; Get the filetype and ASCII flag
-        CMPA    #$02            ; ASCII flag must be 0 = BINARY & File type must be 2 = Machine Code program and 
-        BNE     DiskErrorBadMLFile  ; Not an ML file
-       
-; File is setup to start reading from the disk using the following for an ML file
-; BYTE        PREAMBLE                POSTAMBLE
-; 0           ØØ Preamble flag        $FF Post-amble flag
-; 1, 2        Length of data block    Two zero bytes
-; 3, 4        Load address            EXEC address
-GetMLBlock:
-        BSR     DiskReadByteA   ; Get flag in A
-        TSTA
-        BEQ     DoPREAMBLE      ; Skip ahead if it's a PREAMBLE
-; If we get here then we have reached the end of the file
-; Postamble
-        CMPA    #$FF            ; Make sure it's the post-amble flag
-        BNE     DiskErrorBadMLFile     ; Bad file format if not
-        BSR     DiskReadWordD   ; Read next two bytes into D
-        CMPD    #$0000          ; Make sure it's two zero bytes
-        BNE     DiskErrorBadMLFile     ; Bad file format if not
-        BSR     DiskReadWordD   ; Read next two bytes into D
-        ADDD    _Var_PF10       ; D = D + LOADM Offset amount    
-        STD     EXECAddress     ; Save the EXEC address
-        JSR     SetCPUSpeed     ; Set the CPU Speed back to what the user wants
-        RTS                     ; File has been LOADMed into memory, Return
-
-DoPREAMBLE:
-        BSR     DiskReadWordD   ; Read next two bytes into D    
-        TFR     D,X             ; X = Length of data block
-        BSR     DiskReadWordD   ; Read next two bytes into D
-        ADDD    _Var_PF10       ; D = D + LOADM Offset amount    
-        TFR     D,U             ; U = Load address
-!       BSR     DiskReadByteA   ; Get a byte from the file in A
-        STA     ,U+             ; Save the byte to memory
-        LEAX    -1,X            ; Decrement the counter
-        BNE     <               ; Keep looping until we've copied all the bytes
-        BRA     GetMLBlock      ; Go read the next block
-
-; Read next two bytes from the open file into D
-DiskReadWordD:
-        BSR     DiskReadByteA   ; Get a byte from the file in A
-        TFR     A,B             ; Save MSB of the EXEC address in B
-        BSR     DiskReadByteA   ; Get a byte from the file in A
-        EXG     A,B             ; MOVE LSB of the EXEC address To B and move the MSB to A
-        RTS
-DiskErrorBadMLFile:
-        LDB     #DiskErrorNotMLFileType ; B = Message DiskErrorNotMLFileType
-        JMP     DiskError       ; Go handle disk error
-
-; Read a byte from the open file into A
-DiskReadByteA:
-        PSHS    B,X,U           ; Save B,X & U
-        LDX     3,Y             ; Get the buffer pointer
-        CMPX    #DBUF0+$0100    ; Have we reached the end of the buffer?
-        BNE     >               ; Skip ahead if not
-        LDD     DCTRK           ; Get the Current Tracke & sector
-        INCB                    ; Increment the sector number
-        STB     DSEC            ; Save the new sector number
-GranuleEnd:
-        CMPB    #$FF            ; Have we reached end of a granule? (Value will be self modded to value of last sector)
-        BNE     GetSector       ; Skip ahead if not
-        JSR     GetNextGranule  ; If so get the next granule and load the buffer
-        LDD     DCTRK           ; Get the current track and sector
-GetSector:
-        LDX     #DBUF0          ; Point to the start of the buffer
-        JSR     ReadSectorDtoX  ; Go read the sector D to RAM at X
-!       LDA     ,X+             ; Get a byte from the buffer
-        STX     3,Y             ; Save the new buffer pointer
-        PULS    B,X,U,PC        ; Restore B,X & U and return
-
-; Write 256 bytes from RAM pointed at from X to sector to disk
-; Enter with:
-; A = Track
-; B = Sector
-; X = Buffer start location in RAM to save to the disks sector
-; No registers are changed on exit
-WriteSectorDFromX:
-        PSHS    A           ; Save the Track
-        LDA     #$03        ; A equals the Disk Write opcode
-        STA     DCOPC       ; Save the operation code
-        PULS    A           ; Restore the Track
-        BRA     UpdateDiskLocation  ; Go save Track, Sector and Buffer pointer and return
-
-; Read 256 byte sector into X
-; Enter with:
-; A = Track
-; B = Sector
-; X = Buffer start location in RAM to save the disks sector data
-; No registers are changed on exit
-ReadSectorDtoX:
-        PSHS    A           ; Save the Teack
-        LDA     #$02        ; A equals the Disk Read opcode
-        STA     DCOPC       ; Save the operation code
-        PULS    A           ; Restore  the Track
-UpdateDiskLocation:
-        STD     DCTRK       ; Save Track pointer & DSEC = Save Sector pointer
-        STX     DCBPT       ; Save the buffer pointer
-; -----------------------------------------------------------------------------
-; Read or write a sector based on the value of DCOPC
-; If DCOPC = $02 then it will read a sector
-; If DCOPC = $03 then it will write a sector
-; DCTRK = Track #
-; DSEC  = Sector #
-; DCBPT = 256 byte buffer start pointer
-ReadWriteSector:
-LD6F2           PSHS        B               ; SAVE ACCB
-                LDB         #$05            ; 5 RETRIES
-                STB         ATTCTR          ; SAVE RETRY COUNT
-                PULS        B               ; RESTORE ACCB
-LD6FB           BSR         DSKCON          ; GO EXECUTE COMMAND
-                TST         DCSTA           ; CHECK STATUS
-                BEQ         LD70E           ; BRANCH IF NO ERRORS
-LD701           LDA         DCSTA           ; GET DSKCON ERROR STATUS
-                LDB         #DiskErrorWriteProtected     ;  LDB  #2*30 ; 'WRITE PROTECTED' ERROR
-                BITA        #$40            ; CHECK BIT 6 OF STATUS
-                BNE         LD70B           ; BRANCH IF WRITE PROTECT ERROR
-LD709           LDB         #DiskErrorIOError     ;  LDB         #2*20           ; 'I/O ERROR'
-LD70B           ; JMP         >LAC46          ; JUMP TO ERROR DRIVER
-                JMP         DiskError       ; Go handle disk error
-
-LD70E           PSHS        A               ; SAVE ACCA
-                LDA         DCOPC           ; GET OPERATION CODE
-                CMPA        #$03            ; CHECK FOR WRITE SECTOR COMMAND
-                PULS        A               ; RESTORE ACCA
-                BNE         LD742           ; RETURN IF NOT WRITE SECTOR
-                TST         DVERFL          ; CHECK VERIFY FLAG
-                BEQ         LD742           ; RETURN IF NO VERIFY
-                PSHS        U,X,B,A         ; SAVE REGISTERS
-                LDA         #$02            ; READ OPERATION CODE
-                STA         DCOPC           ; STORE TO DSKCON PARAMETER
-                LDU         DCBPT           ; POINT U TO WRITE BUFFER ADDRESS
-                LDX         #DBUF1          ; ADDRESS OF VERIFY BUFFER
-                STX         DCBPT           ; TO DSKCON VARIABLE
-                BSR         DSKCON          ; GO READ SECTOR
-                STU         DCBPT           ; RESTORE WRITE BUFFER
-                LDA         #$03            ; WRITE OP CODE
-                STA         DCOPC           ; SAVE IN DSKCON VARIABLE
-                LDA         DCSTA           ; CHECK STATUS FOR THE READ OPERATION
-                BNE         LD743           ; BRANCH IF ERROR
-                CLRB                        ; CHECK 256 BYTES
-LD737           LDA         ,X+             ; GET BYTE FROM WRITE BUFFER
-                CMPA        ,U+             ; COMPARE TO READ BUFFER
-                BNE         LD743           ; BRANCH IF NOT EQUAL
-                DECB                        ; DECREMENT BYTE COUNTER AND
-                BNE         LD737           ; BRANCH IF NOT DONE
-                PULS        A,B,X,U         ; RESTORE REGISTERS
-LD742           RTS
-LD743           PULS        A,B,X,U         ; RESTORE REGISTERS
-                DEC         ATTCTR          ; DECREMENT THE VERIFY COUNTER
-                BNE         LD6FB           ; BRANCH IF MORE TRIES LEFT
-                LDB         #DiskErrorVerifyError     ;LDB         #2*36           ; 'VERIFY ERROR'
-                BRA         LD70B           ; JUMP TO ERROR HANDLER
-; VERIFY COMMAND
-;VERIFY          CLRB                        ;  OFF FLAG = 0
-;                CMPA        #$AA            ; OFF TOKEN ?
-;                BEQ         LD75A           ; YES
-;                COMB                        ;  ON FLAG = $FF
-;                CMPA        #$88            ; ON TOKEN
-;                LBNE        LB277           ; BRANCH TO 'SYNTAX ERROR' IF NOT ON OR OFF
-;LD75A           STB         DVERFL          ; SET VERIFY FLAG
-;                JMP         GETNCH          ; GET NEXT CHARACTER FROM BASIC
-; DSKCON ROUTINE
-DSKCON          PSHS        U,Y,X,B,A       ; SAVE REGISTERS
-                LDA         #$05            ; GET RETRY COUNT AND
-                PSHS        A               ; SAVE IT ON THE STACK
-LD765           CLR         RDYTMR          ; RESET DRIVE NOT READY TIMER
-                LDB         DCDRV           ; GET DRIVE NUMBER
-                LDX         #LD89D          ; POINT X TO DRIVE ENABLE MASKS
-                LDA         DRGRAM          ; GET DSKREG IMAGE
-                ANDA        #$A8            ; KEEP MOTOR STATUS, DOUBLE DENSITY. HALT ENABLE
-                ORA         B,X             ; 'OR' IN DRIVE SELECT DATA
-                ORA         #$20            ; 'OR' IN DOUBLE DENSITY
-                LDB         DCTRK           ; GET TRACK NUMBER
-                CMPB        #22             ; PRECOMPENSATION STARTS AT TRACK 22
-                BLO         LD77E           ; BRANCH IF LESS THAN 22
-                ORA         #$10            ; TURN ON WRITE PRECOMPENSATION IF >= 22
-LD77E           TFR         A,B             ; SAVE PARTIAL IMAGE IN ACCB
-                ORA         #$08            ; 'OR' IN MOTOR ON CONTROL BIT
-                STA         DRGRAM          ; SAVE IMAGE IN RAM
-                STA         DSKREG          ; PROGRAM THE 1793 CONTROL REGISTER
-                BITB        #$08            ; WERE MOTORS ALREADY ON?
-                BNE         LD792           ; DON'T WAIT FOR IT TO COME UP TO SPEED IF ALREADY ON
-; WAIT A WHILE
-                LDX    #$0000      GET READY TO WAIT A WHILE
-!               LEAX   -1,X        DECREMENT X
-                BNE    <           BRANCH IF NOT ZERO
-; WAIT SOME MORE FOR MOTOR TO COME UP TO SPEED
-                LDX    #$0000      GET READY TO WAIT A WHILE
-!               LEAX   -1,X        DECREMENT X
-                BNE    <           BRANCH IF NOT ZERO
-LD792           BSR         LD7D1           ; WAIT UNTIL NOT BUSY OR TIME OUT
-                BNE         LD7A0           ; BRANCH IF TIMED OUT (DOOR OPEN. NO DISK, NO POWER. ETC.)
-                CLR         DCSTA           ; CLEAR STATUS REGISTER
-                LDX         #LD895          ; POINT TO COMMAND JUMP VECTORS
-                LDB         DCOPC           ; GET COMMAND
-                ASLB                        ;  2 BYTES PER COMMAND JUMP ADDRESS
-                JSR         [B,X]           ; GO DO IT
-LD7A0           PULS        A               ; GET RETRY COUNT
-                LDB         DCSTA           ; GET STATUS
-                BEQ         LD7B1           ; BRANCH IF NO ERRORS
-                DECA                        ; DECREMENT RETRIES COUNTER
-                BEQ         LD7B1           ; BRANCH IF NO RETRIES LEFT
-                PSHS        A               ; SAVE RETRY COUNT ON STACK
-                BSR         LD7B8           ; RESTORE HEAD TO TRACK 0
-                BNE         LD7A0           ; BRANCH IF SEEK ERROR
-                BRA         LD765           ; GO TRY COMMAND AGAIN IF NO ERROR
-LD7B1           LDA         #120            ; 120*1/60 = 2 SECONDS (1/60 SECOND FOR EACH IRQ INTERRUPT)
-                STA         RDYTMR          ; WAIT 2 SECONDS BEFORE TURNING OFF MOTOR
-                PULS        A,B,X,Y,U,PC    ; RESTORE REGISTERS - EXIT DSKCON
-; RESTORE HEAD TO TRACK 0
-LD7B8           LDX         #DR0TRK         ; POINT TO TRACK TABLE
-                LDB         DCDRV           ; GET DRIVE NUMBER
-                CLR         B,X             ; ZERO TRACK NUMBER
-                LDA         #$03            ; RESTORE HEAD TO TRACK 0, UNLOAD THE HEAD
-                STA         FDCREG          ; AT START, 30 MS STEPPING RATE
-                EXG         A,A             ;
-                EXG         A,A             ; WAIT FOR 1793 TO RESPOND TO COMMAND
-                BSR         LD7D1           ; WAIT TILL DRIVE NOT BUSY
-                BSR         LD7F0           ; WAIT SOME MORE
-                ANDA        #$10            ; 1793 STATUS : KEEP ONLY SEEK ERROR
-                STA         DCSTA           ; SAVE IN DSKCON STATUS
-LD7D0           RTS
-; WAIT FOR THE 1793 TO BECOME UNBUSY. IF IT DOES NOT BECOME UNBUSY,
-; FORCE AN INTERRUPT AND ISSUE A DRIVE NOT READY 1793 ERROR.
-LD7D1           LDX         #$0000          ; GET ZERO TO X REGISTER - LONG WAIT
-LD7D3           LEAX        -1,X            ; DECREMENT LONG WAIT COUNTER
-                BEQ         LD7DF           ; lF NOT READY BY NOW, FORCE INTERRUPT
-                LDA         FDCREG          ; GET 1793 STATUS AND TEST
-                BITA        #$01            ; BUSY STATUS BIT
-                BNE         LD7D3           ; BRANCH IF BUSY
-                RTS
-LD7DF           LDA         #$D0            ; FORCE INTERRUPT COMMAND - TERMINATE ANY COMMAND
-                STA         FDCREG          ; IN PROCESS. DO NOT GENERATE A 1793 INTERRUPT REQUEST
-                EXG         A,A             ; WAIT BEFORE READING 1793
-                EXG         A,A             ;
-                LDA         FDCREG          ; RESET INTRQ (FDC INTERRUPT REQUEST)
-                LDA         #$80            ; RETURN DRIVE NOT READY STATUS IF THE DRIVE DID NOT BECOME UNBUSY
-                STA         DCSTA           ; SAVE DSKCON STATUS BYTE
-                RTS
-; MEDIUM DELAY
-LD7F0           LDX         #8750           ; DELAY FOR A WHILE
-LD7F3           LEAX        -1,X            ; DECREMENT DELAY COUNTER AND
-                BNE         LD7F3           ; BRANCH IF NOT DONE
-                RTS
-; READ ONE SECTOR
-LD7F8           LDA         #$80            ; $80 IS READ FLAG (1793 READ SECTOR)
-LD7FA           FCB         $8C             ; SKIP TWO BYTES (THROWN AWAY CMPX INSTRUCTION)
-; WRITE ONE SECTOR
-LD7FB           LDA         #$A0            ; $A0 IS WRITE FLAG (1793 WRITE SECTOR)
-                PSHS        A               ; SAVE READ/WRITE FLAG ON STACK
-                LDX         #DR0TRK         ; POINT X TO TRACK NUMBER TABLE IN RAM
-                LDB         DCDRV           ; GET DRIVE NUMBER
-                ABX                         ; POINT X TO CORRECT DRIVE'S TRACK BYTE
-                LDB         ,X              ; GET TRACK NUMBER OF CURRENT HEAD POSITION
-                STB         FDCREG+1        ; SEND TO 1793 TRACK REGISTER
-                CMPB        DCTRK           ; COMPARE TO DESIRED TRACK
-                BEQ         LD82C           ; BRANCH IF ON CORRECT TRACK
-                LDA         DCTRK           ; GET TRACK DESIRED
-                STA         FDCREG+3        ; SEND TO 1793 DATA REGiSTER
-                STA         ,X              ; SAVE IN RAM TRACK IMAGE
-                LDA         #$17            ; SEEK COMMAND FOR 1793: DO NOT LOAD THE
-                STA         FDCREG          ; HEAD AT START, VERIFY DESTINATION TRACK,
-                EXG         A,A             ; 30 MS STEPPING RATE - WAIT FOR
-                EXG         A,A             ; VALID STATUS FROM 1793
-                BSR         LD7D1           ; WAIT TILL NOT BUSY
-                BNE         LD82A           ; RETURN IF TIMED OUT
-                BSR         LD7F0           ; WAIT SOME MORE
-                ANDA        #$18            ; KEEP ONLY SEEK ERROR OR CRC ERROR IN ID FIELD
-                BEQ         LD82C           ; BRANCH IF NO ERRORS - HEAD ON CORRECT TRACK
-                STA         DCSTA           ; SAVE IN DSKCON STATUS
-LD82A           PULS        A,PC
-; HEAD POSITIONED ON CORRECT TRACK
-LD82C           LDA         DSEC            ; GET SECTOR NUMBER DESIRED
-                STA         FDCREG+2        ; SEND TO 1793 SECTOR REGISTER
-                LDX         #LD88B          ; POINT X TO ROUTINE TO BE VECTORED
-                STX         DNMIVC          ; TO BY NMI UPON COMPLETION OF DISK I/O AND SAVE VECTOR
-                LDX         DCBPT           ; POINT X TO I/O BUFFER
-                LDA         FDCREG          ; RESET INTRQ (FDC INTERRUPT REQUEST)
-                LDA         DRGRAM          ; GET DSKREG IMAGE
-                ORA         #$80            ; SET FLAG TO ENABLE 1793 TO HALT 6809
-                PULS        B               ; GET READ/WRITE COMMAND FROM STACK
-                LDY         #$0000          ; ZERO OUT Y - TIMEOUT INITIAL VALUE
-                LDU         #FDCREG         ; U POINTS TO 1793 INTERFACE REGISTERS
-                COM         NMIFLG          ; NMI FLAG = $FF: ENABLE NMI VECTOR
-                ORCC        #$50            ; DISABLE FIRQ,IRQ
-                STB         FDCREG          ; SEND READ/WRITE COMMAND TO 1793: SINGLE RECORD, COMPARE
-                EXG         A,A             ; FOR SIDE 0, NO 15 MS DELAY, DISABLE SIDE SELECT
-                EXG         A,A             ; COMPARE, WRITE DATA ADDRESS MARK (FB) - WAIT FOR STATUS
-                CMPB        #$80            ; WAS THIS A READ?
-                BEQ         LD875           ; IF SO, GO LOOK FOR DATA
-; WAIT FOR THE 1793 TO ACKNOWLEDGE READY TO WRITE DATA
-                LDB         #$02            ; DRQ MASK BIT
-LD85B           BITB        ,U              ; IS 1793 READY FOR A BYTE? (DRQ SET IN STATUS BYTE)
-                BNE         LD86B           ; BRANCH IF SO
-                LEAY        -1,Y            ; DECREMENT WAIT TIMER
-                BNE         LD85B           ; KEEP WAITING FOR THE 1793 DRQ
-LD863           CLR         NMIFLG          ; RESET NMI FLAG
-                ANDCC       #$AF            ; ENABLE FIRQ,IRQ
-                JMP         >LD7DF          ; FORCE INTERRUPT, SET DRIVE NOT READY ERROR
-; WRITE A SECTOR
-LD86B           LDB         ,X+             ; GET A BYTE FROM RAM
-                STB         FDCREG+3        ; SEND IT TO 1793 DATA REGISTER
-                STA         DSKREG          ; REPROGRAM FDC CONTROL REGISTER
-                BRA         LD86B           ; SEND MORE DATA
-; WAIT FOR THE 17933 TO ACKNOWLEDGE READY TO READ DATA
-LD875           LDB         #$02            ; DRQ MASK BIT
-LD877           BITB        ,U              ; DOES THE 1793 HAVE A BYTE? (DRQ SET IN STATUS BYTE)
-                BNE         LD881           ; YES, GO READ A SECTOR
-                LEAY        -1,Y            ; DECREMENT WAIT TIMER
-                BNE         LD877           ; KEEP WAITING FOR 1793 DRQ
-                BRA         LD863           ; GENERATE DRIVE NOT READY ERROR
-; READ A SECTOR
-LD881           LDB         FDCREG+3        ; GET DATA BYTE FROM 1793 DATA REGISTER
-                STB         ,X+             ; PUT IT IN RAM
-                STA         DSKREG          ; REPROGRAM FDC CONTROL REGISTER
-                BRA         LD881           ; KEEP GETTING DATA
-; BRANCH HERE ON COMPLETION OF SECTOR READ/WRITE
-LD88B           ANDCC       #$AF            ; ENABLE IRQ, FIRO
-                LDA         FDCREG          ; GET STATUS & KEEP WRITE PROTECT, RECORD TYPE/WRITE
-                ANDA        #$7C            ; FAULT, RECORD NOT FOUND, CRC ERROR OR LOST DATA
-                STA         DCSTA           ; SAVE IN DSKCON STATUS
-                RTS
-; DSKCON OPERATION CODE JUMP VECTORS
-LD895           FDB         LD7B8           ; RESTORE HEAD TO TRACK ZERO
-                FDB         LD7D0           ; NO OP - RETURN
-                FDB         LD7F8           ; READ SECTOR
-                FDB         LD7FB           ; WRITE SECTOR
-; DSKREG MASKS FOR DISK DRIVE SELECT
-LD89D           FCB         1               ; DRIVE SEL 0
-                FCB         2               ; DRIVE SEL 1
-                FCB         4               ; DRIVE SEL 2
-                FCB         $40             ; DRIVE SEL 3
-; NMI SERVICE
-;DNMISV          LDA         NMIFLG          ; GET NMI FLAG
-;                BEQ         LD8AE           ; RETURN IF NOT ACTIVE
-;                LDX         DNMIVC          ; GET NEW RETURN VECTOR
-;                STX         10,S            ; STORE AT STACKED PC SLOT ON STACK
-;                CLR         NMIFLG          ; RESET NMI FLAG
-;LD8AE           RTI
-; IRQ SERVICE
-;DIRQSV          LDA         $FF03           ; 63.5 MICRO SECOND OR 60 HZ INTERRUPT?
-;                BPL         LD8AE           ; RETURN IF 63.5 MICROSECOND
-;                LDA         $FF02           ; RESET 60 HZ PIA INTERRUPT FLAG
-;                LDA         RDYTMR          ; GET TIMER
-;                BEQ         LD8CD           ; BRANCH IF NOT ACTIVE
-;                DECA                        ; DECREMENT THE TIMER
-;                STA         RDYTMR          ; SAVE IT
-;                BNE         LD8CD           ; BRANCH IF NOT TIME TO TURN OFF DISK MOTORS
-;                LDA         DRGRAM          ; GET DSKREG IMAGE
-;                ANDA        #$B0            ; TURN ALL MOTORS AND DRIVE SELECTS OFF
-;                STA         DRGRAM          ; PUT IT BACK IN RAM IMAGE
-;                STA         DSKREG          ; SEND TO CONTROL REGISTER (MOTORS OFF)
-;LD8CD           RTI                         ;         >L8955          ; JUMP TO EXTENDED BASIC'S IRQ HANDLER
-
-
 PrintDiskErrorOnScreen:
         PSHS    B
         LDX     #DNAMBF
@@ -901,28 +1615,128 @@ PrintDiskErrorOnScreen:
         LDA     #' '
         JSR     PrintA_On_Screen
         PULS    B
-; Print Error code in B
         LDX     #DiskErrorTable
 !       LDA     ,X+
         BNE     <
         DECB
         BNE     <
-; X now points at the message to print
-!       LDA     ,X+         ; get byte of message to print on screen
+!       LDA     ,X+
         BEQ     >
         JSR     PrintA_On_Screen
         BRA     <
 !       RTS
 
 DiskErrorTable:
-        FCB     $00
-DiskErrorFileNotFound   EQU 01
+        FCB     0
+DiskErrorFileNotFound   EQU     1
         FCN     /FILE NOT FOUND/
-DiskErrorWriteProtected EQU 02
+DiskErrorWriteProtected EQU     2
         FCN     /DISK IS WRITE PROTECTED/
-DiskErrorIOError        EQU 03
+DiskErrorIOError        EQU     3
         FCN     'INPUT/OUTPUT ERROR'
-DiskErrorVerifyError EQU 04
-        FCN     /VERIFY ERROR/
-DiskErrorNotMLFileType EQU 05
+DiskErrorNotMLFileType  EQU     4
         FCN     /NOT A MACHINE LANGUAGE FILE/
+DiskErrorFileExists     EQU     5
+        FCN     /FILE ALREADY EXISTS/
+DiskErrorDiskFull       EQU     6
+        FCN     /DISK FULL/
+DiskErrorDirectoryFull  EQU     7
+        FCN     /DIRECTORY FULL/
+DiskErrorBadRange       EQU     8
+        FCN     /BAD SAVEM ADDRESS RANGE/
+DiskErrorWorkspaceOverlap EQU   9
+        FCN     /DISK DATA OVERLAPS DISK WORKSPACE/
+DiskErrorStreamClosed EQU       10
+        FCN     /DISK FILE IS NOT OPEN/
+DiskErrorStreamBusy EQU         11
+        FCN     /ANOTHER DISK FILE IS OPEN/
+DiskErrorBackwardSeek EQU       12
+        FCN     /CANNOT SEEK BACKWARD WHILE WRITING/
+DiskErrorEmptyFile EQU          13
+        FCN     /CANNOT CLOSE AN EMPTY DISK FILE/
+
+************************************************************************
+* Resident disk workspace. These labels are private to Disk_Commands.asm;
+* no controller state or file buffer is placed in fixed lower RAM.
+************************************************************************
+DiskWorkspaceStart:
+DCOPC           RMB     1               ; 0=restore, 2=read, 3=write
+DCDRV           RMB     1               ; active physical drive 0-3
+DCTRK           RMB     1
+DSEC            RMB     1
+DCBPT           RMB     2
+DCSTA           RMB     1
+NMIFLG          RMB     1
+DNMIVC          RMB     2
+RDYTMR          RMB     1               ; compiler IRQ motor-off timer
+DRGRAM          RMB     1               ; image of $FF40
+DiskTrackImages RMB     4               ; one physical head position per drive
+DNAMBF          RMB     11              ; active formatted 8.3 filename
+DiskSearchName  RMB     2
+DiskWorkBuffer  RMB     2
+DiskFreeDirSec  RMB     1
+DiskFreeDirOff  RMB     1
+DiskDirSector   RMB     1
+
+; Input stream and LOADM state.
+DiskFileType        RMB 1
+DiskCurrentGran     RMB 1
+DiskNextGran        RMB 1
+DiskLastGran        RMB 1
+DiskGranuleEnd      RMB 1
+DiskBufferPtr       RMB 2
+DiskReadLastLen     RMB 2
+DiskReadLimit       RMB 2
+DiskFilePosition    RMB 4
+DiskFirstGran       RMB 1
+DiskReadOpen        RMB 1
+DiskReadHandle      RMB 1
+DiskReadDrive       RMB 1
+DiskReadTrack       RMB 2
+DiskReadName        RMB 11
+
+; Output stream and SAVEM state.
+DiskWriteOpen           RMB 1
+DiskWriteHandle         RMB 1
+DiskWriteDrive          RMB 1
+DiskWriteTrack          RMB 2
+DiskWriteName           RMB 11
+DiskWriteDirSec         RMB 1
+DiskWriteDirOff         RMB 1
+DiskWriteCurrentGran    RMB 1
+DiskWriteBufferPtr      RMB 2
+DiskWriteFilePosition   RMB 4
+DiskWriteAny            RMB 1
+DiskOutputFileType      RMB 1
+DiskOutputASCII         RMB 1
+DiskOverwriteAllowed    RMB 1
+DiskReplaceExisting     RMB 1
+DiskReplaceFirstGran    RMB 1
+DiskSaveStart           RMB 2
+DiskSaveEnd             RMB 2
+DiskSaveExec            RMB 2
+DiskSaveWord            RMB 2
+DiskSaveLastLen         RMB 2
+DiskSaveSectors         RMB 1
+DiskSaveListPos         RMB 1
+DiskSaveListCnt         RMB 1
+DiskGranuleList         RMB MAXSAVEGRAN
+
+; Directory, seeking, and information scratch.
+DiskDirPattern      RMB 11
+DiskDirNextEntry    RMB 1
+DiskDirPageCount    RMB 1
+DiskDirInitialized RMB 1
+DiskSeekTarget      RMB 4
+DiskFileSize        RMB 4
+DiskInfoSizePtr     RMB 2
+DiskLoadStart       RMB 2
+DiskLoadEnd         RMB 2
+DiskStreamMagic     RMB 2
+
+DiskInputBuffer     RMB SECLEN
+DiskOutputBuffer    RMB SECLEN
+DiskWorkspaceEnd:
+
+; Compatibility name used by the original reader/directory implementation.
+DiskBuffer      EQU DiskInputBuffer

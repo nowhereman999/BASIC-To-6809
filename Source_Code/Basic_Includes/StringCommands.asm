@@ -83,12 +83,19 @@ StrCommandINSTR:
 StrCommandLeft:
       PULS  Y           ; Get the return address off the stack
       LDD   ,S++        ; A = the new length, B = Current length, move the stack
+      PSHS  B
+      CMPA  ,S+
+      BLS   @LengthOK
+      TFR   B,A         ; Clamp requested length to the source string length
+@LengthOK:
       STA   @SeldMod+1  ; Save new length
       LEAX  ,S          ; X points at the start of the original string
       ABX               ; X points at the end of the string
       TFR   A,B         ; B = # of bytes to copy
       CLRA
       LEAU  D,S         ; U = end of bytes to copy
+      TSTB
+      BEQ   @SeldMod    ; A zero length produces an empty string; do not copy 256 bytes
 !     LDA   ,-U         ; Get a source byte, move up
       STA   ,-X         ; Write a destination byte
       DECB              ; Decrement the counter
@@ -106,10 +113,19 @@ StrCommandLeft:
 ; Destination string will be at ,S with the first byte being the length of the new string
 StrCommandMid2Arg:
       PULS  Y                 ; Get the return address off the stack
-      LDB   1,S               ; B = Length of original string
-      SUBB  ,S+               ; B = Length of original string - mid point = amount to keep
+      LDA   ,S+               ; A = requested starting position
+      BNE   >
+      INCA                    ; Treat position zero as the first character
+!     LDB   ,S                ; B = Length of original string
+      CMPA  ,S
+      BHI   @NoCharacters     ; Start beyond the source produces an empty string
+      STA   StrComTemp
+      SUBB  StrComTemp        ; B = Length of original string - mid point
       INCB
       BRA   @UseRightCode     ; reuse the rest of the RIGHT$ code
+@NoCharacters:
+      CLRB
+      BRA   @UseRightCode
 ; StrCommandRight
 ; ,S = length of new string
 ; 1,S = String to copy from
@@ -118,6 +134,10 @@ StrCommandRight:
       PULS  Y                 ; Get the return address off the stack
       LDB   ,S+               ; Get the new length, move the stack
 @UseRightCode:
+      CMPB  ,S
+      BLS   @LengthOK
+      LDB   ,S                ; Clamp requested length to the source string length
+@LengthOK:
       STB   @SeldMod+1        ; Save new length
       SUBB  ,S
       CLRA
@@ -136,9 +156,26 @@ StrCommandRight:
 ; Destination string will be at ,S with the first byte being the length of the new string
 StrCommandMid:
       PULS  Y                 ; Get the return address off the stack
-      LDD   ,S++            ; A = the new length, B = Mid point start, move the stack
-      STA   @SeldMod+1      ; Save new length
-      STB   @SelfMod2+1     ; Save the mid point
+      LDD   ,S++              ; A = requested length, B = starting position
+      TSTB
+      BNE   >
+      INCB                    ; Treat position zero as the first character
+!     STB   @SelfMod2+1       ; Save the starting position
+      CMPB  ,S
+      BHI   @NoCharacters     ; Start beyond the source produces an empty string
+      PSHS  B
+      LDB   1,S               ; B = source string length
+      SUBB  ,S+               ; B = source length - starting position
+      INCB                    ; B = characters available from starting position
+      PSHS  B
+      CMPA  ,S+
+      BLS   @LengthOK
+      TFR   B,A               ; Clamp requested length to available characters
+      BRA   @LengthOK
+@NoCharacters:
+      CLRA
+@LengthOK:
+      STA   @SeldMod+1        ; Save final new length
       LDB   ,S+             ; Get the length of the string
       LEAX  ,S
       ABX                     ; X points just past the string, ready to be copied too
@@ -149,6 +186,7 @@ StrCommandMid:
       CLRA
       LEAU  D,S             ; U = source location
       LDB   @SeldMod+1      ; Get new length
+      BEQ   @SeldMod        ; A zero length produces an empty string; do not copy 256 bytes
 !     LDA   ,-U             ; Get a source byte, move up
       STA   ,-X             ; Write a destination byte
       DECB                    ; Decrement the counter

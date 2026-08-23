@@ -1,0 +1,10 @@
+if(__UBYTE_A==NULL){
+__UBYTE_A=(uint8*)mem_static_malloc(1);
+*__UBYTE_A=0;
+}
+if(__UBYTE_R==NULL){
+__UBYTE_R=(uint8*)mem_static_malloc(1);
+*__UBYTE_R=0;
+}
+if (!__STRING_I)__STRING_I=qbs_new(0,0);
+if (!__STRING_D)__STRING_D=qbs_new(0,0);

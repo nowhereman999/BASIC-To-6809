@@ -2712,7 +2712,6 @@ End If
 PushedType = Asc(Right$(Temp$, 1))
 If PushedType = 0 Then PushedType = Asc(Mid$(Temp$, 4, 1)) ' assigned type (var tokens)
 If PushedType = 0 Then PushedType = NT_UInt16 ' default numeric type for undeclared vars
-
 If PushedType > 128 Then
     ' literal
     GoSub DecodeLiteralToken
@@ -2724,6 +2723,10 @@ Else
     NumberType = Asc(Mid$(Temp$, Len(Temp$) - 1, 1)) ' actual var type byte
     PushedType = NumberType
     GoSub PutVarOnStack
+End If
+If IntegerOnly And PushedType >= NT_Single Then
+    Print "Error: floating-point value is not allowed with the -i integer-only option on";
+    GoTo FoundError
 End If
 Return
 
@@ -2794,6 +2797,10 @@ If ManualType = 0 Then
 End If
 
 GotType1:
+If IntegerOnly And ManualType >= NT_Single Then
+    Print "Error: floating-point literal or type is not allowed with the -i integer-only option on";
+    GoTo FoundError
+End If
 ConvertedNum$ = ConvertVal$
 ManualType = ManualType + &H80
 Return

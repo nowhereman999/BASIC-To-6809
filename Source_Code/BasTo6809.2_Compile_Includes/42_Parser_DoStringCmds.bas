@@ -7,6 +7,44 @@ cmd16 = Asc(Mid$(i$, 2, 1)) * 256 + Asc(Mid$(i$, 3, 1))
 ArgCnt = 1
 If Len(i$) >= 4 Then ArgCnt = Asc(Mid$(i$, 4, 1))
 Select Case cmd16
+    Case FILEINFO_CMD
+        If ArgCnt <> 1 Then Print "Error: FILEINFO$() expects one file number";: GoTo FoundError
+        FileNumber$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        Temp$ = FileNumber$: GoSub PushOneValueTokenOnStack
+        LastType = PushedType: NVT = NT_UByte: GoSub ConvertLastType2NVT
+        A$ = "LDB": B$ = ",S+": C$ = "Get DECB stream handle": GoSub AO
+        A$ = "ANDB": B$ = "#$01": C$ = "Limit handle to 0 or 1": GoSub AO
+        A$ = "JSR": B$ = "DiskFileInfoB": C$ = "Build the 32-byte file information record": GoSub AO
+        A$ = "LDB": B$ = "#16": C$ = "Copy 32 bytes to the expression stack": GoSub AO
+        A$ = "LDU": B$ = "#_StrVar_IFRight+32": C$ = "End of DECB file information": GoSub AO
+        Z$ = "!": A$ = "LDX": B$ = ",--U": C$ = "Get two source bytes": GoSub AO
+        A$ = "PSHS": B$ = "X": C$ = "Push two result bytes": GoSub AO
+        A$ = "DECB": C$ = "Decrement copy count": GoSub AO
+        A$ = "BNE": B$ = "<": C$ = "Copy all 32 bytes": GoSub AO
+        A$ = "LDB": B$ = "#32": C$ = "String length": GoSub AO
+        A$ = "PSHS": B$ = "B": C$ = "Push string length": GoSub AO
+        ProcessRPNStackPointer = ProcessRPNStackPointer + 1
+        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(TK_STR_ONSTACK)
+    Case DIRLIST_CMD
+        If ArgCnt <> 1 Then Print "Error: DIRLIST$() expects one entry number";: GoTo FoundError
+        FileNumber$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        Temp$ = FileNumber$: GoSub PushOneValueTokenOnStack
+        LastType = PushedType: NVT = NT_UByte: GoSub ConvertLastType2NVT
+        A$ = "PULS": B$ = "B": C$ = "Get directory entry 0 through 15": GoSub AO
+        A$ = "ANDB": B$ = "#$0F": C$ = "Limit entry number": GoSub AO
+        A$ = "LDA": B$ = "#16": C$ = "Sixteen bytes per entry": GoSub AO
+        A$ = "MUL": C$ = "D = entry byte offset": GoSub AO
+        A$ = "LDX": B$ = "#_StrVar_PF01+16": C$ = "End of first directory record": GoSub AO
+        A$ = "LEAX": B$ = "D,X": C$ = "End of selected directory record": GoSub AO
+        A$ = "LDB": B$ = "#8": C$ = "Copy eight words": GoSub AO
+        Z$ = "!": A$ = "LDU": B$ = ",--X": C$ = "Get two source bytes": GoSub AO
+        A$ = "PSHS": B$ = "U": C$ = "Push two result bytes": GoSub AO
+        A$ = "DECB": C$ = "Decrement copy count": GoSub AO
+        A$ = "BNE": B$ = "<": C$ = "Copy all 16 bytes": GoSub AO
+        A$ = "LDB": B$ = "#16": C$ = "String length": GoSub AO
+        A$ = "PSHS": B$ = "B": C$ = "Push string length": GoSub AO
+        ProcessRPNStackPointer = ProcessRPNStackPointer + 1
+        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(TK_STR_ONSTACK)
     Case SDC_GETCURDIR_CMD
         ' A$=SDC_GETCURDIR$()
         If ArgCnt <> 1 Then
