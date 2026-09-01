@@ -306,19 +306,21 @@ DiskLoadBadChain:
 
 DiskSetReadLimit:
         PSHS    D
-        LDD     #DiskBuffer+SECLEN
+        LDX     #DiskBuffer
         TST     DiskLastGran
-        BEQ     DiskStoreReadLimit
+        BEQ     DiskSetFullReadLimit
         LDA     DSEC
         INCA
         CMPA    DiskGranuleEnd
-        BNE     DiskStoreReadLimit
+        BNE     DiskSetFullReadLimit
         LDD     DiskReadLastLen
-        BNE     >
+        BNE     DiskAddReadLimit
+DiskSetFullReadLimit:
         LDD     #SECLEN
-!       ADDD    #DiskBuffer
+DiskAddReadLimit:
+        LEAX    D,X
 DiskStoreReadLimit:
-        STD     DiskReadLimit
+        STX     DiskReadLimit
         PULS    D,PC
 
 ; Map granule 0-67 to track/starting sector, skipping directory track 17.
