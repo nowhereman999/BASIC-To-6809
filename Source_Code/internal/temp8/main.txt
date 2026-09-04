@@ -1,0 +1,667 @@
+S_0:;
+do{
+if(!qbevent)break;evnt(4);}while(r);
+do{
+if(!qbevent)break;evnt(5);}while(r);
+do{
+if(!qbevent)break;evnt(6);}while(r);
+do{
+if(!qbevent)break;evnt(7);}while(r);
+do{
+if(!qbevent)break;evnt(8);}while(r);
+do{
+if(!qbevent)break;evnt(9);}while(r);
+do{
+if(!qbevent)break;evnt(10);}while(r);
+do{
+if(!qbevent)break;evnt(11);}while(r);
+do{
+if(!qbevent)break;evnt(12);}while(r);
+do{
+if(!qbevent)break;evnt(13);}while(r);
+do{
+if(!qbevent)break;evnt(14);}while(r);
+do{
+if(!qbevent)break;evnt(15);}while(r);
+do{
+*__INTEGER_CHANNEL= 0 ;
+if(!qbevent)break;evnt(17);}while(r);
+do{
+qbs_set(__STRING_URL,qbs_new_txt_len("N:HTTPS://api.open-meteo.com/v1/forecast?latitude=43.6532&longitude=-79.3832&current=temperature_2m,relative_humidity_2m,weather_code&daily=temperature_2m_max&forecast_days=2",174));
+qbs_cleanup(qbs_tmp_base,0);
+if(!qbevent)break;evnt(18);}while(r);
+do{
+tqbs=qbs_new(0,0);
+qbs_set(tqbs,qbs_new_txt_len("FUJINET WEATHER DEMO",20));
+if (is_error_pending()) goto skip1;
+makefit(tqbs);
+qbs_print(tqbs,0);
+qbs_print(nothingstring,1);
+skip1:
+qbs_free(tqbs);
+qbs_cleanup(qbs_tmp_base,0);
+if(!qbevent)break;evnt(20);}while(r);
+do{
+tqbs=qbs_new(0,0);
+qbs_set(tqbs,qbs_new_txt_len("CHECKING FUJINET",16));
+if (is_error_pending()) goto skip2;
+makefit(tqbs);
+qbs_print(tqbs,0);
+qbs_print(nothingstring,1);
+skip2:
+qbs_free(tqbs);
+qbs_cleanup(qbs_tmp_base,0);
+if(!qbevent)break;evnt(21);}while(r);
+do{
+*__INTEGER_E=sub_coco(,0);
+if(!qbevent)break;evnt(23);}while(r);
+S_18:;
+if ((-(*__INTEGER_E!= 0 ))||is_error_pending()){
+if(qbevent){evnt(24);if(r)goto S_18;}
+do{
+tqbs=qbs_new(0,0);
+qbs_set(tqbs,qbs_new_txt_len("FUJINET ERROR",13));
+if (is_error_pending()) goto skip3;
+makefit(tqbs);
+qbs_print(tqbs,0);
+qbs_set(tqbs,qbs_add(qbs_str((int16)(*__INTEGER_E)),qbs_new_txt(" ")));
+if (is_error_pending()) goto skip3;
+makefit(tqbs);
+qbs_print(tqbs,0);
+qbs_print(nothingstring,1);
+skip3:
+qbs_free(tqbs);
+qbs_cleanup(qbs_tmp_base,0);
+if(!qbevent)break;evnt(25);}while(r);
+do{
+goto LABEL_900;
+if(!qbevent)break;evnt(26);}while(r);
+}
+do{
+tqbs=qbs_new(0,0);
+qbs_set(tqbs,qbs_new_txt_len("OPENING JSON FILE",17));
+if (is_error_pending()) goto skip4;
+makefit(tqbs);
+qbs_print(tqbs,0);
+qbs_print(nothingstring,1);
+skip4:
+qbs_free(tqbs);
+qbs_cleanup(qbs_tmp_base,0);
+if(!qbevent)break;evnt(29);}while(r);
+do{
+*__INTEGER_E=sub_coco(*__INTEGER_CHANNEL,__STRING_URL, 4 , 0 ,0|2|4|8|16);
+qbs_cleanup(qbs_tmp_base,0);
+if(!qbevent)break;evnt(30);}while(r);
+S_24:;
+if ((-(*__INTEGER_E!= 0 ))||is_error_pending()){
+if(qbevent){evnt(31);if(r)goto S_24;}
+do{
+tqbs=qbs_new(0,0);
+qbs_set(tqbs,qbs_new_txt_len("OPEN ERROR",10));
+if (is_error_pending()) goto skip5;
+makefit(tqbs);
+qbs_print(tqbs,0);
+qbs_set(tqbs,qbs_add(qbs_str((int16)(*__INTEGER_E)),qbs_new_txt(" ")));
+if (is_error_pending()) goto skip5;
+makefit(tqbs);
+qbs_print(tqbs,0);
+qbs_print(nothingstring,1);
+skip5:
+qbs_free(tqbs);
+qbs_cleanup(qbs_tmp_base,0);
+if(!qbevent)break;evnt(32);}while(r);
+do{
+goto LABEL_900;
+if(!qbevent)break;evnt(33);}while(r);
+}
+do{
+tqbs=qbs_new(0,0);
+qbs_set(tqbs,qbs_new_txt_len("PARSING JSON",12));
+if (is_error_pending()) goto skip6;
+makefit(tqbs);
+qbs_print(tqbs,0);
+qbs_print(nothingstring,1);
+skip6:
+qbs_free(tqbs);
+qbs_cleanup(qbs_tmp_base,0);
+if(!qbevent)break;evnt(36);}while(r);
+do{
+*__INTEGER_E=sub_coco(*__INTEGER_CHANNEL,0|2);
+if(!qbevent)break;evnt(37);}while(r);
+S_30:;
+if ((-(*__INTEGER_E!= 0 ))||is_error_pending()){
+if(qbevent){evnt(38);if(r)goto S_30;}
+do{
+tqbs=qbs_new(0,0);
+qbs_set(tqbs,qbs_new_txt_len("PARSE ERROR",11));
+if (is_error_pending()) goto skip7;
+makefit(tqbs);
+qbs_print(tqbs,0);
+qbs_set(tqbs,qbs_add(qbs_str((int16)(*__INTEGER_E)),qbs_new_txt(" ")));
+if (is_error_pending()) goto skip7;
+makefit(tqbs);
+qbs_print(tqbs,0);
+qbs_print(nothingstring,1);
+skip7:
+qbs_free(tqbs);
+qbs_cleanup(qbs_tmp_base,0);
+if(!qbevent)break;evnt(39);}while(r);
+do{
+*__INTEGER_C=sub_coco(*__INTEGER_CHANNEL,0|2);
+if(!qbevent)break;evnt(40);}while(r);
+do{
+goto LABEL_900;
+if(!qbevent)break;evnt(41);}while(r);
+}
+do{
+qbs_set(__STRING_TEMPERATURE,sub_coco(*__INTEGER_CHANNEL,qbs_new_txt_len("/current/temperature_2m",23),0|2|4));
+qbs_cleanup(qbs_tmp_base,0);
+if(!qbevent)break;evnt(44);}while(r);
+do{
+qbs_set(__STRING_HUMIDITY,sub_coco(*__INTEGER_CHANNEL,qbs_new_txt_len("/current/relative_humidity_2m",29),0|2|4));
+qbs_cleanup(qbs_tmp_base,0);
+if(!qbevent)break;evnt(45);}while(r);
+do{
+qbs_set(__STRING_WEATHERCODE,sub_coco(*__INTEGER_CHANNEL,qbs_new_txt_len("/current/weather_code",21),0|2|4));
+qbs_cleanup(qbs_tmp_base,0);
+if(!qbevent)break;evnt(46);}while(r);
+do{
+qbs_set(__STRING_FORECASTDAY,sub_coco(*__INTEGER_CHANNEL,qbs_new_txt_len("/daily/time/1",13),0|2|4));
+qbs_cleanup(qbs_tmp_base,0);
+if(!qbevent)break;evnt(47);}while(r);
+do{
+qbs_set(__STRING_FORECASTHIGH,sub_coco(*__INTEGER_CHANNEL,qbs_new_txt_len("/daily/temperature_2m_max/1",27),0|2|4));
+qbs_cleanup(qbs_tmp_base,0);
+if(!qbevent)break;evnt(48);}while(r);
+do{
+*__INTEGER_E=sub_coco(,0);
+if(!qbevent)break;evnt(50);}while(r);
+S_41:;
+if ((-(*__INTEGER_E!= 0 ))||is_error_pending()){
+if(qbevent){evnt(51);if(r)goto S_41;}
+do{
+tqbs=qbs_new(0,0);
+qbs_set(tqbs,qbs_new_txt_len("QUERY ERROR",11));
+if (is_error_pending()) goto skip8;
+makefit(tqbs);
+qbs_print(tqbs,0);
+qbs_set(tqbs,qbs_add(qbs_str((int16)(*__INTEGER_E)),qbs_new_txt(" ")));
+if (is_error_pending()) goto skip8;
+makefit(tqbs);
+qbs_print(tqbs,0);
+qbs_print(nothingstring,1);
+skip8:
+qbs_free(tqbs);
+qbs_cleanup(qbs_tmp_base,0);
+if(!qbevent)break;evnt(52);}while(r);
+}else{
+do{
+*__INTEGER_WEATHERCODE=qbr_float_to_long(func_val(__STRING_WEATHERCODE));
+qbs_cleanup(qbs_tmp_base,0);
+if(!qbevent)break;evnt(54);}while(r);
+do{
+qbs_set(__STRING_CONDITION,qbs_new_txt_len("UNKNOWN",7));
+qbs_cleanup(qbs_tmp_base,0);
+if(!qbevent)break;evnt(55);}while(r);
+S_46:;
+if ((-(*__INTEGER_WEATHERCODE== 0 ))||is_error_pending()){
+if(qbevent){evnt(56);if(r)goto S_46;}
+do{
+qbs_set(__STRING_CONDITION,qbs_new_txt_len("CLEAR SKY",9));
+qbs_cleanup(qbs_tmp_base,0);
+if(!qbevent)break;evnt(56);}while(r);
+}
+S_49:;
+if (((-(*__INTEGER_WEATHERCODE>= 1 ))&(-(*__INTEGER_WEATHERCODE<= 3 )))||is_error_pending()){
+if(qbevent){evnt(57);if(r)goto S_49;}
+do{
+qbs_set(__STRING_CONDITION,qbs_new_txt_len("PARTLY CLOUDY",13));
+qbs_cleanup(qbs_tmp_base,0);
+if(!qbevent)break;evnt(57);}while(r);
+}
+S_52:;
+if (((-(*__INTEGER_WEATHERCODE== 45 ))|(-(*__INTEGER_WEATHERCODE== 48 )))||is_error_pending()){
+if(qbevent){evnt(58);if(r)goto S_52;}
+do{
+qbs_set(__STRING_CONDITION,qbs_new_txt_len("FOG",3));
+qbs_cleanup(qbs_tmp_base,0);
+if(!qbevent)break;evnt(58);}while(r);
+}
+S_55:;
+if (((-(*__INTEGER_WEATHERCODE>= 51 ))&(-(*__INTEGER_WEATHERCODE<= 57 )))||is_error_pending()){
+if(qbevent){evnt(59);if(r)goto S_55;}
+do{
+qbs_set(__STRING_CONDITION,qbs_new_txt_len("DRIZZLE",7));
+qbs_cleanup(qbs_tmp_base,0);
+if(!qbevent)break;evnt(59);}while(r);
+}
+S_58:;
+if (((-(*__INTEGER_WEATHERCODE>= 61 ))&(-(*__INTEGER_WEATHERCODE<= 67 )))||is_error_pending()){
+if(qbevent){evnt(60);if(r)goto S_58;}
+do{
+qbs_set(__STRING_CONDITION,qbs_new_txt_len("RAIN",4));
+qbs_cleanup(qbs_tmp_base,0);
+if(!qbevent)break;evnt(60);}while(r);
+}
+S_61:;
+if (((-(*__INTEGER_WEATHERCODE>= 71 ))&(-(*__INTEGER_WEATHERCODE<= 77 )))||is_error_pending()){
+if(qbevent){evnt(61);if(r)goto S_61;}
+do{
+qbs_set(__STRING_CONDITION,qbs_new_txt_len("SNOW",4));
+qbs_cleanup(qbs_tmp_base,0);
+if(!qbevent)break;evnt(61);}while(r);
+}
+S_64:;
+if (((-(*__INTEGER_WEATHERCODE>= 80 ))&(-(*__INTEGER_WEATHERCODE<= 82 )))||is_error_pending()){
+if(qbevent){evnt(62);if(r)goto S_64;}
+do{
+qbs_set(__STRING_CONDITION,qbs_new_txt_len("RAIN SHOWERS",12));
+qbs_cleanup(qbs_tmp_base,0);
+if(!qbevent)break;evnt(62);}while(r);
+}
+S_67:;
+if (((-(*__INTEGER_WEATHERCODE== 85 ))|(-(*__INTEGER_WEATHERCODE== 86 )))||is_error_pending()){
+if(qbevent){evnt(63);if(r)goto S_67;}
+do{
+qbs_set(__STRING_CONDITION,qbs_new_txt_len("SNOW SHOWERS",12));
+qbs_cleanup(qbs_tmp_base,0);
+if(!qbevent)break;evnt(63);}while(r);
+}
+S_70:;
+if ((-(*__INTEGER_WEATHERCODE>= 95 ))||is_error_pending()){
+if(qbevent){evnt(64);if(r)goto S_70;}
+do{
+qbs_set(__STRING_CONDITION,qbs_new_txt_len("THUNDERSTORM",12));
+qbs_cleanup(qbs_tmp_base,0);
+if(!qbevent)break;evnt(64);}while(r);
+}
+do{
+tqbs=qbs_new(0,0);
+qbs_print(nothingstring,1);
+skip9:
+qbs_free(tqbs);
+qbs_cleanup(qbs_tmp_base,0);
+if(!qbevent)break;evnt(65);}while(r);
+do{
+tqbs=qbs_new(0,0);
+qbs_set(tqbs,qbs_new_txt_len("TORONTO WEATHER",15));
+if (is_error_pending()) goto skip10;
+makefit(tqbs);
+qbs_print(tqbs,0);
+qbs_print(nothingstring,1);
+skip10:
+qbs_free(tqbs);
+qbs_cleanup(qbs_tmp_base,0);
+if(!qbevent)break;evnt(66);}while(r);
+do{
+tqbs=qbs_new(0,0);
+qbs_set(tqbs,qbs_new_txt_len("DATA: OPEN-METEO",16));
+if (is_error_pending()) goto skip11;
+makefit(tqbs);
+qbs_print(tqbs,0);
+qbs_print(nothingstring,1);
+skip11:
+qbs_free(tqbs);
+qbs_cleanup(qbs_tmp_base,0);
+if(!qbevent)break;evnt(67);}while(r);
+do{
+tqbs=qbs_new(0,0);
+qbs_set(tqbs,qbs_new_txt_len("TEMP:",5));
+if (is_error_pending()) goto skip12;
+makefit(tqbs);
+qbs_print(tqbs,0);
+qbs_set(tqbs,__STRING_TEMPERATURE);
+if (is_error_pending()) goto skip12;
+makefit(tqbs);
+qbs_print(tqbs,0);
+qbs_set(tqbs,qbs_new_txt_len(" C",2));
+if (is_error_pending()) goto skip12;
+makefit(tqbs);
+qbs_print(tqbs,0);
+qbs_print(nothingstring,1);
+skip12:
+qbs_free(tqbs);
+qbs_cleanup(qbs_tmp_base,0);
+if(!qbevent)break;evnt(68);}while(r);
+do{
+tqbs=qbs_new(0,0);
+qbs_set(tqbs,qbs_new_txt_len("SKY: ",5));
+if (is_error_pending()) goto skip13;
+makefit(tqbs);
+qbs_print(tqbs,0);
+qbs_set(tqbs,__STRING_CONDITION);
+if (is_error_pending()) goto skip13;
+makefit(tqbs);
+qbs_print(tqbs,0);
+qbs_print(nothingstring,1);
+skip13:
+qbs_free(tqbs);
+qbs_cleanup(qbs_tmp_base,0);
+if(!qbevent)break;evnt(69);}while(r);
+do{
+tqbs=qbs_new(0,0);
+qbs_set(tqbs,qbs_new_txt_len("HUMIDITY:",9));
+if (is_error_pending()) goto skip14;
+makefit(tqbs);
+qbs_print(tqbs,0);
+qbs_set(tqbs,__STRING_HUMIDITY);
+if (is_error_pending()) goto skip14;
+makefit(tqbs);
+qbs_print(tqbs,0);
+qbs_set(tqbs,qbs_new_txt_len("%",1));
+if (is_error_pending()) goto skip14;
+makefit(tqbs);
+qbs_print(tqbs,0);
+qbs_print(nothingstring,1);
+skip14:
+qbs_free(tqbs);
+qbs_cleanup(qbs_tmp_base,0);
+if(!qbevent)break;evnt(70);}while(r);
+do{
+tqbs=qbs_new(0,0);
+qbs_set(tqbs,__STRING_FORECASTDAY);
+if (is_error_pending()) goto skip15;
+makefit(tqbs);
+qbs_print(tqbs,0);
+qbs_set(tqbs,qbs_new_txt_len(" HIGH:",6));
+if (is_error_pending()) goto skip15;
+makefit(tqbs);
+qbs_print(tqbs,0);
+qbs_set(tqbs,__STRING_FORECASTHIGH);
+if (is_error_pending()) goto skip15;
+makefit(tqbs);
+qbs_print(tqbs,0);
+qbs_set(tqbs,qbs_new_txt_len(" C",2));
+if (is_error_pending()) goto skip15;
+makefit(tqbs);
+qbs_print(tqbs,0);
+qbs_print(nothingstring,1);
+skip15:
+qbs_free(tqbs);
+qbs_cleanup(qbs_tmp_base,0);
+if(!qbevent)break;evnt(71);}while(r);
+}
+do{
+*__INTEGER_C=sub_coco(*__INTEGER_CHANNEL,0|2);
+if(!qbevent)break;evnt(74);}while(r);
+S_82:;
+if ((-(*__INTEGER_C!= 0 ))||is_error_pending()){
+if(qbevent){evnt(75);if(r)goto S_82;}
+do{
+tqbs=qbs_new(0,0);
+qbs_set(tqbs,qbs_new_txt_len("CLOSE ERROR",11));
+if (is_error_pending()) goto skip16;
+makefit(tqbs);
+qbs_print(tqbs,0);
+qbs_set(tqbs,qbs_add(qbs_str((int16)(*__INTEGER_C)),qbs_new_txt(" ")));
+if (is_error_pending()) goto skip16;
+makefit(tqbs);
+qbs_print(tqbs,0);
+qbs_print(nothingstring,1);
+skip16:
+qbs_free(tqbs);
+qbs_cleanup(qbs_tmp_base,0);
+if(!qbevent)break;evnt(75);}while(r);
+}
+LABEL_900:;
+last_line=900;
+if(qbevent){evnt(77);r=0;}
+do{
+tqbs=qbs_new(0,0);
+qbs_print(nothingstring,1);
+skip17:
+qbs_free(tqbs);
+qbs_cleanup(qbs_tmp_base,0);
+if(!qbevent)break;evnt(77);}while(r);
+do{
+tqbs=qbs_new(0,0);
+qbs_set(tqbs,qbs_new_txt_len("PRESS ENTER",11));
+if (is_error_pending()) goto skip18;
+makefit(tqbs);
+qbs_print(tqbs,0);
+qbs_print(nothingstring,1);
+skip18:
+qbs_free(tqbs);
+qbs_cleanup(qbs_tmp_base,0);
+if(!qbevent)break;evnt(78);}while(r);
+do{
+qbs_print(qbs_new_txt("? "),0);
+qbs_input_variabletypes[1]=ISSTRING;
+qbs_input_variableoffsets[1]=__STRING_PAUSE;
+qbs_input(1,1);
+if (stop_program) end();
+qbs_cleanup(qbs_tmp_base,0);
+if(!qbevent)break;evnt(79);}while(r);
+do{
+sub_end();
+if(!qbevent)break;evnt(80);}while(r);
+sub_end();
+return;
+}
+void SUB_VWATCH(){
+qbs *tqbs;
+ptrszint tmp_long;
+int32 tmp_fileno;
+uint32 qbs_tmp_base=qbs_tmp_list_nexti;
+uint8 *tmp_mem_static_pointer=mem_static_pointer;
+uint32 tmp_cmem_sp=cmem_sp;
+#include "data1.txt"
+mem_lock *sf_mem_lock;
+new_mem_lock();
+sf_mem_lock=mem_lock_tmp;
+sf_mem_lock->type=3;
+if (is_error_pending()) goto exit_subfunc;
+exit_subfunc:;
+free_mem_lock(sf_mem_lock);
+#include "free1.txt"
+if ((tmp_mem_static_pointer>=mem_static)&&(tmp_mem_static_pointer<=mem_static_limit)) mem_static_pointer=tmp_mem_static_pointer; else mem_static_pointer=mem_static;
+cmem_sp=tmp_cmem_sp;
+}
+long double FUNC__MIN(long double*_FUNC__MIN_FLOAT__VALUE1,long double*_FUNC__MIN_FLOAT__VALUE2){
+qbs *tqbs;
+ptrszint tmp_long;
+int32 tmp_fileno;
+uint32 qbs_tmp_base=qbs_tmp_list_nexti;
+uint8 *tmp_mem_static_pointer=mem_static_pointer;
+uint32 tmp_cmem_sp=cmem_sp;
+#include "data2.txt"
+mem_lock *sf_mem_lock;
+new_mem_lock();
+sf_mem_lock=mem_lock_tmp;
+sf_mem_lock->type=3;
+if (is_error_pending()) goto exit_subfunc;
+*_FUNC__MIN_FLOAT__MIN=((-(*_FUNC__MIN_FLOAT__VALUE1<=*_FUNC__MIN_FLOAT__VALUE2))?(*_FUNC__MIN_FLOAT__VALUE1):(*_FUNC__MIN_FLOAT__VALUE2));
+exit_subfunc:;
+free_mem_lock(sf_mem_lock);
+#include "free2.txt"
+if ((tmp_mem_static_pointer>=mem_static)&&(tmp_mem_static_pointer<=mem_static_limit)) mem_static_pointer=tmp_mem_static_pointer; else mem_static_pointer=mem_static;
+cmem_sp=tmp_cmem_sp;
+return *_FUNC__MIN_FLOAT__MIN;
+}
+long double FUNC__MAX(long double*_FUNC__MAX_FLOAT__VALUE1,long double*_FUNC__MAX_FLOAT__VALUE2){
+qbs *tqbs;
+ptrszint tmp_long;
+int32 tmp_fileno;
+uint32 qbs_tmp_base=qbs_tmp_list_nexti;
+uint8 *tmp_mem_static_pointer=mem_static_pointer;
+uint32 tmp_cmem_sp=cmem_sp;
+#include "data3.txt"
+mem_lock *sf_mem_lock;
+new_mem_lock();
+sf_mem_lock=mem_lock_tmp;
+sf_mem_lock->type=3;
+if (is_error_pending()) goto exit_subfunc;
+*_FUNC__MAX_FLOAT__MAX=((-(*_FUNC__MAX_FLOAT__VALUE1>=*_FUNC__MAX_FLOAT__VALUE2))?(*_FUNC__MAX_FLOAT__VALUE1):(*_FUNC__MAX_FLOAT__VALUE2));
+exit_subfunc:;
+free_mem_lock(sf_mem_lock);
+#include "free3.txt"
+if ((tmp_mem_static_pointer>=mem_static)&&(tmp_mem_static_pointer<=mem_static_limit)) mem_static_pointer=tmp_mem_static_pointer; else mem_static_pointer=mem_static;
+cmem_sp=tmp_cmem_sp;
+return *_FUNC__MAX_FLOAT__MAX;
+}
+long double FUNC__CLAMP(long double*_FUNC__CLAMP_FLOAT__VALUE,long double*_FUNC__CLAMP_FLOAT__MINVAL,long double*_FUNC__CLAMP_FLOAT__MAXVAL){
+qbs *tqbs;
+ptrszint tmp_long;
+int32 tmp_fileno;
+uint32 qbs_tmp_base=qbs_tmp_list_nexti;
+uint8 *tmp_mem_static_pointer=mem_static_pointer;
+uint32 tmp_cmem_sp=cmem_sp;
+#include "data4.txt"
+mem_lock *sf_mem_lock;
+new_mem_lock();
+sf_mem_lock=mem_lock_tmp;
+sf_mem_lock->type=3;
+if (is_error_pending()) goto exit_subfunc;
+*_FUNC__CLAMP_FLOAT__REALMIN=FUNC__MIN(_FUNC__CLAMP_FLOAT__MINVAL,_FUNC__CLAMP_FLOAT__MAXVAL);
+*_FUNC__CLAMP_FLOAT__REALMAX=FUNC__MAX(_FUNC__CLAMP_FLOAT__MINVAL,_FUNC__CLAMP_FLOAT__MAXVAL);
+*_FUNC__CLAMP_FLOAT__CLAMP=((-(*_FUNC__CLAMP_FLOAT__VALUE<*_FUNC__CLAMP_FLOAT__REALMIN))?(*_FUNC__CLAMP_FLOAT__REALMIN):(((-(*_FUNC__CLAMP_FLOAT__VALUE>*_FUNC__CLAMP_FLOAT__REALMAX))?(*_FUNC__CLAMP_FLOAT__REALMAX):(*_FUNC__CLAMP_FLOAT__VALUE))));
+exit_subfunc:;
+free_mem_lock(sf_mem_lock);
+#include "free4.txt"
+if ((tmp_mem_static_pointer>=mem_static)&&(tmp_mem_static_pointer<=mem_static_limit)) mem_static_pointer=tmp_mem_static_pointer; else mem_static_pointer=mem_static;
+cmem_sp=tmp_cmem_sp;
+return *_FUNC__CLAMP_FLOAT__CLAMP;
+}
+qbs* FUNC__ENCODEURL(qbs*_FUNC__ENCODEURL_STRING__URL){
+qbs *tqbs;
+ptrszint tmp_long;
+int32 tmp_fileno;
+uint32 qbs_tmp_base=qbs_tmp_list_nexti;
+uint8 *tmp_mem_static_pointer=mem_static_pointer;
+uint32 tmp_cmem_sp=cmem_sp;
+#include "data5.txt"
+mem_lock *sf_mem_lock;
+new_mem_lock();
+sf_mem_lock=mem_lock_tmp;
+sf_mem_lock->type=3;
+if (is_error_pending()) goto exit_subfunc;
+qbs_set(_FUNC__ENCODEURL_STRING__TMP,qbs_new_txt_len("",0));
+qbs_cleanup(qbs_tmp_base,0);
+*_FUNC__ENCODEURL_INTEGER__INQUERY= 0ll ;
+*_FUNC__ENCODEURL_INTEGER__ISKEY= 0ll ;
+fornext_value21= 1 ;
+fornext_finalvalue21=_FUNC__ENCODEURL_STRING__URL->len;
+fornext_step21= 1 ;
+if (fornext_step21<0) fornext_step_negative21=1; else fornext_step_negative21=0;
+if (is_error_pending()) goto fornext_error21;
+goto fornext_entrylabel21;
+while(1){
+fornext_value21=fornext_step21+(*_FUNC__ENCODEURL_INTEGER__P);
+fornext_entrylabel21:
+*_FUNC__ENCODEURL_INTEGER__P=fornext_value21;
+qbs_cleanup(qbs_tmp_base,0);
+if (fornext_step_negative21){
+if (fornext_value21<fornext_finalvalue21) break;
+}else{
+if (fornext_value21>fornext_finalvalue21) break;
+}
+fornext_error21:;
+*_FUNC__ENCODEURL_INTEGER__A=qbs_asc(_FUNC__ENCODEURL_STRING__URL,*_FUNC__ENCODEURL_INTEGER__P);
+qbs_cleanup(qbs_tmp_base,0);
+*_FUNC__ENCODEURL_INTEGER__VALID= 0ll ;
+if (((*_FUNC__ENCODEURL_INTEGER__A==( 45ll ))||(*_FUNC__ENCODEURL_INTEGER__A==( 46ll ))||(*_FUNC__ENCODEURL_INTEGER__A==( 95ll ))||(*_FUNC__ENCODEURL_INTEGER__A==( 126ll ))||((*_FUNC__ENCODEURL_INTEGER__A>=( 48 ))&&(*_FUNC__ENCODEURL_INTEGER__A<=( 57 )))||((*_FUNC__ENCODEURL_INTEGER__A>=( 65 ))&&(*_FUNC__ENCODEURL_INTEGER__A<=( 90 )))||((*_FUNC__ENCODEURL_INTEGER__A>=( 97 ))&&(*_FUNC__ENCODEURL_INTEGER__A<=( 122 ))))||is_error_pending()){
+*_FUNC__ENCODEURL_INTEGER__VALID= -1ll ;
+sc_ec_1_end:;
+goto sc_23_end;
+}
+if (((*_FUNC__ENCODEURL_INTEGER__A==( 35ll ))||(*_FUNC__ENCODEURL_INTEGER__A==( 47ll ))||(*_FUNC__ENCODEURL_INTEGER__A==( 58ll ))||(*_FUNC__ENCODEURL_INTEGER__A==( 63ll ))||(*_FUNC__ENCODEURL_INTEGER__A==( 64ll ))||(*_FUNC__ENCODEURL_INTEGER__A==( 91ll ))||(*_FUNC__ENCODEURL_INTEGER__A==( 93ll )))||is_error_pending()){
+if ((~(*_FUNC__ENCODEURL_INTEGER__INQUERY))||is_error_pending()){
+*_FUNC__ENCODEURL_INTEGER__VALID= -1ll ;
+if ((-(*_FUNC__ENCODEURL_INTEGER__A== 63ll ))||is_error_pending()){
+*_FUNC__ENCODEURL_INTEGER__INQUERY= -1ll ;
+*_FUNC__ENCODEURL_INTEGER__ISKEY= -1ll ;
+}
+}
+sc_ec_2_end:;
+goto sc_23_end;
+}
+if (((*_FUNC__ENCODEURL_INTEGER__A==( 61ll )))||is_error_pending()){
+if ((*_FUNC__ENCODEURL_INTEGER__INQUERY&*_FUNC__ENCODEURL_INTEGER__ISKEY)||is_error_pending()){
+*_FUNC__ENCODEURL_INTEGER__VALID= -1ll ;
+*_FUNC__ENCODEURL_INTEGER__ISKEY= 0ll ;
+}
+sc_ec_3_end:;
+goto sc_23_end;
+}
+if (((*_FUNC__ENCODEURL_INTEGER__A==( 38ll )))||is_error_pending()){
+if ((*_FUNC__ENCODEURL_INTEGER__INQUERY&(~(*_FUNC__ENCODEURL_INTEGER__ISKEY)))||is_error_pending()){
+*_FUNC__ENCODEURL_INTEGER__VALID= -1ll ;
+*_FUNC__ENCODEURL_INTEGER__ISKEY= -1ll ;
+}
+sc_ec_4_end:;
+goto sc_23_end;
+}
+sc_23_end:;
+if ((*_FUNC__ENCODEURL_INTEGER__VALID)||is_error_pending()){
+qbs_set(_FUNC__ENCODEURL_STRING__TMP,qbs_add(_FUNC__ENCODEURL_STRING__TMP,func_chr(*_FUNC__ENCODEURL_INTEGER__A)));
+qbs_cleanup(qbs_tmp_base,0);
+}else{
+qbs_set(_FUNC__ENCODEURL_STRING__TMP,qbs_add(qbs_add(_FUNC__ENCODEURL_STRING__TMP,qbs_new_txt_len("%",1)),qbs_right(qbs_add(qbs_new_txt_len("00",2),func_hex(*_FUNC__ENCODEURL_INTEGER__A,4)), 2 )));
+qbs_cleanup(qbs_tmp_base,0);
+}
+fornext_continue_20:;
+}
+fornext_exit_20:;
+qbs_set(_FUNC__ENCODEURL_STRING__ENCODEURL,_FUNC__ENCODEURL_STRING__TMP);
+qbs_cleanup(qbs_tmp_base,0);
+exit_subfunc:;
+free_mem_lock(sf_mem_lock);
+#include "free5.txt"
+if ((tmp_mem_static_pointer>=mem_static)&&(tmp_mem_static_pointer<=mem_static_limit)) mem_static_pointer=tmp_mem_static_pointer; else mem_static_pointer=mem_static;
+cmem_sp=tmp_cmem_sp;
+qbs_maketmp(_FUNC__ENCODEURL_STRING__ENCODEURL);return _FUNC__ENCODEURL_STRING__ENCODEURL;
+}
+qbs* FUNC__DECODEURL(qbs*_FUNC__DECODEURL_STRING__URL){
+qbs *tqbs;
+ptrszint tmp_long;
+int32 tmp_fileno;
+uint32 qbs_tmp_base=qbs_tmp_list_nexti;
+uint8 *tmp_mem_static_pointer=mem_static_pointer;
+uint32 tmp_cmem_sp=cmem_sp;
+#include "data6.txt"
+mem_lock *sf_mem_lock;
+new_mem_lock();
+sf_mem_lock=mem_lock_tmp;
+sf_mem_lock->type=3;
+if (is_error_pending()) goto exit_subfunc;
+qbs_set(_FUNC__DECODEURL_STRING__TMP,qbs_new_txt_len("",0));
+qbs_cleanup(qbs_tmp_base,0);
+fornext_value26= 1 ;
+fornext_finalvalue26=_FUNC__DECODEURL_STRING__URL->len;
+fornext_step26= 1 ;
+if (fornext_step26<0) fornext_step_negative26=1; else fornext_step_negative26=0;
+if (is_error_pending()) goto fornext_error26;
+goto fornext_entrylabel26;
+while(1){
+fornext_value26=fornext_step26+(*_FUNC__DECODEURL_INTEGER__P);
+fornext_entrylabel26:
+*_FUNC__DECODEURL_INTEGER__P=fornext_value26;
+qbs_cleanup(qbs_tmp_base,0);
+if (fornext_step_negative26){
+if (fornext_value26<fornext_finalvalue26) break;
+}else{
+if (fornext_value26>fornext_finalvalue26) break;
+}
+fornext_error26:;
+*_FUNC__DECODEURL_INTEGER__A=qbs_asc(_FUNC__DECODEURL_STRING__URL,*_FUNC__DECODEURL_INTEGER__P);
+qbs_cleanup(qbs_tmp_base,0);
+if ((-(*_FUNC__DECODEURL_INTEGER__A!= 37ll ))||is_error_pending()){
+qbs_set(_FUNC__DECODEURL_STRING__TMP,qbs_add(_FUNC__DECODEURL_STRING__TMP,func_chr(*_FUNC__DECODEURL_INTEGER__A)));
+qbs_cleanup(qbs_tmp_base,0);
+}else{
+qbs_set(_FUNC__DECODEURL_STRING__TMP,qbs_add(_FUNC__DECODEURL_STRING__TMP,func_chr(qbr(func_val(qbs_add(qbs_new_txt_len("&H",2),func_mid(_FUNC__DECODEURL_STRING__URL,*_FUNC__DECODEURL_INTEGER__P+ 1 , 2 ,0|1))))& 255 )));
+qbs_cleanup(qbs_tmp_base,0);
+*_FUNC__DECODEURL_INTEGER__P=*_FUNC__DECODEURL_INTEGER__P+ 2 ;
+}
+fornext_continue_25:;
+}
+fornext_exit_25:;
+qbs_set(_FUNC__DECODEURL_STRING__DECODEURL,_FUNC__DECODEURL_STRING__TMP);
+qbs_cleanup(qbs_tmp_base,0);
+exit_subfunc:;
+free_mem_lock(sf_mem_lock);
+#include "free6.txt"
+if ((tmp_mem_static_pointer>=mem_static)&&(tmp_mem_static_pointer<=mem_static_limit)) mem_static_pointer=tmp_mem_static_pointer; else mem_static_pointer=mem_static;
+cmem_sp=tmp_cmem_sp;
+qbs_maketmp(_FUNC__DECODEURL_STRING__DECODEURL);return _FUNC__DECODEURL_STRING__DECODEURL;
+}

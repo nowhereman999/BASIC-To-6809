@@ -1441,6 +1441,7 @@ Select Case v$
         A$ = "LDD": B$ = "#$2365": GoSub AO
         A$ = "STD": B$ = "$FF98": GoSub AO
         A$ = "LDD": B$ = "#$0000": GoSub AO
+        A$ = "STD": B$ = "W_CURPOS": C$ = "Set the wide text cursor to the top left corner": GoSub AO
         A$ = "STD": B$ = "$FF9A": C$ = "Border color register - BRDR & 2 Meg Virtual 512k Bank": GoSub AO
         A$ = "STA": B$ = "$FF9C": C$ = "Vertical scroll register - VSC": GoSub AO
         A$ = "STA": B$ = "$FF9F": C$ = "Clear the Horizontal register": GoSub AO
@@ -1458,6 +1459,7 @@ Select Case v$
         A$ = "LDD": B$ = "#$2371": GoSub AO
         A$ = "STD": B$ = "$FF98": GoSub AO
         A$ = "LDD": B$ = "#$0000": GoSub AO
+        A$ = "STD": B$ = "W_CURPOS": C$ = "Set the wide text cursor to the top left corner": GoSub AO
         A$ = "STD": B$ = "$FF9A": C$ = "Border color register - BRDR & 2 Meg Virtual 512k Bank": GoSub AO
         A$ = "STA": B$ = "$FF9C": C$ = "Vertical scroll register - VSC": GoSub AO
         A$ = "STA": B$ = "$FF9F": C$ = "Clear the Horizontal register": GoSub AO
@@ -1475,6 +1477,7 @@ Select Case v$
         A$ = "LDD": B$ = "#$2375": GoSub AO
         A$ = "STD": B$ = "$FF98": GoSub AO
         A$ = "LDD": B$ = "#$0000": GoSub AO
+        A$ = "STD": B$ = "W_CURPOS": C$ = "Set the wide text cursor to the top left corner": GoSub AO
         A$ = "STD": B$ = "$FF9A": C$ = "Border color register - BRDR & 2 Meg Virtual 512k Bank": GoSub AO
         A$ = "STA": B$ = "$FF9C": C$ = "Vertical scroll register - VSC": GoSub AO
         A$ = "STA": B$ = "$FF9F": C$ = "Clear the Horizontal register": GoSub AO
@@ -2873,27 +2876,15 @@ DoGCOPY:
 ' Get source Page in B
 GoSub GetExpressionB4Comma: x = x + 2 ' Get the expression before a Comma, & move past it
 GoSub ParseNumericExpression_UByte ' Parse Number and return with value as Unsigned value in B
-If Gmode = 0 Or Gmode = 1 Or Gmode = 2 Or Gmode = 4 Then
-    ' For the Text screen we move past the Disk variable area
-    A$ = "TSTB": C$ = "Check if B = 0": GoSub AO
-    A$ = "BNE": B$ = ">": C$ = "Skip ahead if it's 0": GoSub AO
-    A$ = "ADDB": B$ = "#$04": C$ = "Add 4": GoSub AO
-    Z$ = "!"
-End If
 A$ = "PSHS": B$ = "B": C$ = "Save the Source Graphics Page # on the stack": GoSub AO
 'Get Destination page value inB
 GoSub GetExpressionB4EOL 'Handle an expression that ends with a colon or End of a Line
 GoSub ParseNumericExpression_UByte ' Parse Number and return with value as Unsigned value in B
-If Gmode = 0 Or Gmode = 1 Or Gmode = 2 Or Gmode = 4 Then
-    ' For the Text screen we move past the Disk variable area
-    A$ = "TSTB": C$ = "Check if B = 0": GoSub AO
-    A$ = "BNE": B$ = ">": C$ = "Skip ahead if it's 0": GoSub AO
-    A$ = "ADDB": B$ = "#$04": C$ = "Add 4": GoSub AO
-    Z$ = "!"
-End If
 ' Figure out the start of the source page
 If Gmode < 100 Then
-    ' Copy CoCo 1 & 2 graphic screens
+    ' Copy contiguous CoCo 1 & 2 graphics pages. GModeStartAddress$ has already
+    ' been relocated to GRAPHICS_PAGE_START by the tokenizer, so page numbers
+    ' must remain logical zero-based indices for every GMODE.
     A$ = "CLRA": C$ = "Clear MSB": GoSub AO
     A$ = "LDX": B$ = "#$" + GModeScreenSize$(Gmode): C$ = "Get the Size of a graphics screen": GoSub AO
     A$ = "PSHS": B$ = "D,X": C$ = "Save the two 16 bit WORDS on the stack, to be multiplied": GoSub AO
@@ -3121,13 +3112,21 @@ If Gmode > 99 Then
     '    Print #1, ' Need a space for @ in assembly
     '    Return
 Else
-    If Gmode = 4 Or Gmode = 7 Then
-        A$ = "LDA": B$ = "#9": C$ = "9 for Semigrpahics 6 or 12": GoSub AO
-        A$ = "STA": B$ = "$FF9C": C$ = "Neccesary for CoCo 3 GIME to use this mode": GoSub AO
-    End If
-    If Gmode = 8 Then
-        A$ = "LDA": B$ = "#10": C$ = "10 for Semigrpahics 24": GoSub AO
-        A$ = "STA": B$ = "$FF9C": C$ = "Neccesary for CoCo 3 GIME to use this mode": GoSub AO
+    ' In legacy video the low VSC nibble selects how many scanlines use each
+    ' fetched 32-byte row. Set it for every alphanumeric/semigraphics mode so a
+    ' mode switch cannot inherit the previous screen's row height.
+    Select Case Gmode
+        Case 0, 1, 2, 4
+            A$ = "LDA": B$ = "#$0F": C$ = "Use 12 scanlines per row for the $0200 IA/EA/SG4/SG6 layout": GoSub AO
+        Case 3, 6
+            A$ = "LDA": B$ = "#8": C$ = "Use 3 scanlines per row for the $0800 SG8 layout": GoSub AO
+        Case 5, 7
+            A$ = "LDA": B$ = "#9": C$ = "Use 2 scanlines per row for the $0C00 SG12 layout": GoSub AO
+        Case 8
+            A$ = "LDA": B$ = "#10": C$ = "Use 1 scanline per row for the $1800 SG24 layout": GoSub AO
+    End Select
+    If Gmode >= 0 And Gmode <= 8 Then
+        A$ = "STA": B$ = "$FF9C": C$ = "Set the CoCo 3 GIME legacy row height": GoSub AO
     End If
     A$ = "CLRA": C$ = "D=B": GoSub AO
     A$ = "LDB": B$ = "GModePage": C$ = "Get the screen Page #": GoSub AO
@@ -4421,8 +4420,20 @@ DoPRINT:
 Z$ = "; Starting PRINT": GoSub AO
 PrintD$ = "PRINT_D": PrintA$ = "PrintA_On_Screen": PrintDev$ = " on screen"
 PrintCC3 = 0
+PrintEmptyGraphicsTarget = 0
 GetSectionToPrint:
 v = Array(x): x = x + 1
+' A comma is normally a PRINT separator.  For PRINT #-3, PRINT #-4, and PRINT #-5,
+' however, the first comma terminates the graphics-device specifier.  If
+' it is immediately followed by EOL/colon, treat it like an empty string
+' instead of mistaking it for a trailing PRINT comma that suppresses CR.
+If PrintEmptyGraphicsTarget = 1 Then
+    If v <> TK_SpecialChar Then
+        PrintEmptyGraphicsTarget = 0
+    Else
+        If Array(x) <> TK_EOL And Array(x) <> TK_Colon Then PrintEmptyGraphicsTarget = 0
+    End If
+End If
 ' Chek if we are printing numbers
 If v >= Asc("0") And v <= Asc("9") Or (v = Asc("&") And Array(x) = Asc("H")) Then
     ' Printing a number, PRINT 10*20
@@ -4658,7 +4669,7 @@ Select Case v
         v = Array(x): x = x + 1
         Select Case v
             Case TK_EOL, TK_Colon ' Do a carriage return/Line feed
-                If Array(x - 4) = &HF5 And (Array(x - 3) = &H2C Or Array(x - 3) = &H3B) Then
+                If PrintEmptyGraphicsTarget = 0 And Array(x - 4) = &HF5 And (Array(x - 3) = &H2C Or Array(x - 3) = &H3B) Then
                     Return 'if we previously did a comma or semicolon then Return
                 Else
                     A$ = "LDA": B$ = "#$0D": C$ = "Do a Line Feed/Carriage Return": GoSub AO
@@ -4729,6 +4740,7 @@ Select Case v
                                             PrintCC3 = 0
                                         End If
                                         PrintD$ = "PRINT_D_Graphics_Screen_" + GModeName$(Gmode): PrintA$ = "AtoGraphics_Screen_" + GModeName$(Gmode): PrintDev$ = " to graphic screen"
+                                        PrintEmptyGraphicsTarget = 1
                                         GoTo GetSectionToPrint
                                     End If
                                 End If
@@ -4742,10 +4754,11 @@ Select Case v
                                     Else
                                         If GModeName$(Gmode) <> "FG6R" Then
                                             Print "PRINT #-4 only works with GMODE 16 FG6R on";: GoTo FoundError
-                                        End If
-                                        PrintCC3 = 0
-                                        PrintD$ = "PRINT_D_Graphics_Screen_6Bit_FG6R": PrintA$ = "AtoGraphics_Screen_6Bit_FG6R": PrintDev$ = " to 42 column graphic screen"
-                                        GoTo GetSectionToPrint
+                                    End If
+                                    PrintCC3 = 0
+                                    PrintD$ = "PRINT_D_Graphics_Screen_6Bit_FG6R": PrintA$ = "AtoGraphics_Screen_6Bit_FG6R": PrintDev$ = " to 42 column graphic screen"
+                                    PrintEmptyGraphicsTarget = 1
+                                    GoTo GetSectionToPrint
                                     End If
                                 End If
                             Case &H35
@@ -4758,10 +4771,11 @@ Select Case v
                                     Else
                                         If GModeName$(Gmode) <> "FG6R" Then
                                             Print "PRINT #-5 only works with GMODE 16 FG6R on";: GoTo FoundError
-                                        End If
-                                        PrintCC3 = 0
-                                        PrintD$ = "PRINT_D_Graphics_Screen_6Bit_Inverse_FG6R": PrintA$ = "AtoGraphics_Screen_6Bit_Inverse_FG6R": PrintDev$ = " to inverse 42 column graphic screen"
-                                        GoTo GetSectionToPrint
+                                    End If
+                                    PrintCC3 = 0
+                                    PrintD$ = "PRINT_D_Graphics_Screen_6Bit_Inverse_FG6R": PrintA$ = "AtoGraphics_Screen_6Bit_Inverse_FG6R": PrintDev$ = " to inverse 42 column graphic screen"
+                                    PrintEmptyGraphicsTarget = 1
+                                    GoTo GetSectionToPrint
                                     End If
                                 End If
                         End Select
@@ -4779,11 +4793,7 @@ Select Case v
 
 
             Case TK_Comma ' Handle a comma on the print line
-                A$ = "LDD": B$ = "CURPOS": C$ = "Handling the comma": GoSub AO
-                A$ = "ADDD": B$ = "#16": GoSub AO
-                A$ = "ANDB": B$ = "#%11110000": C$ = "force it to be position 0 or 16": GoSub AO
-                A$ = "TFR": B$ = "D,X": C$ = "Handle the comma in the PRINT command": GoSub AO
-                A$ = "JSR": B$ = "UpdateCursor": GoSub AO
+                A$ = "JSR": B$ = "PrintComma": C$ = "Advance to the next 16-column PRINT zone": GoSub AO
                 GoTo GetSectionToPrint 'continue printing on the same line
 
             Case TK_SemiColon ' Handle a semi-colon
@@ -4883,7 +4893,8 @@ If c = 0 Then x = x + 1: GoTo PrintQDone 'an empty string, skip the &H22 and "mo
 ' string has a value
 x = Y
 If c > 5 Then
-    A$ = "BSR": B$ = ">": C$ = "Skip over string value": GoSub AO
+    If c <= 127 Then A$ = "BSR" Else A$ = "LBSR"
+    B$ = ">": C$ = "Skip over string value": GoSub AO
     PrintQGetChars:
     v = Array(x): x = x + 1: 'Get next byte
     If v = &HF5 Then GoTo PrintQGotQuote ' end quote

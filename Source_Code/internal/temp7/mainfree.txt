@@ -1,0 +1,9 @@
+qbs_free(__STRING_URL);
+qbs_free(__STRING_STATION);
+qbs_free(__STRING_CITY);
+qbs_free(__STRING_TEMPERATURE);
+qbs_free(__STRING_CONDITION);
+qbs_free(__STRING_HUMIDITY);
+qbs_free(__STRING_FORECASTDAY);
+qbs_free(__STRING_FORECASTHIGH);
+qbs_free(__STRING_PAUSE);

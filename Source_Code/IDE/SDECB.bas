@@ -15879,8 +15879,14 @@ Function evaluate$ (a2$, typ As Long)
                             If l2$ = ")" Then
                                 b2 = b2 - 1
                                 If b2 = -1 Then
-                                    If i2 = i + 2 Then Give_Error "Expected (...)": Exit Function
-                                    c$ = evaluatefunc(getelements$(a$, i + 2, i2 - 1), args, typ2)
+                                    If i2 = i + 2 Then
+                                        ' Permit explicit empty parentheses only for a zero-argument
+                                        ' function registered with the special format "()".
+                                        If id.args <> 0 Or RTrim$(id.specialformat) <> "()" Then Give_Error "Expected (...)": Exit Function
+                                        c$ = evaluatefunc("", 0, typ2)
+                                    Else
+                                        c$ = evaluatefunc(getelements$(a$, i + 2, i2 - 1), args, typ2)
+                                    End If
                                     If Error_Happened Then Exit Function
                                     i = i2
                                     GoTo evalednextele
@@ -15891,6 +15897,7 @@ Function evaluate$ (a2$, typ As Long)
                             GoTo evalnextele
                         Else
                             'no brackets
+                            If RTrim$(id.specialformat) = "()" Then Give_Error "Expected ()": Exit Function
                             c$ = evaluatefunc("", 0, typ2)
                             If Error_Happened Then Exit Function
                         End If

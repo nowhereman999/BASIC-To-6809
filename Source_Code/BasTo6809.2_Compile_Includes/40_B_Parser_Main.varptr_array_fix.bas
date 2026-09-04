@@ -588,7 +588,10 @@ While RPNEntry <= RPNLast
 
                     ' Code to push this literal string onto the 6809 string stack
                     ' Stack will have the first byte = string length then the string
-                    A$ = "BSR": B$ = "@CopyToStack": C$ = "Skip ahead": GoSub AO
+                    ' BSR can only cross 127 bytes. The inline data contains
+                    ' the literal plus its length byte, so use LBSR when needed.
+                    If Len(Temp$) <= 126 Then A$ = "BSR" Else A$ = "LBSR"
+                    B$ = "@CopyToStack": C$ = "Skip ahead": GoSub AO
                     For ii = Len(Temp$) To 1 Step -1
                         A$ = "FCB": B$ = "$" + Right$("0" + Hex$(Asc(Mid$(Temp$, ii, 1))), 2): C$ = Mid$(Temp$, ii, 1): GoSub AO
                     Next ii

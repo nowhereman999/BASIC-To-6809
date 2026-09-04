@@ -428,6 +428,12 @@ While p <= Len(Expression$)
                     End If
 
                     p = p + 2 ' skip F5 28
+                    ' FNTIME$ is a true zero-argument string function.
+                    If cmd16 = FNTIME_CMD And p + 1 <= Len(Expression$) Then
+                        If Asc(Mid$(Expression$, p, 1)) = TK_SpecialChar And Asc(Mid$(Expression$, p + 1, 1)) = &H29 Then
+                            ParenArgCount(ParenSP) = 0
+                        End If
+                    End If
                     ExpectValue = -1
                 Else
                     ' Not followed by "(": emit immediately (ex: INKEY$)
@@ -513,6 +519,17 @@ While p <= Len(Expression$)
                     End If
 
                     p = p + 2 ' skip F5 28
+                    ' FujiNet functions below take no arguments. Record an empty
+                    ' pair of parentheses distinctly from a one-argument call.
+                    EmptyFujiArgs = (cmd16 = FNINIT_CMD Or cmd16 = FNERROR_CMD Or cmd16 = FNWIFISTATUS_CMD Or _
+                        cmd16 = FNWIFIENABLED_CMD Or cmd16 = FNWIFISCAN_CMD Or cmd16 = FNMOUNTALL_CMD Or _
+                        cmd16 = FNCLOSEDIR_CMD Or cmd16 = FNDIRPOS_CMD Or cmd16 = FNTIME_CMD Or _
+                        cmd16 = FNAPPKEYCLOSE_CMD Or cmd16 = FNHASHCLEAR_CMD)
+                    If EmptyFujiArgs And p + 1 <= Len(Expression$) Then
+                        If Asc(Mid$(Expression$, p, 1)) = TK_SpecialChar And Asc(Mid$(Expression$, p + 1, 1)) = &H29 Then
+                            ParenArgCount(ParenSP) = 0
+                        End If
+                    End If
                     ExpectValue = -1 ' expecting first argument expression
 
                 Else
@@ -2667,7 +2684,10 @@ If T% = TK_SpecialChar Then
         If Asc(Mid$(Temp$, 2, 1)) = TK_Quote Then
             Lit$ = Mid$(Temp$, 3, Len(Temp$) - 4) ' inside quotes
 
-            A$ = "BSR": B$ = "@CopyToStack": C$ = "Skip ahead": GoSub AO
+            ' BSR can only cross 127 bytes. The inline data contains the
+            ' literal plus its length byte, so use LBSR for long strings.
+            If Len(Lit$) <= 126 Then A$ = "BSR" Else A$ = "LBSR"
+            B$ = "@CopyToStack": C$ = "Skip ahead": GoSub AO
             For ii = Len(Lit$) To 1 Step -1
                 A$ = "FCB": B$ = "$" + Right$("0" + Hex$(Asc(Mid$(Lit$, ii, 1))), 2): C$ = Mid$(Lit$, ii, 1): GoSub AO
             Next ii

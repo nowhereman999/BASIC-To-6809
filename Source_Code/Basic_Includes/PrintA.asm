@@ -37,6 +37,15 @@ LA344:  STX   CURPOS
 LA35D:
         PULS  D,X,PC    ; Restore D & X and return
 
+; Advance to the next 16-column PRINT zone on the 32-column screen.
+; A trailing comma suppresses the carriage return but still calls this routine.
+PrintComma:
+        LDD     CURPOS
+        ADDD    #16
+        ANDB    #%11110000
+        TFR     D,X
+        JMP     UpdateCursor
+
 * Otherwise scroll the screen (Fastest method I can think of for 6809)
 ScrollTextScreen:
         PSHS    CC,DP,Y,U

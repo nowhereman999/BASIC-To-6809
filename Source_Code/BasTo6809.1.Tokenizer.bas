@@ -86,6 +86,8 @@ Dim Sprite$(255)
 Dim SpriteHeight(255)
 Dim SpriteNumberOfFrames(255)
 Dim SpriteLivesAt(255)
+Dim SpriteRequiredGMode(255)
+For i = 0 To 255: SpriteRequiredGMode(i) = -1: Next i
 Dim Sample$(255)
 Dim SampleStart(255)
 Dim SampleStartBlock(255)
@@ -139,7 +141,7 @@ GMode$(16) = "Full_graphic_6_R" '     Full graphic 6-R      1   1   1   1   1 1 
 GMode$(17) = "DMAccess_grpahics" '    Direct memory access  X   X   X   X   1 1 1
 GMode$(16) = "Full_graphic_6_R" '     Full graphic 6-R      1   1   1   1   1 1 0   256x192x2 $1800(6144)
 
-GModeName$(0) = "IA": GModeMaxX$(0) = "31": GModeMaxY$(0) = "15": GModeStartAddress$(0) = "400": GModeScreenSize$(0) = "200": GModeColours$(0) = "2"
+GModeName$(0) = "IA": GModeMaxX$(0) = "31": GModeMaxY$(0) = "15": GModeStartAddress$(0) = "400": GModeScreenSize$(0) = "200": GModeColours$(0) = "9"
 GModeName$(1) = "EA": GModeMaxX$(1) = "31": GModeMaxY$(1) = "15": GModeStartAddress$(1) = "400": GModeScreenSize$(1) = "200": GModeColours$(1) = "2"
 GModeName$(2) = "SG4": GModeMaxX$(2) = "63": GModeMaxY$(2) = "31": GModeStartAddress$(2) = "400": GModeScreenSize$(2) = "200": GModeColours$(2) = "2"
 GModeName$(3) = "SG4H": GModeMaxX$(3) = "63": GModeMaxY$(3) = "31": GModeStartAddress$(3) = "E00": GModeScreenSize$(3) = "800": GModeColours$(3) = "9"
@@ -1592,7 +1594,9 @@ While x < filesize
                                 h$ = Mid$(i$, 14, hend - 14)
                                 h = Val(h$)
                                 SpriteHeight(n) = h
-                                Exit While
+                            End If
+                            If InStr(i$, "; Required GMODE") = 1 Then
+                                SpriteRequiredGMode(n) = Val(Mid$(i$, InStr(i$, ":") + 1))
                             End If
                         Wend
                         Close #1
@@ -1730,6 +1734,10 @@ Next ii
 ' Sprite setup stuff
 For i = 0 To 31
     If Sprite$(i) <> "" Then Sprites = 1
+    If Sprite$(i) <> "" And SpriteRequiredGMode(i) >= 0 And SpriteRequiredGMode(i) <> CurrentGMode Then
+        Print "Error: SPRITE_LOAD file: "; Sprite$(i); " was generated for GMODE"; SpriteRequiredGMode(i); " but this program uses GMODE"; CurrentGMode; "."
+        GoTo FoundError
+    End If
 Next i
 
 Open "SpritesUsed.txt" For Output As #1
@@ -1855,6 +1863,7 @@ Next ii
 WideTextBytes = 0
 If NoText = 1 And WidthVal$ <> "" Then Print "Memory layout error: -notext cannot be used with WIDTH "; WidthVal$; ".": System
 If WidthVal$ <> "" And WidthVal$ <> "32" Then
+    ' The cursor uses 28 logical rows, but the GIME displays a 29th guard row.
     WideTextBytes = Val(WidthVal$) * 2 * 29
 End If
 ScreenBytes = CoCo12GraphicsBytes
@@ -1922,6 +1931,8 @@ If CoCo3 = 1 And Sprites = 1 Then
         Case 4
             ColourDiv = 4
         Case 16
+            ColourDiv = 2
+        Case 9
             ColourDiv = 2
     End Select
     Num = (Val(GModeMaxX$(CurrentGMode)) + 1) / ColourDiv: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
@@ -2887,9 +2898,136 @@ For ii = 0 To StringCommandsFoundCount - 1
         Disk = 1
         Temp$ = "Disk_Commands": GoSub AddIncludeTemp
     End If
+    If Temp$ = "FNREAD$" Then
+        Temp$ = "FujiNet": GoSub AddIncludeTemp ' Shared Becker-port transport
+        Temp$ = "FujiNet_Read": GoSub AddIncludeTemp ' Buffered string read support
+    ElseIf Temp$ = "FNJSONQUERY$" Then
+        Temp$ = "FujiNet": GoSub AddIncludeTemp ' Shared Becker-port transport
+        Temp$ = "FujiNet_String": GoSub AddIncludeTemp ' Copy the JSON path into compiler scratch space
+        Temp$ = "FujiNet_ChannelStatus": GoSub AddIncludeTemp ' Shared four-byte channel status transaction
+        Temp$ = "FujiNet_Status": GoSub AddIncludeTemp ' Obtain the JSON query result length
+        Temp$ = "FujiNet_Read": GoSub AddIncludeTemp ' Shared network-read dependency
+        Temp$ = "FujiNet_JSONQuery": GoSub AddIncludeTemp ' FujiNet on-device JSON query support
+    ElseIf Temp$ = "FNWIFISSID$" Or Temp$ = "FNADAPTER$" Then
+        Temp$ = "FujiNet": GoSub AddIncludeTemp
+        Temp$ = "FujiNet_String": GoSub AddIncludeTemp
+        Temp$ = "FujiNet_Fuji": GoSub AddIncludeTemp
+        Temp$ = "FujiNet_WiFi": GoSub AddIncludeTemp
+    ElseIf Temp$ = "FNHOST$" Or Temp$ = "FNDEVICEPATH$" Or Temp$ = "FNHOSTPREFIX$" Then
+        Temp$ = "FujiNet": GoSub AddIncludeTemp
+        Temp$ = "FujiNet_String": GoSub AddIncludeTemp
+        Temp$ = "FujiNet_Fuji": GoSub AddIncludeTemp
+        Temp$ = "FujiNet_Mount": GoSub AddIncludeTemp
+    ElseIf Temp$ = "FNREADDIR$" Then
+        Temp$ = "FujiNet": GoSub AddIncludeTemp
+        Temp$ = "FujiNet_String": GoSub AddIncludeTemp
+        Temp$ = "FujiNet_Fuji": GoSub AddIncludeTemp
+        Temp$ = "FujiNet_Directory": GoSub AddIncludeTemp
+    ElseIf Temp$ = "FNTIME$" Then
+        Temp$ = "FujiNet": GoSub AddIncludeTemp
+        Temp$ = "FujiNet_String": GoSub AddIncludeTemp
+        Temp$ = "FujiNet_Clock": GoSub AddIncludeTemp
+    ElseIf Temp$ = "FNAPPKEYREAD$" Then
+        Temp$ = "FujiNet": GoSub AddIncludeTemp
+        Temp$ = "FujiNet_String": GoSub AddIncludeTemp
+        Temp$ = "FujiNet_Fuji": GoSub AddIncludeTemp
+        Temp$ = "FujiNet_AppKey": GoSub AddIncludeTemp
+    ElseIf Temp$ = "FNHASH$" Or Temp$ = "FNHASHCALC$" Then
+        Temp$ = "FujiNet": GoSub AddIncludeTemp
+        Temp$ = "FujiNet_String": GoSub AddIncludeTemp
+        Temp$ = "FujiNet_Fuji": GoSub AddIncludeTemp
+        Temp$ = "FujiNet_Hash": GoSub AddIncludeTemp
+    ElseIf Temp$ = "FNBASE64ENCODE$" Or Temp$ = "FNBASE64DECODE$" Then
+        Temp$ = "FujiNet": GoSub AddIncludeTemp
+        Temp$ = "FujiNet_String": GoSub AddIncludeTemp
+        Temp$ = "FujiNet_Fuji": GoSub AddIncludeTemp
+        Temp$ = "FujiNet_Base64": GoSub AddIncludeTemp
+    End If
 Next ii
 For ii = 0 To NumericCommandsFoundCount - 1
     Temp$ = UCase$(NumericCommandsFound$(ii))
+
+    If Temp$ = "FNOPEN" Then
+        Temp$ = "FujiNet": GoSub AddIncludeTemp ' Add the shared FujiNet Becker-port transport
+        Temp$ = "FujiNet_String": GoSub AddIncludeTemp ' Shared BASIC stack-string copier
+        Temp$ = "FujiNet_Open": GoSub AddIncludeTemp ' Add network-open support only when used
+    ElseIf Temp$ = "FNCLOSE" Then
+        Temp$ = "FujiNet": GoSub AddIncludeTemp ' Add the shared FujiNet Becker-port transport
+        Temp$ = "FujiNet_Close": GoSub AddIncludeTemp ' Add network-close support only when used
+    ElseIf Temp$ = "FNBYTESWAITING" Then
+        Temp$ = "FujiNet": GoSub AddIncludeTemp ' Add the shared FujiNet Becker-port transport
+        Temp$ = "FujiNet_ChannelStatus": GoSub AddIncludeTemp ' Shared four-byte channel status transaction
+        Temp$ = "FujiNet_Status": GoSub AddIncludeTemp ' Add channel byte-count status support
+    ElseIf Temp$ = "FNCHANNELERROR" Then
+        Temp$ = "FujiNet": GoSub AddIncludeTemp ' Add the shared FujiNet Becker-port transport
+        Temp$ = "FujiNet_ChannelStatus": GoSub AddIncludeTemp ' Shared four-byte channel status transaction
+        Temp$ = "FujiNet_ChannelError": GoSub AddIncludeTemp ' Add normalized channel error support
+    ElseIf Temp$ = "FNCONNECTED" Then
+        Temp$ = "FujiNet": GoSub AddIncludeTemp ' Add the shared FujiNet Becker-port transport
+        Temp$ = "FujiNet_ChannelStatus": GoSub AddIncludeTemp ' Shared four-byte channel status transaction
+        Temp$ = "FujiNet_Connected": GoSub AddIncludeTemp ' Add channel connected-flag support
+    ElseIf Temp$ = "FNWRITE" Then
+        Temp$ = "FujiNet": GoSub AddIncludeTemp ' Add the shared FujiNet Becker-port transport
+        Temp$ = "FujiNet_String": GoSub AddIncludeTemp ' Shared BASIC stack-string copier
+        Temp$ = "FujiNet_Write": GoSub AddIncludeTemp ' Add network string-write support
+    ElseIf Temp$ = "FNJSONPARSE" Then
+        Temp$ = "FujiNet": GoSub AddIncludeTemp ' Add the shared FujiNet Becker-port transport
+        Temp$ = "FujiNet_ChannelStatus": GoSub AddIncludeTemp ' Preserve the protocol's real HTTP/channel error
+        Temp$ = "FujiNet_JSONParse": GoSub AddIncludeTemp ' Add on-device JSON parsing only when used
+    ElseIf Temp$ = "FNHTTPMODE" Then
+        Temp$ = "FujiNet": GoSub AddIncludeTemp
+        Temp$ = "FujiNet_NetworkControl": GoSub AddIncludeTemp
+    ElseIf Temp$ = "FNHTTPHEADER" Or Temp$ = "FNHTTPPOST" Or Temp$ = "FNHTTPPUT" Or Temp$ = "FNHTTPDELETE" Then
+        ' The shared HTTP module contains header/body and DELETE entry points,
+        ' so include each of its small channel dependencies together.
+        Temp$ = "FujiNet": GoSub AddIncludeTemp
+        Temp$ = "FujiNet_String": GoSub AddIncludeTemp
+        Temp$ = "FujiNet_Open": GoSub AddIncludeTemp
+        Temp$ = "FujiNet_Write": GoSub AddIncludeTemp
+        Temp$ = "FujiNet_ChannelStatus": GoSub AddIncludeTemp
+        Temp$ = "FujiNet_NetworkControl": GoSub AddIncludeTemp
+        Temp$ = "FujiNet_HTTP": GoSub AddIncludeTemp
+    ElseIf Temp$ = "FNREADMEM" Or Temp$ = "FNWRITEMEM" Then
+        Temp$ = "FujiNet": GoSub AddIncludeTemp
+        Temp$ = "FujiNet_ChannelStatus": GoSub AddIncludeTemp
+        Temp$ = "FujiNet_NetworkControl": GoSub AddIncludeTemp
+        Temp$ = "FujiNet_Memory": GoSub AddIncludeTemp
+    ElseIf Temp$ = "FNDELETE" Or Temp$ = "FNRENAME" Or Temp$ = "FNLOCK" Or Temp$ = "FNUNLOCK" Or Temp$ = "FNMKDIR" Or Temp$ = "FNRMDIR" Or Temp$ = "FNCHDIR" Or Temp$ = "FNUSERNAME" Or Temp$ = "FNPASSWORD" Then
+        Temp$ = "FujiNet": GoSub AddIncludeTemp
+        Temp$ = "FujiNet_String": GoSub AddIncludeTemp
+        Temp$ = "FujiNet_NetworkControl": GoSub AddIncludeTemp
+    ElseIf Temp$ = "FNDIROPEN" Then
+        Temp$ = "FujiNet": GoSub AddIncludeTemp
+        Temp$ = "FujiNet_String": GoSub AddIncludeTemp
+        Temp$ = "FujiNet_Open": GoSub AddIncludeTemp
+    ElseIf Temp$ = "FNWIFIENABLED" Or Temp$ = "FNWIFISCAN" Or Temp$ = "FNWIFIRSSI" Or Temp$ = "FNSETWIFI" Then
+        Temp$ = "FujiNet": GoSub AddIncludeTemp
+        Temp$ = "FujiNet_String": GoSub AddIncludeTemp
+        Temp$ = "FujiNet_Fuji": GoSub AddIncludeTemp
+        Temp$ = "FujiNet_WiFi": GoSub AddIncludeTemp
+    ElseIf Temp$ = "FNSETHOST" Or Temp$ = "FNMOUNTHOST" Or Temp$ = "FNUNMOUNTHOST" Or Temp$ = "FNDEVICEHOST" Or Temp$ = "FNDEVICEMODE" Or Temp$ = "FNSETDEVICE" Or Temp$ = "FNMOUNTIMAGE" Or Temp$ = "FNUNMOUNTIMAGE" Or Temp$ = "FNMOUNTALL" Or Temp$ = "FNSETHOSTPREFIX" Then
+        Temp$ = "FujiNet": GoSub AddIncludeTemp
+        Temp$ = "FujiNet_String": GoSub AddIncludeTemp
+        Temp$ = "FujiNet_Fuji": GoSub AddIncludeTemp
+        Temp$ = "FujiNet_Mount": GoSub AddIncludeTemp
+    ElseIf Temp$ = "FNOPENDIR" Or Temp$ = "FNCLOSEDIR" Or Temp$ = "FNDIRPOS" Or Temp$ = "FNSETDIRPOS" Then
+        Temp$ = "FujiNet": GoSub AddIncludeTemp
+        Temp$ = "FujiNet_String": GoSub AddIncludeTemp
+        Temp$ = "FujiNet_Fuji": GoSub AddIncludeTemp
+        Temp$ = "FujiNet_Directory": GoSub AddIncludeTemp
+    ElseIf Temp$ = "FNAPPKEYSET" Or Temp$ = "FNAPPKEYWRITE" Or Temp$ = "FNAPPKEYCLOSE" Then
+        Temp$ = "FujiNet": GoSub AddIncludeTemp
+        Temp$ = "FujiNet_String": GoSub AddIncludeTemp
+        Temp$ = "FujiNet_Fuji": GoSub AddIncludeTemp
+        Temp$ = "FujiNet_AppKey": GoSub AddIncludeTemp
+    ElseIf Temp$ = "FNHASHCLEAR" Or Temp$ = "FNHASHADD" Then
+        Temp$ = "FujiNet": GoSub AddIncludeTemp
+        Temp$ = "FujiNet_String": GoSub AddIncludeTemp
+        Temp$ = "FujiNet_Fuji": GoSub AddIncludeTemp
+        Temp$ = "FujiNet_Hash": GoSub AddIncludeTemp
+    ElseIf Temp$ = "FNINIT" Or Temp$ = "FNERROR" Or Temp$ = "FNWIFISTATUS" Then
+        Temp$ = "FujiNet": GoSub AddIncludeTemp ' Add the FujiNet Becker-port byte transport
+    End If
 
     If Temp$ = "VAL" Then
         Temp$ = "NumericString_To_Integer": GoSub AddIncludeTemp ' The LPEEK & LPOKE routines
@@ -2963,10 +3101,15 @@ If Sprites = 1 Then
             ColourDiv = 4
         Case 16
             ColourDiv = 2
+        Case 9
+            ColourDiv = 2
     End Select
     If CoCo3 <> 1 Then
         ' Do this for CoCo 1 & 2
-        Num = (Val(GModeMaxX$(CurrentGMode)) + 1) / ColourDiv: GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
+        Num = (Val(GModeMaxX$(CurrentGMode)) + 1) / ColourDiv
+        If (CurrentGMode >= 0 And CurrentGMode <= 2) Or CurrentGMode = 4 Then Num = 32 ' IA/EA/SG4/SG6 all use 32-byte physical rows
+        If CurrentGMode = 3 Or CurrentGMode = 5 Then Num = Num * 2 ' SG4H/SG6H store each logical row in two 32-byte memory rows
+        GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
         Z$ = "GmodeBytesPerRow EQU     " + num$ + "        ; # of bytes per graphics row, used by the sprite rendering code": GoSub AO
         Num = Val("&H" + GModeScreenSize$(CurrentGMode)): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
         Z$ = "ScreenSize       EQU     " + num$ + "        ; Size of a graphics screen": GoSub AO
@@ -2974,6 +3117,17 @@ If Sprites = 1 Then
         Z$ = "PixelsMaxX       EQU     " + num$ + "        ; Screen width Max from 0 to this value": GoSub AO
         Num = Val(GModeColours$(CurrentGMode)): GoSub NumAsString 'Convert number in Num to a string without spaces as Num$
         Z$ = "NumberOfColours  EQU     " + num$ + "        ; Number of Colours on this screen": GoSub AO
+        If CurrentGMode = 0 Or CurrentGMode = 1 Then
+            Z$ = "SemiGraphics     EQU     4         ; IA/EA: one complete character/colour cell per screen byte": GoSub AO
+        ElseIf CurrentGMode = 2 Then
+            Z$ = "SemiGraphics     EQU     2         ; SG4: four pixels share each byte; X and Y select a quadrant": GoSub AO
+        ElseIf CurrentGMode = 4 Then
+            Z$ = "SemiGraphics     EQU     3         ; SG6: six pixels share each byte; X and Y select a cell position": GoSub AO
+        ElseIf CurrentGMode = 3 Or (CurrentGMode >= 5 And CurrentGMode <= 8) Then
+            Z$ = "SemiGraphics     EQU     1         ; Two horizontal pixels share each semigraphics byte": GoSub AO
+        Else
+            Z$ = "SemiGraphics     EQU     0         ; Normal packed-pixel graphics mode": GoSub AO
+        End If
         If CurrentGMode = 18 Then
             ' We are going to use CoCo 1 & 2 Hi-res artifacting mode
             Z$ = "Artifacting      EQU     1         ; Using Artifact colours": GoSub AO
@@ -3001,6 +3155,8 @@ If Sprites = 1 Then
                 End If
                 SpriteName$ = Left$(SpriteName$, Len(SpriteName$) - 4) ' remove the .asm
                 A$ = "FDB": B$ = SpriteName$ + "_Draw": C$ = "Points to the Sprite Drawing Table (in the compiled sprite.asm file)": GoSub AO
+            Else
+                A$ = "FDB": B$ = "$0000": C$ = "No sprite loaded in this slot": GoSub AO
             End If
         Next i
     End If

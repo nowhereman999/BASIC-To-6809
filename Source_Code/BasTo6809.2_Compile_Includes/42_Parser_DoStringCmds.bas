@@ -7,6 +7,148 @@ cmd16 = Asc(Mid$(i$, 2, 1)) * 256 + Asc(Mid$(i$, 3, 1))
 ArgCnt = 1
 If Len(i$) >= 4 Then ArgCnt = Asc(Mid$(i$, 4, 1))
 Select Case cmd16
+    Case FNREAD_CMD
+        If ArgCnt <> 2 Then Print "Error: FNREAD$() expects channel and byte count";: GoTo FoundError
+
+        CountTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        ChannelTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+
+        Temp$ = CountTok$: GoSub IsStringToken
+        If IsStrFlag% Then Print "Error: FNREAD$() byte count must be numeric";: GoTo FoundError
+        Temp$ = ChannelTok$: GoSub IsStringToken
+        If IsStrFlag% Then Print "Error: FNREAD$() channel must be numeric";: GoTo FoundError
+
+        ' Runtime stack is channel followed by count. Consume rightmost first.
+        Temp$ = CountTok$: GoSub PushOneValueTokenOnStack
+        LastType = PushedType: NVT = NT_UByte: GoSub ConvertLastType2NVT
+        A$ = "PULS": B$ = "B": C$ = "Get FNREAD$ byte count": GoSub AO
+        A$ = "STB": B$ = "FN_ReadCount": C$ = "Keep byte count while channel is converted": GoSub AO
+
+        Temp$ = ChannelTok$: GoSub PushOneValueTokenOnStack
+        LastType = PushedType: NVT = NT_UByte: GoSub ConvertLastType2NVT
+        A$ = "PULS": B$ = "A": C$ = "Get FNREAD$ network channel": GoSub AO
+        A$ = "LDB": B$ = "FN_ReadCount": C$ = "Restore FNREAD$ byte count": GoSub AO
+        A$ = "JSR": B$ = "FN_ReadString": C$ = "Read FujiNet bytes and push a BASIC string": GoSub AO
+
+        ProcessRPNStackPointer = ProcessRPNStackPointer + 1
+        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(TK_STR_ONSTACK)
+    Case FNJSONQUERY_CMD
+        If ArgCnt <> 2 Then Print "Error: FNJSONQUERY$() expects channel and JSON path";: GoTo FoundError
+
+        PathTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        ChannelTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+
+        Temp$ = PathTok$: GoSub IsStringToken
+        If IsStrFlag% = 0 Then Print "Error: FNJSONQUERY$() JSON path must be a string";: GoTo FoundError
+        Temp$ = ChannelTok$: GoSub IsStringToken
+        If IsStrFlag% Then Print "Error: FNJSONQUERY$() channel must be numeric";: GoTo FoundError
+
+        Temp$ = PathTok$: GoSub PushOneStringTokenOnStack
+        A$ = "JSR": B$ = "FN_CopyStackString": C$ = "Copy FNJSONQUERY$ path into compiler scratch string": GoSub AO
+
+        Temp$ = ChannelTok$: GoSub PushOneValueTokenOnStack
+        LastType = PushedType: NVT = NT_UByte: GoSub ConvertLastType2NVT
+        A$ = "PULS": B$ = "B": C$ = "Get FNJSONQUERY$ network channel": GoSub AO
+        A$ = "JSR": B$ = "FN_JSONQueryString": C$ = "Query FujiNet JSON and push the scalar string": GoSub AO
+
+        ProcessRPNStackPointer = ProcessRPNStackPointer + 1
+        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(TK_STR_ONSTACK)
+    Case FNWIFISSID_CMD, FNADAPTER_CMD, FNHOST_CMD, FNDEVICEPATH_CMD, FNHOSTPREFIX_CMD
+        If ArgCnt <> 1 Then Print "Error: this FujiNet string function expects one numeric argument";: GoTo FoundError
+        Arg1$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        Temp$ = Arg1$: GoSub IsStringToken
+        If IsStrFlag% Then Print "Error: FujiNet string-function argument must be numeric";: GoTo FoundError
+        Temp$ = Arg1$: GoSub PushOneValueTokenOnStack
+        LastType = PushedType: NVT = NT_UByte: GoSub ConvertLastType2NVT
+        A$ = "PULS": B$ = "B": C$ = "Get FujiNet index, field, or slot": GoSub AO
+        If cmd16 = FNWIFISSID_CMD Then
+            A$ = "JSR": B$ = "FN_WifiScanNameString": C$ = "Return scanned Wi-Fi SSID": GoSub AO
+        ElseIf cmd16 = FNADAPTER_CMD Then
+            A$ = "JSR": B$ = "FN_AdapterString": C$ = "Return FujiNet adapter field": GoSub AO
+        ElseIf cmd16 = FNHOST_CMD Then
+            A$ = "JSR": B$ = "FN_HostSlotString": C$ = "Return configured FujiNet hostname": GoSub AO
+        ElseIf cmd16 = FNDEVICEPATH_CMD Then
+            A$ = "JSR": B$ = "FN_DeviceFileString": C$ = "Return configured device full path": GoSub AO
+        Else
+            A$ = "JSR": B$ = "FN_HostPrefixString": C$ = "Return FujiNet host prefix": GoSub AO
+        End If
+        ProcessRPNStackPointer = ProcessRPNStackPointer + 1
+        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(TK_STR_ONSTACK)
+    Case FNREADDIR_CMD
+        If ArgCnt <> 2 Then Print "Error: FNREADDIR$() expects maximum length and details flag";: GoTo FoundError
+        DetailsTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        LengthTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        Temp$ = DetailsTok$: GoSub IsStringToken: If IsStrFlag% Then Print "Error: FNREADDIR$() details flag must be numeric";: GoTo FoundError
+        Temp$ = LengthTok$: GoSub IsStringToken: If IsStrFlag% Then Print "Error: FNREADDIR$() maximum length must be numeric";: GoTo FoundError
+        Temp$ = DetailsTok$: GoSub PushOneValueTokenOnStack
+        LastType = PushedType: NVT = NT_UByte: GoSub ConvertLastType2NVT
+        A$ = "PULS": B$ = "B": C$ = "Get directory details flag": GoSub AO
+        A$ = "STB": B$ = "FN_DirDetails": C$ = "Save directory details flag": GoSub AO
+        Temp$ = LengthTok$: GoSub PushOneValueTokenOnStack
+        LastType = PushedType: NVT = NT_UByte: GoSub ConvertLastType2NVT
+        A$ = "PULS": B$ = "B": C$ = "Get directory response length": GoSub AO
+        A$ = "STB": B$ = "FN_DirMaxLength": C$ = "Save directory response length": GoSub AO
+        A$ = "JSR": B$ = "FN_ReadDirectoryString": C$ = "Read next FujiNet directory entry": GoSub AO
+        ProcessRPNStackPointer = ProcessRPNStackPointer + 1
+        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(TK_STR_ONSTACK)
+    Case FNTIME_CMD
+        If Len(i$) < 4 Or ArgCnt <> 0 Then Print "Error: FNTIME$() expects empty parentheses";: GoTo FoundError
+        A$ = "JSR": B$ = "FN_TimeString": C$ = "Return FujiNet local time": GoSub AO
+        ProcessRPNStackPointer = ProcessRPNStackPointer + 1
+        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(TK_STR_ONSTACK)
+    Case FNAPPKEYREAD_CMD
+        If ArgCnt <> 1 Then Print "Error: FNAPPKEYREAD$() expects one key ID";: GoTo FoundError
+        KeyTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        Temp$ = KeyTok$: GoSub IsStringToken: If IsStrFlag% Then Print "Error: FNAPPKEYREAD$() key ID must be numeric";: GoTo FoundError
+        Temp$ = KeyTok$: GoSub PushOneValueTokenOnStack
+        LastType = PushedType: NVT = NT_UByte: GoSub ConvertLastType2NVT
+        A$ = "PULS": B$ = "B": C$ = "Get AppKey key ID": GoSub AO
+        A$ = "JSR": B$ = "FN_AppKeyReadString": C$ = "Read persistent FujiNet AppKey data": GoSub AO
+        ProcessRPNStackPointer = ProcessRPNStackPointer + 1
+        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(TK_STR_ONSTACK)
+    Case FNHASH_CMD
+        If ArgCnt <> 2 Then Print "Error: FNHASH$() expects algorithm and data string";: GoTo FoundError
+        DataTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        AlgorithmTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        Temp$ = DataTok$: GoSub IsStringToken: If IsStrFlag% = 0 Then Print "Error: FNHASH$() data must be a string";: GoTo FoundError
+        Temp$ = AlgorithmTok$: GoSub IsStringToken: If IsStrFlag% Then Print "Error: FNHASH$() algorithm must be numeric";: GoTo FoundError
+        Temp$ = AlgorithmTok$: GoSub PushOneValueTokenOnStack
+        LastType = PushedType: NVT = NT_UByte: GoSub ConvertLastType2NVT
+        Temp$ = DataTok$: GoSub PushOneStringTokenOnStack
+        A$ = "JSR": B$ = "FN_CopyStackString": C$ = "Copy hash input to PF00": GoSub AO
+        A$ = "PULS": B$ = "B": C$ = "Get hash algorithm (0=MD5 through 3=SHA-512)": GoSub AO
+        A$ = "JSR": B$ = "FN_HashString": C$ = "Hash one value and return hexadecimal text": GoSub AO
+        ProcessRPNStackPointer = ProcessRPNStackPointer + 1
+        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(TK_STR_ONSTACK)
+    Case FNHASHCALC_CMD
+        If ArgCnt <> 2 Then Print "Error: FNHASHCALC$() expects algorithm and discard-data flag";: GoTo FoundError
+        DiscardTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        AlgorithmTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        Temp$ = DiscardTok$: GoSub IsStringToken: If IsStrFlag% Then Print "Error: FNHASHCALC$() discard flag must be numeric";: GoTo FoundError
+        Temp$ = AlgorithmTok$: GoSub IsStringToken: If IsStrFlag% Then Print "Error: FNHASHCALC$() algorithm must be numeric";: GoTo FoundError
+        Temp$ = AlgorithmTok$: GoSub PushOneValueTokenOnStack
+        LastType = PushedType: NVT = NT_UByte: GoSub ConvertLastType2NVT
+        Temp$ = DiscardTok$: GoSub PushOneValueTokenOnStack
+        LastType = PushedType: NVT = NT_UByte: GoSub ConvertLastType2NVT
+        A$ = "PULS": B$ = "B": C$ = "Get hash discard-data flag": GoSub AO
+        A$ = "STB": B$ = "FN_HashDiscard": C$ = "Save hash discard-data flag": GoSub AO
+        A$ = "PULS": B$ = "B": C$ = "Get hash algorithm": GoSub AO
+        A$ = "JSR": B$ = "FN_HashCalcString": C$ = "Hash accumulated data and return hexadecimal text": GoSub AO
+        ProcessRPNStackPointer = ProcessRPNStackPointer + 1
+        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(TK_STR_ONSTACK)
+    Case FNBASE64ENCODE_CMD, FNBASE64DECODE_CMD
+        If ArgCnt <> 1 Then Print "Error: Base64 function expects one data string";: GoTo FoundError
+        DataTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        Temp$ = DataTok$: GoSub IsStringToken: If IsStrFlag% = 0 Then Print "Error: Base64 function argument must be a string";: GoTo FoundError
+        Temp$ = DataTok$: GoSub PushOneStringTokenOnStack
+        A$ = "JSR": B$ = "FN_CopyStackString": C$ = "Copy Base64 input to PF00": GoSub AO
+        If cmd16 = FNBASE64ENCODE_CMD Then
+            A$ = "JSR": B$ = "FN_Base64EncodeString": C$ = "Return Base64-encoded text": GoSub AO
+        Else
+            A$ = "JSR": B$ = "FN_Base64DecodeString": C$ = "Return binary-safe Base64-decoded data": GoSub AO
+        End If
+        ProcessRPNStackPointer = ProcessRPNStackPointer + 1
+        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(TK_STR_ONSTACK)
     Case FILEINFO_CMD
         If ArgCnt <> 1 Then Print "Error: FILEINFO$() expects one file number";: GoTo FoundError
         FileNumber$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1

@@ -4276,6 +4276,529 @@ Sub reginternal
     regid
 
     clearid
+    id.n = "FNInit"
+    id.subfunc = 1
+    id.callname = "sub_coco"
+    id.args = 0
+    id.ret = LONGTYPE - ISPOINTER
+    id.specialformat = "()"
+    id.hr_syntax = "FNINIT()"
+    regid
+
+    clearid
+    id.n = "FNError"
+    id.subfunc = 1
+    id.callname = "sub_coco"
+    id.args = 0
+    id.ret = LONGTYPE - ISPOINTER
+    id.specialformat = "()"
+    id.hr_syntax = "FNERROR()"
+    regid
+
+    clearid
+    id.n = "FNWiFiStatus"
+    id.subfunc = 1
+    id.callname = "sub_coco"
+    id.args = 0
+    id.ret = LONGTYPE - ISPOINTER
+    id.specialformat = "()"
+    id.hr_syntax = "FNWIFISTATUS()"
+    regid
+
+    clearid
+    id.n = "FNOpen"
+    id.subfunc = 1
+    id.callname = "sub_coco"
+    id.args = 4
+    id.arg = MKL$(LONGTYPE - ISPOINTER) + MKL$(STRINGTYPE - ISPOINTER) + MKL$(LONGTYPE - ISPOINTER) + MKL$(LONGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER
+    id.specialformat = "(?,?,?,?)"
+    id.hr_syntax = "FNOPEN(channel, device_specification$, access_mode, translation_mode)"
+    regid
+
+    clearid
+    id.n = "FNClose"
+    id.subfunc = 1
+    id.callname = "sub_coco"
+    id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER
+    id.specialformat = "(?)"
+    id.hr_syntax = "FNCLOSE(channel)"
+    regid
+
+    clearid
+    id.n = "FNBytesWaiting"
+    id.subfunc = 1
+    id.callname = "sub_coco"
+    id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER
+    id.specialformat = "(?)"
+    id.hr_syntax = "FNBYTESWAITING(channel)"
+    regid
+
+    clearid
+    id.n = "FNChannelError"
+    id.subfunc = 1
+    id.callname = "sub_coco"
+    id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER
+    id.specialformat = "(?)"
+    id.hr_syntax = "FNCHANNELERROR(channel)"
+    regid
+
+    clearid
+    id.n = "FNConnected"
+    id.subfunc = 1
+    id.callname = "sub_coco"
+    id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER
+    id.specialformat = "(?)"
+    id.hr_syntax = "FNCONNECTED(channel)"
+    regid
+
+    clearid
+    id.n = "FNRead"
+    id.musthave = "$"
+    id.subfunc = 1
+    id.callname = "sub_coco"
+    id.args = 2
+    id.arg = MKL$(LONGTYPE - ISPOINTER) + MKL$(LONGTYPE - ISPOINTER)
+    id.ret = STRINGTYPE - ISPOINTER
+    id.specialformat = "(?,?)"
+    id.hr_syntax = "FNREAD$(channel, byte_count)"
+    regid
+
+    clearid
+    id.n = "FNWrite"
+    id.subfunc = 1
+    id.callname = "sub_coco"
+    id.args = 2
+    id.arg = MKL$(LONGTYPE - ISPOINTER) + MKL$(STRINGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER
+    id.specialformat = "(?,?)"
+    id.hr_syntax = "FNWRITE(channel, data$)"
+    regid
+
+    clearid
+    id.n = "FNJsonParse"
+    id.subfunc = 1
+    id.callname = "sub_coco"
+    id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER
+    id.specialformat = "(?)"
+    id.hr_syntax = "FNJSONPARSE(channel)"
+    regid
+
+    clearid
+    id.n = "FNJsonQuery"
+    id.musthave = "$"
+    id.subfunc = 1
+    id.callname = "sub_coco"
+    id.args = 2
+    id.arg = MKL$(LONGTYPE - ISPOINTER) + MKL$(STRINGTYPE - ISPOINTER)
+    id.ret = STRINGTYPE - ISPOINTER
+    id.specialformat = "(?,?)"
+    id.hr_syntax = "FNJSONQUERY$(channel, json_path$)"
+    regid
+
+    clearid
+    id.n = "FNHTTPMode"
+    id.subfunc = 1: id.callname = "sub_coco": id.args = 2
+    id.arg = MKL$(LONGTYPE - ISPOINTER) + MKL$(LONGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER: id.specialformat = "(?,?)"
+    id.hr_syntax = "FNHTTPMODE(channel, mode_0_to_4)"
+    regid
+
+    clearid
+    id.n = "FNHTTPHeader"
+    id.subfunc = 1: id.callname = "sub_coco": id.args = 2
+    id.arg = MKL$(LONGTYPE - ISPOINTER) + MKL$(STRINGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER: id.specialformat = "(?,?)"
+    id.hr_syntax = "FNHTTPHEADER(channel, header$)"
+    regid
+
+    clearid
+    id.n = "FNHTTPPost"
+    id.subfunc = 1: id.callname = "sub_coco": id.args = 2
+    id.arg = MKL$(LONGTYPE - ISPOINTER) + MKL$(STRINGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER: id.specialformat = "(?,?)"
+    id.hr_syntax = "FNHTTPPOST(channel, data$)"
+    regid
+
+    clearid
+    id.n = "FNHTTPPut"
+    id.subfunc = 1: id.callname = "sub_coco": id.args = 2
+    id.arg = MKL$(LONGTYPE - ISPOINTER) + MKL$(STRINGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER: id.specialformat = "(?,?)"
+    id.hr_syntax = "FNHTTPPUT(channel, data$)"
+    regid
+
+    clearid
+    id.n = "FNHTTPDelete"
+    id.subfunc = 1: id.callname = "sub_coco": id.args = 3
+    id.arg = MKL$(LONGTYPE - ISPOINTER) + MKL$(STRINGTYPE - ISPOINTER) + MKL$(LONGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER: id.specialformat = "(?,?,?)"
+    id.hr_syntax = "FNHTTPDELETE(channel, url$, translation_mode)"
+    regid
+
+    clearid
+    id.n = "FNReadMem"
+    id.subfunc = 1: id.callname = "sub_coco": id.args = 3
+    id.arg = MKL$(LONGTYPE - ISPOINTER) + MKL$(LONGTYPE - ISPOINTER) + MKL$(LONGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER: id.specialformat = "(?,?,?)"
+    id.hr_syntax = "FNREADMEM(channel, address, byte_count)"
+    regid
+
+    clearid
+    id.n = "FNWriteMem"
+    id.subfunc = 1: id.callname = "sub_coco": id.args = 3
+    id.arg = MKL$(LONGTYPE - ISPOINTER) + MKL$(LONGTYPE - ISPOINTER) + MKL$(LONGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER: id.specialformat = "(?,?,?)"
+    id.hr_syntax = "FNWRITEMEM(channel, address, byte_count)"
+    regid
+
+    clearid
+    id.n = "FNDelete"
+    id.subfunc = 1: id.callname = "sub_coco": id.args = 2
+    id.arg = MKL$(LONGTYPE - ISPOINTER) + MKL$(STRINGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER: id.specialformat = "(?,?)"
+    id.hr_syntax = "FNDELETE(channel, device_specification$)"
+    regid
+
+    clearid
+    id.n = "FNRename"
+    id.subfunc = 1: id.callname = "sub_coco": id.args = 2
+    id.arg = MKL$(LONGTYPE - ISPOINTER) + MKL$(STRINGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER: id.specialformat = "(?,?)"
+    id.hr_syntax = "FNRENAME(channel, old_path_comma_new_name$)"
+    regid
+
+    clearid
+    id.n = "FNLock"
+    id.subfunc = 1: id.callname = "sub_coco": id.args = 2
+    id.arg = MKL$(LONGTYPE - ISPOINTER) + MKL$(STRINGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER: id.specialformat = "(?,?)"
+    id.hr_syntax = "FNLOCK(channel, device_specification$)"
+    regid
+
+    clearid
+    id.n = "FNUnlock"
+    id.subfunc = 1: id.callname = "sub_coco": id.args = 2
+    id.arg = MKL$(LONGTYPE - ISPOINTER) + MKL$(STRINGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER: id.specialformat = "(?,?)"
+    id.hr_syntax = "FNUNLOCK(channel, device_specification$)"
+    regid
+
+    clearid
+    id.n = "FNMkDir"
+    id.subfunc = 1: id.callname = "sub_coco": id.args = 2
+    id.arg = MKL$(LONGTYPE - ISPOINTER) + MKL$(STRINGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER: id.specialformat = "(?,?)"
+    id.hr_syntax = "FNMKDIR(channel, device_specification$)"
+    regid
+
+    clearid
+    id.n = "FNRmDir"
+    id.subfunc = 1: id.callname = "sub_coco": id.args = 2
+    id.arg = MKL$(LONGTYPE - ISPOINTER) + MKL$(STRINGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER: id.specialformat = "(?,?)"
+    id.hr_syntax = "FNRMDIR(channel, device_specification$)"
+    regid
+
+    clearid
+    id.n = "FNChDir"
+    id.subfunc = 1: id.callname = "sub_coco": id.args = 2
+    id.arg = MKL$(LONGTYPE - ISPOINTER) + MKL$(STRINGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER: id.specialformat = "(?,?)"
+    id.hr_syntax = "FNCHDIR(channel, device_specification$)"
+    regid
+
+    clearid
+    id.n = "FNDirOpen"
+    id.subfunc = 1: id.callname = "sub_coco": id.args = 3
+    id.arg = MKL$(LONGTYPE - ISPOINTER) + MKL$(STRINGTYPE - ISPOINTER) + MKL$(LONGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER: id.specialformat = "(?,?,?)"
+    id.hr_syntax = "FNDIROPEN(channel, directory_specification$, format)"
+    regid
+
+    clearid
+    id.n = "FNUsername"
+    id.subfunc = 1: id.callname = "sub_coco": id.args = 2
+    id.arg = MKL$(LONGTYPE - ISPOINTER) + MKL$(STRINGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER: id.specialformat = "(?,?)"
+    id.hr_syntax = "FNUSERNAME(channel, username$)"
+    regid
+
+    clearid
+    id.n = "FNPassword"
+    id.subfunc = 1: id.callname = "sub_coco": id.args = 2
+    id.arg = MKL$(LONGTYPE - ISPOINTER) + MKL$(STRINGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER: id.specialformat = "(?,?)"
+    id.hr_syntax = "FNPASSWORD(channel, password$)"
+    regid
+
+    clearid
+    id.n = "FNWiFiEnabled"
+    id.subfunc = 1: id.callname = "sub_coco": id.args = 0
+    id.ret = LONGTYPE - ISPOINTER: id.specialformat = "()"
+    id.hr_syntax = "FNWIFIENABLED()"
+    regid
+
+    clearid
+    id.n = "FNWiFiScan"
+    id.subfunc = 1: id.callname = "sub_coco": id.args = 0
+    id.ret = LONGTYPE - ISPOINTER: id.specialformat = "()"
+    id.hr_syntax = "FNWIFISCAN()"
+    regid
+
+    clearid
+    id.n = "FNWiFiSSID": id.musthave = "$"
+    id.subfunc = 1: id.callname = "sub_coco": id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER): id.ret = STRINGTYPE - ISPOINTER
+    id.specialformat = "(?)": id.hr_syntax = "FNWIFISSID$(scan_index)"
+    regid
+
+    clearid
+    id.n = "FNWiFiRSSI"
+    id.subfunc = 1: id.callname = "sub_coco": id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER): id.ret = LONGTYPE - ISPOINTER
+    id.specialformat = "(?)": id.hr_syntax = "FNWIFIRSSI(scan_index)"
+    regid
+
+    clearid
+    id.n = "FNSetWiFi"
+    id.subfunc = 1: id.callname = "sub_coco": id.args = 2
+    id.arg = MKL$(STRINGTYPE - ISPOINTER) + MKL$(STRINGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER: id.specialformat = "(?,?)"
+    id.hr_syntax = "FNSETWIFI(ssid$, password$)"
+    regid
+
+    clearid
+    id.n = "FNAdapter": id.musthave = "$"
+    id.subfunc = 1: id.callname = "sub_coco": id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER): id.ret = STRINGTYPE - ISPOINTER
+    id.specialformat = "(?)": id.hr_syntax = "FNADAPTER$(field_0_to_8)"
+    regid
+
+    clearid
+    id.n = "FNHost": id.musthave = "$"
+    id.subfunc = 1: id.callname = "sub_coco": id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER): id.ret = STRINGTYPE - ISPOINTER
+    id.specialformat = "(?)": id.hr_syntax = "FNHOST$(host_slot_0_to_7)"
+    regid
+
+    clearid
+    id.n = "FNSetHost"
+    id.subfunc = 1: id.callname = "sub_coco": id.args = 2
+    id.arg = MKL$(LONGTYPE - ISPOINTER) + MKL$(STRINGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER: id.specialformat = "(?,?)"
+    id.hr_syntax = "FNSETHOST(host_slot_0_to_7, hostname$)"
+    regid
+
+    clearid
+    id.n = "FNMountHost"
+    id.subfunc = 1: id.callname = "sub_coco": id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER): id.ret = LONGTYPE - ISPOINTER
+    id.specialformat = "(?)": id.hr_syntax = "FNMOUNTHOST(host_slot_0_to_7)"
+    regid
+
+    clearid
+    id.n = "FNUnmountHost"
+    id.subfunc = 1: id.callname = "sub_coco": id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER): id.ret = LONGTYPE - ISPOINTER
+    id.specialformat = "(?)": id.hr_syntax = "FNUNMOUNTHOST(host_slot_0_to_7)"
+    regid
+
+    clearid
+    id.n = "FNDeviceHost"
+    id.subfunc = 1: id.callname = "sub_coco": id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER): id.ret = LONGTYPE - ISPOINTER
+    id.specialformat = "(?)": id.hr_syntax = "FNDEVICEHOST(device_slot_0_to_3)"
+    regid
+
+    clearid
+    id.n = "FNDeviceMode"
+    id.subfunc = 1: id.callname = "sub_coco": id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER): id.ret = LONGTYPE - ISPOINTER
+    id.specialformat = "(?)": id.hr_syntax = "FNDEVICEMODE(device_slot_0_to_3)"
+    regid
+
+    clearid
+    id.n = "FNDevicePath": id.musthave = "$"
+    id.subfunc = 1: id.callname = "sub_coco": id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER): id.ret = STRINGTYPE - ISPOINTER
+    id.specialformat = "(?)": id.hr_syntax = "FNDEVICEPATH$(device_slot_0_to_3)"
+    regid
+
+    clearid
+    id.n = "FNSetDevice"
+    id.subfunc = 1: id.callname = "sub_coco": id.args = 4
+    id.arg = MKL$(LONGTYPE - ISPOINTER) + MKL$(LONGTYPE - ISPOINTER) + MKL$(LONGTYPE - ISPOINTER) + MKL$(STRINGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER: id.specialformat = "(?,?,?,?)"
+    id.hr_syntax = "FNSETDEVICE(device_0_to_3, host_0_to_7, mode_1_read_or_2_write, path$)"
+    regid
+
+    clearid
+    id.n = "FNMountImage"
+    id.subfunc = 1: id.callname = "sub_coco": id.args = 2
+    id.arg = MKL$(LONGTYPE - ISPOINTER) + MKL$(LONGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER: id.specialformat = "(?,?)"
+    id.hr_syntax = "FNMOUNTIMAGE(device_0_to_3, mode_1_read_or_2_write)"
+    regid
+
+    clearid
+    id.n = "FNUnmountImage"
+    id.subfunc = 1: id.callname = "sub_coco": id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER): id.ret = LONGTYPE - ISPOINTER
+    id.specialformat = "(?)": id.hr_syntax = "FNUNMOUNTIMAGE(device_0_to_3)"
+    regid
+
+    clearid
+    id.n = "FNMountAll"
+    id.subfunc = 1: id.callname = "sub_coco": id.args = 0
+    id.ret = LONGTYPE - ISPOINTER: id.specialformat = "()"
+    id.hr_syntax = "FNMOUNTALL()"
+    regid
+
+    clearid
+    id.n = "FNHostPrefix": id.musthave = "$"
+    id.subfunc = 1: id.callname = "sub_coco": id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER): id.ret = STRINGTYPE - ISPOINTER
+    id.specialformat = "(?)": id.hr_syntax = "FNHOSTPREFIX$(host_slot_0_to_7)"
+    regid
+
+    clearid
+    id.n = "FNSetHostPrefix"
+    id.subfunc = 1: id.callname = "sub_coco": id.args = 2
+    id.arg = MKL$(LONGTYPE - ISPOINTER) + MKL$(STRINGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER: id.specialformat = "(?,?)"
+    id.hr_syntax = "FNSETHOSTPREFIX(host_slot_0_to_7, prefix$)"
+    regid
+
+    clearid
+    id.n = "FNOpenDir"
+    id.subfunc = 1: id.callname = "sub_coco": id.args = 3
+    id.arg = MKL$(LONGTYPE - ISPOINTER) + MKL$(STRINGTYPE - ISPOINTER) + MKL$(STRINGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER: id.specialformat = "(?,?,?)"
+    id.hr_syntax = "FNOPENDIR(host_slot_0_to_7, path$, filter$)"
+    regid
+
+    clearid
+    id.n = "FNReadDir": id.musthave = "$"
+    id.subfunc = 1: id.callname = "sub_coco": id.args = 2
+    id.arg = MKL$(LONGTYPE - ISPOINTER) + MKL$(LONGTYPE - ISPOINTER)
+    id.ret = STRINGTYPE - ISPOINTER: id.specialformat = "(?,?)"
+    id.hr_syntax = "FNREADDIR$(max_length_1_to_254, details_0_or_1)"
+    regid
+
+    clearid
+    id.n = "FNCloseDir"
+    id.subfunc = 1: id.callname = "sub_coco": id.args = 0
+    id.ret = LONGTYPE - ISPOINTER: id.specialformat = "()"
+    id.hr_syntax = "FNCLOSEDIR()"
+    regid
+
+    clearid
+    id.n = "FNDirPos"
+    id.subfunc = 1: id.callname = "sub_coco": id.args = 0
+    id.ret = LONGTYPE - ISPOINTER: id.specialformat = "()"
+    id.hr_syntax = "FNDIRPOS()"
+    regid
+
+    clearid
+    id.n = "FNSetDirPos"
+    id.subfunc = 1: id.callname = "sub_coco": id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER): id.ret = LONGTYPE - ISPOINTER
+    id.specialformat = "(?)": id.hr_syntax = "FNSETDIRPOS(position)"
+    regid
+
+    clearid
+    id.n = "FNTime": id.musthave = "$"
+    id.subfunc = 1: id.callname = "sub_coco": id.args = 0
+    id.ret = STRINGTYPE - ISPOINTER: id.specialformat = "()"
+    id.hr_syntax = "FNTIME$()"
+    regid
+
+    clearid
+    id.n = "FNAppKeySet"
+    id.subfunc = 1: id.callname = "sub_coco": id.args = 2
+    id.arg = MKL$(LONGTYPE - ISPOINTER) + MKL$(LONGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER: id.specialformat = "(?,?)"
+    id.hr_syntax = "FNAPPKEYSET(creator_id, application_id)"
+    regid
+
+    clearid
+    id.n = "FNAppKeyWrite"
+    id.subfunc = 1: id.callname = "sub_coco": id.args = 2
+    id.arg = MKL$(LONGTYPE - ISPOINTER) + MKL$(STRINGTYPE - ISPOINTER)
+    id.ret = LONGTYPE - ISPOINTER: id.specialformat = "(?,?)"
+    id.hr_syntax = "FNAPPKEYWRITE(key_id, data$)"
+    regid
+
+    clearid
+    id.n = "FNAppKeyRead": id.musthave = "$"
+    id.subfunc = 1: id.callname = "sub_coco": id.args = 1
+    id.arg = MKL$(LONGTYPE - ISPOINTER): id.ret = STRINGTYPE - ISPOINTER
+    id.specialformat = "(?)": id.hr_syntax = "FNAPPKEYREAD$(key_id)"
+    regid
+
+    clearid
+    id.n = "FNAppKeyClose"
+    id.subfunc = 1: id.callname = "sub_coco": id.args = 0
+    id.ret = LONGTYPE - ISPOINTER: id.specialformat = "()"
+    id.hr_syntax = "FNAPPKEYCLOSE()"
+    regid
+
+    clearid
+    id.n = "FNHash": id.musthave = "$"
+    id.subfunc = 1: id.callname = "sub_coco": id.args = 2
+    id.arg = MKL$(LONGTYPE - ISPOINTER) + MKL$(STRINGTYPE - ISPOINTER)
+    id.ret = STRINGTYPE - ISPOINTER: id.specialformat = "(?,?)"
+    id.hr_syntax = "FNHASH$(algorithm_0_to_3, data$)"
+    regid
+
+    clearid
+    id.n = "FNHashClear"
+    id.subfunc = 1: id.callname = "sub_coco": id.args = 0
+    id.ret = LONGTYPE - ISPOINTER: id.specialformat = "()"
+    id.hr_syntax = "FNHASHCLEAR()"
+    regid
+
+    clearid
+    id.n = "FNHashAdd"
+    id.subfunc = 1: id.callname = "sub_coco": id.args = 1
+    id.arg = MKL$(STRINGTYPE - ISPOINTER): id.ret = LONGTYPE - ISPOINTER
+    id.specialformat = "(?)": id.hr_syntax = "FNHASHADD(data$)"
+    regid
+
+    clearid
+    id.n = "FNHashCalc": id.musthave = "$"
+    id.subfunc = 1: id.callname = "sub_coco": id.args = 2
+    id.arg = MKL$(LONGTYPE - ISPOINTER) + MKL$(LONGTYPE - ISPOINTER)
+    id.ret = STRINGTYPE - ISPOINTER: id.specialformat = "(?,?)"
+    id.hr_syntax = "FNHASHCALC$(algorithm_0_to_3, discard_data)"
+    regid
+
+    clearid
+    id.n = "FNBase64Encode": id.musthave = "$"
+    id.subfunc = 1: id.callname = "sub_coco": id.args = 1
+    id.arg = MKL$(STRINGTYPE - ISPOINTER): id.ret = STRINGTYPE - ISPOINTER
+    id.specialformat = "(?)": id.hr_syntax = "FNBASE64ENCODE$(data$)"
+    regid
+
+    clearid
+    id.n = "FNBase64Decode": id.musthave = "$"
+    id.subfunc = 1: id.callname = "sub_coco": id.args = 1
+    id.arg = MKL$(STRINGTYPE - ISPOINTER): id.ret = STRINGTYPE - ISPOINTER
+    id.specialformat = "(?)": id.hr_syntax = "FNBASE64DECODE$(data$)"
+    regid
+
+    clearid
     id.n = "Gmode"
     id.subfunc = 2
     id.callname = "sub_coco"

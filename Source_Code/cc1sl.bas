@@ -179,7 +179,10 @@ While x < &H7F00
     count = 0
     If Flag64k(x) = 0 Then
         Loader_Program = x
-        While Flag64k(x) = 0
+        ' Stop at the end of the lower-RAM search window.  A small input
+        ' program can leave every byte from $0E00 through $7EFF unused; the
+        ' old loop then ran beyond Flag64k() looking for a used byte.
+        While x < &H7F00 And Flag64k(x) = 0
             count = count + 1
             x = x + 1
         Wend
@@ -650,4 +653,3 @@ Data "7E0000"
 
 
 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-

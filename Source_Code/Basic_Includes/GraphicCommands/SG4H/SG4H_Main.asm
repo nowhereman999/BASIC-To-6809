@@ -2,7 +2,7 @@
 ScreenWidth_SG4H     EQU 64
 ScreenHeight_SG4H    EQU 32
 BytesPerRow_SG4H     EQU ScreenWidth_SG4H/2
-Screen_Size_SG4H     EQU $0C00
+Screen_Size_SG4H     EQU $0800
 
 ; Line Box & BoxFill commands come here, Colour of pixels has already been set
 ; Value of A & B need to return unchanged

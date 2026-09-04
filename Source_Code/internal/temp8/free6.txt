@@ -1,0 +1,5 @@
+if(oldstr24){
+if(oldstr24->fixed)qbs_set(oldstr24,_FUNC__DECODEURL_STRING__URL);
+qbs_free(_FUNC__DECODEURL_STRING__URL);
+}
+qbs_free(_FUNC__DECODEURL_STRING__TMP);

@@ -1,0 +1,6 @@
+void SUB_VWATCH();
+long double FUNC__MIN(long double*_FUNC__MIN_FLOAT__VALUE1,long double*_FUNC__MIN_FLOAT__VALUE2);
+long double FUNC__MAX(long double*_FUNC__MAX_FLOAT__VALUE1,long double*_FUNC__MAX_FLOAT__VALUE2);
+long double FUNC__CLAMP(long double*_FUNC__CLAMP_FLOAT__VALUE,long double*_FUNC__CLAMP_FLOAT__MINVAL,long double*_FUNC__CLAMP_FLOAT__MAXVAL);
+qbs* FUNC__ENCODEURL(qbs*_FUNC__ENCODEURL_STRING__URL);
+qbs* FUNC__DECODEURL(qbs*_FUNC__DECODEURL_STRING__URL);

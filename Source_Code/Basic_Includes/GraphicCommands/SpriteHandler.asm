@@ -164,6 +164,15 @@ BackupSpriteB:
 CalcAddressOfSprite0:
         LDA     #GmodeBytesPerRow       ; # of bytes per row
         LDB     SpriteY,X               ; Get the y co-ordinate
+ IFEQ SemiGraphics-2
+        LSRB                            ; SG4 stores two logical Y rows in each byte row
+ ENDIF
+ IFEQ SemiGraphics-3
+        LDA     #86                     ; Approximate 256/3 for the SG6 logical-row conversion
+        MUL                             ; A = INT(Y/3)
+        TFR     A,B
+        LDA     #GmodeBytesPerRow
+ ENDIF
         MUL                             ; D = Number bytes per row * y co-ordinate which gives us the row offset
         ADDD    BEGGRP                  ; D=D+Screen start location add the screen start location
         PSHS    D                       ; Save the screen location on the stack
@@ -179,6 +188,15 @@ CalcAddressOfSprite0:
 CalcAddressOfSprite0_and1:
         LDA     #GmodeBytesPerRow       ; # of bytes per row
         LDB     SpriteY,X               ; Get the y co-ordinate
+ IFEQ SemiGraphics-2
+        LSRB                            ; SG4 stores two logical Y rows in each byte row
+ ENDIF
+ IFEQ SemiGraphics-3
+        LDA     #86                     ; Approximate 256/3 for the SG6 logical-row conversion
+        MUL                             ; A = INT(Y/3)
+        TFR     A,B
+        LDA     #GmodeBytesPerRow
+ ENDIF
         MUL                             ; D = Number bytes per row * y co-ordinate which gives us the row offset
         ADDD    BEGGRP                  ; D=D+Screen start location add the screen start location
         PSHS    D                       ; Save the screen location on the stack
@@ -264,7 +282,70 @@ AddSpriteToSpriteCache:
         LSLB            ; * 2 (two bytes per entry in the jump table)
         ABX
         LDX     ,X      ; X now points at the sprite drawing table
-; NumberOfColours & PixelsMaxX values will be set by the Tokenizer, these conditions allow it to work for 2, 4 or 16 colour modes
+; SemiGraphics, NumberOfColours & PixelsMaxX are set by the Tokenizer.
+; GMODE 0/1 have one whole-cell routine per frame, GMODE 2 has four X/Y shifted
+; routines, GMODE 4 has six, and GMODE 3 and 5-8 have two X-shifted routines.
+ IFNE SemiGraphics
+  IFEQ SemiGraphics-4
+        LDB     2,S     ; Get the frame number
+        LSLB            ; * 2 bytes per FDB entry
+        ABX
+        LDX     ,X      ; Get the whole-cell drawing routine
+        STX     2,U     ; Save the routine address in SpriteCache0
+  ELSE
+   IFEQ SemiGraphics-2
+        LDB     2,S     ; Get the frame number
+        LSLB            ; * 2
+        LSLB            ; * 4
+        LSLB            ; * 8 bytes per frame (four FDB entries)
+        ABX
+        LDA     3,S     ; Get the y co-ordinate
+        ANDA    #$01    ; Keep the SG4 top/bottom quadrant offset
+        LSLA            ; Y parity selects variants 0/1 or 2/3
+        LDB     5,S     ; Get the x co-ordinate (LSB)
+        ANDB    #$01    ; Keep the SG4 left/right quadrant offset
+        PSHS    B
+        ADDA    ,S+     ; A = Y parity * 2 + X parity
+        LSLA            ; * 2 bytes per jump-table entry
+        LEAX    A,X
+        LDX     ,X      ; Get routine to draw the SG4 sprite in X
+        STX     2,U     ; Save the routine address in SpriteCache0
+  ELSE
+   IFEQ SemiGraphics-3
+        LDB     2,S     ; Get the frame number
+        LDA     #12     ; Six FDB entries use 12 bytes per frame
+        MUL
+        LEAX    D,X
+        LDA     3,S     ; Get the y co-ordinate
+!       CMPA    #3
+        BLO     >
+        SUBA    #3      ; A = Y MOD 3
+        BRA     <
+!       LSLA            ; Y remainder selects variants 0/1, 2/3, or 4/5
+        LDB     5,S     ; Get the x co-ordinate (LSB)
+        ANDB    #$01    ; Keep the SG6 left/right cell offset
+        PSHS    B
+        ADDA    ,S+     ; A = (Y MOD 3) * 2 + X parity
+        LSLA            ; * 2 bytes per jump-table entry
+        LEAX    A,X
+        LDX     ,X      ; Get routine to draw the SG6 sprite in X
+        STX     2,U     ; Save the routine address in SpriteCache0
+   ELSE
+        LDB     2,S     ; Get the frame number
+        LSLB            ; * 2
+        LSLB            ; * 4 bytes per frame (two FDB entries)
+        ABX
+        LDB     5,S     ; Get the x co-ordinate (LSB)
+        ANDB    #$01    ; Select the even or odd pixel version
+        LSLB            ; * 2 bytes per jump-table entry
+        ABX
+        LDX     ,X      ; Get routine to draw the sprite in X
+        STX     2,U     ; Save the routine address in SpriteCache0
+    ENDIF
+   ENDIF
+  ENDIF
+ ELSE
+; NumberOfColours & PixelsMaxX values allow packed-pixel 2, 4 or 16 colour modes
 ; Handle 2 colour mode
  IFEQ NumberOfColours-2
   IFEQ Artifacting-1
@@ -328,7 +409,7 @@ AddSpriteToSpriteCache:
         LDX     ,X      ; Get routine to draw the sprite in X
         STX     2,U     ; Save the sprite/frame routine address in the SpriteCache0
  ENDIF
- 
+ ENDIF                   ; SemiGraphics
 
 ; For Screen 1 we will use the copy sprite area from screen 0 to screen 1 routine
 !       LDX     #SpriteRestoreTable+2  ; Point at the SpriteRestoreTable+2 so it points at screen1 routine
@@ -341,6 +422,15 @@ AddSpriteToSpriteCache:
 ; Calculate where to draw the sprite
         LDA     #GmodeBytesPerRow ; # of bytes per row
         LDB     3,S     ; Get the y co-ordinate
+ IFEQ SemiGraphics-2
+        LSRB            ; SG4 stores two logical Y rows in each byte row
+ ENDIF
+ IFEQ SemiGraphics-3
+        LDA     #86     ; Approximate 256/3 for the SG6 logical-row conversion
+        MUL             ; A = INT(Y/3)
+        TFR     A,B
+        LDA     #GmodeBytesPerRow
+ ENDIF
         MUL             ; D = Number bytes per row * y co-ordinate which gives us the row offset
         ADDD    BEGGRP  ; D=D+Screen start location add the screen start location
         TFR     D,X     ; X now has the starting Row offset on screen 0
@@ -359,6 +449,16 @@ AddSpriteToSpriteCache:
 ; X = the Row on screen 0 in RAM
 ; D = the x position (pixel)
 CalculateSpriteLocation:
+; IA/EA use one complete character/colour cell per byte. Other semigraphics
+; modes expose two horizontal logical pixels per byte.
+ IFNE SemiGraphics
+  IFEQ SemiGraphics-4
+        ABX             ; X is already a 0-31 byte/cell offset
+  ELSE
+        LSRB            ; / 2 = byte offset (X is 0-63)
+        ABX             ; X now points at the starting byte on screen 0
+  ENDIF
+ ELSE
 ; NumberOfColours & PixelsMaxX values will be set by the Tokenizer, these conditions optimize the code
 ; Handle 2 colour mode
  IFEQ NumberOfColours-2
@@ -402,6 +502,7 @@ CalculateSpriteLocation:
         LEAX    D,X     ; X now points at the starting byte location on screen 0
   ENDIF
  ENDIF
+ ENDIF                   ; SemiGraphics
         RTS             ; Return with X pointing at the starting byte location on screen 0
 
 ; Handle the WAIT VBL command
@@ -453,7 +554,12 @@ DoWaitVBL:
         BRA     <                       ; Loop until all the sprite commands have been processed
 
 
-; Show Screen 1
+; Show Screen 1 only at vertical blank. Screen 1 is copied while screen 0 is
+; visible, so changing pages immediately after the copy can occur partway
+; through a video frame and produce an intermittent sprite flicker/tear.
+        LDB     $FF02                   ; Reset Vsync flag
+!       LDB     $FF03                   ; See if Vsync has occurred yet
+        BPL     <                       ; Wait until the next vertical blank
         LDD     BEGGRP                  ; D = The screen starting address for Screen 0
         ADDD    #ScreenSize             ; D points at Screen 1
         LSRA                            ; Location in RAM to start the graphics screen / 2 as it must start in a 512 byte block
@@ -466,4 +572,3 @@ DoWaitVBL:
         LDU     #SpriteCache1           ; U = The Sprite Cache1 start
         STU     SpriteCachePointer1     ; Reset the Sprite Cache1 Pointer
         RTS                             ; Return                
-

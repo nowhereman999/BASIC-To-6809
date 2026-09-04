@@ -1,6 +1,24 @@
 ' Sprite Compiler & Background Image Renderer
 
-VersionNumber$ = "1.02"
+VersionNumber$ = "1.11"
+' V1.11 - Added whole-cell compiled sprites for GMODE 0 internal alphanumeric and GMODE 1 external alphanumeric
+'       - Uses native 32x16 cell coordinates, exact 32-byte screen rows, and one drawing routine per frame
+'       - GMODE 0 preserves black plus all eight SG4 colours; GMODE 1 uses the two portable D7-set foreground bytes
+'       - Cell sprites back up their exact footprint without the extra byte required by shifted pixel sprites
+' V1.10 - GMODE 4 maps up to three source colours to two solid SG6 colours and a stable mixed style
+'       - Opaque regions remain filled instead of acquiring holes from black-density dithering
+'       - Keeps D7 set for every generated cell, as required by the CoCo's SG6 wiring
+'       - Warns that GMODE 4 requires the original MC6847 and is unavailable on the MC6847T1 CoCo 2B
+' V1.09 - GMODE 4 conversion now chooses the closest SG6 style for every source pixel
+'       - Preserves black and tests both solid colours plus their 25/50/75-percent blends
+'       - Anchors dithering to the sprite frame so moving sprites do not shimmer
+' V1.08 - Added GMODE 4 SG6 sprites with six X/Y cell-alignment variants and two-colour source clustering
+'       - Added GMODE 2 SG4 sprites with four X/Y shifted variants and horizontal cell-aspect correction
+'       - Centered GMODE 3 vertical resampling so matching top and bottom rows are expanded consistently
+'       - Added compiled sprite support for the CoCo 1/2 semigraphics modes GMODE 3, 5, 6, 7 and 8
+'       - Semigraphics sprites use two shifted versions and treat each two-pixel byte as one drawing cell
+'       - GMODE 3 and 5 sprites duplicate each logical row into both hybrid-mode memory rows
+'       - Corrected transparent right-edge cells and compensate for GMODE 3 and 5-8 physical pixel aspect ratios
 '       - Tweaked output x size when size of sprites are taken from a anim sheet where multiple sprites are in a row in the .PNG file
 
 ' V1.01
@@ -460,6 +478,7 @@ If Verbose > 0 Then
     If Verbose < 0 Then Verbose = 0
     Print "Verbose level set to:"; Verbose
 End If
+InputFilePath$ = FName$ ' Keep the supplied path for _LOADIMAGE before reducing the output name to its basename.
 FileName$ = GetFilenameOnly$(FName$) ' convert full path of filename to just the filename
 FName$ = FileName$
 If Right$(UCase$(FileName$), 3) <> "PNG" Then Print "Input file must be a 32 bit .PNG file that includes transparency": System
@@ -475,7 +494,7 @@ FNameNoExt$ = CodeName$
 Screen _NewImage(8000, 8000, 32)
 
 ' Load the image
-myImage = _LoadImage(FName$, 32)
+myImage = _LoadImage(InputFilePath$, 32)
 
 ' Get the width and height of the image
 imageWidth = _Width(myImage)
@@ -492,6 +511,8 @@ Select Case Colours
         Dim pixelColors(imageWidth * 2 - 1, imageHeight - 1) As Long
     Case 16
         Dim pixelColors(imageWidth * 4 - 1, imageHeight - 1) As Long
+    Case 9
+        Dim pixelColors(imageWidth - 1, imageHeight - 1) As Long
     Case 256
         Dim pixelColors(imageWidth - 1, imageHeight - 1) As Long
 End Select
@@ -596,10 +617,49 @@ Select Case Colours
         Else
             SpWidth = (Int(imageWidth / 2) + 1) * 2
         End If
+    Case 9
+        ' Semigraphics stores two horizontal pixels per byte.
+        Temp = Int(imageWidth / 2)
+        If Temp = imageWidth / 2 Then
+            SpWidth = imageWidth
+        Else
+            SpWidth = (Int(imageWidth / 2) + 1) * 2
+        End If
 End Select
 
 Dim SpriteOriginal$(SpWidth * 4 + 8, imageHeight)
 Dim AnimSprite$(SpWidth * 4 + 8, imageHeight, AnimFrames)
+
+' GMODE 0 and 1 expose the 32x16 alphanumeric/colour-cell grid. Each PNG
+' pixel becomes a complete byte-sized display cell, so no shifted variants
+' are required and SPRITE LOCATE uses the same coordinates as SET/POINT.
+If Gmode = 0 Or Gmode = 1 Then
+    If ConvertBackground <> 0 Then Print "ERROR: GMODE 0 and 1 currently support sprite conversion only": System
+    GoSub MakeAlphaCellSprite
+    System
+End If
+
+' GMODE 2 uses four pixels per SG4 byte and needs both X and Y shifted variants.
+If Gmode = 2 Then
+    If ConvertBackground <> 0 Then Print "ERROR: GMODE 2 currently supports sprite conversion only": System
+    GoSub MakeSG4Sprite
+    System
+End If
+
+' GMODE 4 uses six pixels per SG6 byte and needs two X by three Y variants.
+If Gmode = 4 Then
+    If ConvertBackground <> 0 Then Print "ERROR: GMODE 4 currently supports sprite conversion only": System
+    GoSub MakeSG6Sprite
+    System
+End If
+
+' GMODE 3, 5, 6, 7 and 8 use the same two-pixels-per-byte semigraphics format.
+' Generate their sprites separately because the colour nibble is shared by both pixels.
+If Gmode = 3 Or (Gmode >= 5 And Gmode <= 8) Then
+    If ConvertBackground <> 0 Then Print "ERROR: GMODE 3, 5, 6, 7 and 8 currently support sprite conversion only": System
+    GoSub MakeSemiGraphicsSprite
+    System
+End If
 
 ' If we are using a CoCo 3 GMODE# then we need to deal with palette info:
 ' MakePal = 0
@@ -1578,14 +1638,14 @@ For Row = 0 To imageHeight - 1
     Else
         ' Row is not transparent so handle the bytes
         p = 2
-        While DrawBytesPerRow + 1 - p >= 0
+        While BytesPerRowToBackup - p >= 0
             n = p - 2: GoSub NumAsString 'Convert number in N to a string without spaces as N$ - a value of zero is ignored comes back as N$=""
             Instr1$ = "LDU": Instr2$ = N$ + ",X": Com$ = "read the sprite data on screen 0": GoSub DoOutput ' Print the output to file #2
             Instr1$ = "STU": Instr2$ = N$ + ",Y": Com$ = "write the sprite data on screen 1": GoSub DoOutput ' Print the output to file #2
             p = p + 2
         Wend
         p = p - 1
-        While DrawBytesPerRow + 1 - p >= 0
+        While BytesPerRowToBackup - p >= 0
             n = p - 1: GoSub NumAsString 'Convert number in N to a string without spaces as N$ - a value of zero is ignored comes back as N$=""
             Instr1$ = "LDA": Instr2$ = N$ + ",X": Com$ = "read the sprite data on screen 0": GoSub DoOutput ' Print the output to file #2
             Instr1$ = "STA": Instr2$ = N$ + ",Y": Com$ = "write the sprite data on screen 1": GoSub DoOutput ' Print the output to file #2
@@ -1642,14 +1702,14 @@ Instr1$ = "PSHS": Instr2$ = "DP": Com$ = "Save DP": GoSub DoOutput ' Print the o
 Instr1$ = "STS": Instr2$ = "@SaveSHere+2": Com$ = "Backup the stack pointer's value at the end of the backup routine (self mod)": GoSub DoOutput ' Print the output to file #2
 Instr1$ = "LDS": Instr2$ = "#" + FNameNoExt$ + "_BackupStart" + "+32": Com$ = "Set S pointer to the end of the last row of the backup buffer + 32 extra space for stack during F/IRQ": GoSub DoOutput ' Print the output to file #2
 
-n = (ScreenWidth / (8 / ShiftBits)) * (imageHeight - 1) + DrawBytesPerRow + 1
-If Artifact = 1 Then n = 32 * (imageHeight - 1) + DrawBytesPerRow + 1
-If ScrollMode = 1 Then n = 256 * (imageHeight - 1) + DrawBytesPerRow + 1
+n = (ScreenWidth / (8 / ShiftBits)) * (imageHeight - 1) + BytesPerRowToBackup
+If Artifact = 1 Then n = 32 * (imageHeight - 1) + BytesPerRowToBackup
+If ScrollMode = 1 Then n = 256 * (imageHeight - 1) + BytesPerRowToBackup
 GoSub NumAsString 'Convert number in N to a string without spaces as N$ - a value of zero is ignored comes back as N$=""
 Instr1$ = "LEAU": Instr2$ = N$ + ",X": Com$ = "Point at the bottom, right edge of the sprite backup location": GoSub DoOutput ' Print the output to file #2
 
 ' Calculate restore pattern
-bcopy = DrawBytesPerRow + 1 'number of bytes to copy per row
+bcopy = BytesPerRowToBackup 'number of bytes to copy per row
 For x = 7 To 1 Step -1
     Blast(x) = 0
     c = 0
@@ -1660,7 +1720,7 @@ For x = 7 To 1 Step -1
     Blast(x) = c
 Next x
 
-BlastAmount = DrawBytesPerRow + 1 'number of bytes to copy per row
+BlastAmount = BytesPerRowToBackup 'number of bytes to copy per row
 UMove = 0
 For Row = imageHeight - 1 To 0 Step -1
     Print #2, "; Restoring row"; Row
@@ -1714,9 +1774,9 @@ For Row = imageHeight - 1 To 0 Step -1
             End Select
         End If
     Next x
-    UMove = -(ScreenWidth / (8 / ShiftBits)) + (DrawBytesPerRow + 1)
-    If Artifact = 1 Then UMove = -32 + (DrawBytesPerRow + 1)
-    If ScrollMode = 1 Then UMove = -256 + (DrawBytesPerRow + 1)
+    UMove = -(ScreenWidth / (8 / ShiftBits)) + BytesPerRowToBackup
+    If Artifact = 1 Then UMove = -32 + BytesPerRowToBackup
+    If ScrollMode = 1 Then UMove = -256 + BytesPerRowToBackup
     n = UMove: GoSub NumAsString 'Convert number in N to a string without spaces as N$ - a value of zero is ignored comes back as N$=""
     If Row <> 0 Then Instr1$ = "LEAU": Instr2$ = N$ + ",U": Com$ = "Move to the correct position to write data on screen": GoSub DoOutput ' Print the output to file #2
 Next Row
@@ -1732,8 +1792,10 @@ Outname$ = FNameNoExt$ + "_Backup" + ".asm"
 ' Backup the Bytes behind the sprite
 Print #2, "; Backup Sprite data for "; FNameNoExt$
 Print #2, "; Enter with X pointing at the memory location on screen to backup the data behind the sprite"
-Print #2, "; Sprite Width is:"; BytesPerRowToBackup; "Bytes, one extra byte to backup for shifted start location"
-Print #2, "; Height is:"; imageHeight; "Rows"
+Print #2, "; Sprite Width is:"; BytesPerRowToBackup; "Bytes to backup"
+ReportedImageHeight = imageHeight
+If Gmode = 3 Or Gmode = 5 Then ReportedImageHeight = imageHeight \ 2
+Print #2, "; Height is:"; ReportedImageHeight; "Rows"
 Print #2, FNameNoExt$ + "_BackupStart:"
 
 n = BytesPerRowToBackup: GoSub NumAsString 'Convert number in N to a string without spaces as N$ - a value of zero is ignored comes back as N$=""
@@ -1957,9 +2019,9 @@ Next y
 '    Next Y
 
 Instr1$ = "PSHS": Instr2$ = "DP": Com$ = "Save DP": GoSub DoOutput ' Print the output to file #2
-n = (ScreenWidth / (8 / ShiftBits)) * (imageHeight - 1) + DrawBytesPerRow + 1
-If Artifact = 1 Then n = 32 * (imageHeight - 1) + DrawBytesPerRow + 1
-If ScrollMode = 1 Then n = 256 * (imageHeight - 1) + DrawBytesPerRow + 1
+n = (ScreenWidth / (8 / ShiftBits)) * (imageHeight - 1) + BytesPerRowToBackup
+If Artifact = 1 Then n = 32 * (imageHeight - 1) + BytesPerRowToBackup
+If ScrollMode = 1 Then n = 256 * (imageHeight - 1) + BytesPerRowToBackup
 GoSub NumAsString 'Convert number in N to a string without spaces as N$ - a value of zero is ignored comes back as N$=""
 Instr1$ = "LEAU": Instr2$ = N$ + ",X": Com$ = "Point at the bottom, right edge of the sprite backup location": GoSub DoOutput ' Print the output to file #2
 
@@ -1971,7 +2033,7 @@ Instr1$ = "TFR": Instr2$ = "X,Y": Com$ = "Y = byte Pattern user wants for the ba
 Instr1$ = "TFR": Instr2$ = "A,DP": Com$ = "DP = byte Pattern user wants for the background": GoSub DoOutput ' Print the output to file #2
 
 ' Calculate restore pattern
-bcopy = DrawBytesPerRow + 1 'number of bytes to copy per row
+bcopy = BytesPerRowToBackup 'number of bytes to copy per row
 For x = 7 To 1 Step -1
     Blast(x) = 0
     c = 0
@@ -1982,7 +2044,7 @@ For x = 7 To 1 Step -1
     Blast(x) = c
 Next x
 
-BlastAmount = DrawBytesPerRow + 1 'number of bytes to copy per row
+BlastAmount = BytesPerRowToBackup 'number of bytes to copy per row
 UMove = 0
 For Row = imageHeight - 1 To 0 Step -1
     Print #2, "; Restoring row"; Row
@@ -2029,9 +2091,9 @@ For Row = imageHeight - 1 To 0 Step -1
             End Select
         End If
     Next x
-    UMove = -(ScreenWidth / (8 / ShiftBits)) + (DrawBytesPerRow + 1)
-    If Artifact = 1 Then UMove = -32 + (DrawBytesPerRow + 1)
-    If ScrollMode = 1 Then UMove = -256 + (DrawBytesPerRow + 1)
+    UMove = -(ScreenWidth / (8 / ShiftBits)) + BytesPerRowToBackup
+    If Artifact = 1 Then UMove = -32 + BytesPerRowToBackup
+    If ScrollMode = 1 Then UMove = -256 + BytesPerRowToBackup
     n = UMove: GoSub NumAsString 'Convert number in N to a string without spaces as N$ - a value of zero is ignored comes back as N$=""
     If Row <> 0 Then Instr1$ = "LEAU": Instr2$ = N$ + ",U": Com$ = "Move to the correct position to write data on screen": GoSub DoOutput ' Print the output to file #2
 Next Row
@@ -2040,6 +2102,997 @@ Print #2,
 Print #2, "; Option -b2 used which is to not backup Sprite data for "; FNameNoExt$
 Print #2, "Backup_" + FNameNoExt$ + ":"
 Instr1$ = "RTS": Com$ = "Nothing to do, simply Return": GoSub DoOutput ' Print the output to file #2
+Return
+
+' Build a compiled sprite for GMODE 0 (internal alphanumeric/SG4 cells) or
+' GMODE 1 (external alphanumeric full cells). The compiler deliberately exposes
+' these as a 32x16 grid, so one PNG pixel owns one complete screen byte and
+' SPRITE LOCATE uses character-cell coordinates without shifted variants.
+MakeAlphaCellSprite:
+If AnimFrames < 1 Then AnimFrames = 1
+If imageWidth Mod AnimFrames <> 0 Then
+    Print "ERROR: Sprite sheet width must divide evenly by the number of animation frames"
+    Return
+End If
+
+SemiFrameWidth = imageWidth \ AnimFrames
+If SemiFrameWidth < 1 Then Print "ERROR: Sprite frame width must be at least one pixel": Return
+
+' A displayed cell is approximately 8 clocks wide by 12 scanlines high.
+' Endpoint-aligned 3:2 horizontal expansion keeps source artwork proportional.
+AlphaCellWidth = Int((SemiFrameWidth * 3 + 1) / 2)
+If AlphaCellWidth > 32 Then Print "ERROR: Aspect-corrected GMODE"; Gmode; "sprite width is"; AlphaCellWidth; "cells, but the screen allows only 32": Return
+AlphaCellHeight = imageHeight
+If AlphaCellHeight > 16 Then Print "ERROR: GMODE"; Gmode; "sprites cannot be taller than 16 PNG rows": Return
+
+ReDim AlphaSourceX(AlphaCellWidth - 1) As Integer
+For x = 0 To AlphaCellWidth - 1
+    If AlphaCellWidth = 1 Or SemiFrameWidth = 1 Then
+        AlphaSourceX(x) = 0
+    Else
+        AlphaSourceX(x) = Int(x * (SemiFrameWidth - 1) / (AlphaCellWidth - 1) + .5)
+    End If
+Next x
+
+ReDim SemiColour(imageWidth - 1, imageHeight - 1) As Integer
+ReDim SemiOpaque(imageWidth - 1, imageHeight - 1) As _Unsigned _Byte
+
+If Gmode = 0 Then
+    ' Black plus the eight MC6847 SG4 colours. A full $xF pattern fills the
+    ' complete cell and keeps the selected colour exact.
+    ' MAME's measured MC6847 palette is a closer target than ideal RGB primaries.
+    ColoursToUse(0, 0) = &H26: ColoursToUse(0, 1) = &H30: ColoursToUse(0, 2) = &H16
+    ColoursToUse(1, 0) = &H30: ColoursToUse(1, 1) = &HD2: ColoursToUse(1, 2) = &H00
+    ColoursToUse(2, 0) = &HC1: ColoursToUse(2, 1) = &HE5: ColoursToUse(2, 2) = &H00
+    ColoursToUse(3, 0) = &H4C: ColoursToUse(3, 1) = &H3A: ColoursToUse(3, 2) = &HB4
+    ColoursToUse(4, 0) = &H9A: ColoursToUse(4, 1) = &H32: ColoursToUse(4, 2) = &H36
+    ColoursToUse(5, 0) = &HBF: ColoursToUse(5, 1) = &HC8: ColoursToUse(5, 2) = &HAD
+    ColoursToUse(6, 0) = &H41: ColoursToUse(6, 1) = &HAF: ColoursToUse(6, 2) = &H71
+    ColoursToUse(7, 0) = &HC8: ColoursToUse(7, 1) = &H4E: ColoursToUse(7, 2) = &HF0
+    ColoursToUse(8, 0) = &HD4: ColoursToUse(8, 1) = &H7F: ColoursToUse(8, 2) = &H00
+
+    For y = 0 To imageHeight - 1
+        For x = 0 To imageWidth - 1
+            Pixel$ = Right$("00000000" + Hex$(pixelColors(x, y)), 8)
+            If Val("&H" + Left$(Pixel$, 2)) >= 127 Then
+                SemiOpaque(x, y) = 1
+                R = Val("&H" + Mid$(Pixel$, 3, 2)): G = Val("&H" + Mid$(Pixel$, 5, 2)): B = Val("&H" + Mid$(Pixel$, 7, 2))
+                bestDist = &H7FFFFFFF
+                For i = 0 To 8
+                    dist = (R - ColoursToUse(i, 0)) ^ 2 + (G - ColoursToUse(i, 1)) ^ 2 + (B - ColoursToUse(i, 2)) ^ 2
+                    If dist < bestDist Then bestDist = dist: bestIndex = i
+                Next i
+                SemiColour(x, y) = bestIndex
+            End If
+        Next x
+    Next y
+Else
+    ' On an original MC6847, D7 must stay set to select semigraphics. That
+    ' leaves the portable full-cell bytes $BF and $FF (plus opaque black $80).
+    ColoursToUse(0, 0) = &H26: ColoursToUse(0, 1) = &H30: ColoursToUse(0, 2) = &H16
+    If ScreenOption = 0 Then
+        ColoursToUse(1, 0) = &H4C: ColoursToUse(1, 1) = &H3A: ColoursToUse(1, 2) = &HB4
+        ColoursToUse(2, 0) = &H9A: ColoursToUse(2, 1) = &H32: ColoursToUse(2, 2) = &H36
+    Else
+        ColoursToUse(1, 0) = &HC8: ColoursToUse(1, 1) = &H4E: ColoursToUse(1, 2) = &HF0
+        ColoursToUse(2, 0) = &HD4: ColoursToUse(2, 1) = &H7F: ColoursToUse(2, 2) = &H00
+    End If
+
+    ReDim SG6StyleR(2) As Integer
+    ReDim SG6StyleG(2) As Integer
+    ReDim SG6StyleB(2) As Integer
+    SG6StyleR(0) = ColoursToUse(1, 0): SG6StyleG(0) = ColoursToUse(1, 1): SG6StyleB(0) = ColoursToUse(1, 2)
+    SG6StyleR(1) = (ColoursToUse(1, 0) + ColoursToUse(2, 0)) / 2
+    SG6StyleG(1) = (ColoursToUse(1, 1) + ColoursToUse(2, 1)) / 2
+    SG6StyleB(1) = (ColoursToUse(1, 2) + ColoursToUse(2, 2)) / 2
+    SG6StyleR(2) = ColoursToUse(2, 0): SG6StyleG(2) = ColoursToUse(2, 1): SG6StyleB(2) = ColoursToUse(2, 2)
+
+    ' Preserve up to three exact source colours as three distinct stable styles:
+    ' solid colour 1, a cell checker, and solid colour 2.
+    ReDim SG6UniqueRGB(2) As _Unsigned Long
+    ReDim SG6UniqueR(2) As Integer
+    ReDim SG6UniqueG(2) As Integer
+    ReDim SG6UniqueB(2) As Integer
+    ReDim SG6UniqueStyle(2) As Integer
+    ReDim SG6UniqueError(2, 2) As Double
+    SG6UniqueCount = 0: SG6UniqueOverflow = 0
+    For y = 0 To imageHeight - 1
+        For x = 0 To imageWidth - 1
+            Pixel$ = Right$("00000000" + Hex$(pixelColors(x, y)), 8)
+            If Val("&H" + Left$(Pixel$, 2)) >= 127 Then
+                R = Val("&H" + Mid$(Pixel$, 3, 2)): G = Val("&H" + Mid$(Pixel$, 5, 2)): B = Val("&H" + Mid$(Pixel$, 7, 2))
+                If Not (R <= 48 And G <= 48 And B <= 48) Then
+                    SG6RGB~& = R * 65536 + G * 256 + B
+                    SG6UniqueFound = -1
+                    For i = 0 To SG6UniqueCount - 1
+                        If SG6UniqueRGB(i) = SG6RGB~& Then SG6UniqueFound = i
+                    Next i
+                    If SG6UniqueFound < 0 Then
+                        If SG6UniqueCount < 3 Then
+                            SG6UniqueRGB(SG6UniqueCount) = SG6RGB~&
+                            SG6UniqueR(SG6UniqueCount) = R: SG6UniqueG(SG6UniqueCount) = G: SG6UniqueB(SG6UniqueCount) = B
+                            SG6UniqueCount = SG6UniqueCount + 1
+                        Else
+                            SG6UniqueOverflow = -1
+                        End If
+                    End If
+                End If
+            End If
+        Next x
+    Next y
+
+    If SG6UniqueOverflow = 0 And SG6UniqueCount > 0 Then
+        For SG6Unique = 0 To SG6UniqueCount - 1
+            For SG6Candidate = 0 To 2
+                SG6UniqueError(SG6Unique, SG6Candidate) = (SG6UniqueR(SG6Unique) - SG6StyleR(SG6Candidate)) ^ 2
+                SG6UniqueError(SG6Unique, SG6Candidate) = SG6UniqueError(SG6Unique, SG6Candidate) + (SG6UniqueG(SG6Unique) - SG6StyleG(SG6Candidate)) ^ 2
+                SG6UniqueError(SG6Unique, SG6Candidate) = SG6UniqueError(SG6Unique, SG6Candidate) + (SG6UniqueB(SG6Unique) - SG6StyleB(SG6Candidate)) ^ 2
+            Next SG6Candidate
+        Next SG6Unique
+        SG6BestError = 1E+30
+        For SG6Candidate0 = 0 To 2
+            If SG6UniqueCount = 1 Then
+                SG6Error = SG6UniqueError(0, SG6Candidate0)
+                If SG6Error < SG6BestError Then SG6BestError = SG6Error: SG6UniqueStyle(0) = SG6Candidate0
+            Else
+                For SG6Candidate1 = 0 To 2
+                    If SG6Candidate1 <> SG6Candidate0 Then
+                        SG6Error = SG6UniqueError(0, SG6Candidate0) + SG6UniqueError(1, SG6Candidate1)
+                        If SG6UniqueCount = 2 Then
+                            If SG6Error < SG6BestError Then SG6BestError = SG6Error: SG6UniqueStyle(0) = SG6Candidate0: SG6UniqueStyle(1) = SG6Candidate1
+                        Else
+                            For SG6Candidate2 = 0 To 2
+                                If SG6Candidate2 <> SG6Candidate0 And SG6Candidate2 <> SG6Candidate1 Then
+                                    SG6Error2 = SG6Error + SG6UniqueError(2, SG6Candidate2)
+                                    If SG6Error2 < SG6BestError Then SG6BestError = SG6Error2: SG6UniqueStyle(0) = SG6Candidate0: SG6UniqueStyle(1) = SG6Candidate1: SG6UniqueStyle(2) = SG6Candidate2
+                                End If
+                            Next SG6Candidate2
+                        End If
+                    End If
+                Next SG6Candidate1
+            End If
+        Next SG6Candidate0
+    End If
+
+    For y = 0 To imageHeight - 1
+        For x = 0 To imageWidth - 1
+            Pixel$ = Right$("00000000" + Hex$(pixelColors(x, y)), 8)
+            If Val("&H" + Left$(Pixel$, 2)) >= 127 Then
+                SemiOpaque(x, y) = 1
+                R = Val("&H" + Mid$(Pixel$, 3, 2)): G = Val("&H" + Mid$(Pixel$, 5, 2)): B = Val("&H" + Mid$(Pixel$, 7, 2))
+                If R <= 48 And G <= 48 And B <= 48 Then
+                    SemiColour(x, y) = -1
+                Else
+                    SG6BestStyle = -1
+                    If SG6UniqueOverflow = 0 Then
+                        SG6RGB~& = R * 65536 + G * 256 + B
+                        For i = 0 To SG6UniqueCount - 1
+                            If SG6UniqueRGB(i) = SG6RGB~& Then SG6BestStyle = SG6UniqueStyle(i)
+                        Next i
+                    End If
+                    If SG6BestStyle < 0 Then
+                        SG6BestError = 1E+30
+                        For SG6Candidate = 0 To 2
+                            SG6Error = (R - SG6StyleR(SG6Candidate)) ^ 2 + (G - SG6StyleG(SG6Candidate)) ^ 2 + (B - SG6StyleB(SG6Candidate)) ^ 2
+                            If SG6Error < SG6BestError Then SG6BestError = SG6Error: SG6BestStyle = SG6Candidate
+                        Next SG6Candidate
+                    End If
+                    SemiColour(x, y) = SG6BestStyle
+                End If
+            End If
+        Next x
+    Next y
+End If
+
+' Restore/copy helpers calculate their physical row width from these values.
+ScreenWidth = 64
+ShiftBits = 4
+Colours = 16
+DrawBytesPerRow = AlphaCellWidth
+BytesPerRowToBackup = AlphaCellWidth
+SpriteWidthPixels = AlphaCellWidth
+SpWidth = AlphaCellWidth * 4
+imageHeight = AlphaCellHeight
+ReDim SpriteOriginal$(SpWidth * 4 + 8, imageHeight)
+For y = 0 To imageHeight - 1
+    For x = 0 To SpWidth - 1
+        SpriteOriginal$(x, y) = "1"
+    Next x
+Next y
+
+Print "GMODE # selected:"; Gmode
+Print "Generating whole-cell sprite with the following info:"
+Print "Source PNG Width:"; SemiFrameWidth
+Print "Aspect-corrected Sprite Width:"; AlphaCellWidth; "screen cells"
+Print "Sprite Height:"; AlphaCellHeight; "screen cells"
+If Gmode = 1 Then Print "GMODE 1 SCREEN colour set:"; ScreenOption
+Print "Number of frames in this sprite:"; AnimFrames
+Print "Filename: "; FNameNoExt$; ".asm"
+If Gmode = 1 Then Print "NOTE: GMODE 1 colours differ on an MC6847T1 CoCo 2B; its D7-set bytes display as SG4 red/orange cells."
+
+Outname$ = FNameNoExt$ + ".asm"
+Open Outname$ For Output As #2
+Print #2, "; Sprite Name            : "; FNameNoExt$
+Print #2, "; Source PNG Width       :"; SemiFrameWidth
+Print #2, "; Sprite Width in cells  :"; AlphaCellWidth
+Print #2, "; Sprite Height in cells :"; AlphaCellHeight
+If Gmode = 0 Then Print #2, "; Hardware colours       : black plus all eight SG4 colours"
+If Gmode = 1 Then Print #2, "; Hardware bytes         : $80 black, $BF foreground 1, $FF foreground 2"
+Print #2, "; # of Animation Frames  :"; AnimFrames
+Print #2, "; Required GMODE         :"; Gmode
+If Gmode = 1 Then Print #2, "; SCREEN colour set      :"; ScreenOption
+Print #2, "; One PNG pixel occupies one complete 8x12 display cell"
+Print #2, "; SPRITE LOCATE coordinates use the native 32x16 cell grid"
+Print #2, FNameNoExt$; "_Draw:"
+For FrameNumber = 0 To AnimFrames - 1
+    Instr1$ = "FDB"
+    Instr2$ = FNameNoExt$ + "_" + LTrim$(Str$(FrameNumber))
+    Com$ = "Address to draw whole-cell sprite frame"
+    GoSub DoOutput
+Next FrameNumber
+
+GoSub Restore_BackupSprite
+
+For FrameNumber = 0 To AnimFrames - 1
+    SemiFrameStart = FrameNumber * SemiFrameWidth
+    Print #2, "; Frame Number:"; FrameNumber
+    Print #2, FNameNoExt$ + "_" + LTrim$(Str$(FrameNumber)) + ":"
+    For y = 0 To imageHeight - 1
+        For AlphaCellX = 0 To AlphaCellWidth - 1
+            AlphaSourcePixelX = SemiFrameStart + AlphaSourceX(AlphaCellX)
+            If SemiOpaque(AlphaSourcePixelX, y) Then
+                If Gmode = 0 Then
+                    AlphaColour = SemiColour(AlphaSourcePixelX, y)
+                    If AlphaColour = 0 Then
+                        AlphaByte = &H80
+                    Else
+                        AlphaByte = &H80 + (AlphaColour - 1) * 16 + &HF
+                    End If
+                Else
+                    AlphaStyle = SemiColour(AlphaSourcePixelX, y)
+                    If AlphaStyle < 0 Then
+                        AlphaByte = &H80
+                    ElseIf AlphaStyle = 0 Then
+                        AlphaByte = &HBF
+                    ElseIf AlphaStyle = 1 Then
+                        AlphaByte = &HBF
+                        If ((AlphaCellX + y) And 1) Then AlphaByte = &HFF
+                    Else
+                        AlphaByte = &HFF
+                    End If
+                End If
+                Instr1$ = "LDA": Instr2$ = "#$" + Right$("0" + Hex$(AlphaByte), 2): Com$ = "Whole display-cell colour"
+                GoSub DoOutput
+                n = AlphaCellX: GoSub NumAsString
+                Instr1$ = "STA": Instr2$ = N$ + ",X": Com$ = "Draw character/colour cell"
+                GoSub DoOutput
+            End If
+        Next AlphaCellX
+        If y <> imageHeight - 1 Then
+            Instr1$ = "LEAX": Instr2$ = "32,X": Com$ = "Next 32-byte display row"
+            GoSub DoOutput
+        End If
+    Next y
+    Instr1$ = "RTS": Com$ = "Done drawing the whole-cell sprite"
+    GoSub DoOutput
+    Print #2,
+Next FrameNumber
+Close #2
+Return
+
+' Build a compiled sprite for GMODE 4 (SG6).
+' Each screen byte contains a 2x3 pixel block with one of two CoCo-safe foreground
+' colours. One PNG pixel owns one complete SG6 cell at aligned coordinates.
+' Six variants allow placement at both X parities and all three Y remainders.
+MakeSG6Sprite:
+If AnimFrames < 1 Then AnimFrames = 1
+If imageWidth Mod AnimFrames <> 0 Then
+    Print "ERROR: Sprite sheet width must divide evenly by the number of animation frames"
+    Return
+End If
+
+SemiFrameWidth = imageWidth \ AnimFrames
+If SemiFrameWidth < 1 Then Print "ERROR: Sprite frame width must be at least one pixel": Return
+
+' An SG6 byte is approximately 8 display clocks wide and 12 scanlines high.
+' Expanding horizontally by 3:2 preserves every source row and makes the
+' complete colour cells approximately square without vertical downsampling.
+SG6CellWidth = Int((SemiFrameWidth * 3 + 1) / 2)
+If SG6CellWidth > 31 Then Print "ERROR: Aspect-corrected GMODE 4 sprite width is"; SG6CellWidth; "cells, but shifted sprites safely allow at most 31": Return
+SG6SourceHeight = imageHeight
+If SG6SourceHeight > 15 Then Print "ERROR: Shifted GMODE 4 sprites cannot be taller than 15 PNG rows": Return
+
+' The MC6847 defines four SG6 colour prefixes, but the CoCo wires video D7
+' to Alpha/Semigraphics select. D7 must remain set, leaving prefixes $80 and
+' $C0: blue/red for SCREEN 1,0 or magenta/orange for SCREEN 1,1.
+' MAME's measured MC6847 "black" is the very dark green seen on a CoCo.
+' Model density blends against it instead of mathematical RGB black.
+ColoursToUse(0, 0) = &H26: ColoursToUse(0, 1) = &H30: ColoursToUse(0, 2) = &H16
+If ScreenOption = 0 Then
+    ' SCREEN 1,0: legal CoCo SG6 colours are blue and red.
+    ColoursToUse(1, 0) = &H4C: ColoursToUse(1, 1) = &H3A: ColoursToUse(1, 2) = &HB4
+    ColoursToUse(2, 0) = &H9A: ColoursToUse(2, 1) = &H32: ColoursToUse(2, 2) = &H36
+Else
+    ' SCREEN 1,1: legal CoCo SG6 colours are magenta and orange.
+    ColoursToUse(1, 0) = &HC8: ColoursToUse(1, 1) = &H4E: ColoursToUse(1, 2) = &HF0
+    ColoursToUse(2, 0) = &HD4: ColoursToUse(2, 1) = &H7F: ColoursToUse(2, 2) = &H00
+End If
+
+' SG6 can display black plus one of two foreground colours in each 2x3 cell.
+' Use three fully opaque styles: solid colour 1, a stable checker of colours
+' 1 and 2, and solid colour 2. This preserves the shape of coloured regions;
+' mixing a foreground colour with black made small sprites look perforated.
+ReDim SG6StyleR(2) As Integer
+ReDim SG6StyleG(2) As Integer
+ReDim SG6StyleB(2) As Integer
+SG6StyleR(0) = ColoursToUse(1, 0): SG6StyleG(0) = ColoursToUse(1, 1): SG6StyleB(0) = ColoursToUse(1, 2)
+SG6StyleR(1) = (ColoursToUse(1, 0) + ColoursToUse(2, 0)) / 2
+SG6StyleG(1) = (ColoursToUse(1, 1) + ColoursToUse(2, 1)) / 2
+SG6StyleB(1) = (ColoursToUse(1, 2) + ColoursToUse(2, 2)) / 2
+SG6StyleR(2) = ColoursToUse(2, 0): SG6StyleG(2) = ColoursToUse(2, 1): SG6StyleB(2) = ColoursToUse(2, 2)
+
+' Flat pixel art commonly uses only a few exact colours. Record up to three
+' and give each a different SG6 style, so distinct source regions cannot merge.
+ReDim SG6UniqueRGB(2) As _Unsigned Long
+ReDim SG6UniqueR(2) As Integer
+ReDim SG6UniqueG(2) As Integer
+ReDim SG6UniqueB(2) As Integer
+ReDim SG6UniqueStyle(2) As Integer
+ReDim SG6UniqueError(2, 2) As Double
+SG6UniqueCount = 0: SG6UniqueOverflow = 0
+For y = 0 To imageHeight - 1
+    For x = 0 To imageWidth - 1
+        Pixel$ = Right$("00000000" + Hex$(pixelColors(x, y)), 8)
+        If Val("&H" + Left$(Pixel$, 2)) >= 127 Then
+            R = Val("&H" + Mid$(Pixel$, 3, 2)): G = Val("&H" + Mid$(Pixel$, 5, 2)): B = Val("&H" + Mid$(Pixel$, 7, 2))
+            If Not (R <= 48 And G <= 48 And B <= 48) Then
+                SG6RGB~& = R * 65536 + G * 256 + B
+                SG6UniqueFound = -1
+                For i = 0 To SG6UniqueCount - 1
+                    If SG6UniqueRGB(i) = SG6RGB~& Then SG6UniqueFound = i
+                Next i
+                If SG6UniqueFound < 0 Then
+                    If SG6UniqueCount < 3 Then
+                        SG6UniqueRGB(SG6UniqueCount) = SG6RGB~&
+                        SG6UniqueR(SG6UniqueCount) = R: SG6UniqueG(SG6UniqueCount) = G: SG6UniqueB(SG6UniqueCount) = B
+                        SG6UniqueCount = SG6UniqueCount + 1
+                    Else
+                        SG6UniqueOverflow = -1
+                    End If
+                End If
+            End If
+        End If
+    Next x
+Next y
+
+If SG6UniqueOverflow = 0 And SG6UniqueCount > 0 Then
+    For SG6Unique = 0 To SG6UniqueCount - 1
+        For SG6Candidate = 0 To 2
+            SG6UniqueError(SG6Unique, SG6Candidate) = (SG6UniqueR(SG6Unique) - SG6StyleR(SG6Candidate)) ^ 2
+            SG6UniqueError(SG6Unique, SG6Candidate) = SG6UniqueError(SG6Unique, SG6Candidate) + (SG6UniqueG(SG6Unique) - SG6StyleG(SG6Candidate)) ^ 2
+            SG6UniqueError(SG6Unique, SG6Candidate) = SG6UniqueError(SG6Unique, SG6Candidate) + (SG6UniqueB(SG6Unique) - SG6StyleB(SG6Candidate)) ^ 2
+        Next SG6Candidate
+    Next SG6Unique
+    SG6BestError = 1E+30
+    For SG6Candidate0 = 0 To 2
+        If SG6UniqueCount = 1 Then
+            SG6Error = SG6UniqueError(0, SG6Candidate0)
+            If SG6Error < SG6BestError Then SG6BestError = SG6Error: SG6UniqueStyle(0) = SG6Candidate0
+        Else
+            For SG6Candidate1 = 0 To 2
+                If SG6Candidate1 <> SG6Candidate0 Then
+                    SG6Error = SG6UniqueError(0, SG6Candidate0) + SG6UniqueError(1, SG6Candidate1)
+                    If SG6UniqueCount = 2 Then
+                        If SG6Error < SG6BestError Then SG6BestError = SG6Error: SG6UniqueStyle(0) = SG6Candidate0: SG6UniqueStyle(1) = SG6Candidate1
+                    Else
+                        For SG6Candidate2 = 0 To 2
+                            If SG6Candidate2 <> SG6Candidate0 And SG6Candidate2 <> SG6Candidate1 Then
+                                SG6Error2 = SG6Error + SG6UniqueError(2, SG6Candidate2)
+                                If SG6Error2 < SG6BestError Then SG6BestError = SG6Error2: SG6UniqueStyle(0) = SG6Candidate0: SG6UniqueStyle(1) = SG6Candidate1: SG6UniqueStyle(2) = SG6Candidate2
+                            End If
+                        Next SG6Candidate2
+                    End If
+                End If
+            Next SG6Candidate1
+        End If
+    Next SG6Candidate0
+End If
+
+ReDim SemiColour(imageWidth - 1, imageHeight - 1) As Integer
+ReDim SemiOpaque(imageWidth - 1, imageHeight - 1) As _Unsigned _Byte
+For y = 0 To imageHeight - 1
+    For x = 0 To imageWidth - 1
+        Pixel$ = Right$("00000000" + Hex$(pixelColors(x, y)), 8)
+        If Val("&H" + Left$(Pixel$, 2)) >= 127 Then
+            SemiOpaque(x, y) = 1
+            R = Val("&H" + Mid$(Pixel$, 3, 2)): G = Val("&H" + Mid$(Pixel$, 5, 2)): B = Val("&H" + Mid$(Pixel$, 7, 2))
+            If R <= 48 And G <= 48 And B <= 48 Then
+                SemiColour(x, y) = -1
+            Else
+                SG6BestStyle = -1
+                If SG6UniqueOverflow = 0 Then
+                    SG6RGB~& = R * 65536 + G * 256 + B
+                    For i = 0 To SG6UniqueCount - 1
+                        If SG6UniqueRGB(i) = SG6RGB~& Then SG6BestStyle = SG6UniqueStyle(i)
+                    Next i
+                End If
+                If SG6BestStyle < 0 Then
+                    SG6BestError = 1E+30
+                    For SG6Candidate = 0 To 2
+                        SG6Error = (R - SG6StyleR(SG6Candidate)) ^ 2 + (G - SG6StyleG(SG6Candidate)) ^ 2 + (B - SG6StyleB(SG6Candidate)) ^ 2
+                        If SG6Error < SG6BestError Then SG6BestError = SG6Error: SG6BestStyle = SG6Candidate
+                    Next SG6Candidate
+                End If
+                SemiColour(x, y) = SG6BestStyle
+            End If
+        End If
+    Next x
+Next y
+
+ReDim SG6SourceX(SG6CellWidth - 1) As Integer
+For x = 0 To SG6CellWidth - 1
+    If SG6CellWidth = 1 Or SemiFrameWidth = 1 Then
+        SG6SourceX(x) = 0
+    Else
+        SG6SourceX(x) = Int(x * (SemiFrameWidth - 1) / (SG6CellWidth - 1) + .5)
+    End If
+Next x
+
+SG6LogicalWidth = SG6CellWidth * 2
+SG6LogicalHeight = SG6SourceHeight * 3
+SG6PhysicalRows = SG6SourceHeight + 1 ' Extra byte row required by a Y shift of one or two pixels.
+ScreenWidth = 64
+ShiftBits = 4
+Colours = 16 ' The existing backup generator only needs the two-pixels-per-byte X geometry.
+DrawBytesPerRow = SG6CellWidth
+BytesPerRowToBackup = SG6CellWidth + 1
+SpriteWidthPixels = SG6LogicalWidth
+SpWidth = SG6LogicalWidth * 4
+imageHeight = SG6PhysicalRows
+ReDim SpriteOriginal$(SpWidth * 4 + 8, imageHeight)
+For y = 0 To imageHeight - 1
+    For x = 0 To SpWidth - 1
+        SpriteOriginal$(x, y) = "1"
+    Next x
+Next y
+
+Print "GMODE # selected:"; Gmode
+Print "Generating SG6 sprite with the following info:"
+Print "Source PNG Width:"; SemiFrameWidth
+Print "Aspect-corrected Sprite Width:"; SG6CellWidth; "SG6 cells ("; SG6LogicalWidth; "logical pixels)"
+Print "Source PNG Height:"; SG6SourceHeight
+Print "Sprite Height:"; SG6LogicalHeight; "logical pixels"
+Print "SG6 SCREEN colour set:"; ScreenOption
+Print "Number of frames in this sprite:"; AnimFrames
+Print "Filename: "; FNameNoExt$; ".asm"
+Print "NOTE: GMODE 4 requires the original MC6847; the MC6847T1 CoCo 2B does not support SG6."
+
+Outname$ = FNameNoExt$ + ".asm"
+Open Outname$ For Output As #2
+Print #2, "; Sprite Name            : "; FNameNoExt$
+Print #2, "; Source PNG Width       :"; SemiFrameWidth
+Print #2, "; Sprite Width in pixels :"; SG6LogicalWidth
+Print #2, "; Sprite Height in pixels:"; SG6LogicalHeight
+Print #2, "; Hardware colours       : black plus 2 CoCo-safe foreground colours"
+Print #2, "; Conversion             : two solid colours plus a stable between-colour pattern"
+Print #2, "; Transparency           : shifted edge cells preserve existing pixel bits"
+Print #2, "; # of Animation Frames  :"; AnimFrames
+Print #2, "; Required GMODE         :4"
+Print #2, "; SCREEN colour set      :"; ScreenOption
+Print #2, "; Each PNG pixel occupies one complete 2x3 SG6 colour cell"
+Print #2, "; GMODE 4 requires an original MC6847; MC6847T1 CoCo 2B machines have no SG6 mode"
+Print #2, "; Six routines per frame support two X and three Y cell alignments"
+Print #2, FNameNoExt$; "_Draw:"
+For FrameNumber = 0 To AnimFrames - 1
+    For SG6Variant = 0 To 5
+        Instr1$ = "FDB"
+        Instr2$ = FNameNoExt$ + "_" + LTrim$(Str$(FrameNumber)) + "_" + LTrim$(Str$(SG6Variant))
+        Com$ = "Address to draw SG6 sprite; variant = (Y MOD 3) * 2 + X parity"
+        GoSub DoOutput
+    Next SG6Variant
+Next FrameNumber
+
+GoSub Restore_BackupSprite
+
+ReDim SG6CellColour(5) As Integer
+ReDim SG6CellOpaque(5) As _Unsigned _Byte
+ReDim SG6CellBit(5) As Integer
+SG6CellBit(0) = 32: SG6CellBit(1) = 16
+SG6CellBit(2) = 8: SG6CellBit(3) = 4
+SG6CellBit(4) = 2: SG6CellBit(5) = 1
+
+For FrameNumber = 0 To AnimFrames - 1
+    SemiFrameStart = FrameNumber * SemiFrameWidth
+    For SG6Variant = 0 To 5
+        SG6ShiftX = SG6Variant And 1
+        SG6ShiftY = Int(SG6Variant / 2)
+        Print #2, "; Frame Number:"; FrameNumber; " X shift:"; SG6ShiftX; " Y shift:"; SG6ShiftY
+        Print #2, FNameNoExt$ + "_" + LTrim$(Str$(FrameNumber)) + "_" + LTrim$(Str$(SG6Variant)) + ":"
+        For SG6Row = 0 To SG6PhysicalRows - 1
+            For SG6Cell = 0 To SG6CellWidth
+                SG6AnyOpaque = 0
+                SG6AnyColour = 0
+                SG6OpaquePattern = 0
+                For SG6Q = 0 To 5
+                    SG6CellOpaque(SG6Q) = 0
+                    SG6CellColour(SG6Q) = 0
+                    SG6LogicalX = SG6Cell * 2 + (SG6Q And 1) - SG6ShiftX
+                    SG6LogicalY = SG6Row * 3 + Int(SG6Q / 2) - SG6ShiftY
+                    If SG6LogicalX >= 0 And SG6LogicalX < SG6LogicalWidth And SG6LogicalY >= 0 And SG6LogicalY < SG6LogicalHeight Then
+                        SG6CorrectedX = Int(SG6LogicalX / 2)
+                        SG6SourceY = Int(SG6LogicalY / 3)
+                        SG6SourcePixelX = SemiFrameStart + SG6SourceX(SG6CorrectedX)
+                        If SemiOpaque(SG6SourcePixelX, SG6SourceY) Then
+                            SG6CellOpaque(SG6Q) = 1
+                            SG6AnyOpaque = 1
+                            SG6OpaquePattern = SG6OpaquePattern Or SG6CellBit(SG6Q)
+                            SG6PixelStyle = SemiColour(SG6SourcePixelX, SG6SourceY)
+                            If SG6PixelStyle = 0 Then
+                                SG6CellColour(SG6Q) = 1
+                            ElseIf SG6PixelStyle = 1 Then
+                                SG6CellColour(SG6Q) = 1
+                                If ((SG6CorrectedX + SG6SourceY) And 1) Then SG6CellColour(SG6Q) = 2
+                            ElseIf SG6PixelStyle = 2 Then
+                                SG6CellColour(SG6Q) = 2
+                            End If
+                            If SG6CellColour(SG6Q) > 0 Then SG6AnyColour = 1
+                        End If
+                    End If
+                Next SG6Q
+
+                If SG6AnyOpaque Then
+                    SG6SharedColour = 0
+                    If SG6AnyColour Then
+                        SG6BestDist = &H7FFFFFFF
+                        For i = 1 To 2
+                            SG6Dist = 0
+                            For SG6Q = 0 To 5
+                                If SG6CellOpaque(SG6Q) And SG6CellColour(SG6Q) > 0 Then
+                                    SG6Dist = SG6Dist + (ColoursToUse(SG6CellColour(SG6Q), 0) - ColoursToUse(i, 0)) ^ 2
+                                    SG6Dist = SG6Dist + (ColoursToUse(SG6CellColour(SG6Q), 1) - ColoursToUse(i, 1)) ^ 2
+                                    SG6Dist = SG6Dist + (ColoursToUse(SG6CellColour(SG6Q), 2) - ColoursToUse(i, 2)) ^ 2
+                                End If
+                            Next SG6Q
+                            If SG6Dist < SG6BestDist Then SG6BestDist = SG6Dist: SG6SharedColour = i
+                        Next i
+                    End If
+
+                    SG6Pattern = 0
+                    For SG6Q = 0 To 5
+                        If SG6CellOpaque(SG6Q) And SG6CellColour(SG6Q) > 0 Then SG6Pattern = SG6Pattern Or SG6CellBit(SG6Q)
+                    Next SG6Q
+                    SG6Byte = &H80 + SG6Pattern
+                    If SG6SharedColour = 2 Then SG6Byte = SG6Byte Or &H40
+                    n = SG6Cell: GoSub NumAsString
+                    If SG6OpaquePattern = &H3F Then
+                        Instr1$ = "LDA": Instr2$ = "#$" + Right$("0" + Hex$(SG6Byte), 2): Com$ = "Complete SG6 2x3 colour cell"
+                        GoSub DoOutput
+                    Else
+                        SG6PreserveMask = &H3F - SG6OpaquePattern
+                        If SG6SharedColour = 0 Then SG6PreserveMask = SG6PreserveMask Or &H40
+                        Instr1$ = "LDA": Instr2$ = N$ + ",X": Com$ = "Read partially covered SG6 cell"
+                        GoSub DoOutput
+                        Instr1$ = "ANDA": Instr2$ = "#$" + Right$("0" + Hex$(SG6PreserveMask), 2): Com$ = "Preserve transparent subpixels"
+                        GoSub DoOutput
+                        Instr1$ = "ORA": Instr2$ = "#$" + Right$("0" + Hex$(SG6Byte), 2): Com$ = "Add the visible sprite subpixels"
+                        GoSub DoOutput
+                    End If
+                    Instr1$ = "STA": Instr2$ = N$ + ",X": Com$ = "Draw SG6 cell"
+                    GoSub DoOutput
+                End If
+            Next SG6Cell
+            If SG6Row <> SG6PhysicalRows - 1 Then
+                Instr1$ = "LEAX": Instr2$ = "32,X": Com$ = "Next SG6 byte row"
+                GoSub DoOutput
+            End If
+        Next SG6Row
+        Instr1$ = "RTS": Com$ = "Done drawing the SG6 sprite"
+        GoSub DoOutput
+        Print #2,
+    Next SG6Variant
+Next FrameNumber
+Close #2
+Return
+
+' Build a compiled sprite for GMODE 2 (SG4).
+' Each screen byte contains a 2x2 pixel block with one shared colour. One PNG
+' pixel owns one complete SG4 byte so its colour remains exact at even X/Y.
+' Four variants allow placement at every combination of X and Y parity.
+MakeSG4Sprite:
+If AnimFrames < 1 Then AnimFrames = 1
+If imageWidth Mod AnimFrames <> 0 Then
+    Print "ERROR: Sprite sheet width must divide evenly by the number of animation frames"
+    Return
+End If
+
+SemiFrameWidth = imageWidth \ AnimFrames
+If SemiFrameWidth < 1 Then Print "ERROR: Sprite frame width must be at least one pixel": Return
+
+' An SG4 byte is approximately 8 display clocks wide and 12 scanlines high.
+' Expanding horizontally by 3:2 preserves every source row and makes the
+' complete colour cells approximately square without vertical downsampling.
+SG4CellWidth = Int((SemiFrameWidth * 3 + 1) / 2)
+If SG4CellWidth > 32 Then Print "ERROR: Aspect-corrected GMODE 2 sprite width is"; SG4CellWidth; "cells, but the screen allows only 32": Return
+SG4SourceHeight = imageHeight
+If SG4SourceHeight > 16 Then Print "ERROR: GMODE 2 sprites cannot be taller than 16 PNG rows": Return
+
+' Approximate RGB palette for the eight MC6847 semigraphics colours.
+ColoursToUse(0, 0) = 0: ColoursToUse(0, 1) = 0: ColoursToUse(0, 2) = 0
+ColoursToUse(1, 0) = 0: ColoursToUse(1, 1) = 214: ColoursToUse(1, 2) = 0
+ColoursToUse(2, 0) = 255: ColoursToUse(2, 1) = 255: ColoursToUse(2, 2) = 0
+ColoursToUse(3, 0) = 0: ColoursToUse(3, 1) = 0: ColoursToUse(3, 2) = 255
+ColoursToUse(4, 0) = 255: ColoursToUse(4, 1) = 0: ColoursToUse(4, 2) = 0
+ColoursToUse(5, 0) = 220: ColoursToUse(5, 1) = 199: ColoursToUse(5, 2) = 160
+ColoursToUse(6, 0) = 0: ColoursToUse(6, 1) = 255: ColoursToUse(6, 2) = 255
+ColoursToUse(7, 0) = 255: ColoursToUse(7, 1) = 0: ColoursToUse(7, 2) = 255
+ColoursToUse(8, 0) = 255: ColoursToUse(8, 1) = 128: ColoursToUse(8, 2) = 0
+
+ReDim SemiColour(imageWidth - 1, imageHeight - 1) As Integer
+ReDim SemiOpaque(imageWidth - 1, imageHeight - 1) As _Unsigned _Byte
+For y = 0 To imageHeight - 1
+    For x = 0 To imageWidth - 1
+        Pixel$ = Right$("00000000" + Hex$(pixelColors(x, y)), 8)
+        If Val("&H" + Left$(Pixel$, 2)) >= 127 Then
+            SemiOpaque(x, y) = 1
+            R = Val("&H" + Mid$(Pixel$, 3, 2))
+            G = Val("&H" + Mid$(Pixel$, 5, 2))
+            B = Val("&H" + Mid$(Pixel$, 7, 2))
+            bestDist = &H7FFFFFFF
+            For i = 0 To 8
+                dist = (R - ColoursToUse(i, 0)) ^ 2 + (G - ColoursToUse(i, 1)) ^ 2 + (B - ColoursToUse(i, 2)) ^ 2
+                If dist < bestDist Then bestDist = dist: bestIndex = i
+            Next i
+            SemiColour(x, y) = bestIndex
+        End If
+    Next x
+Next y
+
+ReDim SG4SourceX(SG4CellWidth - 1) As Integer
+For x = 0 To SG4CellWidth - 1
+    If SG4CellWidth = 1 Or SemiFrameWidth = 1 Then
+        SG4SourceX(x) = 0
+    Else
+        ' Endpoint-aligned nearest-neighbour scaling keeps left/right details symmetric.
+        SG4SourceX(x) = Int(x * (SemiFrameWidth - 1) / (SG4CellWidth - 1) + .5)
+    End If
+Next x
+
+SG4LogicalWidth = SG4CellWidth * 2
+SG4LogicalHeight = SG4SourceHeight * 2
+SG4PhysicalRows = SG4SourceHeight + 1 ' Extra byte row required by an odd Y placement.
+ScreenWidth = 64
+ShiftBits = 4
+Colours = 16 ' The existing backup generator only needs the two-pixels-per-byte X geometry.
+DrawBytesPerRow = SG4CellWidth
+BytesPerRowToBackup = SG4CellWidth + 1
+SpriteWidthPixels = SG4LogicalWidth
+SpWidth = SG4LogicalWidth * 4
+imageHeight = SG4PhysicalRows
+ReDim SpriteOriginal$(SpWidth * 4 + 8, imageHeight)
+For y = 0 To imageHeight - 1
+    For x = 0 To SpWidth - 1
+        SpriteOriginal$(x, y) = "1"
+    Next x
+Next y
+
+Print "GMODE # selected:"; Gmode
+Print "Generating SG4 sprite with the following info:"
+Print "Source PNG Width:"; SemiFrameWidth
+Print "Aspect-corrected Sprite Width:"; SG4CellWidth; "SG4 cells ("; SG4LogicalWidth; "logical pixels)"
+Print "Source PNG Height:"; SG4SourceHeight
+Print "Sprite Height:"; SG4LogicalHeight; "logical pixels"
+Print "Number of frames in this sprite:"; AnimFrames
+Print "Filename: "; FNameNoExt$; ".asm"
+
+Outname$ = FNameNoExt$ + ".asm"
+Open Outname$ For Output As #2
+Print #2, "; Sprite Name            : "; FNameNoExt$
+Print #2, "; Source PNG Width       :"; SemiFrameWidth
+Print #2, "; Sprite Width in pixels :"; SG4LogicalWidth
+Print #2, "; Sprite Height in pixels:"; SG4LogicalHeight
+Print #2, "; # of Colours           :9"
+Print #2, "; # of Animation Frames  :"; AnimFrames
+Print #2, "; Required GMODE         :2"
+Print #2, "; Each PNG pixel occupies one complete 2x2 SG4 colour cell"
+Print #2, "; Four routines per frame support even/odd X and even/odd Y placement"
+Print #2, FNameNoExt$; "_Draw:"
+For FrameNumber = 0 To AnimFrames - 1
+    For SG4Variant = 0 To 3
+        Instr1$ = "FDB"
+        Instr2$ = FNameNoExt$ + "_" + LTrim$(Str$(FrameNumber)) + "_" + LTrim$(Str$(SG4Variant))
+        Com$ = "Address to draw SG4 sprite; variant = Y parity * 2 + X parity"
+        GoSub DoOutput
+    Next SG4Variant
+Next FrameNumber
+
+GoSub Restore_BackupSprite
+
+ReDim SG4QuadrantColour(3) As Integer
+ReDim SG4QuadrantOpaque(3) As _Unsigned _Byte
+ReDim SG4QuadrantBit(3) As Integer
+SG4QuadrantBit(0) = 8: SG4QuadrantBit(1) = 4: SG4QuadrantBit(2) = 2: SG4QuadrantBit(3) = 1
+
+For FrameNumber = 0 To AnimFrames - 1
+    SemiFrameStart = FrameNumber * SemiFrameWidth
+    For SG4Variant = 0 To 3
+        SG4ShiftX = SG4Variant And 1
+        SG4ShiftY = Int(SG4Variant / 2)
+        Print #2, "; Frame Number:"; FrameNumber; " X shift:"; SG4ShiftX; " Y shift:"; SG4ShiftY
+        Print #2, FNameNoExt$ + "_" + LTrim$(Str$(FrameNumber)) + "_" + LTrim$(Str$(SG4Variant)) + ":"
+        For SG4Row = 0 To SG4PhysicalRows - 1
+            For SG4Cell = 0 To SG4CellWidth
+                SG4AnyOpaque = 0
+                SG4AnyColour = 0
+                For SG4Q = 0 To 3
+                    SG4QuadrantOpaque(SG4Q) = 0
+                    SG4QuadrantColour(SG4Q) = 0
+                    SG4LogicalX = SG4Cell * 2 + (SG4Q And 1) - SG4ShiftX
+                    SG4LogicalY = SG4Row * 2 + Int(SG4Q / 2) - SG4ShiftY
+                    If SG4LogicalX >= 0 And SG4LogicalX < SG4LogicalWidth And SG4LogicalY >= 0 And SG4LogicalY < SG4LogicalHeight Then
+                        SG4CorrectedX = Int(SG4LogicalX / 2)
+                        SG4SourceY = Int(SG4LogicalY / 2)
+                        SG4SourcePixelX = SemiFrameStart + SG4SourceX(SG4CorrectedX)
+                        If SemiOpaque(SG4SourcePixelX, SG4SourceY) Then
+                            SG4QuadrantOpaque(SG4Q) = 1
+                            SG4QuadrantColour(SG4Q) = SemiColour(SG4SourcePixelX, SG4SourceY)
+                            SG4AnyOpaque = 1
+                            If SG4QuadrantColour(SG4Q) > 0 Then SG4AnyColour = 1
+                        End If
+                    End If
+                Next SG4Q
+
+                If SG4AnyOpaque Then
+                    SG4SharedColour = 0
+                    If SG4AnyColour Then
+                        SG4BestDist = &H7FFFFFFF
+                        For i = 1 To 8
+                            SG4Dist = 0
+                            For SG4Q = 0 To 3
+                                If SG4QuadrantOpaque(SG4Q) And SG4QuadrantColour(SG4Q) > 0 Then
+                                    SG4Dist = SG4Dist + (ColoursToUse(SG4QuadrantColour(SG4Q), 0) - ColoursToUse(i, 0)) ^ 2
+                                    SG4Dist = SG4Dist + (ColoursToUse(SG4QuadrantColour(SG4Q), 1) - ColoursToUse(i, 1)) ^ 2
+                                    SG4Dist = SG4Dist + (ColoursToUse(SG4QuadrantColour(SG4Q), 2) - ColoursToUse(i, 2)) ^ 2
+                                End If
+                            Next SG4Q
+                            If SG4Dist < SG4BestDist Then SG4BestDist = SG4Dist: SG4SharedColour = i
+                        Next i
+                    End If
+
+                    SG4Pattern = 0
+                    For SG4Q = 0 To 3
+                        If SG4QuadrantOpaque(SG4Q) And SG4QuadrantColour(SG4Q) > 0 Then SG4Pattern = SG4Pattern Or SG4QuadrantBit(SG4Q)
+                    Next SG4Q
+                    If SG4SharedColour = 0 Then
+                        SG4Byte = &H80
+                    Else
+                        SG4Byte = &H80 + (SG4SharedColour - 1) * 16 + SG4Pattern
+                    End If
+                    Instr1$ = "LDA": Instr2$ = "#$" + Right$("0" + Hex$(SG4Byte), 2): Com$ = "SG4 2x2 colour cell"
+                    GoSub DoOutput
+                    n = SG4Cell: GoSub NumAsString
+                    Instr1$ = "STA": Instr2$ = N$ + ",X": Com$ = "Draw SG4 cell"
+                    GoSub DoOutput
+                End If
+            Next SG4Cell
+            If SG4Row <> SG4PhysicalRows - 1 Then
+                Instr1$ = "LEAX": Instr2$ = "32,X": Com$ = "Next SG4 byte row"
+                GoSub DoOutput
+            End If
+        Next SG4Row
+        Instr1$ = "RTS": Com$ = "Done drawing the SG4 sprite"
+        GoSub DoOutput
+        Print #2,
+    Next SG4Variant
+Next FrameNumber
+Close #2
+Return
+
+' Build a compiled sprite for GMODE 3, 5, 6, 7 or 8 (SG4H, SG6H, SG8, SG12 or SG24).
+' Each screen byte contains two horizontal pixels. Both pixels share one colour,
+' so an occupied sprite cell replaces the complete byte and is restored as a unit.
+MakeSemiGraphicsSprite:
+If AnimFrames < 1 Then AnimFrames = 1
+If imageWidth Mod AnimFrames <> 0 Then
+    Print "ERROR: Sprite sheet width must divide evenly by the number of animation frames"
+    Return
+End If
+
+SemiFrameWidth = imageWidth \ AnimFrames
+If SemiFrameWidth < 1 Then Print "ERROR: Sprite frame width must be at least one pixel": Return
+If SemiFrameWidth > 32 Then Print "ERROR: GMODE 3, 5, 6, 7 and 8 sprites cannot be wider than 32 PNG colour cells": Return
+SemiLogicalWidth = SemiFrameWidth * 2
+
+' Approximate RGB palette for the eight MC6847 semigraphics colours.
+' Entry zero is opaque black; entries 1 through 8 match the BASIC colour numbers.
+ColoursToUse(0, 0) = 0: ColoursToUse(0, 1) = 0: ColoursToUse(0, 2) = 0
+ColoursToUse(1, 0) = 0: ColoursToUse(1, 1) = 214: ColoursToUse(1, 2) = 0
+ColoursToUse(2, 0) = 255: ColoursToUse(2, 1) = 255: ColoursToUse(2, 2) = 0
+ColoursToUse(3, 0) = 0: ColoursToUse(3, 1) = 0: ColoursToUse(3, 2) = 255
+ColoursToUse(4, 0) = 255: ColoursToUse(4, 1) = 0: ColoursToUse(4, 2) = 0
+ColoursToUse(5, 0) = 220: ColoursToUse(5, 1) = 199: ColoursToUse(5, 2) = 160
+ColoursToUse(6, 0) = 0: ColoursToUse(6, 1) = 255: ColoursToUse(6, 2) = 255
+ColoursToUse(7, 0) = 255: ColoursToUse(7, 1) = 0: ColoursToUse(7, 2) = 255
+ColoursToUse(8, 0) = 255: ColoursToUse(8, 1) = 128: ColoursToUse(8, 2) = 0
+
+ReDim SemiColour(imageWidth - 1, imageHeight - 1) As Integer
+ReDim SemiOpaque(imageWidth - 1, imageHeight - 1) As _Unsigned _Byte
+
+SemiSourceHeight = imageHeight
+
+For y = 0 To imageHeight - 1
+    For x = 0 To imageWidth - 1
+        Pixel$ = Right$("00000000" + Hex$(pixelColors(x, y)), 8)
+        If Val("&H" + Left$(Pixel$, 2)) >= 127 Then
+            SemiOpaque(x, y) = 1
+            R = Val("&H" + Mid$(Pixel$, 3, 2))
+            G = Val("&H" + Mid$(Pixel$, 5, 2))
+            B = Val("&H" + Mid$(Pixel$, 7, 2))
+            bestDist = &H7FFFFFFF
+            For i = 0 To 8
+                dist = (R - ColoursToUse(i, 0)) ^ 2 + (G - ColoursToUse(i, 1)) ^ 2 + (B - ColoursToUse(i, 2)) ^ 2
+                If dist < bestDist Then bestDist = dist: bestIndex = i
+            Next i
+            SemiColour(x, y) = bestIndex
+        End If
+    Next x
+Next y
+
+' Compensate for the physical aspect ratio of a complete semigraphics colour cell.
+' SG8 is three scanlines high, SG12 is two, and SG24 is one, while one PNG
+' pixel occupies a full two-subpixel cell about eight high-resolution clocks wide.
+Select Case Gmode
+    Case 3
+        ' SG4H duplicates every logical row into two SG8 memory rows. Each
+        ' logical row is therefore six scanlines high; four logical rows
+        ' make the same height as three eight-clock-wide source cells.
+        SemiAspectNumerator = 4: SemiAspectDenominator = 3
+    Case 5
+        ' SG6H duplicates every logical row into two SG12 memory rows. Each
+        ' logical row is therefore four scanlines high, so two logical rows
+        ' make a square cell approximately eight scanlines high.
+        SemiAspectNumerator = 2: SemiAspectDenominator = 1
+    Case 6
+        SemiAspectNumerator = 8: SemiAspectDenominator = 3
+    Case 7
+        SemiAspectNumerator = 4: SemiAspectDenominator = 1
+    Case 8
+        SemiAspectNumerator = 8: SemiAspectDenominator = 1
+End Select
+SemiLogicalHeight = Int((SemiSourceHeight * SemiAspectNumerator + SemiAspectDenominator - 1) / SemiAspectDenominator)
+If SemiLogicalHeight > Val(GModeMaxY$(Gmode)) + 1 Then
+    Print "ERROR: Aspect-corrected sprite height is"; SemiLogicalHeight; "rows, but GMODE"; Gmode; "allows only"; Val(GModeMaxY$(Gmode)) + 1
+    Return
+End If
+SemiRowsPerLogicalRow = 1
+If Gmode = 3 Or Gmode = 5 Then SemiRowsPerLogicalRow = 2
+imageHeight = SemiLogicalHeight * SemiRowsPerLogicalRow
+
+ScreenWidth = 64
+ShiftBits = 4
+Colours = 16 ' The existing backup generator only needs the two-pixels-per-byte geometry.
+DrawBytesPerRow = SemiFrameWidth
+BytesPerRowToBackup = DrawBytesPerRow + 1
+SpriteWidthPixels = SemiLogicalWidth
+SpWidth = SemiLogicalWidth * 4 ' Existing screen-copy generator measures 16-colour pixels as four bits.
+ReDim SpriteOriginal$(SpWidth * 4 + 8, imageHeight)
+For y = 0 To imageHeight - 1
+    For x = 0 To SpWidth - 1
+        SpriteOriginal$(x, y) = "1" ' Force every occupied semigraphics cell through the screen-copy path.
+    Next x
+Next y
+
+Print "GMODE # selected:"; Gmode
+Print "Generating semigraphics sprite with the following info:"
+Print "Source PNG Width:"; SemiFrameWidth
+Print "Sprite Width in semigraphics subpixels:"; SemiLogicalWidth
+Print "Source PNG Height:"; SemiSourceHeight
+Print "Aspect-corrected Sprite Height:"; SemiLogicalHeight
+Print "Number of frames in this sprite:"; AnimFrames
+Print "Filename: "; FNameNoExt$; ".asm"
+
+Outname$ = FNameNoExt$ + ".asm"
+Open Outname$ For Output As #2
+Print #2, "; Sprite Name            : "; FNameNoExt$
+Print #2, "; Source PNG Width       :"; SemiFrameWidth
+Print #2, "; Sprite Width in pixels :"; SemiLogicalWidth
+Print #2, "; Sprite Height in pixels:"; SemiLogicalHeight
+Print #2, "; # of Colours           :9"
+Print #2, "; # of Animation Frames  :"; AnimFrames
+Print #2, "; Required GMODE         :"; Gmode
+Print #2, "; Each PNG pixel occupies one complete two-subpixel semigraphics colour cell"
+If Gmode = 3 Then Print #2, "; Each logical sprite row is duplicated into both SG4H memory rows"
+If Gmode = 5 Then Print #2, "; Each logical sprite row is duplicated into both SG6H memory rows"
+Print #2, FNameNoExt$; "_Draw:"
+For FrameNumber = 0 To AnimFrames - 1
+    For SpriteShift = 0 To 1
+        Instr1$ = "FDB"
+        Instr2$ = FNameNoExt$ + "_" + LTrim$(Str$(FrameNumber)) + "_" + LTrim$(Str$(SpriteShift))
+        Com$ = "Address to draw semigraphics sprite"
+        GoSub DoOutput
+    Next SpriteShift
+Next FrameNumber
+
+GoSub Restore_BackupSprite
+
+For FrameNumber = 0 To AnimFrames - 1
+    SemiFrameStart = FrameNumber * SemiFrameWidth
+    For SpriteShift = 0 To 1
+        Print #2, "; Frame Number:"; FrameNumber; " pixel shift:"; SpriteShift
+        Print #2, FNameNoExt$ + "_" + LTrim$(Str$(FrameNumber)) + "_" + LTrim$(Str$(SpriteShift)) + ":"
+        SemiCells = Int((SemiLogicalWidth + SpriteShift + 1) / 2)
+        For y = 0 To imageHeight - 1
+            SemiLogicalY = Int(y / SemiRowsPerLogicalRow)
+            If Gmode = 3 Then
+                ' An 8-row PNG becomes 11 SG4H logical rows. Sampling at the
+                ' centre of each destination row keeps matching top and bottom
+                ' source rows balanced instead of duplicating only the bottom.
+                SemiSourceY = Int(((SemiLogicalY * 2 + 1) * SemiSourceHeight) / (SemiLogicalHeight * 2))
+            Else
+                SemiSourceY = Int(SemiLogicalY * SemiAspectDenominator / SemiAspectNumerator)
+            End If
+            If SemiSourceY >= SemiSourceHeight Then SemiSourceY = SemiSourceHeight - 1
+            For SemiCell = 0 To SemiCells - 1
+                SemiLeft = SemiCell * 2 - SpriteShift
+                SemiRight = SemiLeft + 1
+                SemiLeftColour = -1: SemiRightColour = -1
+                If SemiLeft >= 0 And SemiLeft < SemiLogicalWidth Then
+                    SemiSourceLeft = Int(SemiLeft / 2)
+                    If SemiOpaque(SemiFrameStart + SemiSourceLeft, SemiSourceY) Then SemiLeftColour = SemiColour(SemiFrameStart + SemiSourceLeft, SemiSourceY)
+                End If
+                If SemiRight >= 0 And SemiRight < SemiLogicalWidth Then
+                    SemiSourceRight = Int(SemiRight / 2)
+                    If SemiOpaque(SemiFrameStart + SemiSourceRight, SemiSourceY) Then SemiRightColour = SemiColour(SemiFrameStart + SemiSourceRight, SemiSourceY)
+                End If
+
+                If SemiLeftColour >= 0 Or SemiRightColour >= 0 Then
+
+                    SemiSharedColour = SemiLeftColour
+                    If SemiLeftColour < 0 Then SemiSharedColour = SemiRightColour
+                    If SemiLeftColour >= 0 And SemiRightColour >= 0 And SemiLeftColour <> SemiRightColour Then
+                        ' Find the one shared colour that best represents both source pixels.
+                        SemiBestDist = &H7FFFFFFF
+                        For i = 1 To 8
+                            SemiDist = 0
+                            If SemiLeftColour <> 0 Then
+                                SemiDist = SemiDist + (ColoursToUse(SemiLeftColour, 0) - ColoursToUse(i, 0)) ^ 2
+                                SemiDist = SemiDist + (ColoursToUse(SemiLeftColour, 1) - ColoursToUse(i, 1)) ^ 2
+                                SemiDist = SemiDist + (ColoursToUse(SemiLeftColour, 2) - ColoursToUse(i, 2)) ^ 2
+                            End If
+                            If SemiRightColour <> 0 Then
+                                SemiDist = SemiDist + (ColoursToUse(SemiRightColour, 0) - ColoursToUse(i, 0)) ^ 2
+                                SemiDist = SemiDist + (ColoursToUse(SemiRightColour, 1) - ColoursToUse(i, 1)) ^ 2
+                                SemiDist = SemiDist + (ColoursToUse(SemiRightColour, 2) - ColoursToUse(i, 2)) ^ 2
+                            End If
+                            If SemiDist < SemiBestDist Then SemiBestDist = SemiDist: SemiSharedColour = i
+                        Next i
+                    End If
+
+                    SemiPattern = 0
+                    If SemiLeftColour > 0 Then SemiPattern = SemiPattern Or &HA
+                    If SemiRightColour > 0 Then SemiPattern = SemiPattern Or &H5
+                    If SemiSharedColour = 0 Then
+                        SemiByte = &H80
+                    Else
+                        SemiByte = &H80 + (SemiSharedColour - 1) * 16 + SemiPattern
+                    End If
+                    Instr1$ = "LDA": Instr2$ = "#$" + Right$("0" + Hex$(SemiByte), 2): Com$ = "Semigraphics cell"
+                    GoSub DoOutput
+                    n = SemiCell: GoSub NumAsString
+                    Instr1$ = "STA": Instr2$ = N$ + ",X": Com$ = "Draw two-pixel cell"
+                    GoSub DoOutput
+                End If
+            Next SemiCell
+            If y <> imageHeight - 1 Then
+                Instr1$ = "LEAX": Instr2$ = "32,X": Com$ = "Next semigraphics row"
+                GoSub DoOutput
+            End If
+        Next y
+        Instr1$ = "RTS": Com$ = "Done drawing the sprite"
+        GoSub DoOutput
+        Print #2,
+    Next SpriteShift
+Next FrameNumber
+Close #2
 Return
 
 FindByteCounts:
@@ -3739,4 +4792,3 @@ Data 218,188,161
 Data 220,199,197
 ' Colour Value 255
 Data 215,215,224
-

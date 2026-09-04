@@ -1,0 +1,24 @@
+if(__INTEGER_CHANNEL==NULL){
+__INTEGER_CHANNEL=(int16*)mem_static_malloc(2);
+*__INTEGER_CHANNEL=0;
+}
+if(__INTEGER_E==NULL){
+__INTEGER_E=(int16*)mem_static_malloc(2);
+*__INTEGER_E=0;
+}
+if(__INTEGER_C==NULL){
+__INTEGER_C=(int16*)mem_static_malloc(2);
+*__INTEGER_C=0;
+}
+if(__INTEGER_WEATHERCODE==NULL){
+__INTEGER_WEATHERCODE=(int16*)mem_static_malloc(2);
+*__INTEGER_WEATHERCODE=0;
+}
+if (!__STRING_URL)__STRING_URL=qbs_new(0,0);
+if (!__STRING_TEMPERATURE)__STRING_TEMPERATURE=qbs_new(0,0);
+if (!__STRING_CONDITION)__STRING_CONDITION=qbs_new(0,0);
+if (!__STRING_HUMIDITY)__STRING_HUMIDITY=qbs_new(0,0);
+if (!__STRING_WEATHERCODE)__STRING_WEATHERCODE=qbs_new(0,0);
+if (!__STRING_FORECASTDAY)__STRING_FORECASTDAY=qbs_new(0,0);
+if (!__STRING_FORECASTHIGH)__STRING_FORECASTHIGH=qbs_new(0,0);
+if (!__STRING_PAUSE)__STRING_PAUSE=qbs_new(0,0);

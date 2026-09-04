@@ -1,4 +1,61 @@
-V$ = "5.45"
+V$ = "5.50"
+' V 5.50
+'       - Fixed the SDC CPU-speed restoration path so SDC_LOADM and SDC_SAVEM return to the user's selected CPUSPEED setting
+
+' V 5.49
+'       - Fixed PRINT commas on WIDTH 40, 64, and 80 screens so they advance to the next 16-column print zone instead of acting like semicolons
+'       - PRINT comma handling now uses the active screen cursor and correctly wraps or scrolls at the right and bottom edges
+
+' V 5.48
+'       - Fixed WIDTH 40, 64, and 80 PRINT, scrolling, and CLS routines to use the relocated BEGGRP framebuffer instead of $0E00
+'       - WIDTH and CLS now home the wide-text cursor, and wide-screen backspace correctly crosses row boundaries
+'       - Replaced invalid LEAU/BNE counters in all wide-screen CLS and scrolling loops with LEAY/BNE counters
+'       - Wide-text modes reserve and clear 29 GIME display rows while retaining 28 logical PRINT rows, preventing garbage on the bottom row
+
+' V 5.47
+'       - Added FujiNet support over the CoCo Becker/DriveWire interface; only the FujiNet modules used by a program are linked
+'       - Core channel functions: FNINIT, FNERROR, FNOPEN, FNCLOSE, FNBYTESWAITING, FNCHANNELERROR, FNCONNECTED, FNREAD$, and FNWRITE
+'       - JSON functions: FNJSONPARSE and FNJSONQUERY$
+'       - Wi-Fi and adapter functions: FNWIFISTATUS, FNWIFIENABLED, FNWIFISCAN, FNWIFISSID$, FNWIFIRSSI, FNSETWIFI, and FNADAPTER$
+'       - Host and disk functions: FNHOST$, FNSETHOST, FNHOSTPREFIX$, FNSETHOSTPREFIX, FNMOUNTHOST, FNUNMOUNTHOST,
+'         FNDEVICEPATH$, FNDEVICEHOST, FNDEVICEMODE, FNSETDEVICE, FNMOUNTIMAGE, FNUNMOUNTIMAGE, and FNMOUNTALL
+'       - Host-directory and clock functions: FNOPENDIR, FNREADDIR$, FNDIRPOS, FNSETDIRPOS, FNCLOSEDIR, and FNTIME$
+'       - AppKey functions: FNAPPKEYSET, FNAPPKEYREAD$, FNAPPKEYWRITE, and FNAPPKEYCLOSE
+'       - Hash and Base64 functions: FNHASH$, FNHASHCLEAR, FNHASHADD, FNHASHCALC$, FNBASE64ENCODE$, and FNBASE64DECODE$
+'       - HTTP, memory, filesystem, and authentication functions: FNHTTPMODE, FNHTTPHEADER, FNHTTPPOST, FNHTTPPUT, FNHTTPDELETE,
+'         FNREADMEM, FNWRITEMEM, FNDELETE, FNRENAME, FNLOCK, FNUNLOCK, FNMKDIR, FNRMDIR, FNCHDIR, FNDIROPEN, FNUSERNAME, and FNPASSWORD
+'       - Added the F11EMULATOR FUJINET source directive and FujiNet-aware MAME debugger launch support
+'       - PRINT #-3, PRINT #-4, and PRINT #-5 with no expression now behave like printing an explicit empty string
+
+' V 5.46
+'       - Added compiled sprite support for GMODE 0 Internal Alphanumeric and GMODE 1 External Alphanumeric screens
+'       - GMODE 0/1 sprites use native 32x16 whole-cell coordinates, exact 32-byte rows, and one draw routine per frame
+'       - PNGtoCCSB 1.11 applies 3:2 cell-aspect correction and backs up only the exact whole-cell sprite footprint
+'       - GMODE 0 sprite conversion selects black plus the closest of all eight MC6847 semigraphics colours
+'       - GMODE 1 uses portable $80/$BF/$FF cells and preserves a third source colour with a stable checker pattern
+'       - CoCo 3 GMODE 0/1 screens explicitly select 12 scanlines per fetched row, keeping their display inside each $0200 page
+'       - CoCo 3 legacy-mode switches now set the correct GMODE 0-8 row height instead of inheriting a previous mode
+'       - Sprite drawing tables retain empty slot entries, so sprites loaded as numbers other than zero dispatch correctly
+'       - Added compiled sprite support for every semigraphics mode from GMODE 2 through GMODE 8
+'       - GMODE 2 sprites use four X/Y quadrant variants and the correct 32-byte SG4 physical-row stride
+'       - PNGtoCCSB expands GMODE 2 sprites horizontally by 3:2 to compensate for SG4 colour-cell proportions
+'       - GMODE 4 sprites use six X/Y cell-alignment variants, Y/3 addressing, and the 32-byte SG6 physical-row stride
+'       - PNGtoCCSB 1.10 generates aspect-corrected GMODE 4 sprites using black and the two CoCo-safe SG6 colours
+'       - Up to three source colours map to two solid colours and a stable between-colour pattern, preserving filled pixel-art regions
+'       - GMODE 4 requires the original MC6847; MC6847T1 CoCo 2B machines do not implement SG6 (use MAME target coco)
+'       - PNGtoCCSB -s0/-s1 selects the GMODE 4 hardware colour set to match the BASIC SCREEN command
+'       - PNGtoCCSB now retains supplied directory paths while loading PNG source files
+'       - PNGtoCCSB maps each PNG pixel to one complete two-subpixel colour cell for exact colours at even X positions
+'       - GMODE 3 and 5 sprites handle SG4H/SG6H's two memory rows per logical graphics row
+'       - Semigraphics sprites use even/odd drawing variants and the correct screen-row geometry
+'       - PNGtoCCSB corrects the physical colour-cell aspect ratio for GMODE 2 through GMODE 8
+'       - Generated semigraphics sprite files record their required GMODE so incompatible assets fail at compile time
+'       - CoCo 1/2 sprite page flips now wait for vertical blank after updating each page, eliminating intermittent movement flicker
+'       - GMODE 3 sprites use SG4H's doubled memory rows, 64-byte logical-row stride, and corrected physical aspect ratio
+'       - Centered GMODE 3 sprite row resampling so matching top and bottom image rows remain balanced
+'       - Fixed GCOPY page addressing for relocated CoCo 1/2 graphics layouts, including GMODE 2 page 0 to page 1 copies
+'       - Fixed the DECB reader's final-granule sector limit so LOADM, GETBYTE, and read-side SETPOS do not overrun the input buffer
+
 ' V 5.45
 '       - Made the CoCo 1/2 SDC_PLAYMOVIE frame buffers follow GRAPHICS_PAGE_START for -notext and -rxxxx layouts
 '       - CoCo 1/2 movie builds always reserve both $1800-byte frame pages and reject an overlapping explicit -p address

@@ -53,4 +53,4 @@ Speed_Normal:
 ; Restore the CPU speed and mode back to what the user set 
 Speed_Restore:
         LDB     CPUSpeedBackup          ; Get the saved speed value
-        BRA     SetCPUSpeed             ; Go set the CPU speed and return
+        BRA     SetCPUSpeedB            ; Restore the saved setting and CPU speed, then return

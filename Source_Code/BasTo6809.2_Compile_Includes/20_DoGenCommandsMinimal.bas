@@ -732,8 +732,20 @@ DoPRINT:
 Z$ = "; Starting PRINT": GoSub AO
 PrintD$ = "PRINT_D": PrintA$ = "PrintA_On_Screen": PrintDev$ = " on screen"
 PrintCC3 = 0
+PrintEmptyGraphicsTarget = 0
 GetSectionToPrint:
 v = Array(x): x = x + 1
+' A comma is normally a PRINT separator.  For PRINT #-3, PRINT #-4, and PRINT #-5,
+' however, the first comma terminates the graphics-device specifier.  If
+' it is immediately followed by EOL/colon, treat it like an empty string
+' instead of mistaking it for a trailing PRINT comma that suppresses CR.
+If PrintEmptyGraphicsTarget = 1 Then
+    If v <> TK_SpecialChar Then
+        PrintEmptyGraphicsTarget = 0
+    Else
+        If Array(x) <> TK_EOL And Array(x) <> TK_Colon Then PrintEmptyGraphicsTarget = 0
+    End If
+End If
 ' Chek if we are printing numbers
 If v >= Asc("0") And v <= Asc("9") Or (v = Asc("&") And Array(x) = Asc("H")) Then
     ' Printing a number, PRINT 10*20
@@ -949,7 +961,7 @@ Select Case v
         v = Array(x): x = x + 1
         Select Case v
             Case TK_EOL, TK_Colon ' Do a carriage return/Line feed
-                If Array(x - 4) = &HF5 And (Array(x - 3) = &H2C Or Array(x - 3) = &H3B) Then
+                If PrintEmptyGraphicsTarget = 0 And Array(x - 4) = &HF5 And (Array(x - 3) = &H2C Or Array(x - 3) = &H3B) Then
                     Return 'if we previously did a comma or semicolon then Return
                 Else
                     A$ = "LDA": B$ = "#$0D": C$ = "Do a Line Feed/Carriage Return": GoSub AO
@@ -1020,6 +1032,7 @@ Select Case v
                                         PrintCC3 = 0
                                     End If
                                     PrintD$ = "PRINT_D_Graphics_Screen_" + GModeName$(Gmode): PrintA$ = "AtoGraphics_Screen_" + GModeName$(Gmode): PrintDev$ = " to graphic screen"
+                                    PrintEmptyGraphicsTarget = 1
                                     GoTo GetSectionToPrint
                                 End If
                             End If
@@ -1034,10 +1047,11 @@ Select Case v
                                 Else
                                     If GModeName$(Gmode) <> "FG6R" Then
                                         Print "PRINT #-4 only works with GMODE 16 FG6R on";: GoTo FoundError
-                                    End If
-                                    PrintCC3 = 0
-                                    PrintD$ = "PRINT_D_Graphics_Screen_6Bit_FG6R": PrintA$ = "AtoGraphics_Screen_6Bit_FG6R": PrintDev$ = " to 42 column graphic screen"
-                                    GoTo GetSectionToPrint
+                                        End If
+                                        PrintCC3 = 0
+                                        PrintD$ = "PRINT_D_Graphics_Screen_6Bit_FG6R": PrintA$ = "AtoGraphics_Screen_6Bit_FG6R": PrintDev$ = " to 42 column graphic screen"
+                                        PrintEmptyGraphicsTarget = 1
+                                        GoTo GetSectionToPrint
                                 End If
                             End If
                         End If
@@ -1051,10 +1065,11 @@ Select Case v
                                 Else
                                     If GModeName$(Gmode) <> "FG6R" Then
                                         Print "PRINT #-5 only works with GMODE 16 FG6R on";: GoTo FoundError
-                                    End If
-                                    PrintCC3 = 0
-                                    PrintD$ = "PRINT_D_Graphics_Screen_6Bit_Inverse_FG6R": PrintA$ = "AtoGraphics_Screen_6Bit_Inverse_FG6R": PrintDev$ = " to inverse 42 column graphic screen"
-                                    GoTo GetSectionToPrint
+                                        End If
+                                        PrintCC3 = 0
+                                        PrintD$ = "PRINT_D_Graphics_Screen_6Bit_Inverse_FG6R": PrintA$ = "AtoGraphics_Screen_6Bit_Inverse_FG6R": PrintDev$ = " to inverse 42 column graphic screen"
+                                        PrintEmptyGraphicsTarget = 1
+                                        GoTo GetSectionToPrint
                                 End If
                             End If
                         End If
@@ -1072,11 +1087,7 @@ Select Case v
 
 
             Case TK_Comma ' Handle a comma on the print line
-                A$ = "LDD": B$ = "CURPOS": C$ = "Handling the comma": GoSub AO
-                A$ = "ADDD": B$ = "#16": GoSub AO
-                A$ = "ANDB": B$ = "#%11110000": C$ = "force it to be position 0 or 16": GoSub AO
-                A$ = "TFR": B$ = "D,X": C$ = "Handle the comma in the PRINT command": GoSub AO
-                A$ = "JSR": B$ = "UpdateCursor": GoSub AO
+                A$ = "JSR": B$ = "PrintComma": C$ = "Advance to the next 16-column PRINT zone": GoSub AO
                 GoTo GetSectionToPrint 'continue printing on the same line
 
             Case TK_SemiColon ' Handle a semi-colon

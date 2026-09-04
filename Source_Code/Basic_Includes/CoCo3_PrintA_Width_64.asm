@@ -1,4 +1,4 @@
-; Commands to Print to the width 64 screen @ $0E00
+; Commands to print to the relocatable width 64 screen
 TextCols EQU 64
 TextRows EQU 28
 W_CURPOS    FDB   $0000 ; Cursor x & y position for the Width screen
@@ -7,7 +7,7 @@ PrintA_On_Screen:
 * PUT CHARACTER ON THE SCREEN
 LA30A:
       PSHS  D,X
-      LDX   #$E00       ; Get the screen start address
+      LDX   BEGGRP      ; Get the relocated screen start address
       LDA   W_CURPOS+1    ; Get the Y co-ordinate
       LDB   #TextCols*2
       MUL
@@ -19,8 +19,14 @@ LA30A:
       LDA   ,S          ; Get the character to print on screen
       CMPA  #$08        ; Is it a backspace?
       BNE   >           ; If not skip forward
-      CMPX  #$E00       * Start of the screen?
+      CMPX  BEGGRP      * Start of the screen?
       BEQ   LA35D       * Retore the registers and return
+      LDA   W_CURPOS
+      BNE   @BackspaceSameRow
+      DEC   W_CURPOS+1
+      LDA   #TextCols*2
+      STA   W_CURPOS
+@BackspaceSameRow:
       LDA   #' '        * Blank
       STD   ,--X
       DEC   W_CURPOS
@@ -48,50 +54,55 @@ LA32F:
       LDA   W_CURPOS
       CMPA  #TextCols*2
       BEQ   @NextRow    ; We just printed the last character of this row
-LA344:  
-      CMPX  #$0E00+TextCols*2*TextRows      * End of screen?
+LA344:
+      LDA   W_CURPOS+1  ; Has the cursor moved below the last visible row?
+      CMPA  #TextRows
       BLO   LA35D
       BSR   ScrollTextScreen       * Scroll the screen
 LA35D:
       PULS    D,X,PC    ; Restore D & X and return
 
-* Otherwise scroll the screen (Fastest method I can think of for 6809)
+; Advance to the next 16-column PRINT zone. W_CURPOS stores its horizontal
+; position as a byte offset because each wide-text cell is two bytes.
+PrintComma:
+      PSHS  D
+      LDB   W_CURPOS
+      ADDB  #16*2
+      ANDB  #%11100000
+      CMPB  #TextCols*2
+      BLO   @StoreColumn
+      CLRB
+      INC   W_CURPOS+1
+      LDA   W_CURPOS+1
+      CMPA  #TextRows
+      BLO   @StoreColumn
+      BSR   ScrollTextScreen
+      PULS  D,PC
+@StoreColumn:
+      STB   W_CURPOS
+      PULS  D,PC
+
+* Move rows 1-27 to rows 0-26 and blank the last row.
 ScrollTextScreen:
-      PSHS  CC,DP,Y,U
-      STS   @DoneScroll+2    * Save the Stack pointer (self mod below)
-      ORCC  #$50
-      LDS   #$E00+TextCols*2      ; Set S as the source as the line below
-      LDA   #TextCols*2             ; bytes per line * 28 rows / 28 (7*4)
-      STA   >Temp1                  ; Save as the counter
-!     LEAU  -TextCols*2+7,S   ; Move U forward
-      PULS  D,DP,X,Y  ; Get the source data
-      PSHU  D,DP,X,Y  ; Write the destination data
-      LEAU  -TextCols*2+7,S   ; Move U forward
-      PULS  D,DP,X,Y  ; Get the source data
-      PSHU  D,DP,X,Y  ; Write the destination data
-      LEAU  -TextCols*2+7,S   ; Move U forward
-      PULS  D,DP,X,Y  ; Get the source data
-      PSHU  D,DP,X,Y  ; Write the destination data
-      LEAU  -TextCols*2+7,S   ; Move U forward
-      PULS  D,DP,X,Y  ; Get the source data
-      PSHU  D,DP,X,Y  ; Write the destination data
-      DEC   >Temp1
+      PSHS  D,X,Y,U
+      LDX   BEGGRP
+      LEAU  TextCols*2,X
+      LDY   #TextCols*(TextRows-1) ; Number of words to copy
+!     LDD   ,U++
+      STD   ,X++
+      LEAY  -1,Y
       BNE   <
       LDA   #' '
       LDB   AttributeByte
-      TFR   D,X
-      LEAY  ,X
-      LEAU  ,X
-!     PSHS  D,X,Y,U
-      CMPS  #$0E00+TextCols*2*TextRows-TextCols*2 ; End of the screen - 1 row?
+      LDY   #TextCols
+!     STD   ,X++
+      LEAY  -1,Y
       BNE   <
-      LDD   #27         ; X = 0, Y = 27 (last row)
+      LDD   #TextRows-1 ; X = 0, Y = last row
       STD   W_CURPOS
-@DoneScroll:
-      LDS   #$FFFF    ; Restore the Stack
-      PULS  CC,DP,Y,U,PC      ;  Restore all and return
+      PULS  D,X,Y,U,PC
 
-; Do the PRINT @ on the 40 character text screen
+; Do PRINT @ on the 64-character text screen
 ; Enter with D = the Print @ value
 DoPrintAt:
       LDX   #0          ; y = 0
@@ -110,19 +121,23 @@ DoPrintAt:
       STD   W_CURPOS      ; Update the cursor position
       RTS
 
-; Clear the 64x28 text screen
+; Clear 29 rows: 28 logical text rows plus the extra row displayed by the GIME.
 ; Enter with:
 ; B = Text background colour to fill screen with
 ;
 CLS_B: 
 CLS_FixB:
+      PSHS  Y
       LDA   #' '
       ANDB  #%00000111
-      LDX   #$0E00            ; Screen start
+      LDX   BEGGRP            ; Relocated screen start
+      LDY   #TextCols*(TextRows+1)
 !     STD   ,X++
-      CMPX  #$0E00+TextCols*2*(TextRows+1) ; End of the screen + 1 row?
+      LEAY  -1,Y
       BNE   <
-      RTS                     ; Return
+      LDD   #$0000
+      STD   W_CURPOS          ; CLS always homes the cursor
+      PULS  Y,PC
 CLS_Default:
       CLRB
       BRA   CLS_B

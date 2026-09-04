@@ -1,0 +1,2 @@
+qbs_free(__STRING_FUJISEND);
+qbs_free(__STRING_FUJIRECIEVE);

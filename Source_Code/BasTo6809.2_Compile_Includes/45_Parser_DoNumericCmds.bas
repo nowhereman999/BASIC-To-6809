@@ -6,6 +6,576 @@ cmd16 = Asc(Mid$(i$, 2, 1)) * 256 + Asc(Mid$(i$, 3, 1))
 ArgCnt = 1
 If Len(i$) >= 4 Then ArgCnt = Asc(Mid$(i$, 4, 1))
 Select Case cmd16
+    Case FNINIT_CMD
+        ' FNINIT() : zero-argument function returning a FujiNet status byte.
+        If Len(i$) < 4 Then Print "Error: FNINIT must be used as FNINIT()";: GoTo FoundError
+        If ArgCnt <> 0 Then Print "Error: FNINIT() expects 0 arguments";: GoTo FoundError
+        A$ = "JSR": B$ = "FN_Init": C$ = "Initialize FujiNet; A=0 on success or an error code": GoSub AO
+        A$ = "PSHS": B$ = "A": C$ = "Push the FujiNet initialization status": GoSub AO
+        ProcessRPNStackPointer = ProcessRPNStackPointer + 1
+        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(NT_UByte)
+        Return
+    Case FNERROR_CMD
+        If Len(i$) < 4 Then Print "Error: FNERROR must be used as FNERROR()";: GoTo FoundError
+        If ArgCnt <> 0 Then Print "Error: FNERROR() expects 0 arguments";: GoTo FoundError
+        A$ = "JSR": B$ = "FN_Error": C$ = "Return the last FujiNet library error": GoSub AO
+        A$ = "PSHS": B$ = "A": C$ = "Push the FujiNet error code": GoSub AO
+        ProcessRPNStackPointer = ProcessRPNStackPointer + 1
+        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(NT_UByte)
+        Return
+    Case FNWIFISTATUS_CMD
+        If Len(i$) < 4 Then Print "Error: FNWIFISTATUS must be used as FNWIFISTATUS()";: GoTo FoundError
+        If ArgCnt <> 0 Then Print "Error: FNWIFISTATUS() expects 0 arguments";: GoTo FoundError
+        A$ = "JSR": B$ = "FN_WifiStatus": C$ = "Return FujiNet Wi-Fi status; 3=connected, 6=disconnected": GoSub AO
+        A$ = "PSHS": B$ = "A": C$ = "Push the FujiNet Wi-Fi status": GoSub AO
+        ProcessRPNStackPointer = ProcessRPNStackPointer + 1
+        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(NT_UByte)
+        Return
+    Case FNOPEN_CMD
+        If ArgCnt <> 4 Then Print "Error: FNOPEN() expects channel, device string, access mode, and translation mode";: GoTo FoundError
+
+        ' RPN arguments are removed from right to left.
+        TranslationTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        AccessTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        DeviceTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        ChannelTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+
+        Temp$ = TranslationTok$: GoSub IsStringToken
+        If IsStrFlag% Then Print "Error: FNOPEN() translation mode must be numeric";: GoTo FoundError
+        Temp$ = AccessTok$: GoSub IsStringToken
+        If IsStrFlag% Then Print "Error: FNOPEN() access mode must be numeric";: GoTo FoundError
+        Temp$ = DeviceTok$: GoSub IsStringToken
+        If IsStrFlag% = 0 Then Print "Error: FNOPEN() device specification must be a string";: GoTo FoundError
+        Temp$ = ChannelTok$: GoSub IsStringToken
+        If IsStrFlag% Then Print "Error: FNOPEN() channel must be numeric";: GoTo FoundError
+
+        ' Consume values in reverse runtime-stack order so nested expressions work.
+        Temp$ = TranslationTok$: GoSub PushOneValueTokenOnStack
+        LastType = PushedType: NVT = NT_UByte: GoSub ConvertLastType2NVT
+        A$ = "PULS": B$ = "B": C$ = "Get FNOPEN translation mode": GoSub AO
+        A$ = "STB": B$ = "FN_OpenTranslation": C$ = "Save FNOPEN translation mode": GoSub AO
+
+        Temp$ = AccessTok$: GoSub PushOneValueTokenOnStack
+        LastType = PushedType: NVT = NT_UByte: GoSub ConvertLastType2NVT
+        A$ = "PULS": B$ = "B": C$ = "Get FNOPEN access mode": GoSub AO
+        A$ = "STB": B$ = "FN_OpenAccess": C$ = "Save FNOPEN access mode": GoSub AO
+
+        Temp$ = DeviceTok$: GoSub PushOneStringTokenOnStack
+        A$ = "JSR": B$ = "FN_CopyStackString": C$ = "Copy FNOPEN device specification into compiler scratch string": GoSub AO
+
+        Temp$ = ChannelTok$: GoSub PushOneValueTokenOnStack
+        LastType = PushedType: NVT = NT_UByte: GoSub ConvertLastType2NVT
+        A$ = "PULS": B$ = "B": C$ = "Get FNOPEN network channel": GoSub AO
+        A$ = "STB": B$ = "FN_OpenChannel": C$ = "Save FNOPEN network channel": GoSub AO
+
+        A$ = "JSR": B$ = "FN_Open": C$ = "Open the FujiNet network channel": GoSub AO
+        A$ = "PSHS": B$ = "A": C$ = "Push FNOPEN result; zero means success": GoSub AO
+        ProcessRPNStackPointer = ProcessRPNStackPointer + 1
+        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(NT_UByte)
+        Return
+    Case FNCLOSE_CMD
+        If Len(i$) < 4 Then Print "Error: FNCLOSE must be used as FNCLOSE(channel)";: GoTo FoundError
+        If ArgCnt <> 1 Then Print "Error: FNCLOSE() expects one channel argument";: GoTo FoundError
+
+        ChannelTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        Temp$ = ChannelTok$: GoSub IsStringToken
+        If IsStrFlag% Then Print "Error: FNCLOSE() channel must be numeric";: GoTo FoundError
+
+        Temp$ = ChannelTok$: GoSub PushOneValueTokenOnStack
+        LastType = PushedType: NVT = NT_UByte: GoSub ConvertLastType2NVT
+        A$ = "PULS": B$ = "B": C$ = "Get FNCLOSE network channel": GoSub AO
+        A$ = "JSR": B$ = "FN_Close": C$ = "Close the FujiNet network channel": GoSub AO
+        A$ = "PSHS": B$ = "A": C$ = "Push FNCLOSE result; zero means success": GoSub AO
+        ProcessRPNStackPointer = ProcessRPNStackPointer + 1
+        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(NT_UByte)
+        Return
+    Case FNBYTESWAITING_CMD
+        If Len(i$) < 4 Then Print "Error: FNBYTESWAITING must be used as FNBYTESWAITING(channel)";: GoTo FoundError
+        If ArgCnt <> 1 Then Print "Error: FNBYTESWAITING() expects one channel argument";: GoTo FoundError
+
+        ChannelTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        Temp$ = ChannelTok$: GoSub IsStringToken
+        If IsStrFlag% Then Print "Error: FNBYTESWAITING() channel must be numeric";: GoTo FoundError
+
+        Temp$ = ChannelTok$: GoSub PushOneValueTokenOnStack
+        LastType = PushedType: NVT = NT_UByte: GoSub ConvertLastType2NVT
+        A$ = "PULS": B$ = "B": C$ = "Get FNBYTESWAITING network channel": GoSub AO
+        A$ = "JSR": B$ = "FN_BytesWaiting": C$ = "Return available bytes in D": GoSub AO
+        A$ = "PSHS": B$ = "D": C$ = "Push FNBYTESWAITING result": GoSub AO
+        ProcessRPNStackPointer = ProcessRPNStackPointer + 1
+        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(NT_UInt16)
+        Return
+    Case FNCHANNELERROR_CMD
+        If Len(i$) < 4 Then Print "Error: FNCHANNELERROR must be used as FNCHANNELERROR(channel)";: GoTo FoundError
+        If ArgCnt <> 1 Then Print "Error: FNCHANNELERROR() expects one channel argument";: GoTo FoundError
+
+        ChannelTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        Temp$ = ChannelTok$: GoSub IsStringToken
+        If IsStrFlag% Then Print "Error: FNCHANNELERROR() channel must be numeric";: GoTo FoundError
+
+        Temp$ = ChannelTok$: GoSub PushOneValueTokenOnStack
+        LastType = PushedType: NVT = NT_UByte: GoSub ConvertLastType2NVT
+        A$ = "PULS": B$ = "B": C$ = "Get FNCHANNELERROR network channel": GoSub AO
+        A$ = "JSR": B$ = "FN_ChannelError": C$ = "Return zero or the channel's FujiNet error": GoSub AO
+        A$ = "PSHS": B$ = "A": C$ = "Push FNCHANNELERROR result": GoSub AO
+        ProcessRPNStackPointer = ProcessRPNStackPointer + 1
+        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(NT_UByte)
+        Return
+    Case FNCONNECTED_CMD
+        If Len(i$) < 4 Then Print "Error: FNCONNECTED must be used as FNCONNECTED(channel)";: GoTo FoundError
+        If ArgCnt <> 1 Then Print "Error: FNCONNECTED() expects one channel argument";: GoTo FoundError
+
+        ChannelTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        Temp$ = ChannelTok$: GoSub IsStringToken
+        If IsStrFlag% Then Print "Error: FNCONNECTED() channel must be numeric";: GoTo FoundError
+
+        Temp$ = ChannelTok$: GoSub PushOneValueTokenOnStack
+        LastType = PushedType: NVT = NT_UByte: GoSub ConvertLastType2NVT
+        A$ = "PULS": B$ = "B": C$ = "Get FNCONNECTED network channel": GoSub AO
+        A$ = "JSR": B$ = "FN_Connected": C$ = "Return the channel's connected flag": GoSub AO
+        A$ = "PSHS": B$ = "A": C$ = "Push FNCONNECTED result": GoSub AO
+        ProcessRPNStackPointer = ProcessRPNStackPointer + 1
+        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(NT_UByte)
+        Return
+    Case FNWRITE_CMD
+        If ArgCnt <> 2 Then Print "Error: FNWRITE() expects channel and data string";: GoTo FoundError
+
+        DataTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        ChannelTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+
+        Temp$ = DataTok$: GoSub IsStringToken
+        If IsStrFlag% = 0 Then Print "Error: FNWRITE() data must be a string";: GoTo FoundError
+        Temp$ = ChannelTok$: GoSub IsStringToken
+        If IsStrFlag% Then Print "Error: FNWRITE() channel must be numeric";: GoTo FoundError
+
+        Temp$ = DataTok$: GoSub PushOneStringTokenOnStack
+        A$ = "JSR": B$ = "FN_CopyStackString": C$ = "Copy FNWRITE data into compiler scratch string": GoSub AO
+
+        Temp$ = ChannelTok$: GoSub PushOneValueTokenOnStack
+        LastType = PushedType: NVT = NT_UByte: GoSub ConvertLastType2NVT
+        A$ = "PULS": B$ = "B": C$ = "Get FNWRITE network channel": GoSub AO
+        A$ = "JSR": B$ = "FN_Write": C$ = "Write string to the FujiNet network channel": GoSub AO
+        A$ = "PSHS": B$ = "A": C$ = "Push FNWRITE result; zero means success": GoSub AO
+        ProcessRPNStackPointer = ProcessRPNStackPointer + 1
+        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(NT_UByte)
+        Return
+    Case FNJSONPARSE_CMD
+        If Len(i$) < 4 Then Print "Error: FNJSONPARSE must be used as FNJSONPARSE(channel)";: GoTo FoundError
+        If ArgCnt <> 1 Then Print "Error: FNJSONPARSE() expects one channel argument";: GoTo FoundError
+
+        ChannelTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        Temp$ = ChannelTok$: GoSub IsStringToken
+        If IsStrFlag% Then Print "Error: FNJSONPARSE() channel must be numeric";: GoTo FoundError
+
+        Temp$ = ChannelTok$: GoSub PushOneValueTokenOnStack
+        LastType = PushedType: NVT = NT_UByte: GoSub ConvertLastType2NVT
+        A$ = "PULS": B$ = "B": C$ = "Get FNJSONPARSE network channel": GoSub AO
+        A$ = "JSR": B$ = "FN_JSONParse": C$ = "Parse the open response as JSON inside FujiNet": GoSub AO
+        A$ = "PSHS": B$ = "A": C$ = "Push FNJSONPARSE result; zero means success": GoSub AO
+        ProcessRPNStackPointer = ProcessRPNStackPointer + 1
+        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(NT_UByte)
+        Return
+    Case FNHTTPMODE_CMD
+        If ArgCnt <> 2 Then Print "Error: FNHTTPMODE() expects channel and mode";: GoTo FoundError
+        ModeTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        ChannelTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        Temp$ = ModeTok$: GoSub IsStringToken
+        If IsStrFlag% Then Print "Error: FNHTTPMODE() mode must be numeric";: GoTo FoundError
+        Temp$ = ChannelTok$: GoSub IsStringToken
+        If IsStrFlag% Then Print "Error: FNHTTPMODE() channel must be numeric";: GoTo FoundError
+
+        Temp$ = ModeTok$: GoSub PushOneValueTokenOnStack
+        LastType = PushedType: NVT = NT_UByte: GoSub ConvertLastType2NVT
+        A$ = "PULS": B$ = "B": C$ = "Get FNHTTPMODE mode": GoSub AO
+        A$ = "STB": B$ = "FN_ChannelModeValue": C$ = "Save FujiNet channel mode": GoSub AO
+        Temp$ = ChannelTok$: GoSub PushOneValueTokenOnStack
+        LastType = PushedType: NVT = NT_UByte: GoSub ConvertLastType2NVT
+        A$ = "PULS": B$ = "B": C$ = "Get FNHTTPMODE channel": GoSub AO
+        A$ = "LDA": B$ = "FN_ChannelModeValue": C$ = "Get FujiNet channel mode": GoSub AO
+        A$ = "JSR": B$ = "FN_SetChannelMode": C$ = "Set FujiNet channel mode": GoSub AO
+        A$ = "PSHS": B$ = "A": C$ = "Push FNHTTPMODE status": GoSub AO
+        ProcessRPNStackPointer = ProcessRPNStackPointer + 1
+        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(NT_UByte)
+        Return
+    Case FNHTTPHEADER_CMD, FNHTTPPOST_CMD, FNHTTPPUT_CMD
+        If ArgCnt <> 2 Then Print "Error: HTTP header/body function expects channel and string data";: GoTo FoundError
+        DataTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        ChannelTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        Temp$ = DataTok$: GoSub IsStringToken
+        If IsStrFlag% = 0 Then Print "Error: HTTP header/body data must be a string";: GoTo FoundError
+        Temp$ = ChannelTok$: GoSub IsStringToken
+        If IsStrFlag% Then Print "Error: HTTP channel must be numeric";: GoTo FoundError
+
+        Temp$ = DataTok$: GoSub PushOneStringTokenOnStack
+        A$ = "JSR": B$ = "FN_CopyStackString": C$ = "Copy HTTP text into compiler scratch string": GoSub AO
+        Temp$ = ChannelTok$: GoSub PushOneValueTokenOnStack
+        LastType = PushedType: NVT = NT_UByte: GoSub ConvertLastType2NVT
+        A$ = "PULS": B$ = "B": C$ = "Get HTTP network channel": GoSub AO
+        If cmd16 = FNHTTPHEADER_CMD Then HTTPEntry$ = "FN_HTTPHeader"
+        If cmd16 = FNHTTPPOST_CMD Then HTTPEntry$ = "FN_HTTPPost"
+        If cmd16 = FNHTTPPUT_CMD Then HTTPEntry$ = "FN_HTTPPut"
+        A$ = "JSR": B$ = HTTPEntry$: C$ = "Send FujiNet HTTP header or request body": GoSub AO
+        A$ = "PSHS": B$ = "A": C$ = "Push HTTP operation status": GoSub AO
+        ProcessRPNStackPointer = ProcessRPNStackPointer + 1
+        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(NT_UByte)
+        Return
+    Case FNHTTPDELETE_CMD
+        If ArgCnt <> 3 Then Print "Error: FNHTTPDELETE() expects channel, URL string, and translation mode";: GoTo FoundError
+        TranslationTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        DeviceTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        ChannelTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        Temp$ = TranslationTok$: GoSub IsStringToken
+        If IsStrFlag% Then Print "Error: FNHTTPDELETE() translation mode must be numeric";: GoTo FoundError
+        Temp$ = DeviceTok$: GoSub IsStringToken
+        If IsStrFlag% = 0 Then Print "Error: FNHTTPDELETE() URL must be a string";: GoTo FoundError
+        Temp$ = ChannelTok$: GoSub IsStringToken
+        If IsStrFlag% Then Print "Error: FNHTTPDELETE() channel must be numeric";: GoTo FoundError
+
+        Temp$ = TranslationTok$: GoSub PushOneValueTokenOnStack
+        LastType = PushedType: NVT = NT_UByte: GoSub ConvertLastType2NVT
+        A$ = "PULS": B$ = "B": C$ = "Get DELETE translation mode": GoSub AO
+        A$ = "STB": B$ = "FN_HTTPDeleteTranslation": C$ = "Save DELETE translation mode": GoSub AO
+        Temp$ = DeviceTok$: GoSub PushOneStringTokenOnStack
+        A$ = "JSR": B$ = "FN_CopyStackString": C$ = "Copy DELETE URL into compiler scratch string": GoSub AO
+        Temp$ = ChannelTok$: GoSub PushOneValueTokenOnStack
+        LastType = PushedType: NVT = NT_UByte: GoSub ConvertLastType2NVT
+        A$ = "PULS": B$ = "B": C$ = "Get DELETE network channel": GoSub AO
+        A$ = "STB": B$ = "FN_HTTPDeleteChannel": C$ = "Save DELETE network channel": GoSub AO
+        A$ = "JSR": B$ = "FN_HTTPDelete": C$ = "Open and execute the HTTP DELETE": GoSub AO
+        A$ = "PSHS": B$ = "A": C$ = "Push FNHTTPDELETE status": GoSub AO
+        ProcessRPNStackPointer = ProcessRPNStackPointer + 1
+        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(NT_UByte)
+        Return
+    Case FNREADMEM_CMD, FNWRITEMEM_CMD
+        If ArgCnt <> 3 Then Print "Error: memory transfer expects channel, address, and count";: GoTo FoundError
+        CountTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        AddressTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        ChannelTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        Temp$ = CountTok$: GoSub IsStringToken
+        If IsStrFlag% Then Print "Error: memory transfer count must be numeric";: GoTo FoundError
+        Temp$ = AddressTok$: GoSub IsStringToken
+        If IsStrFlag% Then Print "Error: memory transfer address must be numeric";: GoTo FoundError
+        Temp$ = ChannelTok$: GoSub IsStringToken
+        If IsStrFlag% Then Print "Error: memory transfer channel must be numeric";: GoTo FoundError
+
+        Temp$ = CountTok$: GoSub PushOneValueTokenOnStack
+        LastType = PushedType: NVT = NT_UInt16: GoSub ConvertLastType2NVT
+        A$ = "PULS": B$ = "D": C$ = "Get binary transfer count": GoSub AO
+        A$ = "STD": B$ = "FN_MemoryCount": C$ = "Save binary transfer count": GoSub AO
+        Temp$ = AddressTok$: GoSub PushOneValueTokenOnStack
+        LastType = PushedType: NVT = NT_UInt16: GoSub ConvertLastType2NVT
+        A$ = "PULS": B$ = "D": C$ = "Get binary transfer address": GoSub AO
+        A$ = "STD": B$ = "FN_MemoryAddress": C$ = "Save binary transfer address": GoSub AO
+        Temp$ = ChannelTok$: GoSub PushOneValueTokenOnStack
+        LastType = PushedType: NVT = NT_UByte: GoSub ConvertLastType2NVT
+        A$ = "PULS": B$ = "B": C$ = "Get binary transfer channel": GoSub AO
+        A$ = "STB": B$ = "FN_MemoryChannel": C$ = "Save binary transfer channel": GoSub AO
+        If cmd16 = FNREADMEM_CMD Then
+            A$ = "JSR": B$ = "FN_ReadMemory": C$ = "Read available channel bytes directly into memory": GoSub AO
+            A$ = "PSHS": B$ = "D": C$ = "Push actual FNREADMEM byte count": GoSub AO
+            ResultType = NT_UInt16
+        Else
+            A$ = "JSR": B$ = "FN_WriteMemory": C$ = "Write memory directly to the network channel": GoSub AO
+            A$ = "PSHS": B$ = "A": C$ = "Push FNWRITEMEM status": GoSub AO
+            ResultType = NT_UByte
+        End If
+        ProcessRPNStackPointer = ProcessRPNStackPointer + 1
+        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(ResultType)
+        Return
+    Case FNDELETE_CMD, FNRENAME_CMD, FNLOCK_CMD, FNUNLOCK_CMD, FNMKDIR_CMD, FNRMDIR_CMD, FNCHDIR_CMD, FNUSERNAME_CMD, FNPASSWORD_CMD
+        If ArgCnt <> 2 Then Print "Error: FujiNet network control function expects channel and specification string";: GoTo FoundError
+        DeviceTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        ChannelTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        Temp$ = DeviceTok$: GoSub IsStringToken
+        If IsStrFlag% = 0 Then Print "Error: FujiNet network specification must be a string";: GoTo FoundError
+        Temp$ = ChannelTok$: GoSub IsStringToken
+        If IsStrFlag% Then Print "Error: FujiNet network channel must be numeric";: GoTo FoundError
+
+        Temp$ = DeviceTok$: GoSub PushOneStringTokenOnStack
+        A$ = "JSR": B$ = "FN_CopyStackString": C$ = "Copy network specification into compiler scratch string": GoSub AO
+        Temp$ = ChannelTok$: GoSub PushOneValueTokenOnStack
+        LastType = PushedType: NVT = NT_UByte: GoSub ConvertLastType2NVT
+        A$ = "PULS": B$ = "B": C$ = "Get network control channel": GoSub AO
+        A$ = "STB": B$ = "FN_IOChannel": C$ = "Save network control channel": GoSub AO
+        If cmd16 = FNDELETE_CMD Then FujiCommand$ = "FN_NC_CMD_DELETE"
+        If cmd16 = FNRENAME_CMD Then FujiCommand$ = "FN_NC_CMD_RENAME"
+        If cmd16 = FNLOCK_CMD Then FujiCommand$ = "FN_NC_CMD_LOCK"
+        If cmd16 = FNUNLOCK_CMD Then FujiCommand$ = "FN_NC_CMD_UNLOCK"
+        If cmd16 = FNMKDIR_CMD Then FujiCommand$ = "FN_NC_CMD_MKDIR"
+        If cmd16 = FNRMDIR_CMD Then FujiCommand$ = "FN_NC_CMD_RMDIR"
+        If cmd16 = FNCHDIR_CMD Then FujiCommand$ = "FN_NC_CMD_CHDIR"
+        If cmd16 = FNUSERNAME_CMD Then FujiCommand$ = "FN_NC_CMD_USERNAME"
+        If cmd16 = FNPASSWORD_CMD Then FujiCommand$ = "FN_NC_CMD_PASSWORD"
+        A$ = "LDA": B$ = "#" + FujiCommand$: C$ = "Select FujiNet network control operation": GoSub AO
+        A$ = "STA": B$ = "FN_IOCommand": C$ = "Save network control operation": GoSub AO
+        A$ = "CLR": B$ = "FN_IOAux1": C$ = "Clear network control aux1": GoSub AO
+        A$ = "CLR": B$ = "FN_IOAux2": C$ = "Clear network control aux2": GoSub AO
+        A$ = "JSR": B$ = "FN_NetworkIOCtl": C$ = "Perform FujiNet network control operation": GoSub AO
+        A$ = "PSHS": B$ = "A": C$ = "Push network control status": GoSub AO
+        ProcessRPNStackPointer = ProcessRPNStackPointer + 1
+        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(NT_UByte)
+        Return
+    Case FNDIROPEN_CMD
+        If ArgCnt <> 3 Then Print "Error: FNDIROPEN() expects channel, directory specification, and format";: GoTo FoundError
+        FormatTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        DeviceTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        ChannelTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        Temp$ = FormatTok$: GoSub IsStringToken
+        If IsStrFlag% Then Print "Error: FNDIROPEN() format must be numeric";: GoTo FoundError
+        Temp$ = DeviceTok$: GoSub IsStringToken
+        If IsStrFlag% = 0 Then Print "Error: FNDIROPEN() directory specification must be a string";: GoTo FoundError
+        Temp$ = ChannelTok$: GoSub IsStringToken
+        If IsStrFlag% Then Print "Error: FNDIROPEN() channel must be numeric";: GoTo FoundError
+
+        Temp$ = FormatTok$: GoSub PushOneValueTokenOnStack
+        LastType = PushedType: NVT = NT_UByte: GoSub ConvertLastType2NVT
+        A$ = "PULS": B$ = "B": C$ = "Get directory response format": GoSub AO
+        A$ = "STB": B$ = "FN_OpenTranslation": C$ = "Save directory response format": GoSub AO
+        Temp$ = DeviceTok$: GoSub PushOneStringTokenOnStack
+        A$ = "JSR": B$ = "FN_CopyStackString": C$ = "Copy directory specification into compiler scratch string": GoSub AO
+        Temp$ = ChannelTok$: GoSub PushOneValueTokenOnStack
+        LastType = PushedType: NVT = NT_UByte: GoSub ConvertLastType2NVT
+        A$ = "PULS": B$ = "B": C$ = "Get directory channel": GoSub AO
+        A$ = "STB": B$ = "FN_OpenChannel": C$ = "Save directory channel": GoSub AO
+        A$ = "LDA": B$ = "#6": C$ = "Select FujiNet directory-open access": GoSub AO
+        A$ = "STA": B$ = "FN_OpenAccess": C$ = "Save directory-open access": GoSub AO
+        A$ = "JSR": B$ = "FN_Open": C$ = "Open FujiNet directory stream": GoSub AO
+        A$ = "PSHS": B$ = "A": C$ = "Push FNDIROPEN status": GoSub AO
+        ProcessRPNStackPointer = ProcessRPNStackPointer + 1
+        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(NT_UByte)
+        Return
+    Case FNWIFIENABLED_CMD, FNWIFISCAN_CMD, FNMOUNTALL_CMD, FNCLOSEDIR_CMD, FNDIRPOS_CMD
+        If Len(i$) < 4 Or ArgCnt <> 0 Then Print "Error: this FujiNet function expects empty parentheses";: GoTo FoundError
+        If cmd16 = FNWIFIENABLED_CMD Then
+            A$ = "JSR": B$ = "FN_WifiEnabled": C$ = "Return whether the FujiNet Wi-Fi adapter is enabled": GoSub AO
+            A$ = "PSHS": B$ = "A": C$ = "Push FNWIFIENABLED result": GoSub AO
+            ResultType = NT_UByte
+        ElseIf cmd16 = FNWIFISCAN_CMD Then
+            A$ = "JSR": B$ = "FN_WifiScan": C$ = "Scan Wi-Fi and return the result count": GoSub AO
+            A$ = "PSHS": B$ = "A": C$ = "Push FNWIFISCAN result": GoSub AO
+            ResultType = NT_UByte
+        ElseIf cmd16 = FNMOUNTALL_CMD Then
+            A$ = "JSR": B$ = "FN_MountAll": C$ = "Mount every configured FujiNet disk": GoSub AO
+            A$ = "PSHS": B$ = "A": C$ = "Push FNMOUNTALL status": GoSub AO
+            ResultType = NT_UByte
+        ElseIf cmd16 = FNCLOSEDIR_CMD Then
+            A$ = "JSR": B$ = "FN_CloseDirectory": C$ = "Close the active FujiNet directory": GoSub AO
+            A$ = "PSHS": B$ = "A": C$ = "Push FNCLOSEDIR status": GoSub AO
+            ResultType = NT_UByte
+        Else
+            A$ = "JSR": B$ = "FN_GetDirectoryPosition": C$ = "Return the active FujiNet directory position": GoSub AO
+            A$ = "PSHS": B$ = "D": C$ = "Push FNDIRPOS result": GoSub AO
+            ResultType = NT_UInt16
+        End If
+        ProcessRPNStackPointer = ProcessRPNStackPointer + 1
+        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(ResultType)
+        Return
+    Case FNWIFIRSSI_CMD, FNMOUNTHOST_CMD, FNUNMOUNTHOST_CMD, FNDEVICEHOST_CMD, FNDEVICEMODE_CMD, FNUNMOUNTIMAGE_CMD, FNSETDIRPOS_CMD
+        If ArgCnt <> 1 Then Print "Error: this FujiNet function expects one numeric argument";: GoTo FoundError
+        Arg1$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        Temp$ = Arg1$: GoSub IsStringToken
+        If IsStrFlag% Then Print "Error: this FujiNet argument must be numeric";: GoTo FoundError
+        Temp$ = Arg1$: GoSub PushOneValueTokenOnStack
+        If cmd16 = FNSETDIRPOS_CMD Then
+            LastType = PushedType: NVT = NT_UInt16: GoSub ConvertLastType2NVT
+            A$ = "PULS": B$ = "D": C$ = "Get FujiNet directory position": GoSub AO
+            A$ = "JSR": B$ = "FN_SetDirectoryPosition": C$ = "Set active directory position": GoSub AO
+            A$ = "PSHS": B$ = "A": C$ = "Push FNSETDIRPOS status": GoSub AO
+            ResultType = NT_UByte
+        Else
+            LastType = PushedType: NVT = NT_UByte: GoSub ConvertLastType2NVT
+            A$ = "PULS": B$ = "B": C$ = "Get FujiNet slot or scan index": GoSub AO
+            If cmd16 = FNWIFIRSSI_CMD Then
+                A$ = "JSR": B$ = "FN_WifiScanRSSI": C$ = "Return signed scan-result RSSI": GoSub AO
+                A$ = "PSHS": B$ = "D": C$ = "Push FNWIFIRSSI result": GoSub AO
+                ResultType = NT_Int16
+            ElseIf cmd16 = FNDEVICEHOST_CMD Or cmd16 = FNDEVICEMODE_CMD Then
+                If cmd16 = FNDEVICEHOST_CMD Then FieldValue$ = "0" Else FieldValue$ = "1"
+                A$ = "LDA": B$ = "#" + FieldValue$: C$ = "Select device-slot field": GoSub AO
+                A$ = "STA": B$ = "FN_MountField": C$ = "Save device-slot field": GoSub AO
+                A$ = "JSR": B$ = "FN_DeviceSlotField": C$ = "Read FujiNet device-slot field": GoSub AO
+                A$ = "PSHS": B$ = "A": C$ = "Push device-slot field": GoSub AO
+                ResultType = NT_UByte
+            Else
+                If cmd16 = FNMOUNTHOST_CMD Then FujiCommand$ = "FN_MOUNT_CMD_MOUNT_HOST"
+                If cmd16 = FNUNMOUNTHOST_CMD Then FujiCommand$ = "FN_MOUNT_CMD_UNMOUNT_HOST"
+                If cmd16 = FNUNMOUNTIMAGE_CMD Then FujiCommand$ = "FN_MOUNT_CMD_UNMOUNT_IMAGE"
+                A$ = "LDA": B$ = "#" + FujiCommand$: C$ = "Select FujiNet mount operation": GoSub AO
+                A$ = "JSR": B$ = "FN_MountOneParameter": C$ = "Run one-slot mount operation": GoSub AO
+                A$ = "PSHS": B$ = "A": C$ = "Push mount-operation status": GoSub AO
+                ResultType = NT_UByte
+            End If
+        End If
+        ProcessRPNStackPointer = ProcessRPNStackPointer + 1
+        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(ResultType)
+        Return
+    Case FNSETWIFI_CMD
+        If ArgCnt <> 2 Then Print "Error: FNSETWIFI() expects SSID and password strings";: GoTo FoundError
+        PasswordTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        SSIDTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        Temp$ = PasswordTok$: GoSub IsStringToken
+        If IsStrFlag% = 0 Then Print "Error: FNSETWIFI() password must be a string";: GoTo FoundError
+        Temp$ = SSIDTok$: GoSub IsStringToken
+        If IsStrFlag% = 0 Then Print "Error: FNSETWIFI() SSID must be a string";: GoTo FoundError
+        Temp$ = PasswordTok$: GoSub PushOneStringTokenOnStack
+        A$ = "JSR": B$ = "FN_CopyStackStringPF01": C$ = "Copy Wi-Fi password to PF01": GoSub AO
+        Temp$ = SSIDTok$: GoSub PushOneStringTokenOnStack
+        A$ = "JSR": B$ = "FN_CopyStackString": C$ = "Copy Wi-Fi SSID to PF00": GoSub AO
+        A$ = "JSR": B$ = "FN_SetWifi": C$ = "Configure FujiNet Wi-Fi credentials": GoSub AO
+        A$ = "PSHS": B$ = "A": C$ = "Push FNSETWIFI status": GoSub AO
+        ProcessRPNStackPointer = ProcessRPNStackPointer + 1
+        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(NT_UByte)
+        Return
+    Case FNSETHOST_CMD, FNSETHOSTPREFIX_CMD
+        If ArgCnt <> 2 Then Print "Error: this FujiNet function expects slot and string";: GoTo FoundError
+        TextTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        SlotTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        Temp$ = TextTok$: GoSub IsStringToken
+        If IsStrFlag% = 0 Then Print "Error: FujiNet host text must be a string";: GoTo FoundError
+        Temp$ = SlotTok$: GoSub IsStringToken
+        If IsStrFlag% Then Print "Error: FujiNet host slot must be numeric";: GoTo FoundError
+        Temp$ = TextTok$: GoSub PushOneStringTokenOnStack
+        If cmd16 = FNSETHOST_CMD Then
+            A$ = "JSR": B$ = "FN_CopyStackStringPF01": C$ = "Copy hostname to PF01": GoSub AO
+        Else
+            A$ = "JSR": B$ = "FN_CopyStackString": C$ = "Copy host prefix to PF00": GoSub AO
+        End If
+        Temp$ = SlotTok$: GoSub PushOneValueTokenOnStack
+        LastType = PushedType: NVT = NT_UByte: GoSub ConvertLastType2NVT
+        A$ = "PULS": B$ = "B": C$ = "Get FujiNet host slot": GoSub AO
+        If cmd16 = FNSETHOST_CMD Then
+            A$ = "JSR": B$ = "FN_SetHostSlot": C$ = "Set FujiNet hostname": GoSub AO
+        Else
+            A$ = "JSR": B$ = "FN_SetHostPrefix": C$ = "Set FujiNet host prefix": GoSub AO
+        End If
+        A$ = "PSHS": B$ = "A": C$ = "Push host-setting status": GoSub AO
+        ProcessRPNStackPointer = ProcessRPNStackPointer + 1
+        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(NT_UByte)
+        Return
+    Case FNMOUNTIMAGE_CMD
+        If ArgCnt <> 2 Then Print "Error: FNMOUNTIMAGE() expects device and mode";: GoTo FoundError
+        ModeTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        DeviceTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        Temp$ = ModeTok$: GoSub IsStringToken: If IsStrFlag% Then Print "Error: FNMOUNTIMAGE() mode must be numeric";: GoTo FoundError
+        Temp$ = DeviceTok$: GoSub IsStringToken: If IsStrFlag% Then Print "Error: FNMOUNTIMAGE() device must be numeric";: GoTo FoundError
+        Temp$ = ModeTok$: GoSub PushOneValueTokenOnStack
+        LastType = PushedType: NVT = NT_UByte: GoSub ConvertLastType2NVT
+        A$ = "PULS": B$ = "B": C$ = "Get mount mode (1=read, 2=write)": GoSub AO
+        A$ = "STB": B$ = "FN_MountMode": C$ = "Save mount mode": GoSub AO
+        Temp$ = DeviceTok$: GoSub PushOneValueTokenOnStack
+        LastType = PushedType: NVT = NT_UByte: GoSub ConvertLastType2NVT
+        A$ = "PULS": B$ = "B": C$ = "Get device slot": GoSub AO
+        A$ = "STB": B$ = "FN_MountSlot": C$ = "Save device slot": GoSub AO
+        A$ = "JSR": B$ = "FN_MountDisk": C$ = "Mount configured disk image": GoSub AO
+        A$ = "PSHS": B$ = "A": C$ = "Push FNMOUNTIMAGE status": GoSub AO
+        ProcessRPNStackPointer = ProcessRPNStackPointer + 1
+        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(NT_UByte)
+        Return
+    Case FNSETDEVICE_CMD
+        If ArgCnt <> 4 Then Print "Error: FNSETDEVICE() expects device, host, mode, and path$";: GoTo FoundError
+        PathTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        ModeTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        HostTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        DeviceTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        Temp$ = PathTok$: GoSub IsStringToken: If IsStrFlag% = 0 Then Print "Error: FNSETDEVICE() path must be a string";: GoTo FoundError
+        Temp$ = ModeTok$: GoSub IsStringToken: If IsStrFlag% Then Print "Error: FNSETDEVICE() mode must be numeric";: GoTo FoundError
+        Temp$ = HostTok$: GoSub IsStringToken: If IsStrFlag% Then Print "Error: FNSETDEVICE() host must be numeric";: GoTo FoundError
+        Temp$ = DeviceTok$: GoSub IsStringToken: If IsStrFlag% Then Print "Error: FNSETDEVICE() device must be numeric";: GoTo FoundError
+        Temp$ = PathTok$: GoSub PushOneStringTokenOnStack
+        A$ = "JSR": B$ = "FN_CopyStackString": C$ = "Copy device path to PF00": GoSub AO
+        Temp$ = ModeTok$: GoSub PushOneValueTokenOnStack
+        LastType = PushedType: NVT = NT_UByte: GoSub ConvertLastType2NVT
+        A$ = "PULS": B$ = "B": C$ = "Get device mode": GoSub AO
+        A$ = "STB": B$ = "FN_MountMode": C$ = "Save device mode": GoSub AO
+        Temp$ = HostTok$: GoSub PushOneValueTokenOnStack
+        LastType = PushedType: NVT = NT_UByte: GoSub ConvertLastType2NVT
+        A$ = "PULS": B$ = "B": C$ = "Get host slot": GoSub AO
+        A$ = "STB": B$ = "FN_MountHost": C$ = "Save host slot": GoSub AO
+        Temp$ = DeviceTok$: GoSub PushOneValueTokenOnStack
+        LastType = PushedType: NVT = NT_UByte: GoSub ConvertLastType2NVT
+        A$ = "PULS": B$ = "B": C$ = "Get device slot": GoSub AO
+        A$ = "STB": B$ = "FN_MountSlot": C$ = "Save device slot": GoSub AO
+        A$ = "JSR": B$ = "FN_SetDeviceFile": C$ = "Configure FujiNet disk slot": GoSub AO
+        A$ = "PSHS": B$ = "A": C$ = "Push FNSETDEVICE status": GoSub AO
+        ProcessRPNStackPointer = ProcessRPNStackPointer + 1
+        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(NT_UByte)
+        Return
+    Case FNOPENDIR_CMD
+        If ArgCnt <> 3 Then Print "Error: FNOPENDIR() expects host, path$, and filter$";: GoTo FoundError
+        FilterTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        PathTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        HostTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        Temp$ = FilterTok$: GoSub IsStringToken: If IsStrFlag% = 0 Then Print "Error: FNOPENDIR() filter must be a string";: GoTo FoundError
+        Temp$ = PathTok$: GoSub IsStringToken: If IsStrFlag% = 0 Then Print "Error: FNOPENDIR() path must be a string";: GoTo FoundError
+        Temp$ = HostTok$: GoSub IsStringToken: If IsStrFlag% Then Print "Error: FNOPENDIR() host must be numeric";: GoTo FoundError
+        Temp$ = FilterTok$: GoSub PushOneStringTokenOnStack
+        A$ = "JSR": B$ = "FN_CopyStackStringPF01": C$ = "Copy directory filter to PF01": GoSub AO
+        Temp$ = PathTok$: GoSub PushOneStringTokenOnStack
+        A$ = "JSR": B$ = "FN_CopyStackString": C$ = "Copy directory path to PF00": GoSub AO
+        Temp$ = HostTok$: GoSub PushOneValueTokenOnStack
+        LastType = PushedType: NVT = NT_UByte: GoSub ConvertLastType2NVT
+        A$ = "PULS": B$ = "B": C$ = "Get directory host slot": GoSub AO
+        A$ = "JSR": B$ = "FN_OpenDirectory": C$ = "Open FujiNet host directory": GoSub AO
+        A$ = "PSHS": B$ = "A": C$ = "Push FNOPENDIR status": GoSub AO
+        ProcessRPNStackPointer = ProcessRPNStackPointer + 1
+        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(NT_UByte)
+        Return
+    Case FNAPPKEYSET_CMD
+        If ArgCnt <> 2 Then Print "Error: FNAPPKEYSET() expects creator ID and application ID";: GoTo FoundError
+        AppTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        CreatorTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        Temp$ = AppTok$: GoSub IsStringToken: If IsStrFlag% Then Print "Error: FNAPPKEYSET() application ID must be numeric";: GoTo FoundError
+        Temp$ = CreatorTok$: GoSub IsStringToken: If IsStrFlag% Then Print "Error: FNAPPKEYSET() creator ID must be numeric";: GoTo FoundError
+        Temp$ = CreatorTok$: GoSub PushOneValueTokenOnStack
+        LastType = PushedType: NVT = NT_UInt16: GoSub ConvertLastType2NVT
+        Temp$ = AppTok$: GoSub PushOneValueTokenOnStack
+        LastType = PushedType: NVT = NT_UByte: GoSub ConvertLastType2NVT
+        A$ = "PULS": B$ = "B": C$ = "Get AppKey application ID": GoSub AO
+        A$ = "STB": B$ = "FN_AppKeyApp": C$ = "Save AppKey application ID": GoSub AO
+        A$ = "PULS": B$ = "D": C$ = "Get AppKey creator ID": GoSub AO
+        A$ = "JSR": B$ = "FN_AppKeySet": C$ = "Set AppKey creator/application IDs": GoSub AO
+        A$ = "PSHS": B$ = "A": C$ = "Push FNAPPKEYSET status": GoSub AO
+        ProcessRPNStackPointer = ProcessRPNStackPointer + 1
+        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(NT_UByte)
+        Return
+    Case FNAPPKEYWRITE_CMD
+        If ArgCnt <> 2 Then Print "Error: FNAPPKEYWRITE() expects key ID and data string";: GoTo FoundError
+        DataTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        KeyTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        Temp$ = DataTok$: GoSub IsStringToken: If IsStrFlag% = 0 Then Print "Error: FNAPPKEYWRITE() data must be a string";: GoTo FoundError
+        Temp$ = KeyTok$: GoSub IsStringToken: If IsStrFlag% Then Print "Error: FNAPPKEYWRITE() key ID must be numeric";: GoTo FoundError
+        Temp$ = KeyTok$: GoSub PushOneValueTokenOnStack
+        LastType = PushedType: NVT = NT_UByte: GoSub ConvertLastType2NVT
+        Temp$ = DataTok$: GoSub PushOneStringTokenOnStack
+        A$ = "JSR": B$ = "FN_CopyStackString": C$ = "Copy AppKey data to PF00": GoSub AO
+        A$ = "PULS": B$ = "B": C$ = "Get AppKey key ID": GoSub AO
+        A$ = "JSR": B$ = "FN_AppKeyWrite": C$ = "Write the persistent FujiNet AppKey": GoSub AO
+        A$ = "PSHS": B$ = "A": C$ = "Push FNAPPKEYWRITE status": GoSub AO
+        ProcessRPNStackPointer = ProcessRPNStackPointer + 1
+        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(NT_UByte)
+        Return
+    Case FNAPPKEYCLOSE_CMD, FNHASHCLEAR_CMD
+        If Len(i$) < 4 Or ArgCnt <> 0 Then Print "Error: this FujiNet function expects empty parentheses";: GoTo FoundError
+        If cmd16 = FNAPPKEYCLOSE_CMD Then
+            A$ = "JSR": B$ = "FN_AppKeyClose": C$ = "Close the current AppKey context": GoSub AO
+        Else
+            A$ = "JSR": B$ = "FN_HashClear": C$ = "Clear FujiNet's accumulated hash data": GoSub AO
+        End If
+        A$ = "PSHS": B$ = "A": C$ = "Push FujiNet data-service status": GoSub AO
+        ProcessRPNStackPointer = ProcessRPNStackPointer + 1
+        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(NT_UByte)
+        Return
+    Case FNHASHADD_CMD
+        If ArgCnt <> 1 Then Print "Error: FNHASHADD() expects one data string";: GoTo FoundError
+        DataTok$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1
+        Temp$ = DataTok$: GoSub IsStringToken: If IsStrFlag% = 0 Then Print "Error: FNHASHADD() data must be a string";: GoTo FoundError
+        Temp$ = DataTok$: GoSub PushOneStringTokenOnStack
+        A$ = "JSR": B$ = "FN_CopyStackString": C$ = "Copy hash input to PF00": GoSub AO
+        A$ = "JSR": B$ = "FN_HashAdd": C$ = "Add data to FujiNet's hash accumulator": GoSub AO
+        A$ = "PSHS": B$ = "A": C$ = "Push FNHASHADD status": GoSub AO
+        ProcessRPNStackPointer = ProcessRPNStackPointer + 1
+        ProcessRPNStack$(ProcessRPNStackPointer) = Chr$(&HFA) + Chr$(0) + Chr$(0) + Chr$(NT_UByte)
+        Return
     Case LOF_CMD, SDC_LOF_CMD
         If ArgCnt <> 1 Then Print "Error: LOF()/SDC_LOF() expects one file number";: GoTo FoundError
         Arg1$ = ProcessRPNStack$(ProcessRPNStackPointer): ProcessRPNStackPointer = ProcessRPNStackPointer - 1

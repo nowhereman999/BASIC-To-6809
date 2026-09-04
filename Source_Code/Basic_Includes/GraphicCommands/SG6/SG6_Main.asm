@@ -1,5 +1,7 @@
 * Set the width and height of the SG6 screen
-* Only has colours 0 = black & colours 1 & 2
+* CoCo wiring uses D7 to select SG6, so only D7:D6=$80/$C0 are safe.
+* Colours are 0=black, 1=blue/magenta and 2=red/orange (selected by CSS).
+* Requires the original MC6847; the MC6847T1 used in the CoCo 2B has no SG6 mode.
 ScreenWidth_SG6     EQU 64
 ScreenHeight_SG6    EQU 48
 BytesPerRow_SG6     EQU ScreenWidth_SG6/2
@@ -11,7 +13,7 @@ Y_SG6       FCB         0,86        ; Y COORD  (0-47) , 1/3 FIXED POINT
 X_SG6       FCB         0           ; X COORD  (0-63)
 C_SG6       FCB         0           ; COLOR FOR PIXEL (0-2) BLACK=0
 FRAC_SG6    FCB         0,3         ; FIXED POINT FRACTION , 3 MULTIPLIER
-TABLE_SG6   FCB         160,144,136,132,130,129  ; TABLE FOR SET
+TABLE_SG6   FCB         160,144,136,132,130,129  ; D7 plus D5:D0 pixel masks for SET
             FCB         223,239,247,251,253,254  ; TABLE FOR RESET
 
 ; Line Box & BoxFill commands come here, Colour of pixels has already been set
@@ -55,9 +57,9 @@ SET_SG6     LDU         #TABLE_SG6  ; POINT TO PIXEL TABLE
             LSRB                    ; STORE (X AND 1) IN CARRY FLAG
             ROLA                    ; REMAINDER * 2    + (X AND 1)
             LDB         ,X          ; GET OLD PIXELS
-            BMI         LP1_SG6     ; BRANCH IF NOT TEXT
-            LDB         #128        ; OK TEXT, MAKE 6 PIXELS BLACK
-            STB         ,X          ; PUT BACK ON SCREEN
+            BMI         LP1_SG6     ; BRANCH IF THIS IS ALREADY AN SG6 CELL
+            LDB         #128        ; Convert text to an empty SG6 cell
+            STB         ,X
 LP1_SG6     LDB         -3,U        ; GET COLOR (0-2)
             BNE         LP2_SG6     ; IF C=(1-2) THEN SET PIXEL
 ;     RESET(X,Y)
@@ -67,14 +69,14 @@ LP1_SG6     LDB         -3,U        ; GET COLOR (0-2)
             STB         ,X          ; RESET PIXEL TO BLACK
             RTS                     ; RETURN             
 ;     SET(X,Y,C)
-LP2_SG6     DECB                    ; SHIFT FROM COLOR(1-2) TO ACTUAL BIT COLOR(0-1)
-            BNE         LP3_SG6     ; IF COLOR=1 GO SET BIT 6
-            LDB         #191        ; LOAD CLEAR BIT 6 MASK
-            ANDB        ,X          ; RESET COLOR TO 0 OF OLD PIXEL            
-            BRA         LP4_SG6     ;
-LP3_SG6     LDB         #64         ; GET BIT 6
-            ORB         ,X          ; SET COLOR TO 1 OF OLD PIXEL        
-LP4_SG6     ORB         A,U         ; COMBINE OLD WITH NEW PIXELS         
+LP2_SG6     DECB                    ; BASIC colours 1-2 become D6 values 0-1
+            BNE         LP3_SG6
+            LDB         #$BF        ; Colour 1: keep D7 set and clear D6
+            ANDB        ,X
+            BRA         LP4_SG6
+LP3_SG6     LDB         #$40        ; Colour 2: keep D7 set and set D6
+            ORB         ,X
+LP4_SG6     ORB         A,U         ; COMBINE OLD WITH NEW PIXEL
             STB         ,X          ; PUT NEW PIXEL ON SCREEN            
             RTS                     ; RETURN
 
@@ -109,18 +111,18 @@ POINT_SG6:
             LDB         -3,U        ; GET X
             LSRB                    ; STORE (X AND 1) IN CARRY FLAG
             ROLA                    ; REMAINDER * 2    + (X AND 1)            
-            LDB         ,X          ; GET OLD PIXELS            
-            BMI         LP5_SG6     ; GO RESET PIXEL AND REMOVE TEXT IF BIT 7 IS 0
-            LDB         #255        ; IF ALPHA THEN RETURN -1
-            BRA         LP6_SG6     ; 
-LP5_SG6     ANDB        A,U         ; SEE IF OLD PIXEL IS BLACK
-            BEQ         LP6_SG6     ; GO RETURN 0
             LDB         ,X          ; GET OLD PIXELS
-            ANDB        #64         ; GET COLOR BIT 6
-            BEQ         LP7_SG6     ; IF BIT 6=0,RETURN 1
-            LDB         #1          ; ELSE RETURN 2
-LP7_SG6     INCB                    ; ADJUST TO CORRECT COLOR #
-LP6_SG6     RTS                     ; RETURN  REG B= COLOR CODES:ALPHA=-1,BLACK=0,BLUE=1,RED=2
+            BMI         LP5_SG6     ; D7=1 identifies a valid SG6 cell
+            LDB         #255        ; Text/invalid cell returns -1
+            BRA         LP6_SG6
+LP5_SG6     ANDB        A,U         ; SEE IF THE REQUESTED PIXEL IS BLACK
+            BEQ         LP6_SG6     ; RETURN 0 WHEN THE PIXEL IS OFF
+            LDB         ,X
+            ANDB        #$40        ; D6 selects the two legal CoCo SG6 colours
+            BEQ         LP7_SG6
+            LDB         #1
+LP7_SG6     INCB                    ; RETURN BASIC COLOUR 1 OR 2
+LP6_SG6     RTS                     ; RETURN -1, 0, 1 OR 2
 
 ; Colour the screen Colour B
 GCLS_SG6:
