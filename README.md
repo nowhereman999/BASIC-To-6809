@@ -5,7 +5,7 @@ as Extended Color BASIC, with many new BASIC commands and features.
 Binaries for all major OSs are available in the Binary_Versions folder
 
 Installation and much more info is available in the manual found here:
-https://github.com/nowhereman999/BASIC-To-6809/blob/main/Manual.pdf
+https://github.com/nowhereman999/BASIC-To-6809/blob/main/BasTo6809_User_Manual.pdf
 
 For more info check out the blog post here:
 https://wordpress.com/post/nowhereman999.wordpress.com/5054
