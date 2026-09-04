@@ -13,6 +13,63 @@ https://wordpress.com/post/nowhereman999.wordpress.com/5054
 For support goto the CoCo Nation Basic-to-6809 channel on discord:
 https://discord.com/channels/301741082600013824/460587865928105985
 
+V 5.50
+- Fixed the SDC CPU-speed restoration path so SDC_LOADM and SDC_SAVEM return to the user's selected CPUSPEED setting
+
+V 5.49
+- Fixed PRINT commas on WIDTH 40, 64, and 80 screens so they advance to the next 16-column print zone instead of acting like semicolons
+- PRINT comma handling now uses the active screen cursor and correctly wraps or scrolls at the right and bottom edges
+
+V 5.48
+- Fixed WIDTH 40, 64, and 80 PRINT, scrolling, and CLS routines to use the relocated BEGGRP framebuffer instead of $0E00
+- WIDTH and CLS now home the wide-text cursor, and wide-screen backspace correctly crosses row boundaries
+- Replaced invalid LEAU/BNE counters in all wide-screen CLS and scrolling loops with LEAY/BNE counters
+- Wide-text modes reserve and clear 29 GIME display rows while retaining 28 logical PRINT rows, preventing garbage on the bottom row
+
+V 5.47
+- Added FujiNet support over the CoCo Becker/DriveWire interface; only the FujiNet modules used by a program are linked
+- Core channel functions: FNINIT, FNERROR, FNOPEN, FNCLOSE, FNBYTESWAITING, FNCHANNELERROR, FNCONNECTED, FNREAD$, and FNWRITE
+- JSON functions: FNJSONPARSE and FNJSONQUERY$
+- Wi-Fi and adapter functions: FNWIFISTATUS, FNWIFIENABLED, FNWIFISCAN, FNWIFISSID$, FNWIFIRSSI, FNSETWIFI, and FNADAPTER$
+- Host and disk functions: FNHOST$, FNSETHOST, FNHOSTPREFIX$, FNSETHOSTPREFIX, FNMOUNTHOST, FNUNMOUNTHOST,
+  FNDEVICEPATH$, FNDEVICEHOST, FNDEVICEMODE, FNSETDEVICE, FNMOUNTIMAGE, FNUNMOUNTIMAGE, and FNMOUNTALL
+- Host-directory and clock functions: FNOPENDIR, FNREADDIR$, FNDIRPOS, FNSETDIRPOS, FNCLOSEDIR, and FNTIME$
+- AppKey functions: FNAPPKEYSET, FNAPPKEYREAD$, FNAPPKEYWRITE, and FNAPPKEYCLOSE
+- Hash and Base64 functions: FNHASH$, FNHASHCLEAR, FNHASHADD, FNHASHCALC$, FNBASE64ENCODE$, and FNBASE64DECODE$
+- HTTP, memory, filesystem, and authentication functions: FNHTTPMODE, FNHTTPHEADER, FNHTTPPOST, FNHTTPPUT, FNHTTPDELETE,
+  FNREADMEM, FNWRITEMEM, FNDELETE, FNRENAME, FNLOCK, FNUNLOCK, FNMKDIR, FNRMDIR, FNCHDIR, FNDIROPEN, FNUSERNAME, and FNPASSWORD
+- Added the F11EMULATOR FUJINET source directive and FujiNet-aware MAME debugger launch support
+- PRINT #-3, PRINT #-4, and PRINT #-5 with no expression now behave like printing an explicit empty string
+
+V 5.46
+- Added compiled sprite support for GMODE 0 Internal Alphanumeric and GMODE 1 External Alphanumeric screens
+- GMODE 0/1 sprites use native 32x16 whole-cell coordinates, exact 32-byte rows, and one draw routine per frame
+- PNGtoCCSB 1.11 applies 3:2 cell-aspect correction and backs up only the exact whole-cell sprite footprint
+- GMODE 0 sprite conversion selects black plus the closest of all eight MC6847 semigraphics colours
+- GMODE 1 uses portable $80/$BF/$FF cells and preserves a third source colour with a stable checker pattern
+- CoCo 3 GMODE 0/1 screens explicitly select 12 scanlines per fetched row, keeping their display inside each $0200 page
+- CoCo 3 legacy-mode switches now set the correct GMODE 0-8 row height instead of inheriting a previous mode
+- Sprite drawing tables retain empty slot entries, so sprites loaded as numbers other than zero dispatch correctly
+- Added compiled sprite support for every semigraphics mode from GMODE 2 through GMODE 8
+- GMODE 2 sprites use four X/Y quadrant variants and the correct 32-byte SG4 physical-row stride
+- PNGtoCCSB expands GMODE 2 sprites horizontally by 3:2 to compensate for SG4 colour-cell proportions
+- GMODE 4 sprites use six X/Y cell-alignment variants, Y/3 addressing, and the 32-byte SG6 physical-row stride
+- PNGtoCCSB 1.10 generates aspect-correct GMODE 4 sprites using black and the two CoCo-safe SG6 colours
+- Up to three source colours map to two solid colours and a stable between-colour pattern, preserving filled pixel-art regions
+- GMODE 4 requires the original MC6847; MC6847T1 CoCo 2B machines do not implement SG6 (use MAME target coco)
+- PNGtoCCSB -s0/-s1 selects the GMODE 4 hardware colour set to match the BASIC SCREEN command
+- PNGtoCCSB now retains supplied directory paths while loading PNG source files
+- PNGtoCCSB maps each PNG pixel to one complete two-subpixel colour cell for exact colours at even X positions
+- GMODE 3 and 5 sprites handle SG4H/SG6H's two memory rows per logical graphics row
+- Semigraphics sprites use even/odd drawing variants and the correct screen-row geometry
+- PNGtoCCSB corrects the physical colour-cell aspect ratio for GMODE 2 through GMODE 8
+- Generated semigraphics sprite files record their required GMODE so incompatible assets fail at compile time
+- CoCo 1/2 sprite page flips now wait for vertical blank after updating each page, eliminating intermittent movement flicker
+- GMODE 3 sprites use SG4H's doubled memory rows, 64-byte logical-row stride, and corrected physical aspect ratio
+- Centered GMODE 3 sprite row resampling so matching top and bottom image rows remain balanced
+- Fixed GCOPY page addressing for relocated CoCo 1/2 graphics layouts, including GMODE 2 page 0 to page 1 copies
+- Fixed the DECB reader's final-granule sector limit so LOADM, GETBYTE, and read-side SETPOS do not overrun the input buffer
+
 V 5.45
 - Made the CoCo 1/2 SDC_PLAYMOVIE frame buffers follow GRAPHICS_PAGE_START for -notext and -rxxxx layouts
 - CoCo 1/2 movie builds always reserve both $1800-byte frame pages and reject an overlapping explicit -p address
@@ -25,30 +82,30 @@ V 5.45
 - CHAIN and SDC_CHAIN now force all-RAM mode before loading, so a normally loaded small
   first program can safely chain to a large program with segments above $7FFF
 
-' V 5.44
+V 5.44
 - Added QB64-compatible LOF(handle) for open DECB files; returns an unsigned 32-bit file length
 - Added SDC_LOF(handle) for open CoCoSDC files with the same unsigned 32-bit result
 - Updated the SDECB IDE syntax checking and highlighting for SDC_LOF
 
-' V 5.43
+V 5.43
 - Fixed GETBYTE returning zero for valid bytes: DiskReadByteA now explicitly clears carry after a successful read
 - Sequential reads now distinguish a valid byte, including $00, from the internal end-of-file condition
 
-' V 5.42
+V 5.42
 - Fixed sequential disk OPEN "R": DiskOpenFileAB now preserves the requested mode and handle while initializing stream state
 - Prevents a read-open from becoming an empty write stream and fixes OPEN/GETBYTE/CLOSE file-reading loops
 
-' V 5.41
+V 5.41
 - INPUT and READ/DATA use a dedicated integer ASCII converter with -i, so no floating-point library is included
 - Fixed the integer-only VAL parser so hexadecimal values and all internal branches assemble correctly
 - Context-free VAL() now defaults to INTEGER with -i instead of requesting the default floating-point type
 - Exponentiation now reports a compile-time error with -i because the current power routines require floating point
 
-' V 5.40
+V 5.40
 - Fixed CoCo 1/2 startup when disk support is included: DiskInitialize now preserves the IRQ-vector register
 - Prevents the first IRQ from following the old $010C ROM vector into RAM after a cc1sl load
 
-' V 5.39
+V 5.39
 - Disk_Commands.asm now owns all controller variables, stream state, and sector buffers as relocatable resident data
 - Added independent 256-byte input and output buffers so one DECB reader and one DECB writer can remain open together
 - Reader and writer handles retain independent filenames, drives, track/sector positions, FAT state, and 32-bit positions
@@ -57,7 +114,7 @@ V 5.45
 - SDECB IDE highlighting and syntax checking now recognize all flat DECB file commands
 - Sequential OPEN "W" safely replaces/truncates existing files; old granules are freed only after publishing the replacement
 
-' V 5.38
+V 5.38
 - Added flat DECB file commands: OPEN, CLOSE, PUTBYTE0/1, GETBYTE, SETPOS0/1, FILEINFO$,
   DELETE, INITDIR, DIRPAGE, and DIRLIST$
 - DECB byte reads honor the exact last-sector length; writes commit FAT and directory data on CLOSE
