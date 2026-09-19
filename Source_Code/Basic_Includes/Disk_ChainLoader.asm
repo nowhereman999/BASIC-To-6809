@@ -248,7 +248,7 @@ DiskChainDirectorySector:
         LDA     #8
 DiskChainDirectoryEntry:
         LDB     ,X
-        LBEQ    DiskChainError
+        LBEQ    DiskChainNextDirectoryEntry * $00 is a deleted slot, not end of directory
         CMPB    #$FF
         BEQ     DiskChainNextDirectoryEntry
         PSHS    A,X
